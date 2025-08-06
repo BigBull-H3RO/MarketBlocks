@@ -1,0 +1,13 @@
+{
+  "itemGroup.marketblocks": "Example Mod Tab",
+  "block.marketblocks.example_block": "Example Block",
+  "item.marketblocks.example_item": "Example Item",
+
+  "marketblocks.configuration.title": "MarketBlocks Configs",
+  "marketblocks.configuration.section.marketblocks.common.toml": "MarketBlocks Configs",
+  "marketblocks.configuration.section.marketblocks.common.toml.title": "MarketBlocks Configs",
+  "marketblocks.configuration.items": "Item List",
+  "marketblocks.configuration.logDirtBlock": "Log Dirt Block",
+  "marketblocks.configuration.magicNumberIntroduction": "Magic Number Text",
+  "marketblocks.configuration.magicNumber": "Magic Number"
+}
