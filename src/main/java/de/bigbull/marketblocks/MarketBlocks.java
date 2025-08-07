@@ -2,9 +2,8 @@ package de.bigbull.marketblocks;
 
 import com.mojang.logging.LogUtils;
 import de.bigbull.marketblocks.config.Config;
-import de.bigbull.marketblocks.util.BlockInit;
 import de.bigbull.marketblocks.util.CreativeTabInit;
-import de.bigbull.marketblocks.util.ItemInit;
+import de.bigbull.marketblocks.util.RegistriesInit;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -25,8 +24,7 @@ public class MarketBlocks {
 
         NeoForge.EVENT_BUS.register(this);
 
-        ItemInit.ITEMS.register(modEventBus);
-        BlockInit.BLOCKS.register(modEventBus);
+        RegistriesInit.register(modEventBus);
         CreativeTabInit.CREATIVE_MODE_TABS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
