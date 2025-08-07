@@ -6,10 +6,7 @@ import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.*;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -140,6 +137,22 @@ public class SmallShopBlock extends BaseEntityBlock {
             if (be instanceof SmallShopBlockEntity shop) {
                 shop.discardDisplayItem();
                 shop.discardPayDisplayItem();
+
+                SimpleContainer container = new SimpleContainer(shop.getInventory().getSlots());
+                for (int i = 0; i < shop.getInventory().getSlots(); i++) {
+                    container.setItem(i, shop.getInventory().getStackInSlot(i));
+                }
+                Containers.dropContents(level, pos, container);
+
+                if (!shop.getSaleItem().isEmpty()) {
+                    Block.popResource(level, pos, shop.getSaleItem());
+                }
+                if (!shop.getPayItemA().isEmpty()) {
+                    Block.popResource(level, pos, shop.getPayItemA());
+                }
+                if (!shop.getPayItemB().isEmpty()) {
+                    Block.popResource(level, pos, shop.getPayItemB());
+                }
             }
         }
         super.onRemove(state, level, pos, newState, isMoving);

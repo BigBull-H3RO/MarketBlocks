@@ -108,7 +108,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
 
             @Override
             public boolean isActive() {
-                return ownerView ? activeTab == 0 : true;
+                return !ownerView || activeTab == 0;
             }
         });
 
@@ -126,7 +126,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
 
             @Override
             public boolean isActive() {
-                return ownerView ? activeTab == 0 : true;
+                return !ownerView || activeTab == 0;
             }
         });
 
@@ -143,7 +143,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
 
             @Override
             public boolean isActive() {
-                return ownerView ? activeTab == 0 : true;
+                return !ownerView || activeTab == 0;
             }
         });
 
@@ -180,7 +180,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
     public ItemStack quickMoveStack(Player player, int index) {
         ItemStack itemstack = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
-        if (slot != null && slot.hasItem()) {
+        if (slot.hasItem()) {
             ItemStack stack = slot.getItem();
             itemstack = stack.copy();
             if (index < 21) {
@@ -203,16 +203,32 @@ public class SmallShopMenu extends AbstractContainerMenu {
 
     @Override
     public void clicked(int slotId, int dragType, ClickType clickType, Player player) {
-        if (!ownerView && clickType == ClickType.QUICK_MOVE && slotId >= 21 && slotId < this.slots.size()) {
-            Slot slot = this.slots.get(slotId);
-            if (slot != null && slot.hasItem()) {
-                ItemStack stack = slot.getItem();
-                if (moveToPaySlots(stack)) {
-                    slot.set(stack);
-                    slot.setChanged();
-                    broadcastChanges();
-                    return;
+        if (!ownerView) {
+            // Shift-Klick aus Spielerinventar in Bezahl-Slots
+            if (clickType == ClickType.QUICK_MOVE && slotId >= 21 && slotId < this.slots.size()) {
+                Slot slot = this.slots.get(slotId);
+                if (slot != null && slot.hasItem()) {
+                    ItemStack stack = slot.getItem();
+                    if (moveToPaySlots(stack)) {
+                        slot.set(stack);
+                        slot.setChanged();
+                        broadcastChanges();
+                        return;
+                    }
                 }
+            }
+
+            // Klick auf Angebotsslot zum Kauf
+            if (slotId == 18) {
+                if (clickType == ClickType.QUICK_MOVE) {
+                    int trades = calculateMaxTrades(player);
+                    if (trades > 0) {
+                        buyItem(player, trades);
+                    }
+                } else if (clickType == ClickType.PICKUP) {
+                    buyItem(player);
+                }
+                return;
             }
         }
         super.clicked(slotId, dragType, clickType, player);
@@ -310,31 +326,41 @@ public class SmallShopMenu extends AbstractContainerMenu {
     }
 
     private void buyItem(Player player) {
-        if (blockEntity == null) {
+        buyItem(player, 1);
+    }
+
+    private void buyItem(Player player, int trades) {
+        if (blockEntity == null || trades <= 0) {
             return;
         }
         if (!blockEntity.hasStock()) {
             player.sendSystemMessage(Component.translatable("message.marketblocks.small_shop.no_stock"));
             return;
         }
-        autoFillPayment(player);
-        if (!blockEntity.canTrade(container)) {
-            player.sendSystemMessage(Component.translatable("message.marketblocks.small_shop.payment_mismatch"));
-            return;
+        autoFillPayment(player, trades);
+        int executed = 0;
+        while (executed < trades) {
+            if (!blockEntity.canTrade(container)) {
+                if (executed == 0) {
+                    player.sendSystemMessage(Component.translatable("message.marketblocks.small_shop.payment_mismatch"));
+                }
+                break;
+            }
+            executed++;
         }
         blockEntity.performTrade(player, container);
         broadcastChanges();
     }
 
-    private void autoFillPayment(Player player) {
+    private void autoFillPayment(Player player, int trades) {
         if (blockEntity == null) {
             return;
         }
-        moveFromPlayer(player, blockEntity.getPayItemA(), 19);
-        moveFromPlayer(player, blockEntity.getPayItemB(), 20);
+        moveFromPlayer(player, blockEntity.getPayItemA(), 19, trades);
+        moveFromPlayer(player, blockEntity.getPayItemB(), 20, trades);
     }
 
-    private void moveFromPlayer(Player player, ItemStack required, int slotIndex) {
+    private void moveFromPlayer(Player player, ItemStack required, int slotIndex, int trades) {
         if (required.isEmpty()) {
             return;
         }
@@ -342,7 +368,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
         if (!slotStack.isEmpty() && !ItemStack.isSameItemSameComponents(slotStack, required)) {
             return;
         }
-        int needed = required.getCount() - slotStack.getCount();
+        int needed = required.getCount() * trades - slotStack.getCount();
         if (needed <= 0) {
             return;
         }
@@ -352,16 +378,66 @@ public class SmallShopMenu extends AbstractContainerMenu {
                 int toMove = Math.min(invStack.getCount(), needed);
                 if (slotStack.isEmpty()) {
                     slotStack = invStack.split(toMove);
-                    container.setItem(slotIndex, slotStack);
                 } else {
                     invStack.shrink(toMove);
                     slotStack.grow(toMove);
-                    container.setItem(slotIndex, slotStack);
                 }
                 needed -= toMove;
                 player.getInventory().setItem(i, invStack);
             }
         }
+        container.setItem(slotIndex, slotStack);
+    }
+
+    private int calculateMaxTrades(Player player) {
+        if (blockEntity == null) {
+            return 0;
+        }
+        ItemStack sale = blockEntity.getSaleItem();
+        ItemStack payA = blockEntity.getPayItemA();
+        if (sale.isEmpty() || payA.isEmpty()) {
+            return 0;
+        }
+
+        int stock = 0;
+        int perTrade = sale.getCount();
+        for (int i = 0; i < blockEntity.getInventory().getSlots(); i++) {
+            ItemStack stack = blockEntity.getInventory().getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(stack, sale)) {
+                stock += stack.getCount() / perTrade;
+            }
+        }
+
+        int availableA = container.getItem(19).getCount() + countItem(player, payA);
+        int trades = Math.min(stock, availableA / payA.getCount());
+
+        ItemStack payB = blockEntity.getPayItemB();
+        if (!payB.isEmpty()) {
+            int availableB = container.getItem(20).getCount() + countItem(player, payB);
+            trades = Math.min(trades, availableB / payB.getCount());
+        }
+
+        int capA = 64 / payA.getCount();
+        trades = Math.min(trades, capA);
+        if (!blockEntity.getPayItemB().isEmpty()) {
+            int capB = 64 / blockEntity.getPayItemB().getCount();
+            trades = Math.min(trades, capB);
+        }
+        return trades;
+    }
+
+    private int countItem(Player player, ItemStack stack) {
+        if (stack.isEmpty()) {
+            return 0;
+        }
+        int total = 0;
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack invStack = player.getInventory().getItem(i);
+            if (ItemStack.isSameItemSameComponents(invStack, stack)) {
+                total += invStack.getCount();
+            }
+        }
+        return total;
     }
 
     public boolean isOwnerView() {
