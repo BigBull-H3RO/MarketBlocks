@@ -12,6 +12,9 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class SmallShopOwnerScreen extends AbstractContainerScreen<SmallShopMenu> {
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop.png");
+    private Button saveButton;
+    private Button removeButton;
+    private int tab = 0;
 
     public SmallShopOwnerScreen(SmallShopMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -24,9 +27,18 @@ public class SmallShopOwnerScreen extends AbstractContainerScreen<SmallShopMenu>
         super.init();
         int x = this.leftPos;
         int y = this.topPos;
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.save"), b -> {
+        saveButton = addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.save"), b -> {
             menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_CONFIRM);
         }).pos(x + 110, y + 90).size(60, 20).build());
+        removeButton = addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.remove"), b -> {
+            menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_REMOVE);
+        }).pos(x + 110, y + 115).size(60, 20).build());
+
+        // Tab-Leiste rechts
+        addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.tab.offer"), b -> tab = 0)
+                .pos(x + this.imageWidth + 4, y + 20).size(60, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.tab.storage"), b -> tab = 1)
+                .pos(x + this.imageWidth + 4, y + 44).size(60, 20).build());
     }
 
     @Override
@@ -37,6 +49,8 @@ public class SmallShopOwnerScreen extends AbstractContainerScreen<SmallShopMenu>
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(graphics, mouseX, mouseY, partialTick);
+        saveButton.visible = tab == 0;
+        removeButton.visible = tab == 0;
         super.render(graphics, mouseX, mouseY, partialTick);
         this.renderTooltip(graphics, mouseX, mouseY);
     }

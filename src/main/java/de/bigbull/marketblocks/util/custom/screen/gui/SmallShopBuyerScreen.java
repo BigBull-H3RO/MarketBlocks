@@ -26,9 +26,13 @@ public class SmallShopBuyerScreen extends AbstractContainerScreen<SmallShopMenu>
         int y = this.topPos;
         this.addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.buy"), b -> {
             if (!menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_BUY) && this.minecraft != null && this.minecraft.player != null) {
-                this.minecraft.player.displayClientMessage(Component.literal("Kauf fehlgeschlagen"), true);
+                this.minecraft.player.displayClientMessage(Component.translatable("message.marketblocks.small_shop.buy_failed"), true);
             }
         }).pos(x + 110, y + 90).size(60, 20).build());
+
+        // Nur Angebots-Tab sichtbar
+        this.addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.tab.offer"), b -> {})
+                .pos(x + this.imageWidth + 4, y + 20).size(60, 20).build());
     }
 
     @Override

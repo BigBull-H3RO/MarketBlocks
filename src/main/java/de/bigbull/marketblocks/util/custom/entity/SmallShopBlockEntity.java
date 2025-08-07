@@ -16,10 +16,13 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity {
-    private final ItemStackHandler inventory = new ItemStackHandler(9);
+    // Lager verwaltet nun zwei 3x3-Blöcke
+    private final ItemStackHandler inventory = new ItemStackHandler(18);
     private ItemStack saleItem = ItemStack.EMPTY;
-    private ItemStack payItem = ItemStack.EMPTY;
+    private ItemStack payItemA = ItemStack.EMPTY;
+    private ItemStack payItemB = ItemStack.EMPTY;
     private ItemEntity displayItem;
+    private ItemEntity payDisplayItem;
     private UUID owner;
 
     public SmallShopBlockEntity(BlockPos pos, BlockState state) {
@@ -40,12 +43,21 @@ public class SmallShopBlockEntity extends BlockEntity {
         sync();
     }
 
-    public ItemStack getPayItem() {
-        return payItem;
+    public ItemStack getPayItemA() {
+        return payItemA;
     }
 
-    public void setPayItem(ItemStack stack) {
-        this.payItem = stack;
+    public void setPayItemA(ItemStack stack) {
+        this.payItemA = stack;
+        sync();
+    }
+
+    public ItemStack getPayItemB() {
+        return payItemB;
+    }
+
+    public void setPayItemB(ItemStack stack) {
+        this.payItemB = stack;
         sync();
     }
 
@@ -72,11 +84,22 @@ public class SmallShopBlockEntity extends BlockEntity {
         }
     }
 
+    public void setPayDisplayItem(ItemEntity item) {
+        this.payDisplayItem = item;
+    }
+
+    public void discardPayDisplayItem() {
+        if (payDisplayItem != null) {
+            payDisplayItem.discard();
+            payDisplayItem = null;
+        }
+    }
+
     /**
      * Prüft, ob genügend Lagerbestand und passende Bezahlung vorhanden sind.
      */
     public boolean canTrade(Player player) {
-        if (saleItem.isEmpty() || payItem.isEmpty()) {
+        if (saleItem.isEmpty() || payItemA.isEmpty()) {
             return false;
         }
         if (!hasStock()) {
@@ -84,23 +107,29 @@ public class SmallShopBlockEntity extends BlockEntity {
         }
 
         // Prüfe, ob der Spieler die geforderte Bezahlung inklusive NBT besitzt
-        int remaining = payItem.getCount();
-        for (int i = 0; i < player.getInventory().getContainerSize() && remaining > 0; i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (ItemStack.isSameItemSameComponents(stack, payItem)) {
-                remaining -= stack.getCount();
-            }
+        if (!hasItems(player, payItemA)) {
+            return false;
         }
-        if (remaining > 0) {
+        if (!payItemB.isEmpty() && !hasItems(player, payItemB)) {
             return false;
         }
 
         // Simuliere das Einfügen der Bezahlung ins Lager
-        ItemStack simulate = payItem.copy();
-        for (int i = 0; i < inventory.getSlots() && !simulate.isEmpty(); i++) {
-            simulate = inventory.insertItem(i, simulate, true);
+        ItemStack simulateA = payItemA.copy();
+        for (int i = 0; i < inventory.getSlots() && !simulateA.isEmpty(); i++) {
+            simulateA = inventory.insertItem(i, simulateA, true);
         }
-        return simulate.isEmpty();
+        if (!simulateA.isEmpty()) {
+            return false;
+        }
+        if (!payItemB.isEmpty()) {
+            ItemStack simulateB = payItemB.copy();
+            for (int i = 0; i < inventory.getSlots() && !simulateB.isEmpty(); i++) {
+                simulateB = inventory.insertItem(i, simulateB, true);
+            }
+            return simulateB.isEmpty();
+        }
+        return true;
     }
 
     /**
@@ -112,38 +141,48 @@ public class SmallShopBlockEntity extends BlockEntity {
         }
 
         // Simuliere erneut das Einfügen, um Race-Conditions zu vermeiden
-        ItemStack simulate = payItem.copy();
-        for (int i = 0; i < inventory.getSlots() && !simulate.isEmpty(); i++) {
-            simulate = inventory.insertItem(i, simulate, true);
+        ItemStack simulateA = payItemA.copy();
+        for (int i = 0; i < inventory.getSlots() && !simulateA.isEmpty(); i++) {
+            simulateA = inventory.insertItem(i, simulateA, true);
         }
-        if (!simulate.isEmpty()) {
+        if (!simulateA.isEmpty()) {
             return; // Lager kann die Bezahlung nicht aufnehmen
         }
 
-        // Entferne Bezahlung aus dem Spielerinventar, dabei NBT berücksichtigen
-        ItemStack payment = payItem.copy();
-        ItemStack toRemove = payItem.copy();
-        for (int i = 0; i < player.getInventory().getContainerSize() && !toRemove.isEmpty(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
-                int remove = Math.min(stack.getCount(), toRemove.getCount());
-                stack.shrink(remove);
-                player.getInventory().setItem(i, stack);
-                toRemove.shrink(remove);
+        if (!payItemB.isEmpty()) {
+            ItemStack simulateB = payItemB.copy();
+            for (int i = 0; i < inventory.getSlots() && !simulateB.isEmpty(); i++) {
+                simulateB = inventory.insertItem(i, simulateB, true);
+            }
+            if (!simulateB.isEmpty()) {
+                return; // Lager kann die Bezahlung nicht aufnehmen
             }
         }
-        if (!toRemove.isEmpty()) {
-            return; // Spieler hatte nicht genug passende Items
+        // Entferne Bezahlung A aus dem Spielerinventar
+        ItemStack paymentA = payItemA.copy();
+        removeFromPlayer(player, paymentA);
+        // Entferne Bezahlung B
+        ItemStack paymentB = payItemB.copy();
+        if (!paymentB.isEmpty()) {
+            removeFromPlayer(player, paymentB);
         }
 
-        // Füge die Bezahlung dem Lager hinzu
-        for (int i = 0; i < inventory.getSlots() && !payment.isEmpty(); i++) {
-            payment = inventory.insertItem(i, payment, false);
+        // Füge Zahlungen dem Lager hinzu
+        for (int i = 0; i < inventory.getSlots() && !paymentA.isEmpty(); i++) {
+            paymentA = inventory.insertItem(i, paymentA, false);
         }
-        if (!payment.isEmpty()) {
-            // Einfügen fehlgeschlagen, gib dem Spieler die Items zurück
-            player.addItem(payment);
+        if (!paymentA.isEmpty()) {
+            player.addItem(paymentA);
             return;
+        }
+        if (!paymentB.isEmpty()) {
+            for (int i = 0; i < inventory.getSlots() && !paymentB.isEmpty(); i++) {
+                paymentB = inventory.insertItem(i, paymentB, false);
+            }
+            if (!paymentB.isEmpty()) {
+                player.addItem(paymentB);
+                return;
+            }
         }
 
         // Entferne Verkaufsware aus dem Lager
@@ -186,6 +225,29 @@ public class SmallShopBlockEntity extends BlockEntity {
         }
     }
 
+    private boolean hasItems(Player player, ItemStack required) {
+        int remaining = required.getCount();
+        for (int i = 0; i < player.getInventory().getContainerSize() && remaining > 0; i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (ItemStack.isSameItemSameComponents(stack, required)) {
+                remaining -= stack.getCount();
+            }
+        }
+        return remaining <= 0;
+    }
+
+    private void removeFromPlayer(Player player, ItemStack toRemove) {
+        for (int i = 0; i < player.getInventory().getContainerSize() && !toRemove.isEmpty(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
+                int remove = Math.min(stack.getCount(), toRemove.getCount());
+                stack.shrink(remove);
+                player.getInventory().setItem(i, stack);
+                toRemove.shrink(remove);
+            }
+        }
+    }
+
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.saveAdditional(tag, provider);
@@ -193,8 +255,11 @@ public class SmallShopBlockEntity extends BlockEntity {
         if (!saleItem.isEmpty()) {
             tag.put("SaleItem", saleItem.save(provider));
         }
-        if (!payItem.isEmpty()) {
-            tag.put("PayItem", payItem.save(provider));
+        if (!payItemA.isEmpty()) {
+            tag.put("PayItemA", payItemA.save(provider));
+        }
+        if (!payItemB.isEmpty()) {
+            tag.put("PayItemB", payItemB.save(provider));
         }
         if (owner != null) {
             tag.putUUID("Owner", owner);
@@ -206,7 +271,8 @@ public class SmallShopBlockEntity extends BlockEntity {
         super.loadAdditional(tag, registries);
         inventory.deserializeNBT(registries, tag.getCompound("Inventory"));
         saleItem = ItemStack.parseOptional(registries, tag.getCompound("SaleItem"));
-        payItem = ItemStack.parseOptional(registries, tag.getCompound("PayItem"));
+        payItemA = ItemStack.parseOptional(registries, tag.getCompound("PayItemA"));
+        payItemB = ItemStack.parseOptional(registries, tag.getCompound("PayItemB"));
         owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
     }
 
