@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.custom.screen.gui;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -24,7 +25,9 @@ public class SmallShopBuyerScreen extends AbstractContainerScreen<SmallShopMenu>
         int x = this.leftPos;
         int y = this.topPos;
         this.addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.buy"), b -> {
-            // TODO: Kaufabwicklung
+            if (!menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_BUY) && this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(Component.literal("Kauf fehlgeschlagen"), true);
+            }
         }).pos(x + 110, y + 90).size(60, 20).build());
     }
 

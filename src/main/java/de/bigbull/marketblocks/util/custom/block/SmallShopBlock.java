@@ -6,10 +6,11 @@ import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.Container;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 
 import javax.annotation.Nullable;
@@ -66,7 +68,15 @@ public class SmallShopBlock extends BaseEntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SmallShopBlockEntity shop) {
                 boolean ownerView = player.getUUID().equals(shop.getOwner());
-                Container container = (Container) shop.getInventory();
+
+                // Erstelle einen Container mit den aktuellen Inhalten des Blocks
+                SimpleContainer container = new SimpleContainer(11);
+                for (int i = 0; i < shop.getInventory().getSlots(); i++) {
+                    container.setItem(i, shop.getInventory().getStackInSlot(i).copy());
+                }
+                container.setItem(9, shop.getSaleItem().copy());
+                container.setItem(10, shop.getPayItem().copy());
+
                 MenuProvider provider = new SimpleMenuProvider((id, inv, ply) ->
                         new SmallShopMenu(id, inv, container, shop, ownerView),
                         Component.translatable("container.small_shop"));
@@ -74,11 +84,16 @@ public class SmallShopBlock extends BaseEntityBlock {
 
                 ItemStack sale = shop.getSaleItem();
                 if (!sale.isEmpty()) {
+                    // Entferne vorhandene ItemEntities an dieser Position
+                    level.getEntitiesOfClass(ItemEntity.class, new AABB(pos)).forEach(Entity::discard);
+
+                    shop.discardDisplayItem();
                     ItemEntity item = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5, sale.copy());
                     item.setNoGravity(true);
                     item.setNeverPickUp();
                     item.setUnlimitedLifetime();
                     level.addFreshEntity(item);
+                    shop.setDisplayItem(item);
                 }
             }
         }
@@ -100,5 +115,16 @@ public class SmallShopBlock extends BaseEntityBlock {
                 shop.setOwner(player.getUUID());
             }
         }
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof SmallShopBlockEntity shop) {
+                shop.discardDisplayItem();
+            }
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 }

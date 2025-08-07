@@ -4,6 +4,7 @@ import de.bigbull.marketblocks.MarketBlocks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -16,9 +17,10 @@ public class CreativeTabInit {
         CreativeModeTab.Builder builder = CreativeModeTab.builder();
 
         builder.displayItems((itemDisplay, output) -> {
+            output.accept(RegistriesInit.SMALL_SHOP_BLOCK_ITEM.get());
 
         });
-        //builder.icon(() -> new ItemStack(ItemInit.VIBRANIUM_MACE.get()));
+        builder.icon(() -> new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK_ITEM.get()));
         builder.title(Component.translatable(MAIN_TAB_ONE_TITLE));
 
         return builder.build();

@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.custom.screen.gui;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -24,7 +25,7 @@ public class SmallShopOwnerScreen extends AbstractContainerScreen<SmallShopMenu>
         int x = this.leftPos;
         int y = this.topPos;
         this.addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.save"), b -> {
-            // TODO: Angebot speichern
+            menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_CONFIRM);
         }).pos(x + 110, y + 90).size(60, 20).build());
     }
 
