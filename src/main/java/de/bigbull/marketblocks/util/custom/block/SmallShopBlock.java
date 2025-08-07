@@ -22,8 +22,8 @@ public class SmallShopBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     public static final MapCodec<SmallShopBlock> CODEC = simpleCodec(SmallShopBlock::new);
 
-    public SmallShopBlock() {
-        super(BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.WOOD));
+    public SmallShopBlock(BlockBehaviour.Properties properties) {
+        super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
