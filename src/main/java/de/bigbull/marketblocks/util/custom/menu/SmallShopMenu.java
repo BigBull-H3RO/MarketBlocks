@@ -1,6 +1,8 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -11,19 +13,30 @@ import net.minecraft.world.item.ItemStack;
 
 public class SmallShopMenu extends AbstractContainerMenu {
     private final Container container;
+    private final SmallShopBlockEntity blockEntity;
+    private final boolean ownerView;
+
+    public static final int BUTTON_CONFIRM = 0;
+    public static final int BUTTON_BUY = 1;
 
     public SmallShopMenu(int containerId, Inventory playerInventory) {
-        this(containerId, playerInventory, true);
+        this(containerId, playerInventory, null, true);
     }
 
     public SmallShopMenu(int id, Inventory playerInventory, boolean ownerView) {
-        this(id, playerInventory, new SimpleContainer(11), ownerView);
+        this(id, playerInventory, null, ownerView);
     }
 
-    public SmallShopMenu(int id, Inventory playerInventory, Container container, boolean ownerView) {
+    public SmallShopMenu(int id, Inventory playerInventory, SmallShopBlockEntity blockEntity, boolean ownerView) {
+        this(id, playerInventory, new SimpleContainer(11), blockEntity, ownerView);
+    }
+
+    public SmallShopMenu(int id, Inventory playerInventory, Container container, SmallShopBlockEntity blockEntity, boolean ownerView) {
         super(RegistriesInit.SMALL_SHOP_MENU.get(), id);
         checkContainerSize(container, 11);
         this.container = container;
+        this.blockEntity = blockEntity;
+        this.ownerView = ownerView;
         container.startOpen(playerInventory.player);
 
         // 3x3 inventory slots
@@ -91,6 +104,9 @@ public class SmallShopMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
+        if (blockEntity != null) {
+            return player.distanceToSqr(blockEntity.getBlockPos().getCenter()) <= 64;
+        }
         return this.container.stillValid(player);
     }
 
@@ -117,5 +133,52 @@ public class SmallShopMenu extends AbstractContainerMenu {
         }
 
         return itemstack;
+    }
+
+    @Override
+    public boolean clickMenuButton(Player player, int id) {
+        if (id == BUTTON_CONFIRM) {
+            confirmOffer(player);
+            return true;
+        }
+        if (id == BUTTON_BUY) {
+            buyItem(player);
+            return true;
+        }
+        return false;
+    }
+
+    private void confirmOffer(Player player) {
+        if (!ownerView || blockEntity == null) {
+            return;
+        }
+        for (int i = 0; i < 9; i++) {
+            blockEntity.getInventory().setStackInSlot(i, container.getItem(i));
+        }
+        blockEntity.setSaleItem(container.getItem(9));
+        blockEntity.setPayItem(container.getItem(10));
+        blockEntity.setChanged();
+        if (blockEntity.getLevel() != null) {
+            blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), 3);
+        }
+    }
+
+    private void buyItem(Player player) {
+        if (blockEntity == null) {
+            return;
+        }
+        if (!blockEntity.hasStock()) {
+            player.sendSystemMessage(Component.literal("Lager ist leer"));
+            return;
+        }
+        if (!blockEntity.canTrade(player)) {
+            player.sendSystemMessage(Component.literal("Bezahlung passt nicht"));
+            return;
+        }
+        blockEntity.performTrade(player);
+    }
+
+    public boolean isOwnerView() {
+        return ownerView;
     }
 }

@@ -2,9 +2,16 @@ package de.bigbull.marketblocks.util.custom.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.Container;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -15,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.BlockHitResult;
 
 import javax.annotation.Nullable;
 
@@ -28,7 +36,7 @@ public class SmallShopBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
+    protected MapCodec<? extends SmallShopBlock> codec() {
         return CODEC;
     }
 
@@ -50,6 +58,31 @@ public class SmallShopBlock extends BaseEntityBlock {
     @Override
     public BlockState mirror(BlockState state, Mirror mirror) {
         return state.rotate(mirror.getRotation(state.getValue(FACING)));
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+        if (!level.isClientSide) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof SmallShopBlockEntity shop) {
+                boolean ownerView = player.getUUID().equals(shop.getOwner());
+                Container container = (Container) shop.getInventory();
+                MenuProvider provider = new SimpleMenuProvider((id, inv, ply) ->
+                        new SmallShopMenu(id, inv, container, shop, ownerView),
+                        Component.translatable("container.small_shop"));
+                player.openMenu(provider);
+
+                ItemStack sale = shop.getSaleItem();
+                if (!sale.isEmpty()) {
+                    ItemEntity item = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5, sale.copy());
+                    item.setNoGravity(true);
+                    item.setNeverPickUp();
+                    item.setUnlimitedLifetime();
+                    level.addFreshEntity(item);
+                }
+            }
+        }
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Nullable
