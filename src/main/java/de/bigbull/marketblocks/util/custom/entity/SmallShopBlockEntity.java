@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -96,9 +97,9 @@ public class SmallShopBlockEntity extends BlockEntity {
     }
 
     /**
-     * Prüft, ob genügend Lagerbestand und passende Bezahlung vorhanden sind.
+     * Prüft, ob genügend Lagerbestand und passende Bezahlung in den angegebenen Slots vorhanden sind.
      */
-    public boolean canTrade(Player player) {
+    public boolean canTrade(Container paymentContainer) {
         if (saleItem.isEmpty() || payItemA.isEmpty()) {
             return false;
         }
@@ -106,12 +107,15 @@ public class SmallShopBlockEntity extends BlockEntity {
             return false;
         }
 
-        // Prüfe, ob der Spieler die geforderte Bezahlung inklusive NBT besitzt
-        if (!hasItems(player, payItemA)) {
+        ItemStack slotA = paymentContainer.getItem(19);
+        ItemStack slotB = paymentContainer.getItem(20);
+        if (!ItemStack.isSameItemSameComponents(slotA, payItemA) || slotA.getCount() < payItemA.getCount()) {
             return false;
         }
-        if (!payItemB.isEmpty() && !hasItems(player, payItemB)) {
-            return false;
+        if (!payItemB.isEmpty()) {
+            if (!ItemStack.isSameItemSameComponents(slotB, payItemB) || slotB.getCount() < payItemB.getCount()) {
+                return false;
+            }
         }
 
         // Simuliere das Einfügen der Bezahlung ins Lager
@@ -127,16 +131,18 @@ public class SmallShopBlockEntity extends BlockEntity {
             for (int i = 0; i < inventory.getSlots() && !simulateB.isEmpty(); i++) {
                 simulateB = inventory.insertItem(i, simulateB, true);
             }
-            return simulateB.isEmpty();
+            if (!simulateB.isEmpty()) {
+                return false;
+            }
         }
         return true;
     }
 
     /**
-     * Führt den Kauf aus und regelt Übergabe und Abzug der Items.
+     * Führt den Kauf aus und regelt Übergabe und Abzug der Items aus den Bezahl-Slots.
      */
-    public void performTrade(Player player) {
-        if (!canTrade(player)) {
+    public void performTrade(Player player, Container paymentContainer) {
+        if (!canTrade(paymentContainer)) {
             return;
         }
 
@@ -158,16 +164,18 @@ public class SmallShopBlockEntity extends BlockEntity {
                 return; // Lager kann die Bezahlung nicht aufnehmen
             }
         }
-        // Entferne Bezahlung A aus dem Spielerinventar
-        ItemStack paymentA = payItemA.copy();
-        removeFromPlayer(player, paymentA);
-        // Entferne Bezahlung B
-        ItemStack paymentB = payItemB.copy();
-        if (!paymentB.isEmpty()) {
-            removeFromPlayer(player, paymentB);
+        // Entferne Bezahlung aus den Slots
+        ItemStack slotA = paymentContainer.getItem(19);
+        slotA.shrink(payItemA.getCount());
+        paymentContainer.setItem(19, slotA.isEmpty() ? ItemStack.EMPTY : slotA);
+        ItemStack slotB = paymentContainer.getItem(20);
+        if (!payItemB.isEmpty()) {
+            slotB.shrink(payItemB.getCount());
+            paymentContainer.setItem(20, slotB.isEmpty() ? ItemStack.EMPTY : slotB);
         }
 
         // Füge Zahlungen dem Lager hinzu
+        ItemStack paymentA = payItemA.copy();
         for (int i = 0; i < inventory.getSlots() && !paymentA.isEmpty(); i++) {
             paymentA = inventory.insertItem(i, paymentA, false);
         }
@@ -175,7 +183,8 @@ public class SmallShopBlockEntity extends BlockEntity {
             player.addItem(paymentA);
             return;
         }
-        if (!paymentB.isEmpty()) {
+        if (!payItemB.isEmpty()) {
+            ItemStack paymentB = payItemB.copy();
             for (int i = 0; i < inventory.getSlots() && !paymentB.isEmpty(); i++) {
                 paymentB = inventory.insertItem(i, paymentB, false);
             }
@@ -222,29 +231,6 @@ public class SmallShopBlockEntity extends BlockEntity {
         if (level != null) {
             BlockState state = getBlockState();
             level.sendBlockUpdated(getBlockPos(), state, state, 3);
-        }
-    }
-
-    private boolean hasItems(Player player, ItemStack required) {
-        int remaining = required.getCount();
-        for (int i = 0; i < player.getInventory().getContainerSize() && remaining > 0; i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (ItemStack.isSameItemSameComponents(stack, required)) {
-                remaining -= stack.getCount();
-            }
-        }
-        return remaining <= 0;
-    }
-
-    private void removeFromPlayer(Player player, ItemStack toRemove) {
-        for (int i = 0; i < player.getInventory().getContainerSize() && !toRemove.isEmpty(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
-                int remove = Math.min(stack.getCount(), toRemove.getCount());
-                stack.shrink(remove);
-                player.getInventory().setItem(i, stack);
-                toRemove.shrink(remove);
-            }
         }
     }
 

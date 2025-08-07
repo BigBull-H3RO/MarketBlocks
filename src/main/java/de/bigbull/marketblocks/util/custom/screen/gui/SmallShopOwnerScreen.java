@@ -35,10 +35,17 @@ public class SmallShopOwnerScreen extends AbstractContainerScreen<SmallShopMenu>
         }).pos(x + 110, y + 115).size(60, 20).build());
 
         // Tab-Leiste rechts
-        addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.tab.offer"), b -> tab = 0)
-                .pos(x + this.imageWidth + 4, y + 20).size(60, 20).build());
-        addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.tab.storage"), b -> tab = 1)
-                .pos(x + this.imageWidth + 4, y + 44).size(60, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.tab.offer"), b -> {
+            tab = 0;
+            menu.setActiveTab(0);
+            menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_TAB_OFFER);
+        }).pos(x + this.imageWidth + 4, y + 20).size(60, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("screen.marketblocks.small_shop.tab.storage"), b -> {
+            tab = 1;
+            menu.setActiveTab(1);
+            menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_TAB_STORAGE);
+        }).pos(x + this.imageWidth + 4, y + 44).size(60, 20).build());
+        menu.setActiveTab(tab);
     }
 
     @Override

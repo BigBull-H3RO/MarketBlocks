@@ -2,6 +2,7 @@ package de.bigbull.marketblocks;
 
 import com.mojang.logging.LogUtils;
 import de.bigbull.marketblocks.config.Config;
+import de.bigbull.marketblocks.data.DataGenerators;
 import de.bigbull.marketblocks.util.CreativeTabInit;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import net.neoforged.bus.api.IEventBus;
@@ -21,6 +22,7 @@ public class MarketBlocks {
 
     public MarketBlocks(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(DataGenerators::gatherData);
 
         NeoForge.EVENT_BUS.register(this);
 
