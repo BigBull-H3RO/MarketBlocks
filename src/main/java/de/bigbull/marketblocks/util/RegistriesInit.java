@@ -44,10 +44,8 @@ public class RegistriesInit {
     public static class ClientRegistry {
         @SubscribeEvent
         public static void registerScreens(RegisterMenuScreensEvent event) {
-            event.register(SMALL_SHOP_MENU.get(), (menu, inventory, title) ->
-                    menu.isOwnerView()
-                            ? new SmallShopOwnerScreen(menu, inventory, title)
-                            : new SmallShopBuyerScreen(menu, inventory, title));
+            event.register(SMALL_SHOP_MENU.get(), SmallShopBuyerScreen::new);
+            event.register(SMALL_SHOP_MENU.get(), SmallShopOwnerScreen::new);
         }
     }
 
