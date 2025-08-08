@@ -33,21 +33,21 @@ public class SmallShopMenu extends AbstractContainerMenu {
     }
 
     public SmallShopMenu(int id, Inventory playerInventory, SmallShopBlockEntity blockEntity, boolean ownerView) {
-        this(id, playerInventory, new SimpleContainer(21), blockEntity, ownerView);
+        this(id, playerInventory, new SimpleContainer(27), blockEntity, ownerView);
     }
 
     public SmallShopMenu(int id, Inventory playerInventory, Container container, SmallShopBlockEntity blockEntity, boolean ownerView) {
         super(RegistriesInit.SMALL_SHOP_MENU.get(), id);
-        checkContainerSize(container, 21);
+        checkContainerSize(container, 27);
         this.container = container;
         this.blockEntity = blockEntity;
         this.ownerView = ownerView;
         container.startOpen(playerInventory.player);
 
-        // 3x3 Output slots (0-8)
+        // 3x4 Output slots (0-11)
         for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 3; ++col) {
-                int index = col + row * 3;
+            for (int col = 0; col < 4; ++col) {
+                int index = col + row * 4;
                 int x = 8 + col * 18;
                 int y = 18 + row * 18;
                 this.addSlot(new Slot(container, index, x, y) {
@@ -69,11 +69,11 @@ public class SmallShopMenu extends AbstractContainerMenu {
             }
         }
 
-        // 3x3 Input slots (9-17)
+        // 3x4 Input slots (12-23)
         for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 3; ++col) {
-                int index = 9 + col + row * 3;
-                int x = 80 + col * 18;
+            for (int col = 0; col < 4; ++col) {
+                int index = 12 + col + row * 4;
+                int x = 98 + col * 18;
                 int y = 18 + row * 18;
                 this.addSlot(new Slot(container, index, x, y) {
                     @Override
@@ -95,7 +95,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
         }
 
         // Sale item slot
-        this.addSlot(new Slot(container, 18, 134, 18) {
+        this.addSlot(new Slot(container, 24, 170, 18) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return ownerView && activeTab == 0;
@@ -113,7 +113,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
         });
 
         // Payment item slots
-        this.addSlot(new Slot(container, 19, 134, 54) {
+        this.addSlot(new Slot(container, 25, 170, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return true;
@@ -130,7 +130,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
             }
         });
 
-        this.addSlot(new Slot(container, 20, 134, 72) {
+        this.addSlot(new Slot(container, 26, 170, 72) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return true;
@@ -183,11 +183,11 @@ public class SmallShopMenu extends AbstractContainerMenu {
         if (slot.hasItem()) {
             ItemStack stack = slot.getItem();
             itemstack = stack.copy();
-            if (index < 21) {
-                if (!this.moveItemStackTo(stack, 21, 57, true)) {
+            if (index < 27) {
+                if (!this.moveItemStackTo(stack, 27, 63, true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.moveItemStackTo(stack, 0, 21, false)) {
+            } else if (!this.moveItemStackTo(stack, 0, 27, false)) {
                 return ItemStack.EMPTY;
             }
 
@@ -205,7 +205,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
     public void clicked(int slotId, int dragType, ClickType clickType, Player player) {
         if (!ownerView) {
             // Shift-Klick aus Spielerinventar in Bezahl-Slots
-            if (clickType == ClickType.QUICK_MOVE && slotId >= 21 && slotId < this.slots.size()) {
+            if (clickType == ClickType.QUICK_MOVE && slotId >= 27 && slotId < this.slots.size()) {
                 Slot slot = this.slots.get(slotId);
                 if (slot != null && slot.hasItem()) {
                     ItemStack stack = slot.getItem();
@@ -219,7 +219,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
             }
 
             // Klick auf Angebotsslot zum Kauf
-            if (slotId == 18) {
+            if (slotId == 24) {
                 if (clickType == ClickType.QUICK_MOVE) {
                     int trades = calculateMaxTrades(player);
                     if (trades > 0) {
@@ -240,10 +240,10 @@ public class SmallShopMenu extends AbstractContainerMenu {
         }
         boolean moved = false;
         if (matchesPayItem(stack, blockEntity.getPayItemA())) {
-            moved |= fillPaySlot(stack, 19, blockEntity.getPayItemA());
+            moved |= fillPaySlot(stack, 25, blockEntity.getPayItemA());
         }
         if (matchesPayItem(stack, blockEntity.getPayItemB())) {
-            moved |= fillPaySlot(stack, 20, blockEntity.getPayItemB());
+            moved |= fillPaySlot(stack, 26, blockEntity.getPayItemB());
         }
         return moved;
     }
@@ -301,12 +301,12 @@ public class SmallShopMenu extends AbstractContainerMenu {
         if (!ownerView || blockEntity == null) {
             return;
         }
-        for (int i = 0; i < 18; i++) {
+        for (int i = 0; i < 24; i++) {
             blockEntity.getInventory().setStackInSlot(i, container.getItem(i));
         }
-        blockEntity.setSaleItem(container.getItem(18));
-        blockEntity.setPayItemA(container.getItem(19));
-        blockEntity.setPayItemB(container.getItem(20));
+        blockEntity.setSaleItem(container.getItem(24));
+        blockEntity.setPayItemA(container.getItem(25));
+        blockEntity.setPayItemB(container.getItem(26));
         blockEntity.setChanged();
         if (blockEntity.getLevel() != null) {
             blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), 3);
@@ -320,9 +320,9 @@ public class SmallShopMenu extends AbstractContainerMenu {
         blockEntity.setSaleItem(ItemStack.EMPTY);
         blockEntity.setPayItemA(ItemStack.EMPTY);
         blockEntity.setPayItemB(ItemStack.EMPTY);
-        container.setItem(18, ItemStack.EMPTY);
-        container.setItem(19, ItemStack.EMPTY);
-        container.setItem(20, ItemStack.EMPTY);
+        container.setItem(24, ItemStack.EMPTY);
+        container.setItem(25, ItemStack.EMPTY);
+        container.setItem(26, ItemStack.EMPTY);
     }
 
     private void buyItem(Player player) {
@@ -346,18 +346,18 @@ public class SmallShopMenu extends AbstractContainerMenu {
                 }
                 break;
             }
+            blockEntity.performTrade(player, container);
             executed++;
+            broadcastChanges();
         }
-        blockEntity.performTrade(player, container);
-        broadcastChanges();
     }
 
     private void autoFillPayment(Player player, int trades) {
         if (blockEntity == null) {
             return;
         }
-        moveFromPlayer(player, blockEntity.getPayItemA(), 19, trades);
-        moveFromPlayer(player, blockEntity.getPayItemB(), 20, trades);
+        moveFromPlayer(player, blockEntity.getPayItemA(), 25, trades);
+        moveFromPlayer(player, blockEntity.getPayItemB(), 26, trades);
     }
 
     private void moveFromPlayer(Player player, ItemStack required, int slotIndex, int trades) {
@@ -408,12 +408,12 @@ public class SmallShopMenu extends AbstractContainerMenu {
             }
         }
 
-        int availableA = container.getItem(19).getCount() + countItem(player, payA);
+        int availableA = container.getItem(25).getCount() + countItem(player, payA);
         int trades = Math.min(stock, availableA / payA.getCount());
 
         ItemStack payB = blockEntity.getPayItemB();
         if (!payB.isEmpty()) {
-            int availableB = container.getItem(20).getCount() + countItem(player, payB);
+            int availableB = container.getItem(26).getCount() + countItem(player, payB);
             trades = Math.min(trades, availableB / payB.getCount());
         }
 

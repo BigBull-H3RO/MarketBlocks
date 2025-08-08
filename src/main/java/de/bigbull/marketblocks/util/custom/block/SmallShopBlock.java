@@ -67,13 +67,13 @@ public class SmallShopBlock extends BaseEntityBlock {
                 boolean ownerView = player.getUUID().equals(shop.getOwner());
 
                 // Erstelle einen Container mit den aktuellen Inhalten des Blocks
-                SimpleContainer container = new SimpleContainer(21);
+                SimpleContainer container = new SimpleContainer(27);
                 for (int i = 0; i < shop.getInventory().getSlots(); i++) {
                     container.setItem(i, shop.getInventory().getStackInSlot(i).copy());
                 }
-                container.setItem(18, shop.getSaleItem().copy());
-                container.setItem(19, shop.getPayItemA().copy());
-                container.setItem(20, shop.getPayItemB().copy());
+                container.setItem(24, shop.getSaleItem().copy());
+                container.setItem(25, shop.getPayItemA().copy());
+                container.setItem(26, shop.getPayItemB().copy());
 
                 MenuProvider provider = new SimpleMenuProvider((id, inv, ply) ->
                         new SmallShopMenu(id, inv, container, shop, ownerView),
@@ -93,19 +93,35 @@ public class SmallShopBlock extends BaseEntityBlock {
                     level.addFreshEntity(item);
                     shop.setDisplayItem(item);
 
-                    // Visualisiere Zahlungs-Item vor dem Block
-                    ItemStack pay = shop.getPayItemA();
-                    if (!pay.isEmpty()) {
-                        shop.discardPayDisplayItem();
-                        Direction facing = state.getValue(FACING);
-                        double offX = pos.getX() + 0.5 + facing.getStepX() * 0.7;
-                        double offZ = pos.getZ() + 0.5 + facing.getStepZ() * 0.7;
-                        ItemEntity payItem = new ItemEntity(level, offX, pos.getY() + 1.0, offZ, pay.copy());
-                        payItem.setNoGravity(true);
-                        payItem.setNeverPickUp();
-                        payItem.setUnlimitedLifetime();
-                        level.addFreshEntity(payItem);
-                        shop.setPayDisplayItem(payItem);
+                    // Visualisiere Zahlungs-Items vor dem Block
+                    shop.discardPayDisplayItemA();
+                    shop.discardPayDisplayItemB();
+
+                    Direction facing = state.getValue(FACING);
+                    double offX = pos.getX() + 0.5 + facing.getStepX() * 0.7;
+                    double offZ = pos.getZ() + 0.5 + facing.getStepZ() * 0.7;
+
+                    ItemStack payA = shop.getPayItemA();
+                    if (!payA.isEmpty()) {
+                        ItemEntity payItemA = new ItemEntity(level, offX, pos.getY() + 1.0, offZ, payA.copy());
+                        payItemA.setNoGravity(true);
+                        payItemA.setNeverPickUp();
+                        payItemA.setUnlimitedLifetime();
+                        level.addFreshEntity(payItemA);
+                        shop.setPayDisplayItemA(payItemA);
+                    }
+
+                    ItemStack payB = shop.getPayItemB();
+                    if (!payB.isEmpty()) {
+                        Direction side = facing.getClockWise();
+                        double offXB = offX + side.getStepX() * 0.25;
+                        double offZB = offZ + side.getStepZ() * 0.25;
+                        ItemEntity payItemB = new ItemEntity(level, offXB, pos.getY() + 1.0, offZB, payB.copy());
+                        payItemB.setNoGravity(true);
+                        payItemB.setNeverPickUp();
+                        payItemB.setUnlimitedLifetime();
+                        level.addFreshEntity(payItemB);
+                        shop.setPayDisplayItemB(payItemB);
                     }
                 }
             }
@@ -136,7 +152,8 @@ public class SmallShopBlock extends BaseEntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SmallShopBlockEntity shop) {
                 shop.discardDisplayItem();
-                shop.discardPayDisplayItem();
+                shop.discardPayDisplayItemA();
+                shop.discardPayDisplayItemB();
 
                 SimpleContainer container = new SimpleContainer(shop.getInventory().getSlots());
                 for (int i = 0; i < shop.getInventory().getSlots(); i++) {

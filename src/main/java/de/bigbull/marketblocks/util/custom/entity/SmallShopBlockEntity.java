@@ -17,13 +17,14 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity {
-    // Lager verwaltet nun zwei 3x3-Blöcke
-    private final ItemStackHandler inventory = new ItemStackHandler(18);
+    // Lager verwaltet nun zwei 3x4-Blöcke
+    private final ItemStackHandler inventory = new ItemStackHandler(24);
     private ItemStack saleItem = ItemStack.EMPTY;
     private ItemStack payItemA = ItemStack.EMPTY;
     private ItemStack payItemB = ItemStack.EMPTY;
     private ItemEntity displayItem;
-    private ItemEntity payDisplayItem;
+    private ItemEntity payDisplayItemA;
+    private ItemEntity payDisplayItemB;
     private UUID owner;
 
     public SmallShopBlockEntity(BlockPos pos, BlockState state) {
@@ -85,14 +86,25 @@ public class SmallShopBlockEntity extends BlockEntity {
         }
     }
 
-    public void setPayDisplayItem(ItemEntity item) {
-        this.payDisplayItem = item;
+    public void setPayDisplayItemA(ItemEntity item) {
+        this.payDisplayItemA = item;
     }
 
-    public void discardPayDisplayItem() {
-        if (payDisplayItem != null) {
-            payDisplayItem.discard();
-            payDisplayItem = null;
+    public void discardPayDisplayItemA() {
+        if (payDisplayItemA != null) {
+            payDisplayItemA.discard();
+            payDisplayItemA = null;
+        }
+    }
+
+    public void setPayDisplayItemB(ItemEntity item) {
+        this.payDisplayItemB = item;
+    }
+
+    public void discardPayDisplayItemB() {
+        if (payDisplayItemB != null) {
+            payDisplayItemB.discard();
+            payDisplayItemB = null;
         }
     }
 
@@ -107,8 +119,8 @@ public class SmallShopBlockEntity extends BlockEntity {
             return false;
         }
 
-        ItemStack slotA = paymentContainer.getItem(19);
-        ItemStack slotB = paymentContainer.getItem(20);
+        ItemStack slotA = paymentContainer.getItem(25);
+        ItemStack slotB = paymentContainer.getItem(26);
         if (!ItemStack.isSameItemSameComponents(slotA, payItemA) || slotA.getCount() < payItemA.getCount()) {
             return false;
         }
@@ -165,13 +177,13 @@ public class SmallShopBlockEntity extends BlockEntity {
             }
         }
         // Entferne Bezahlung aus den Slots
-        ItemStack slotA = paymentContainer.getItem(19);
+        ItemStack slotA = paymentContainer.getItem(25);
         slotA.shrink(payItemA.getCount());
-        paymentContainer.setItem(19, slotA.isEmpty() ? ItemStack.EMPTY : slotA);
-        ItemStack slotB = paymentContainer.getItem(20);
+        paymentContainer.setItem(25, slotA.isEmpty() ? ItemStack.EMPTY : slotA);
+        ItemStack slotB = paymentContainer.getItem(26);
         if (!payItemB.isEmpty()) {
             slotB.shrink(payItemB.getCount());
-            paymentContainer.setItem(20, slotB.isEmpty() ? ItemStack.EMPTY : slotB);
+            paymentContainer.setItem(26, slotB.isEmpty() ? ItemStack.EMPTY : slotB);
         }
 
         // Füge Zahlungen dem Lager hinzu
