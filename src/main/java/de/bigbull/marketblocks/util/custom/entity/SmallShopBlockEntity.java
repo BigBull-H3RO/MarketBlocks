@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.custom.entity;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -40,8 +41,8 @@ public class SmallShopBlockEntity extends BlockEntity {
     }
 
     public void setSaleItem(ItemStack stack) {
-        discardDisplayItem();
         this.saleItem = stack;
+        updateDisplayItems();
         sync();
     }
 
@@ -51,6 +52,7 @@ public class SmallShopBlockEntity extends BlockEntity {
 
     public void setPayItemA(ItemStack stack) {
         this.payItemA = stack;
+        updateDisplayItems();
         sync();
     }
 
@@ -60,6 +62,7 @@ public class SmallShopBlockEntity extends BlockEntity {
 
     public void setPayItemB(ItemStack stack) {
         this.payItemB = stack;
+        updateDisplayItems();
         sync();
     }
 
@@ -105,6 +108,57 @@ public class SmallShopBlockEntity extends BlockEntity {
         if (payDisplayItemB != null) {
             payDisplayItemB.discard();
             payDisplayItemB = null;
+        }
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) {
+            updateDisplayItems();
+        }
+    }
+
+    private void updateDisplayItems() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        discardDisplayItem();
+        discardPayDisplayItemA();
+        discardPayDisplayItemB();
+        if (saleItem.isEmpty()) {
+            return;
+        }
+        BlockPos pos = getBlockPos();
+        ItemEntity sale = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5, saleItem.copy());
+        sale.setNoGravity(true);
+        sale.setNeverPickUp();
+        sale.setUnlimitedLifetime();
+        level.addFreshEntity(sale);
+        setDisplayItem(sale);
+
+        Direction facing = getBlockState().getValue(de.bigbull.marketblocks.util.custom.block.SmallShopBlock.FACING);
+        double offX = pos.getX() + 0.5 + facing.getStepX() * 0.7;
+        double offZ = pos.getZ() + 0.5 + facing.getStepZ() * 0.7;
+
+        if (!payItemA.isEmpty()) {
+            ItemEntity payA = new ItemEntity(level, offX, pos.getY() + 1.0, offZ, payItemA.copy());
+            payA.setNoGravity(true);
+            payA.setNeverPickUp();
+            payA.setUnlimitedLifetime();
+            level.addFreshEntity(payA);
+            setPayDisplayItemA(payA);
+        }
+        if (!payItemB.isEmpty()) {
+            Direction side = facing.getClockWise();
+            double offXB = offX + side.getStepX() * 0.25;
+            double offZB = offZ + side.getStepZ() * 0.25;
+            ItemEntity payB = new ItemEntity(level, offXB, pos.getY() + 1.0, offZB, payItemB.copy());
+            payB.setNoGravity(true);
+            payB.setNeverPickUp();
+            payB.setUnlimitedLifetime();
+            level.addFreshEntity(payB);
+            setPayDisplayItemB(payB);
         }
     }
 

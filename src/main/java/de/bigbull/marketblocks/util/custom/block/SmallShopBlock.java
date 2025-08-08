@@ -7,9 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.*;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -20,7 +18,6 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 
 import javax.annotation.Nullable;
@@ -79,51 +76,6 @@ public class SmallShopBlock extends BaseEntityBlock {
                         new SmallShopMenu(id, inv, container, shop, ownerView),
                         Component.translatable("container.small_shop"));
                 player.openMenu(provider);
-
-                ItemStack sale = shop.getSaleItem();
-                if (!sale.isEmpty()) {
-                    // Entferne vorhandene ItemEntities an dieser Position
-                    level.getEntitiesOfClass(ItemEntity.class, new AABB(pos)).forEach(Entity::discard);
-
-                    shop.discardDisplayItem();
-                    ItemEntity item = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5, sale.copy());
-                    item.setNoGravity(true);
-                    item.setNeverPickUp();
-                    item.setUnlimitedLifetime();
-                    level.addFreshEntity(item);
-                    shop.setDisplayItem(item);
-
-                    // Visualisiere Zahlungs-Items vor dem Block
-                    shop.discardPayDisplayItemA();
-                    shop.discardPayDisplayItemB();
-
-                    Direction facing = state.getValue(FACING);
-                    double offX = pos.getX() + 0.5 + facing.getStepX() * 0.7;
-                    double offZ = pos.getZ() + 0.5 + facing.getStepZ() * 0.7;
-
-                    ItemStack payA = shop.getPayItemA();
-                    if (!payA.isEmpty()) {
-                        ItemEntity payItemA = new ItemEntity(level, offX, pos.getY() + 1.0, offZ, payA.copy());
-                        payItemA.setNoGravity(true);
-                        payItemA.setNeverPickUp();
-                        payItemA.setUnlimitedLifetime();
-                        level.addFreshEntity(payItemA);
-                        shop.setPayDisplayItemA(payItemA);
-                    }
-
-                    ItemStack payB = shop.getPayItemB();
-                    if (!payB.isEmpty()) {
-                        Direction side = facing.getClockWise();
-                        double offXB = offX + side.getStepX() * 0.25;
-                        double offZB = offZ + side.getStepZ() * 0.25;
-                        ItemEntity payItemB = new ItemEntity(level, offXB, pos.getY() + 1.0, offZB, payB.copy());
-                        payItemB.setNoGravity(true);
-                        payItemB.setNeverPickUp();
-                        payItemB.setUnlimitedLifetime();
-                        level.addFreshEntity(payItemB);
-                        shop.setPayDisplayItemB(payItemB);
-                    }
-                }
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

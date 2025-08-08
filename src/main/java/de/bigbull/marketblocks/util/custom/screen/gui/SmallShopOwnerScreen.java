@@ -2,15 +2,19 @@ package de.bigbull.marketblocks.util.custom.screen.gui;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
+import de.bigbull.marketblocks.util.custom.screen.SmallShopScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-public class SmallShopOwnerScreen extends AbstractContainerScreen<SmallShopMenu> {
+/**
+ * Besitzeransicht für den Small Shop. Erweitert {@link SmallShopScreen} um
+ * Speicher- und Angebots-Tab sowie entsprechende Buttons.
+ */
+public class SmallShopOwnerScreen extends SmallShopScreen {
     private static final ResourceLocation TEXTURE_OFFER = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop.png");
     private static final ResourceLocation TEXTURE_STORAGE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/shop_storage.png");
     private Button saveButton;
@@ -19,8 +23,6 @@ public class SmallShopOwnerScreen extends AbstractContainerScreen<SmallShopMenu>
 
     public SmallShopOwnerScreen(SmallShopMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
-        this.imageWidth = 176;
-        this.imageHeight = 166;
     }
 
     @Override
@@ -50,17 +52,14 @@ public class SmallShopOwnerScreen extends AbstractContainerScreen<SmallShopMenu>
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        ResourceLocation texture = tab == 0 ? TEXTURE_OFFER : TEXTURE_STORAGE;
-        graphics.blit(texture, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+    protected ResourceLocation getBackgroundTexture() {
+        return tab == 0 ? TEXTURE_OFFER : TEXTURE_STORAGE;
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics, mouseX, mouseY, partialTick);
         saveButton.visible = tab == 0;
         removeButton.visible = tab == 0;
         super.render(graphics, mouseX, mouseY, partialTick);
-        this.renderTooltip(graphics, mouseX, mouseY);
     }
 }
