@@ -78,7 +78,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
                 this.addSlot(new Slot(container, index, x, y) {
                     @Override
                     public boolean mayPlace(ItemStack stack) {
-                        return ownerView && activeTab == 1 && isSaleItem(stack);
+                        return ownerView && activeTab == 1 && (!hasSaleItem() || isSaleItem(stack));
                     }
 
                     @Override
@@ -94,8 +94,11 @@ public class SmallShopMenu extends AbstractContainerMenu {
             }
         }
 
-        // Sale item slot
-        this.addSlot(new Slot(container, 24, 170, 54) {
+        // Zentrierte Verkaufs- und Bezahl-Slots
+        int centeredX = (176 - 3 * 18) / 2;
+
+        // Sale item slot (rechts)
+        this.addSlot(new Slot(container, 24, centeredX + 59, 52) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return ownerView && activeTab == 0;
@@ -112,8 +115,8 @@ public class SmallShopMenu extends AbstractContainerMenu {
             }
         });
 
-        // Payment item slots
-        this.addSlot(new Slot(container, 25, 116, 54) {
+        // Payment item slots (links)
+        this.addSlot(new Slot(container, 25, centeredX - 25, 52) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return true;
@@ -130,7 +133,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
             }
         });
 
-        this.addSlot(new Slot(container, 26, 134, 54) {
+        this.addSlot(new Slot(container, 26, centeredX + 1, 52) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return true;
@@ -253,12 +256,16 @@ public class SmallShopMenu extends AbstractContainerMenu {
         return !required.isEmpty() && ItemStack.isSameItemSameComponents(stack, required);
     }
 
+    private boolean hasSaleItem() {
+        return blockEntity != null && !blockEntity.getSaleItem().isEmpty();
+    }
+
     private boolean isSaleItem(ItemStack stack) {
-        if (blockEntity == null) {
+        if (!hasSaleItem()) {
             return false;
         }
         ItemStack saleItem = blockEntity.getSaleItem();
-        return !saleItem.isEmpty() && ItemStack.isSameItemSameComponents(stack, saleItem);
+        return ItemStack.isSameItemSameComponents(stack, saleItem);
     }
 
     private boolean fillPaySlot(ItemStack from, int slotIndex, ItemStack required) {
@@ -320,6 +327,10 @@ public class SmallShopMenu extends AbstractContainerMenu {
         if (blockEntity.getLevel() != null) {
             blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), 3);
         }
+        container.setItem(24, ItemStack.EMPTY);
+        container.setItem(25, ItemStack.EMPTY);
+        container.setItem(26, ItemStack.EMPTY);
+        broadcastChanges();
     }
 
     private void removeOffer(Player player) {
@@ -448,6 +459,19 @@ public class SmallShopMenu extends AbstractContainerMenu {
         }
         return total;
     }
+
+    public ItemStack getSaleItem() {
+        return blockEntity != null ? blockEntity.getSaleItem() : ItemStack.EMPTY;
+    }
+
+    public ItemStack getPayItemA() {
+        return blockEntity != null ? blockEntity.getPayItemA() : ItemStack.EMPTY;
+    }
+
+    public ItemStack getPayItemB() {
+        return blockEntity != null ? blockEntity.getPayItemB() : ItemStack.EMPTY;
+    }
+
 
     public boolean isOwnerView() {
         return ownerView;

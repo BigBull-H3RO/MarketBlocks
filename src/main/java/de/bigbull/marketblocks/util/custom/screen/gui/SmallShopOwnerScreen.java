@@ -43,11 +43,13 @@ public class SmallShopOwnerScreen extends SmallShopScreen {
         super.init();
         int x = this.leftPos;
         int y = this.topPos;
-        saveButton = addRenderableWidget(new IconButton(x + 110, y + 90, 20, 20, BUTTON_SPRITES, ICON_CONFIRM, b -> {
+        int rightX = x + this.imageWidth - 24;
+
+        saveButton = addRenderableWidget(new IconButton(rightX, y + 4, 20, 20, BUTTON_SPRITES, ICON_CONFIRM, b -> {
             menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_CONFIRM);
         }, Component.translatable("screen.marketblocks.small_shop.save"), () -> false));
 
-        removeButton = addRenderableWidget(new IconButton(x + 110, y + 115, 20, 20, BUTTON_SPRITES, ICON_CANCEL, b -> {
+        removeButton = addRenderableWidget(new IconButton(rightX, y + 28, 20, 20, BUTTON_SPRITES, ICON_CANCEL, b -> {
             menu.clickMenuButton(Minecraft.getInstance().player, SmallShopMenu.BUTTON_REMOVE);
         }, Component.translatable("screen.marketblocks.small_shop.remove"), () -> false));
         removeButton.setTooltip(Tooltip.create(Component.translatable("screen.marketblocks.small_shop.remove")));

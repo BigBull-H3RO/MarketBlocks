@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
     private static final ResourceLocation DEFAULT_TEXTURE =
@@ -34,6 +35,25 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         guiGraphics.blit(getBackgroundTexture(), this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+        renderOfferOverlay(guiGraphics);
+    }
+
+    private void renderOfferOverlay(GuiGraphics guiGraphics) {
+        ItemStack sale = menu.getSaleItem();
+        if (!sale.isEmpty() && !menu.getSlot(24).hasItem()) {
+            guiGraphics.renderItem(sale, this.leftPos + 170, this.topPos + 54);
+            guiGraphics.renderItemDecorations(this.font, sale, this.leftPos + 170, this.topPos + 54);
+        }
+        ItemStack payA = menu.getPayItemA();
+        if (!payA.isEmpty() && !menu.getSlot(25).hasItem()) {
+            guiGraphics.renderItem(payA, this.leftPos + 116, this.topPos + 54);
+            guiGraphics.renderItemDecorations(this.font, payA, this.leftPos + 116, this.topPos + 54);
+        }
+        ItemStack payB = menu.getPayItemB();
+        if (!payB.isEmpty() && !menu.getSlot(26).hasItem()) {
+            guiGraphics.renderItem(payB, this.leftPos + 134, this.topPos + 54);
+            guiGraphics.renderItemDecorations(this.font, payB, this.leftPos + 134, this.topPos + 54);
+        }
     }
 
     @Override
