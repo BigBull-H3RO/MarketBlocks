@@ -53,7 +53,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
                 this.addSlot(new Slot(container, index, x, y) {
                     @Override
                     public boolean mayPlace(ItemStack stack) {
-                        return ownerView && activeTab == 1;
+                        return false;
                     }
 
                     @Override
@@ -78,7 +78,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
                 this.addSlot(new Slot(container, index, x, y) {
                     @Override
                     public boolean mayPlace(ItemStack stack) {
-                        return ownerView && activeTab == 1;
+                        return ownerView && activeTab == 1 && isSaleItem(stack);
                     }
 
                     @Override
@@ -95,7 +95,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
         }
 
         // Sale item slot
-        this.addSlot(new Slot(container, 24, 170, 18) {
+        this.addSlot(new Slot(container, 24, 170, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return ownerView && activeTab == 0;
@@ -113,7 +113,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
         });
 
         // Payment item slots
-        this.addSlot(new Slot(container, 25, 170, 54) {
+        this.addSlot(new Slot(container, 25, 116, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return true;
@@ -130,7 +130,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
             }
         });
 
-        this.addSlot(new Slot(container, 26, 170, 72) {
+        this.addSlot(new Slot(container, 26, 134, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return true;
@@ -151,7 +151,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
                 int x = 8 + col * 18;
-                int y = 86 + row * 18;
+                int y = 84 + row * 18;
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9, x, y));
             }
         }
@@ -159,13 +159,14 @@ public class SmallShopMenu extends AbstractContainerMenu {
         // Hotbar slots
         for (int col = 0; col < 9; ++col) {
             int x = 8 + col * 18;
-            int y = 144;
+            int y = 142;
             this.addSlot(new Slot(playerInventory, col, x, y));
         }
     }
 
     public void setActiveTab(int tab) {
         this.activeTab = tab;
+        broadcastChanges();
     }
 
     @Override
@@ -250,6 +251,14 @@ public class SmallShopMenu extends AbstractContainerMenu {
 
     private boolean matchesPayItem(ItemStack stack, ItemStack required) {
         return !required.isEmpty() && ItemStack.isSameItemSameComponents(stack, required);
+    }
+
+    private boolean isSaleItem(ItemStack stack) {
+        if (blockEntity == null) {
+            return false;
+        }
+        ItemStack saleItem = blockEntity.getSaleItem();
+        return !saleItem.isEmpty() && ItemStack.isSameItemSameComponents(stack, saleItem);
     }
 
     private boolean fillPaySlot(ItemStack from, int slotIndex, ItemStack required) {
