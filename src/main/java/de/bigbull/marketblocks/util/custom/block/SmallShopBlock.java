@@ -65,9 +65,15 @@ public class SmallShopBlock extends BaseEntityBlock {
 
                 // Erstelle einen Container mit den aktuellen Inhalten des Blocks
                 SimpleContainer container = new SimpleContainer(27);
-                for (int i = 0; i < shop.getInventory().getSlots(); i++) {
-                    container.setItem(i, shop.getInventory().getStackInSlot(i).copy());
+                // Kopiere Zahlungs-Lager (0..11)
+                for (int i = 0; i < shop.getPayments().getSlots(); i++) {
+                    container.setItem(i, shop.getPayments().getStackInSlot(i).copy());
                 }
+                // Kopiere Verkaufs-Lager (12..23)
+                for (int i = 0; i < shop.getStock().getSlots(); i++) {
+                    container.setItem(12 + i, shop.getStock().getStackInSlot(i).copy());
+                }
+                // Angebotstemplates
                 container.setItem(24, shop.getSaleItem().copy());
                 container.setItem(25, shop.getPayItemA().copy());
                 container.setItem(26, shop.getPayItemB().copy());
@@ -107,9 +113,12 @@ public class SmallShopBlock extends BaseEntityBlock {
                 shop.discardPayDisplayItemA();
                 shop.discardPayDisplayItemB();
 
-                SimpleContainer container = new SimpleContainer(shop.getInventory().getSlots());
-                for (int i = 0; i < shop.getInventory().getSlots(); i++) {
-                    container.setItem(i, shop.getInventory().getStackInSlot(i));
+                SimpleContainer container = new SimpleContainer(shop.getPayments().getSlots() + shop.getStock().getSlots());
+                for (int i = 0; i < shop.getPayments().getSlots(); i++) {
+                    container.setItem(i, shop.getPayments().getStackInSlot(i));
+                }
+                for (int i = 0; i < shop.getStock().getSlots(); i++) {
+                    container.setItem(shop.getPayments().getSlots() + i, shop.getStock().getStackInSlot(i));
                 }
                 Containers.dropContents(level, pos, container);
 

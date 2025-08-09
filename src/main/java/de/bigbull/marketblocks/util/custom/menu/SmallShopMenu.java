@@ -317,8 +317,12 @@ public class SmallShopMenu extends AbstractContainerMenu {
         if (!ownerView || blockEntity == null) {
             return;
         }
-        for (int i = 0; i < 24; i++) {
-            blockEntity.getInventory().setStackInSlot(i, container.getItem(i));
+        // Speichere Zahlungs- und Verkaufs-Lager getrennt
+        for (int i = 0; i < blockEntity.getPayments().getSlots(); i++) {
+            blockEntity.getPayments().setStackInSlot(i, container.getItem(i));
+        }
+        for (int i = 0; i < blockEntity.getStock().getSlots(); i++) {
+            blockEntity.getStock().setStackInSlot(i, container.getItem(12 + i));
         }
         blockEntity.setSaleItem(container.getItem(24));
         blockEntity.setPayItemA(container.getItem(25));
@@ -421,8 +425,8 @@ public class SmallShopMenu extends AbstractContainerMenu {
 
         int stock = 0;
         int perTrade = sale.getCount();
-        for (int i = 0; i < blockEntity.getInventory().getSlots(); i++) {
-            ItemStack stack = blockEntity.getInventory().getStackInSlot(i);
+        for (int i = 0; i < blockEntity.getStock().getSlots(); i++) {
+            ItemStack stack = blockEntity.getStock().getStackInSlot(i);
             if (ItemStack.isSameItemSameComponents(stack, sale)) {
                 stock += stack.getCount() / perTrade;
             }
