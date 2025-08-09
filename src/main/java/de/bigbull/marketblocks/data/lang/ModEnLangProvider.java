@@ -20,5 +20,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("message.marketblocks.small_shop.no_stock", "No stock available");
         add("message.marketblocks.small_shop.payment_mismatch", "Payment mismatch");
         add("message.marketblocks.small_shop.buy_failed", "Purchase failed");
+        add("message.marketblocks.small_shop.offer_exists", "Offer already exists");
+        add("message.marketblocks.small_shop.offer_incomplete", "Incomplete offer");
     }
 }

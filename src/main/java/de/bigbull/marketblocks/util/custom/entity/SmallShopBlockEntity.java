@@ -10,7 +10,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -18,31 +17,59 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity {
-    // Zwei getrennte Lagerbereiche: Zahlungen (0..11) und Verkaufsware (0..11)
-    private final ItemStackHandler payments = new ItemStackHandler(12);
-    private final ItemStackHandler stock = new ItemStackHandler(12);
-    private ItemStack saleItem = ItemStack.EMPTY;
-    private ItemStack payItemA = ItemStack.EMPTY;
-    private ItemStack payItemB = ItemStack.EMPTY;
-    private ItemEntity displayItem;
-    private ItemEntity payDisplayItemA;
-    private ItemEntity payDisplayItemB;
+    // Zwei getrennte Lagerbereiche
+    private ItemStackHandler payments = new ItemStackHandler(12); // Erhaltene Zahlungen
+    private ItemStackHandler stock = new ItemStackHandler(12);    // Verkaufsware
+
+    // Angebots-Templates
+    private ItemStack saleItem = ItemStack.EMPTY;   // Was verkauft wird
+    private ItemStack payItemA = ItemStack.EMPTY;  // Erste Bezahlung
+    private ItemStack payItemB = ItemStack.EMPTY;  // Zweite Bezahlung (optional)
+
+    // Display-Entities für 3D-Anzeige
+    private ItemEntity displayItem;      // Verkaufsitem über dem Block
+    private ItemEntity payDisplayItemA; // Bezahlitem A vor dem Block
+    private ItemEntity payDisplayItemB; // Bezahlitem B vor dem Block
+
     private UUID owner;
+    private boolean needsDisplayUpdate = false;
 
     public SmallShopBlockEntity(BlockPos pos, BlockState state) {
         super(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), pos, state);
+
+        // Setup change listeners für automatische Updates
+        setupChangeListeners();
     }
 
-    /**
-     * Zugriff auf das Zahlungs-Lager (rechte Seite).
-     */
+    private void setupChangeListeners() {
+        // Listener für Stock-Änderungen
+        this.stock = new ItemStackHandler(12) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                setChanged();
+                if (level != null && !level.isClientSide) {
+                    sync();
+                }
+            }
+        };
+
+        // Listener für Payment-Änderungen
+        this.payments = new ItemStackHandler(12) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                setChanged();
+                if (level != null && !level.isClientSide) {
+                    sync();
+                }
+            }
+        };
+    }
+
+    // Getter/Setter mit verbesserter Synchronisation
     public ItemStackHandler getPayments() {
         return payments;
     }
 
-    /**
-     * Zugriff auf das Verkaufs-Lager (linke Seite).
-     */
     public ItemStackHandler getStock() {
         return stock;
     }
@@ -52,8 +79,9 @@ public class SmallShopBlockEntity extends BlockEntity {
     }
 
     public void setSaleItem(ItemStack stack) {
-        this.saleItem = stack;
-        updateDisplayItems();
+        this.saleItem = stack.copy();
+        this.needsDisplayUpdate = true;
+        setChanged();
         sync();
     }
 
@@ -62,8 +90,9 @@ public class SmallShopBlockEntity extends BlockEntity {
     }
 
     public void setPayItemA(ItemStack stack) {
-        this.payItemA = stack;
-        updateDisplayItems();
+        this.payItemA = stack.copy();
+        this.needsDisplayUpdate = true;
+        setChanged();
         sync();
     }
 
@@ -72,8 +101,9 @@ public class SmallShopBlockEntity extends BlockEntity {
     }
 
     public void setPayItemB(ItemStack stack) {
-        this.payItemB = stack;
-        updateDisplayItems();
+        this.payItemB = stack.copy();
+        this.needsDisplayUpdate = true;
+        setChanged();
         sync();
     }
 
@@ -83,8 +113,10 @@ public class SmallShopBlockEntity extends BlockEntity {
 
     public void setOwner(UUID owner) {
         this.owner = owner;
+        setChanged();
     }
 
+    // Display-Entity Management
     public void setDisplayItem(ItemEntity item) {
         this.displayItem = item;
     }
@@ -94,7 +126,7 @@ public class SmallShopBlockEntity extends BlockEntity {
     }
 
     public void discardDisplayItem() {
-        if (displayItem != null) {
+        if (displayItem != null && displayItem.isAlive()) {
             displayItem.discard();
             displayItem = null;
         }
@@ -105,7 +137,7 @@ public class SmallShopBlockEntity extends BlockEntity {
     }
 
     public void discardPayDisplayItemA() {
-        if (payDisplayItemA != null) {
+        if (payDisplayItemA != null && payDisplayItemA.isAlive()) {
             payDisplayItemA.discard();
             payDisplayItemA = null;
         }
@@ -116,7 +148,7 @@ public class SmallShopBlockEntity extends BlockEntity {
     }
 
     public void discardPayDisplayItemB() {
-        if (payDisplayItemB != null) {
+        if (payDisplayItemB != null && payDisplayItemB.isAlive()) {
             payDisplayItemB.discard();
             payDisplayItemB = null;
         }
@@ -126,7 +158,37 @@ public class SmallShopBlockEntity extends BlockEntity {
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
+            // Verzögerte Display-Update nach dem Laden
+            level.scheduleTick(getBlockPos(), getBlockState().getBlock(), 5);
+        }
+    }
+
+    public void tick() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+
+        if (needsDisplayUpdate) {
             updateDisplayItems();
+            needsDisplayUpdate = false;
+        }
+
+        // Prüfe Display-Entities auf Validität
+        validateDisplayEntities();
+    }
+
+    private void validateDisplayEntities() {
+        if (displayItem != null && !displayItem.isAlive()) {
+            displayItem = null;
+            needsDisplayUpdate = true;
+        }
+        if (payDisplayItemA != null && !payDisplayItemA.isAlive()) {
+            payDisplayItemA = null;
+            needsDisplayUpdate = true;
+        }
+        if (payDisplayItemB != null && !payDisplayItemB.isAlive()) {
+            payDisplayItemB = null;
+            needsDisplayUpdate = true;
         }
     }
 
@@ -134,178 +196,209 @@ public class SmallShopBlockEntity extends BlockEntity {
         if (level == null || level.isClientSide) {
             return;
         }
+
+        // Entferne alte Display-Items
         discardDisplayItem();
         discardPayDisplayItemA();
         discardPayDisplayItemB();
+
         if (saleItem.isEmpty()) {
             return;
         }
+
         BlockPos pos = getBlockPos();
-        ItemEntity sale = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5, saleItem.copy());
-        sale.setNoGravity(true);
-        sale.setNeverPickUp();
-        sale.setUnlimitedLifetime();
+        Direction facing = getBlockState().getValue(de.bigbull.marketblocks.util.custom.block.SmallShopBlock.FACING);
+
+        // Hauptitem über dem Block
+        ItemEntity sale = createDisplayEntity(saleItem, pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5);
         level.addFreshEntity(sale);
         setDisplayItem(sale);
 
-        Direction facing = getBlockState().getValue(de.bigbull.marketblocks.util.custom.block.SmallShopBlock.FACING);
-        double offX = pos.getX() + 0.5 + facing.getStepX() * 0.7;
-        double offZ = pos.getZ() + 0.5 + facing.getStepZ() * 0.7;
+        // Bezahlitems vor dem Block
+        double frontX = pos.getX() + 0.5 + facing.getStepX() * 0.7;
+        double frontZ = pos.getZ() + 0.5 + facing.getStepZ() * 0.7;
 
         if (!payItemA.isEmpty()) {
-            ItemEntity payA = new ItemEntity(level, offX, pos.getY() + 1.0, offZ, payItemA.copy());
-            payA.setNoGravity(true);
-            payA.setNeverPickUp();
-            payA.setUnlimitedLifetime();
+            ItemEntity payA = createDisplayEntity(payItemA, frontX, pos.getY() + 1.0, frontZ);
             level.addFreshEntity(payA);
             setPayDisplayItemA(payA);
         }
+
         if (!payItemB.isEmpty()) {
             Direction side = facing.getClockWise();
-            double offXB = offX + side.getStepX() * 0.25;
-            double offZB = offZ + side.getStepZ() * 0.25;
-            ItemEntity payB = new ItemEntity(level, offXB, pos.getY() + 1.0, offZB, payItemB.copy());
-            payB.setNoGravity(true);
-            payB.setNeverPickUp();
-            payB.setUnlimitedLifetime();
+            double sideX = frontX + side.getStepX() * 0.25;
+            double sideZ = frontZ + side.getStepZ() * 0.25;
+            ItemEntity payB = createDisplayEntity(payItemB, sideX, pos.getY() + 1.0, sideZ);
             level.addFreshEntity(payB);
             setPayDisplayItemB(payB);
         }
     }
 
+    private ItemEntity createDisplayEntity(ItemStack stack, double x, double y, double z) {
+        ItemEntity entity = new ItemEntity(level, x, y, z, stack.copy());
+        entity.setNoGravity(true);
+        entity.setNeverPickUp();
+        entity.setUnlimitedLifetime();
+        entity.setDeltaMovement(0, 0, 0);
+        return entity;
+    }
+
     /**
-     * Prüft, ob genügend Lagerbestand und passende Bezahlung in den angegebenen Slots vorhanden sind.
+     * Verbesserte Überprüfung der Handelsfähigkeit
      */
     public boolean canTrade(Container paymentContainer) {
         if (saleItem.isEmpty() || payItemA.isEmpty()) {
             return false;
         }
+
         if (!hasStock()) {
             return false;
         }
 
+        // Prüfe Bezahlung in den Slots
         ItemStack slotA = paymentContainer.getItem(25);
         ItemStack slotB = paymentContainer.getItem(26);
+
         if (!ItemStack.isSameItemSameComponents(slotA, payItemA) || slotA.getCount() < payItemA.getCount()) {
             return false;
         }
+
         if (!payItemB.isEmpty()) {
             if (!ItemStack.isSameItemSameComponents(slotB, payItemB) || slotB.getCount() < payItemB.getCount()) {
                 return false;
             }
         }
 
-        // Simuliere das Einfügen der Bezahlung ins Zahlungs-Lager
-        ItemStack simulateA = payItemA.copy();
-        for (int i = 0; i < payments.getSlots() && !simulateA.isEmpty(); i++) {
-            simulateA = payments.insertItem(i, simulateA, true);
+        // Simuliere Einfügen der Bezahlung ins Zahlungs-Lager
+        return canStorePayment(payItemA) && (payItemB.isEmpty() || canStorePayment(payItemB));
+    }
+
+    private boolean canStorePayment(ItemStack payment) {
+        ItemStack simulate = payment.copy();
+        for (int i = 0; i < payments.getSlots() && !simulate.isEmpty(); i++) {
+            simulate = payments.insertItem(i, simulate, true);
         }
-        if (!simulateA.isEmpty()) {
+        return simulate.isEmpty();
+    }
+
+    /**
+     * Verbesserte Handelsausführung
+     */
+    public boolean performTrade(Player buyer, Container paymentContainer) {
+        if (!canTrade(paymentContainer)) {
             return false;
         }
+
+        // Entferne Bezahlung aus Slots
+        ItemStack slotA = paymentContainer.getItem(25);
+        ItemStack slotB = paymentContainer.getItem(26);
+
+        slotA.shrink(payItemA.getCount());
+        if (slotA.isEmpty()) {
+            paymentContainer.setItem(25, ItemStack.EMPTY);
+        }
+
         if (!payItemB.isEmpty()) {
-            ItemStack simulateB = payItemB.copy();
-            for (int i = 0; i < payments.getSlots() && !simulateB.isEmpty(); i++) {
-                simulateB = payments.insertItem(i, simulateB, true);
-            }
-            if (!simulateB.isEmpty()) {
-                return false;
+            slotB.shrink(payItemB.getCount());
+            if (slotB.isEmpty()) {
+                paymentContainer.setItem(26, ItemStack.EMPTY);
             }
         }
+
+        // Füge Bezahlung zum Owner-Lager hinzu
+        addPaymentToStorage(payItemA.copy());
+        if (!payItemB.isEmpty()) {
+            addPaymentToStorage(payItemB.copy());
+        }
+
+        // Entferne Verkaufsware aus dem Stock
+        removeFromStock(saleItem);
+
+        // Gib Verkaufsware an Käufer
+        ItemStack result = saleItem.copy();
+        if (!buyer.getInventory().add(result)) {
+            buyer.drop(result, false);
+        }
+
+        setChanged();
+        sync();
         return true;
     }
 
-    /**
-     * Führt den Kauf aus und regelt Übergabe und Abzug der Items aus den Bezahl-Slots.
-     */
-    public void performTrade(Player player, Container paymentContainer) {
-        if (!canTrade(paymentContainer)) {
-            return;
-        }
-
-        // Simuliere erneut das Einfügen, um Race-Conditions zu vermeiden
-        ItemStack simulateA = payItemA.copy();
-        for (int i = 0; i < payments.getSlots() && !simulateA.isEmpty(); i++) {
-            simulateA = payments.insertItem(i, simulateA, true);
-        }
-        if (!simulateA.isEmpty()) {
-            return; // Lager kann die Bezahlung nicht aufnehmen
-        }
-
-        if (!payItemB.isEmpty()) {
-            ItemStack simulateB = payItemB.copy();
-            for (int i = 0; i < payments.getSlots() && !simulateB.isEmpty(); i++) {
-                simulateB = payments.insertItem(i, simulateB, true);
-            }
-            if (!simulateB.isEmpty()) {
-                return; // Lager kann die Bezahlung nicht aufnehmen
-            }
-        }
-        // Entferne Bezahlung aus den Slots
-        ItemStack slotA = paymentContainer.getItem(25);
-        slotA.shrink(payItemA.getCount());
-        paymentContainer.setItem(25, slotA.isEmpty() ? ItemStack.EMPTY : slotA);
-        ItemStack slotB = paymentContainer.getItem(26);
-        if (!payItemB.isEmpty()) {
-            slotB.shrink(payItemB.getCount());
-            paymentContainer.setItem(26, slotB.isEmpty() ? ItemStack.EMPTY : slotB);
-        }
-
-        // Füge Zahlungen dem Lager hinzu
-        ItemStack paymentA = payItemA.copy();
-        for (int i = 0; i < payments.getSlots() && !paymentA.isEmpty(); i++) {
-            paymentA = payments.insertItem(i, paymentA, false);
-        }
-        if (!paymentA.isEmpty()) {
-            player.addItem(paymentA);
-            return;
-        }
-        if (!payItemB.isEmpty()) {
-            ItemStack paymentB = payItemB.copy();
-            for (int i = 0; i < payments.getSlots() && !paymentB.isEmpty(); i++) {
-                paymentB = payments.insertItem(i, paymentB, false);
-            }
-            if (!paymentB.isEmpty()) {
-                player.addItem(paymentB);
-                return;
-            }
-        }
-
-        // Entferne Verkaufsware aus dem Lager
-        for (int i = 0; i < stock.getSlots(); i++) {
-            ItemStack stack = stock.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, saleItem)) {
-                stack.shrink(saleItem.getCount());
-                stock.setStackInSlot(i, stack);
+    private void addPaymentToStorage(ItemStack payment) {
+        for (int i = 0; i < payments.getSlots(); i++) {
+            payment = payments.insertItem(i, payment, false);
+            if (payment.isEmpty()) {
                 break;
             }
         }
+    }
 
-        // Übergib Verkaufsware an Spieler
-        ItemStack result = saleItem.copy();
-        if (!player.addItem(result)) {
-            player.drop(result, false);
+    private void removeFromStock(ItemStack toRemove) {
+        int remaining = toRemove.getCount();
+        for (int i = 0; i < stock.getSlots() && remaining > 0; i++) {
+            ItemStack stack = stock.getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
+                int removed = Math.min(stack.getCount(), remaining);
+                stack.shrink(removed);
+                stock.setStackInSlot(i, stack.isEmpty() ? ItemStack.EMPTY : stack);
+                remaining -= removed;
+            }
         }
-        setChanged();
     }
 
     /**
-     * Prüft, ob Lagerbestand für das Angebot vorhanden ist.
+     * Verbesserte Stock-Überprüfung
      */
     public boolean hasStock() {
+        return hasStock(1);
+    }
+
+    public boolean hasStock(int requiredAmount) {
+        if (saleItem.isEmpty()) {
+            return false;
+        }
+
+        int totalStock = 0;
+        int requiredPerTrade = saleItem.getCount() * requiredAmount;
+
         for (int i = 0; i < stock.getSlots(); i++) {
             ItemStack stack = stock.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, saleItem) && stack.getCount() >= saleItem.getCount()) {
-                return true;
+            if (ItemStack.isSameItemSameComponents(stack, saleItem)) {
+                totalStock += stack.getCount();
+                if (totalStock >= requiredPerTrade) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
+    /**
+     * Berechnet maximale Anzahl möglicher Trades basierend auf Stock
+     */
+    public int getMaxTradesFromStock() {
+        if (saleItem.isEmpty()) {
+            return 0;
+        }
+
+        int totalStock = 0;
+        for (int i = 0; i < stock.getSlots(); i++) {
+            ItemStack stack = stock.getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(stack, saleItem)) {
+                totalStock += stack.getCount();
+            }
+        }
+
+        return totalStock / saleItem.getCount();
+    }
+
+    /**
+     * Verbesserte Synchronisation
+     */
     private void sync() {
-        setChanged();
-        Level level = getLevel();
-        if (level != null) {
+        if (level != null && !level.isClientSide) {
+            setChanged();
             BlockState state = getBlockState();
             level.sendBlockUpdated(getBlockPos(), state, state, 3);
         }
@@ -314,8 +407,10 @@ public class SmallShopBlockEntity extends BlockEntity {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.saveAdditional(tag, provider);
+
         tag.put("Payments", payments.serializeNBT(provider));
         tag.put("Stock", stock.serializeNBT(provider));
+
         if (!saleItem.isEmpty()) {
             tag.put("SaleItem", saleItem.save(provider));
         }
@@ -328,17 +423,29 @@ public class SmallShopBlockEntity extends BlockEntity {
         if (owner != null) {
             tag.putUUID("Owner", owner);
         }
+
+        tag.putBoolean("NeedsDisplayUpdate", needsDisplayUpdate);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+
         payments.deserializeNBT(registries, tag.getCompound("Payments"));
         stock.deserializeNBT(registries, tag.getCompound("Stock"));
-        saleItem = ItemStack.parseOptional(registries, tag.getCompound("SaleItem"));
-        payItemA = ItemStack.parseOptional(registries, tag.getCompound("PayItemA"));
-        payItemB = ItemStack.parseOptional(registries, tag.getCompound("PayItemB"));
+
+        saleItem = tag.contains("SaleItem") ?
+                ItemStack.parseOptional(registries, tag.getCompound("SaleItem")) :
+                ItemStack.EMPTY;
+        payItemA = tag.contains("PayItemA") ?
+                ItemStack.parseOptional(registries, tag.getCompound("PayItemA")) :
+                ItemStack.EMPTY;
+        payItemB = tag.contains("PayItemB") ?
+                ItemStack.parseOptional(registries, tag.getCompound("PayItemB")) :
+                ItemStack.EMPTY;
+
         owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
+        needsDisplayUpdate = tag.getBoolean("NeedsDisplayUpdate");
     }
 
     @Override
@@ -348,11 +455,147 @@ public class SmallShopBlockEntity extends BlockEntity {
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
-        return saveWithoutMetadata(provider);
+        CompoundTag tag = new CompoundTag();
+        saveAdditional(tag, provider);
+        return tag;
     }
 
     @Override
     public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider provider) {
         loadAdditional(tag, provider);
+        if (needsDisplayUpdate) {
+            updateDisplayItems();
+            needsDisplayUpdate = false;
+        }
+    }
+
+    /**
+     * Prüft ob ein bestimmter Spieler Zugriff auf Owner-Funktionen hat
+     */
+    public boolean hasOwnerAccess(Player player) {
+        return owner != null && owner.equals(player.getUUID());
+    }
+
+    /**
+     * Erweiterte Validierung für Handelsfähigkeit
+     */
+    public TradeResult validateTrade(ItemStack paymentA, ItemStack paymentB) {
+        if (saleItem.isEmpty() || payItemA.isEmpty()) {
+            return TradeResult.NO_OFFER;
+        }
+
+        if (!hasStock()) {
+            return TradeResult.NO_STOCK;
+        }
+
+        if (!ItemStack.isSameItemSameComponents(paymentA, payItemA) ||
+                paymentA.getCount() < payItemA.getCount()) {
+            return TradeResult.INSUFFICIENT_PAYMENT_A;
+        }
+
+        if (!payItemB.isEmpty()) {
+            if (!ItemStack.isSameItemSameComponents(paymentB, payItemB) ||
+                    paymentB.getCount() < payItemB.getCount()) {
+                return TradeResult.INSUFFICIENT_PAYMENT_B;
+            }
+        }
+
+        if (!canStorePayment(payItemA) || (!payItemB.isEmpty() && !canStorePayment(payItemB))) {
+            return TradeResult.PAYMENT_STORAGE_FULL;
+        }
+
+        return TradeResult.SUCCESS;
+    }
+
+    /**
+     * Berechnet die optimale Anzahl von Trades basierend auf verfügbaren Ressourcen
+     */
+    public int calculateOptimalTrades(ItemStack availablePayA, ItemStack availablePayB) {
+        if (saleItem.isEmpty() || payItemA.isEmpty()) {
+            return 0;
+        }
+
+        int maxFromPayA = availablePayA.getCount() / payItemA.getCount();
+        int maxFromPayB = payItemB.isEmpty() ? Integer.MAX_VALUE :
+                availablePayB.getCount() / payItemB.getCount();
+        int maxFromStock = getMaxTradesFromStock();
+
+        return Math.min(Math.min(maxFromPayA, maxFromPayB), maxFromStock);
+    }
+
+    /**
+     * Automatische Inventar-Optimierung für Owner
+     */
+    public void optimizeInventory() {
+        if (saleItem.isEmpty()) {
+            return;
+        }
+
+        // Konsolidiere gleiche Items im Stock
+        consolidateItems(stock, saleItem);
+
+        // Konsolidiere Zahlungen
+        if (!payItemA.isEmpty()) {
+            consolidateItems(payments, payItemA);
+        }
+        if (!payItemB.isEmpty()) {
+            consolidateItems(payments, payItemB);
+        }
+
+        setChanged();
+    }
+
+    private void consolidateItems(ItemStackHandler handler, ItemStack targetItem) {
+        for (int i = 0; i < handler.getSlots(); i++) {
+            ItemStack stack = handler.getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(stack, targetItem) && stack.getCount() < stack.getMaxStackSize()) {
+
+                // Suche nach anderen Stacks zum Zusammenfassen
+                for (int j = i + 1; j < handler.getSlots(); j++) {
+                    ItemStack other = handler.getStackInSlot(j);
+                    if (ItemStack.isSameItemSameComponents(other, targetItem)) {
+                        int space = stack.getMaxStackSize() - stack.getCount();
+                        int toMove = Math.min(space, other.getCount());
+
+                        if (toMove > 0) {
+                            stack.grow(toMove);
+                            other.shrink(toMove);
+                            handler.setStackInSlot(i, stack);
+                            handler.setStackInSlot(j, other.isEmpty() ? ItemStack.EMPTY : other);
+
+                            if (stack.getCount() >= stack.getMaxStackSize()) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Debug-Information für Entwicklung
+     */
+    public String getDebugInfo() {
+        StringBuilder info = new StringBuilder();
+        info.append("Owner: ").append(owner != null ? owner.toString().substring(0, 8) : "None").append("\n");
+        info.append("Sale Item: ").append(saleItem.isEmpty() ? "None" : saleItem.getDisplayName().getString()).append("\n");
+        info.append("Pay A: ").append(payItemA.isEmpty() ? "None" : payItemA.getDisplayName().getString()).append("\n");
+        info.append("Pay B: ").append(payItemB.isEmpty() ? "None" : payItemB.getDisplayName().getString()).append("\n");
+        info.append("Stock Available: ").append(hasStock()).append("\n");
+        info.append("Max Trades: ").append(getMaxTradesFromStock()).append("\n");
+        return info.toString();
+    }
+
+    /**
+     * Enum für Trade-Validierungsergebnisse
+     */
+    public enum TradeResult {
+        SUCCESS,
+        NO_OFFER,
+        NO_STOCK,
+        INSUFFICIENT_PAYMENT_A,
+        INSUFFICIENT_PAYMENT_B,
+        PAYMENT_STORAGE_FULL
     }
 }

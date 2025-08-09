@@ -20,5 +20,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.small_shop.no_stock", "Kein Lagerbestand");
         add("message.marketblocks.small_shop.payment_mismatch", "Falsche Bezahlung");
         add("message.marketblocks.small_shop.buy_failed", "Kauf fehlgeschlagen");
+        add("message.marketblocks.small_shop.offer_exists", "Angebot existiert bereits");
+        add("message.marketblocks.small_shop.offer_incomplete", "Angebot unvollständig");
     }
 }
