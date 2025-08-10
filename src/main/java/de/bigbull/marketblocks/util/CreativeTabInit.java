@@ -11,18 +11,13 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class CreativeTabInit {
     public static DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MarketBlocks.MODID);
 
-    public static String MAIN_TAB_ONE_TITLE = "main.tab.one";
-
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MAIN_TAB_ONE = CREATIVE_MODE_TABS.register("main_tab_one", () -> {
-        CreativeModeTab.Builder builder = CreativeModeTab.builder();
-
-        builder.displayItems((itemDisplay, output) -> {
-            output.accept(RegistriesInit.SMALL_SHOP_BLOCK_ITEM.get());
-
-        });
-        builder.icon(() -> new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK_ITEM.get()));
-        builder.title(Component.translatable(MAIN_TAB_ONE_TITLE));
-
-        return builder.build();
-    });
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MARKETBLOCKS_TAB =
+            CREATIVE_MODE_TABS.register("marketblocks_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.marketblocks"))
+                    .icon(() -> new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK_ITEM.get()))
+                    .displayItems((parameters, output) -> {
+                        // Füge alle Items des Mods hinzu
+                        output.accept(RegistriesInit.SMALL_SHOP_BLOCK_ITEM.get());
+                    })
+                    .build());
 }

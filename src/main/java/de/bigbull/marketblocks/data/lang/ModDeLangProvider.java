@@ -11,16 +11,24 @@ public class ModDeLangProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
-        add("container.small_shop", "Kleiner Laden");
-        add("screen.marketblocks.small_shop.save", "Speichern");
-        add("screen.marketblocks.small_shop.remove", "Entfernen");
-        add("screen.marketblocks.small_shop.tab.offer", "Angebot");
-        add("screen.marketblocks.small_shop.tab.storage", "Lager");
-        add("screen.marketblocks.small_shop.buy", "Kaufen");
-        add("message.marketblocks.small_shop.no_stock", "Kein Lagerbestand");
-        add("message.marketblocks.small_shop.payment_mismatch", "Falsche Bezahlung");
-        add("message.marketblocks.small_shop.buy_failed", "Kauf fehlgeschlagen");
-        add("message.marketblocks.small_shop.offer_exists", "Angebot existiert bereits");
-        add("message.marketblocks.small_shop.offer_incomplete", "Angebot unvollständig");
+        add("itemGroup.marketblocks", "Kleiner Laden");
+        add("gui.marketblocks.shop_title", "Laden");
+        add("gui.marketblocks.inventory_title", "Laden Inventar");
+        add("gui.marketblocks.trade_available", "Handel verfügbar");
+        add("gui.marketblocks.trade_unavailable", "Handel nicht verfügbar");
+        add("gui.marketblocks.available", "Verfügbar");
+        add("gui.marketblocks.no_offers", "Keine Angebote verfügbar");
+        add("gui.marketblocks.create_hint", "Platziere Items in den unteren Slots");
+        add("gui.marketblocks.confirm_offer", "Angebot bestätigen");
+        add("gui.marketblocks.cancel_offer", "Abbrechen");
+        add("gui.marketblocks.offers", "Angebote");
+        add("gui.marketblocks.offers_tab", "Angebote anzeigen");
+        add("gui.marketblocks.inventory_tab", "Inventar anzeigen");
+        add("gui.marketblocks.input_inventory", "Eingabe");
+        add("gui.marketblocks.output_inventory", "Ausgabe");
+        add("gui.marketblocks.create_offer", "Angebot erstellen");
+        add("gui.marketblocks.delete_offer", "Angebot löschen");
+        add("gui.marketblocks.owner", "Besitzer: %s");
+        add("gui.marketblocks.out_of_stock", "Nicht auf Lager");
     }
 }

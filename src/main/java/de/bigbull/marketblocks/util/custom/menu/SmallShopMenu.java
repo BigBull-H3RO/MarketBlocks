@@ -1,207 +1,231 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
-import net.minecraft.core.NonNullList;
+import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.*;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.OptionalInt;
+import net.minecraft.world.level.Level;
 
 public class SmallShopMenu extends AbstractContainerMenu {
-    protected SmallShopMenu(@Nullable MenuType<?> menuType, int containerId) {
-        super(menuType, containerId);
+    private final SmallShopBlockEntity blockEntity;
+    private final Level level;
+    private final Container container;
+
+    // Slot-Indizes
+    private static final int INPUT_SLOTS = 12; // 3x4 Input Inventar
+    private static final int OUTPUT_SLOTS = 12; // 3x4 Output Inventar
+    private static final int PAYMENT_SLOTS = 2; // 2 Bezahlslots
+    private static final int OFFER_SLOT = 1; // 1 Angebots-Slot
+    private static final int PLAYER_INVENTORY_START = INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS + OFFER_SLOT;
+    private static final int HOTBAR_START = PLAYER_INVENTORY_START + 27;
+
+    // Data Slots für Client-Server Sync
+    private final ContainerData data;
+
+    // Constructor für Server
+    public SmallShopMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
+        super(RegistriesInit.SMALL_SHOP_MENU.get(), containerId);
+        this.blockEntity = blockEntity;
+        this.level = playerInventory.player.level();
+        this.container = blockEntity;
+
+        this.data = new SimpleContainerData(6) {
+            @Override
+            public int get(int index) {
+                return switch (index) {
+                    case 0 -> blockEntity.hasOffer() ? 1 : 0;
+                    case 1 -> blockEntity.isOfferAvailable() ? 1 : 0;
+                    case 2 -> blockEntity.isOwner(playerInventory.player) ? 1 : 0;
+                    case 3 -> blockEntity.getOwnerId() != null ? 1 : 0;
+                    case 4 -> 0; // Aktueller Tab (0 = Angebot, 1 = Inventar)
+                    case 5 -> 0; // Zusätzliche Flags
+                    default -> 0;
+                };
+            }
+
+            @Override
+            public void set(int index, int value) {
+                // Data wird vom Server gesteuert
+            }
+        };
+
+        addDataSlots(this.data);
+
+        // Setup der Slots
+        setupSlots(playerInventory);
+
+        // Owner setzen falls noch nicht gesetzt
+        if (blockEntity.getOwnerId() == null) {
+            blockEntity.setOwner(playerInventory.player);
+        }
     }
 
-    @Override
-    public MenuType<?> getType() {
-        return super.getType();
+    // Constructor für Client
+    public SmallShopMenu(int containerId, Inventory playerInventory) {
+        this(containerId, playerInventory, new SmallShopBlockEntity(
+                playerInventory.player.blockPosition(),
+                playerInventory.player.level().getBlockState(playerInventory.player.blockPosition())
+        ));
     }
 
-    @Override
-    public boolean isValidSlotIndex(int slotIndex) {
-        return super.isValidSlotIndex(slotIndex);
-    }
+    private void setupSlots(Inventory playerInventory) {
+        // Input Inventar (3x4 = 12 Slots) - Slots 0-11
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 3; col++) {
+                addSlot(new InputSlot(container, row * 3 + col, 8 + col * 18, 18 + row * 18));
+            }
+        }
 
-    @Override
-    protected Slot addSlot(Slot slot) {
-        return super.addSlot(slot);
-    }
+        // Output Inventar (3x4 = 12 Slots) - Slots 12-23
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 3; col++) {
+                addSlot(new OutputSlot(container, INPUT_SLOTS + row * 3 + col,
+                        116 + col * 18, 18 + row * 18));
+            }
+        }
 
-    @Override
-    protected DataSlot addDataSlot(DataSlot intValue) {
-        return super.addDataSlot(intValue);
-    }
+        // Payment Slots (2 Slots) - Slots 24-25
+        addSlot(new PaymentSlot(container, INPUT_SLOTS + OUTPUT_SLOTS, 44, 35));
+        addSlot(new PaymentSlot(container, INPUT_SLOTS + OUTPUT_SLOTS + 1, 62, 35));
 
-    @Override
-    protected void addDataSlots(ContainerData array) {
-        super.addDataSlots(array);
-    }
+        // Offer Result Slot - Slot 26
+        addSlot(new OfferSlot(container, INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS, 120, 35));
 
-    @Override
-    public void addSlotListener(ContainerListener listener) {
-        super.addSlotListener(listener);
-    }
+        // Spieler Inventar - Slots 27-62
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 140 + row * 18));
+            }
+        }
 
-    @Override
-    public void setSynchronizer(ContainerSynchronizer synchronizer) {
-        super.setSynchronizer(synchronizer);
-    }
-
-    @Override
-    public void sendAllDataToRemote() {
-        super.sendAllDataToRemote();
-    }
-
-    @Override
-    public void removeSlotListener(ContainerListener listener) {
-        super.removeSlotListener(listener);
-    }
-
-    @Override
-    public NonNullList<ItemStack> getItems() {
-        return super.getItems();
-    }
-
-    @Override
-    public void broadcastChanges() {
-        super.broadcastChanges();
-    }
-
-    @Override
-    public void broadcastFullState() {
-        super.broadcastFullState();
-    }
-
-    @Override
-    public void setRemoteSlot(int slot, ItemStack stack) {
-        super.setRemoteSlot(slot, stack);
-    }
-
-    @Override
-    public void setRemoteSlotNoCopy(int slot, ItemStack stack) {
-        super.setRemoteSlotNoCopy(slot, stack);
-    }
-
-    @Override
-    public void setRemoteCarried(ItemStack remoteCarried) {
-        super.setRemoteCarried(remoteCarried);
-    }
-
-    @Override
-    public boolean clickMenuButton(Player player, int id) {
-        return super.clickMenuButton(player, id);
-    }
-
-    @Override
-    public Slot getSlot(int slotId) {
-        return super.getSlot(slotId);
+        // Spieler Hotbar - Slots 63-71
+        for (int col = 0; col < 9; col++) {
+            addSlot(new Slot(playerInventory, col, 8 + col * 18, 198));
+        }
     }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        return null;
-    }
+        ItemStack itemstack = ItemStack.EMPTY;
+        Slot slot = this.slots.get(index);
 
-    @Override
-    public void clicked(int slotId, int button, ClickType clickType, Player player) {
-        super.clicked(slotId, button, clickType, player);
-    }
+        if (slot.hasItem()) {
+            ItemStack itemstack1 = slot.getItem();
+            itemstack = itemstack1.copy();
 
-    @Override
-    public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
-        return super.canTakeItemForPickAll(stack, slot);
-    }
+            // Von Container zu Spieler
+            if (index < PLAYER_INVENTORY_START) {
+                if (!this.moveItemStackTo(itemstack1, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                    return ItemStack.EMPTY;
+                }
+            }
+            // Von Spieler zu Container
+            else if (index >= PLAYER_INVENTORY_START) {
+                // Versuche in Input-Slots zu verschieben
+                if (!this.moveItemStackTo(itemstack1, 0, INPUT_SLOTS, false)) {
+                    if (index < HOTBAR_START) {
+                        // Von Inventar zu Hotbar
+                        if (!this.moveItemStackTo(itemstack1, HOTBAR_START, HOTBAR_START + 9, false)) {
+                            return ItemStack.EMPTY;
+                        }
+                    } else {
+                        // Von Hotbar zu Inventar
+                        if (!this.moveItemStackTo(itemstack1, PLAYER_INVENTORY_START, HOTBAR_START, false)) {
+                            return ItemStack.EMPTY;
+                        }
+                    }
+                }
+            }
 
-    @Override
-    public void removed(Player player) {
-        super.removed(player);
-    }
+            if (itemstack1.isEmpty()) {
+                slot.setByPlayer(ItemStack.EMPTY);
+            } else {
+                slot.setChanged();
+            }
+        }
 
-    @Override
-    protected void clearContainer(Player player, Container container) {
-        super.clearContainer(player, container);
-    }
-
-    @Override
-    public void slotsChanged(Container container) {
-        super.slotsChanged(container);
-    }
-
-    @Override
-    public void setItem(int slotId, int stateId, ItemStack stack) {
-        super.setItem(slotId, stateId, stack);
-    }
-
-    @Override
-    public void initializeContents(int stateId, List<ItemStack> items, ItemStack carried) {
-        super.initializeContents(stateId, items, carried);
-    }
-
-    @Override
-    public void setData(int id, int data) {
-        super.setData(id, data);
+        return itemstack;
     }
 
     @Override
     public boolean stillValid(Player player) {
-        return false;
+        return this.container.stillValid(player);
     }
 
-    @Override
-    protected boolean moveItemStackTo(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection) {
-        return super.moveItemStackTo(stack, startIndex, endIndex, reverseDirection);
+    // Getter für UI
+    public SmallShopBlockEntity getBlockEntity() {
+        return blockEntity;
     }
 
-    @Override
-    protected void resetQuickCraft() {
-        super.resetQuickCraft();
+    public boolean hasOffer() {
+        return data.get(0) == 1;
     }
 
-    @Override
-    public boolean canDragTo(Slot slot) {
-        return super.canDragTo(slot);
+    public boolean isOfferAvailable() {
+        return data.get(1) == 1;
     }
 
-    @Override
-    public void setCarried(ItemStack stack) {
-        super.setCarried(stack);
+    public boolean isOwner() {
+        return data.get(2) == 1;
     }
 
-    @Override
-    public ItemStack getCarried() {
-        return super.getCarried();
+    public boolean hasOwner() {
+        return data.get(3) == 1;
     }
 
-    @Override
-    public void suppressRemoteUpdates() {
-        super.suppressRemoteUpdates();
+    // Custom Slot Klassen
+    public static class InputSlot extends Slot {
+        public InputSlot(Container container, int slot, int x, int y) {
+            super(container, slot, x, y);
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return true; // Input-Slots akzeptieren alle Items
+        }
     }
 
-    @Override
-    public void resumeRemoteUpdates() {
-        super.resumeRemoteUpdates();
+    public static class OutputSlot extends Slot {
+        public OutputSlot(Container container, int slot, int x, int y) {
+            super(container, slot, x, y);
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return false; // Output-Slots akzeptieren keine Items vom Spieler
+        }
     }
 
-    @Override
-    public void transferState(AbstractContainerMenu menu) {
-        super.transferState(menu);
+    public static class PaymentSlot extends Slot {
+        public PaymentSlot(Container container, int slot, int x, int y) {
+            super(container, slot, x, y);
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return true; // Payment-Slots akzeptieren alle Items
+        }
     }
 
-    @Override
-    public OptionalInt findSlot(Container container, int slotIndex) {
-        return super.findSlot(container, slotIndex);
-    }
+    public static class OfferSlot extends Slot {
+        public OfferSlot(Container container, int slot, int x, int y) {
+            super(container, slot, x, y);
+        }
 
-    @Override
-    public int getStateId() {
-        return super.getStateId();
-    }
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return false; // Offer-Slot akzeptiert keine Items direkt
+        }
 
-    @Override
-    public int incrementStateId() {
-        return super.incrementStateId();
+        @Override
+        public ItemStack remove(int amount) {
+            return super.remove(amount);
+        }
     }
 }

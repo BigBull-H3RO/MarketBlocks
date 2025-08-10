@@ -11,16 +11,24 @@ public class ModEnLangProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
-        add("container.small_shop", "Small Shop");
-        add("screen.marketblocks.small_shop.save", "Save");
-        add("screen.marketblocks.small_shop.remove", "Remove");
-        add("screen.marketblocks.small_shop.tab.offer", "Offer");
-        add("screen.marketblocks.small_shop.tab.storage", "Storage");
-        add("screen.marketblocks.small_shop.buy", "Buy");
-        add("message.marketblocks.small_shop.no_stock", "No stock available");
-        add("message.marketblocks.small_shop.payment_mismatch", "Payment mismatch");
-        add("message.marketblocks.small_shop.buy_failed", "Purchase failed");
-        add("message.marketblocks.small_shop.offer_exists", "Offer already exists");
-        add("message.marketblocks.small_shop.offer_incomplete", "Incomplete offer");
+        add("itemGroup.marketblocks", "Small Shop");
+        add("gui.marketblocks.shop_title", "Shop");
+        add("gui.marketblocks.inventory_title", "Shop Inventory");
+        add("gui.marketblocks.trade_available", "Trade Available");
+        add("gui.marketblocks.trade_unavailable", "Trade Unavailable");
+        add("gui.marketblocks.available", "Available");
+        add("gui.marketblocks.no_offers", "No Offers Available");
+        add("gui.marketblocks.create_hint", "Place items in slots below, then click create");
+        add("gui.marketblocks.confirm_offer", "Confirm Offer");
+        add("gui.marketblocks.cancel_offer", "Cancel");
+        add("gui.marketblocks.offers", "Offers");
+        add("gui.marketblocks.offers_tab", "Show Offers");
+        add("gui.marketblocks.inventory_tab", "Show Inventory");
+        add("gui.marketblocks.input_inventory", "Input");
+        add("gui.marketblocks.output_inventory", "Output");
+        add("gui.marketblocks.create_offer", "Create Offer");
+        add("gui.marketblocks.delete_offer", "Delete Offer");
+        add("gui.marketblocks.owner", "Owner: %s");
+        add("gui.marketblocks.out_of_stock", "Out of Stock");
     }
 }

@@ -4,10 +4,8 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import de.bigbull.marketblocks.util.custom.screen.SmallShopScreen;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
@@ -28,7 +26,6 @@ public class RegistriesInit {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MarketBlocks.MODID);
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, MarketBlocks.MODID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MarketBlocks.MODID);
-
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MarketBlocks.MODID);
 
     public static void register(IEventBus bus) {
@@ -38,29 +35,34 @@ public class RegistriesInit {
         MENU_TYPES.register(bus);
     }
 
+    // Block Registrierung
+    public static final DeferredHolder<Block, SmallShopBlock> SMALL_SHOP_BLOCK =
+            BLOCKS.register("small_shop", () -> new SmallShopBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
+                    .strength(2.0f, 3.0f)
+                    .noOcclusion()));
+
+    // Item Registrierung
+    public static final DeferredHolder<Item, BlockItem> SMALL_SHOP_BLOCK_ITEM =
+            ITEMS.register("small_shop", () -> new BlockItem(SMALL_SHOP_BLOCK.get(), new Item.Properties()));
+
+    // BlockEntity Registrierung
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(
+                    SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get()).build(null));
+
+    // Menu Registrierung
+    public static final DeferredHolder<MenuType<?>, MenuType<SmallShopMenu>> SMALL_SHOP_MENU =
+            MENU_TYPES.register("small_shop_menu", () -> new MenuType<>(SmallShopMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
     /**
      * Clientseitige Registrierung der Bildschirmklassen.
      */
     @EventBusSubscriber(modid = MarketBlocks.MODID, value = Dist.CLIENT)
     public static class ClientRegistry {
 
-
         @SubscribeEvent
         public static void registerScreens(RegisterMenuScreensEvent event) {
-
+            event.register(SMALL_SHOP_MENU.get(), SmallShopScreen::new);
         }
     }
-
-    public static final DeferredHolder<MenuType<?>, MenuType<SmallShopMenu>> SMALL_SHOP_MENU =
-            MENU_TYPES.register("small_shop_menu", () -> new MenuType<>(SmallShopMenu::new, FeatureFlags.DEFAULT_FLAGS));
-
-    public static final DeferredHolder<Block, SmallShopBlock> SMALL_SHOP_BLOCK =
-            BLOCKS.register("small_shop", () -> new SmallShopBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)));
-
-    public static final DeferredHolder<Item, BlockItem> SMALL_SHOP_BLOCK_ITEM =
-            ITEMS.register("small_shop", () -> new BlockItem(SMALL_SHOP_BLOCK.get(), new Item.Properties()));
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =
-            BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get()).build(null));
-
 }
