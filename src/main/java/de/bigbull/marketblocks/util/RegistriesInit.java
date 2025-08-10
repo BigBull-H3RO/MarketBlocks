@@ -4,8 +4,6 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
-import de.bigbull.marketblocks.util.custom.screen.gui.SmallShopBuyerScreen;
-import de.bigbull.marketblocks.util.custom.screen.gui.SmallShopOwnerScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -45,16 +43,11 @@ public class RegistriesInit {
      */
     @EventBusSubscriber(modid = MarketBlocks.MODID, value = Dist.CLIENT)
     public static class ClientRegistry {
-        private static AbstractContainerScreen<SmallShopMenu> createSmallShopScreen(
-                SmallShopMenu menu, Inventory inv, Component title) {
-            return menu.isOwnerView()
-                    ? new SmallShopOwnerScreen(menu, inv, title)
-                    : new SmallShopBuyerScreen(menu, inv, title);
-        }
+
 
         @SubscribeEvent
         public static void registerScreens(RegisterMenuScreensEvent event) {
-            event.register(SMALL_SHOP_MENU.get(), ClientRegistry::createSmallShopScreen);
+
         }
     }
 
