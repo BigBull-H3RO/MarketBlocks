@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.util.custom.entity;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
@@ -54,9 +54,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         return Component.translatable("container.marketblocks.small_shop");
     }
 
+    // ❌ ALTE IMPLEMENTIERUNG ENTFERNT:
+    // return new SmallShopMenu(containerId, playerInventory, this);
+
+    // ✅ NEUE IMPLEMENTIERUNG:
+    // Diese Methode wird nicht mehr direkt verwendet, da wir separate MenuProvider haben
+    // Fallback für Kompatibilität - standardmäßig Offers Menu
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        return new SmallShopMenu(containerId, playerInventory, this);
+        // Fallback: Verwende Offers Menu als Standard
+        return new SmallShopOffersMenu(containerId, playerInventory, this);
     }
 
     // Container Implementation

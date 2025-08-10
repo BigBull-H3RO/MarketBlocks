@@ -15,7 +15,7 @@ public record SwitchTabPacket(BlockPos pos, boolean showOffers) implements Custo
     public static final CustomPacketPayload.Type<SwitchTabPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "switch_tab"));
 
-    public static final StreamCodec<ByteBuf, SwitchTabPacket> STREAM_CODEC = StreamCodec.composite(
+    public static final StreamCodec<ByteBuf, SwitchTabPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             SwitchTabPacket::pos,
             ByteBufCodecs.BOOL,

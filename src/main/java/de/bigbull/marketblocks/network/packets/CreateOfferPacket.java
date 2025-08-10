@@ -18,7 +18,7 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
     public static final CustomPacketPayload.Type<CreateOfferPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "create_offer"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, CreateOfferPacket> STREAM_CODEC = StreamCodec.composite(
+    public static final StreamCodec<RegistryFriendlyByteBuf, CreateOfferPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             CreateOfferPacket::pos,
             ItemStack.STREAM_CODEC,

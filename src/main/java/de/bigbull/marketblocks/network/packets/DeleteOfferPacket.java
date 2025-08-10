@@ -16,7 +16,7 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<DeleteOfferPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "delete_offer"));
 
-    public static final StreamCodec<ByteBuf, DeleteOfferPacket> STREAM_CODEC = StreamCodec.composite(
+    public static final StreamCodec<ByteBuf, DeleteOfferPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             DeleteOfferPacket::pos,
             DeleteOfferPacket::new

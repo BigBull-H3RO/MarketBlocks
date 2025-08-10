@@ -5,8 +5,9 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.CreateOfferPacket;
 import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
+import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -16,12 +17,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
-    private static final ResourceLocation BACKGROUND_OFFERS = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
-    private static final ResourceLocation BACKGROUND_INVENTORY = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_inventory.png");
+public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffersMenu> {
+    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
     private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_arrow.png");
     private static final ResourceLocation TRADE_ARROW_DISABLED = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_arrow_disabled.png");
 
@@ -45,12 +44,9 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
     private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icons/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icons/delete.png");
 
-    private boolean showOffers = true;
     private boolean creatingOffer = false;
 
     // Temporäre Slots für Angebots-Erstellung
-    private ItemStack tempPayment1 = ItemStack.EMPTY;
-    private ItemStack tempPayment2 = ItemStack.EMPTY;
     private ItemStack tempResult = ItemStack.EMPTY;
 
     // Buttons
@@ -61,7 +57,7 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
     private IconButton confirmButton;
     private IconButton cancelButton;
 
-    public SmallShopScreen(SmallShopMenu menu, Inventory inv, Component title) {
+    public SmallShopOffersScreen(SmallShopOffersMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 176;
         this.imageHeight = 222;
@@ -82,9 +78,10 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
             this.offersButton = addRenderableWidget(new IconButton(
                     leftPos - 28, topPos + 8, 24, 24,
                     BUTTON_SPRITES, OFFERS_ICON,
-                    button -> switchToOffers(),
+                    button -> {
+                    }, // Bereits im Offers-Modus
                     Component.translatable("gui.marketblocks.offers_tab"),
-                    () -> showOffers
+                    () -> true // Immer selected da wir im Offers-Modus sind
             ));
 
             this.inventoryButton = addRenderableWidget(new IconButton(
@@ -92,77 +89,59 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
                     BUTTON_SPRITES, INVENTORY_ICON,
                     button -> switchToInventory(),
                     Component.translatable("gui.marketblocks.inventory_tab"),
-                    () -> !showOffers
+                    () -> false
             ));
         }
 
-        // Angebots-Buttons (nur auf Angebots-Seite)
-        if (showOffers) {
-            if (isOwner) {
-                if (creatingOffer) {
-                    // Bestätigen/Abbrechen Buttons während Erstellung
-                    this.confirmButton = addRenderableWidget(new IconButton(
-                            leftPos + 80, topPos + 60, 20, 20,
-                            ACTION_BUTTON_SPRITES, CREATE_ICON,
-                            button -> confirmOffer(),
-                            Component.translatable("gui.marketblocks.confirm_offer"),
-                            () -> false
-                    ));
+        // Angebots-Buttons
+        if (isOwner) {
+            if (creatingOffer) {
+                // Bestätigen/Abbrechen Buttons während Erstellung
+                this.confirmButton = addRenderableWidget(new IconButton(
+                        leftPos + 80, topPos + 60, 20, 20,
+                        ACTION_BUTTON_SPRITES, CREATE_ICON,
+                        button -> confirmOffer(),
+                        Component.translatable("gui.marketblocks.confirm_offer"),
+                        () -> false
+                ));
 
-                    this.cancelButton = addRenderableWidget(new IconButton(
-                            leftPos + 104, topPos + 60, 20, 20,
-                            ACTION_BUTTON_SPRITES, DELETE_ICON,
-                            button -> cancelOfferCreation(),
-                            Component.translatable("gui.marketblocks.cancel_offer"),
-                            () -> false
-                    ));
-                } else if (!blockEntity.hasOffer()) {
-                    // Erstellen Button wenn kein Angebot existiert
-                    this.createOfferButton = addRenderableWidget(new IconButton(
-                            leftPos + 80, topPos + 60, 20, 20,
-                            ACTION_BUTTON_SPRITES, CREATE_ICON,
-                            button -> startOfferCreation(),
-                            Component.translatable("gui.marketblocks.create_offer"),
-                            () -> false
-                    ));
-                } else {
-                    // Löschen Button wenn Angebot existiert
-                    this.deleteOfferButton = addRenderableWidget(new IconButton(
-                            leftPos + 104, topPos + 60, 20, 20,
-                            ACTION_BUTTON_SPRITES, DELETE_ICON,
-                            button -> deleteOffer(),
-                            Component.translatable("gui.marketblocks.delete_offer"),
-                            () -> false
-                    ));
-                }
+                this.cancelButton = addRenderableWidget(new IconButton(
+                        leftPos + 104, topPos + 60, 20, 20,
+                        ACTION_BUTTON_SPRITES, DELETE_ICON,
+                        button -> cancelOfferCreation(),
+                        Component.translatable("gui.marketblocks.cancel_offer"),
+                        () -> false
+                ));
+            } else if (!blockEntity.hasOffer()) {
+                // Erstellen Button wenn kein Angebot existiert
+                this.createOfferButton = addRenderableWidget(new IconButton(
+                        leftPos + 80, topPos + 60, 20, 20,
+                        ACTION_BUTTON_SPRITES, CREATE_ICON,
+                        button -> startOfferCreation(),
+                        Component.translatable("gui.marketblocks.create_offer"),
+                        () -> false
+                ));
+            } else {
+                // Löschen Button wenn Angebot existiert
+                this.deleteOfferButton = addRenderableWidget(new IconButton(
+                        leftPos + 104, topPos + 60, 20, 20,
+                        ACTION_BUTTON_SPRITES, DELETE_ICON,
+                        button -> deleteOffer(),
+                        Component.translatable("gui.marketblocks.delete_offer"),
+                        () -> false
+                ));
             }
-        }
-
-        updateSlotVisibility();
-    }
-
-    private void switchToOffers() {
-        if (!showOffers) {
-            showOffers = true;
-            creatingOffer = false;
-            playClickSound();
-            init();
         }
     }
 
     private void switchToInventory() {
-        if (showOffers) {
-            showOffers = false;
-            creatingOffer = false;
-            playClickSound();
-            init();
-        }
+        // Sende Paket zum Wechseln des Menüs
+        NetworkHandler.sendToServer(new SwitchTabPacket(menu.getBlockEntity().getBlockPos(), true)); // true = zu Inventory wechseln
+        playClickSound();
     }
 
     private void startOfferCreation() {
         creatingOffer = true;
-        tempPayment1 = ItemStack.EMPTY;
-        tempPayment2 = ItemStack.EMPTY;
         tempResult = ItemStack.EMPTY;
         playClickSound();
         init();
@@ -170,11 +149,11 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
 
     private void confirmOffer() {
         // Hole Items aus Payment Slots
-        ItemStack payment1 = menu.slots.get(24).getItem().copy();
-        ItemStack payment2 = menu.slots.get(25).getItem().copy();
+        ItemStack payment1 = menu.slots.get(0).getItem().copy();
+        ItemStack payment2 = menu.slots.get(1).getItem().copy();
 
-        // Für das Result Item müsste hier ein spezieller Slot sein
-        // Aktuell nehmen wir an, dass es manuell gesetzt wurde
+        // Für das Result Item - hier könnte ein separater Dialog oder Input-Mechanismus sein
+        // Vorerst nehmen wir an, dass tempResult gesetzt wurde
         ItemStack result = tempResult.copy();
 
         if (!payment1.isEmpty() || !payment2.isEmpty() || !result.isEmpty()) {
@@ -187,8 +166,8 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
             ));
 
             // Leere die Slots
-            menu.slots.get(24).set(ItemStack.EMPTY);
-            menu.slots.get(25).set(ItemStack.EMPTY);
+            menu.slots.get(0).set(ItemStack.EMPTY);
+            menu.slots.get(1).set(ItemStack.EMPTY);
 
             creatingOffer = false;
             playSuccessSound();
@@ -198,18 +177,16 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
 
     private void cancelOfferCreation() {
         // Gebe Items zurück
-        if (!menu.slots.get(24).getItem().isEmpty()) {
-            minecraft.player.getInventory().add(menu.slots.get(24).getItem());
-            menu.slots.get(24).set(ItemStack.EMPTY);
+        if (!menu.slots.get(0).getItem().isEmpty()) {
+            minecraft.player.getInventory().add(menu.slots.get(0).getItem());
+            menu.slots.get(0).set(ItemStack.EMPTY);
         }
-        if (!menu.slots.get(25).getItem().isEmpty()) {
-            minecraft.player.getInventory().add(menu.slots.get(25).getItem());
-            menu.slots.get(25).set(ItemStack.EMPTY);
+        if (!menu.slots.get(1).getItem().isEmpty()) {
+            minecraft.player.getInventory().add(menu.slots.get(1).getItem());
+            menu.slots.get(1).set(ItemStack.EMPTY);
         }
 
         creatingOffer = false;
-        tempPayment1 = ItemStack.EMPTY;
-        tempPayment2 = ItemStack.EMPTY;
         tempResult = ItemStack.EMPTY;
         playClickSound();
         init();
@@ -221,100 +198,11 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
         init();
     }
 
-    private void updateSlotVisibility() {
-        for (Slot slot : menu.slots) {
-            int index = slot.index;
-
-            // Player inventory slots sind immer sichtbar (ab Index 27)
-            if (index >= 27) {
-                setPlayerSlotPositions(slot, index);
-                continue;
-            }
-
-            if (showOffers) {
-                // Angebots-Modus: Nur Payment und Offer Slots sichtbar
-                if (index < 24) { // Input/Output Slots verstecken
-                    hideSlot(slot);
-                } else { // Payment/Offer Slots positionieren
-                    repositionOfferSlots(slot, index);
-                }
-            } else {
-                // Inventar-Modus: Nur Input/Output Slots sichtbar
-                if (index < 24) { // Input/Output Slots
-                    repositionInventorySlots(slot, index);
-                } else if (index < 27) { // Payment/Offer Slots verstecken
-                    hideSlot(slot);
-                }
-            }
-        }
-    }
-
-    private void hideSlot(Slot slot) {
-        slot.x = -1000;
-        slot.y = -1000;
-    }
-
-    private void setPlayerSlotPositions(Slot slot, int index) {
-        if (index < 54) { // Main inventory (27-53)
-            int localIndex = index - 27;
-            int row = localIndex / 9;
-            int col = localIndex % 9;
-            slot.x = leftPos + 8 + col * 18;
-            slot.y = leftPos + 140 + row * 18;
-        } else { // Hotbar (54-62)
-            int localIndex = index - 54;
-            slot.x = leftPos + 8 + localIndex * 18;
-            slot.y = leftPos + 198;
-        }
-    }
-
-    private void repositionOfferSlots(Slot slot, int index) {
-        switch (index) {
-            case 24 -> { // Payment Slot 1
-                slot.x = leftPos + 44;
-                slot.y = topPos + 35;
-            }
-            case 25 -> { // Payment Slot 2
-                slot.x = leftPos + 62;
-                slot.y = topPos + 35;
-            }
-            case 26 -> { // Offer Result Slot
-                slot.x = leftPos + 120;
-                slot.y = topPos + 35;
-            }
-        }
-    }
-
-    private void repositionInventorySlots(Slot slot, int index) {
-        if (index < 12) { // Input Slots (0-11)
-            int row = index / 3;
-            int col = index % 3;
-            slot.x = leftPos + 8 + col * 18;
-            slot.y = topPos + 18 + row * 18;
-        } else if (index < 24) { // Output Slots (12-23)
-            int localIndex = index - 12;
-            int row = localIndex / 3;
-            int col = localIndex % 3;
-            slot.x = leftPos + 116 + col * 18;
-            slot.y = topPos + 18 + row * 18;
-        }
-    }
-
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight);
 
-        ResourceLocation background = showOffers ? BACKGROUND_OFFERS : BACKGROUND_INVENTORY;
-        graphics.blit(background, leftPos, topPos, 0, 0, imageWidth, imageHeight);
-
-        if (showOffers) {
-            renderOfferBackground(graphics, partialTick, mouseX, mouseY);
-        } else {
-            renderInventoryBackground(graphics, partialTick, mouseX, mouseY);
-        }
-    }
-
-    private void renderOfferBackground(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
         // Render Handels-Pfeil
@@ -372,58 +260,33 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
         graphics.drawString(font, hint, leftPos + (imageWidth - hintWidth) / 2, topPos + 90, 0x808080, false);
     }
 
-    private void renderInventoryBackground(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        // Render Inventar-Labels mit Hintergrund
-        Component inputLabel = Component.translatable("gui.marketblocks.input_inventory");
-        Component outputLabel = Component.translatable("gui.marketblocks.output_inventory");
-
-        // Input Label
-        int inputWidth = font.width(inputLabel);
-        graphics.fill(leftPos + 6, topPos + 4, leftPos + 8 + inputWidth, topPos + 14, 0x80000000);
-        graphics.drawString(font, inputLabel, leftPos + 8, topPos + 6, 0xFFFFFF, false);
-
-        // Output Label
-        int outputWidth = font.width(outputLabel);
-        graphics.fill(leftPos + 114, topPos + 4, leftPos + 116 + outputWidth, topPos + 14, 0x80000000);
-        graphics.drawString(font, outputLabel, leftPos + 116, topPos + 6, 0xFFFFFF, false);
-
-        // Render Transfer-Pfeil zwischen Input und Output
-        graphics.blit(TRADE_ARROW, leftPos + 76, topPos + 50, 0, 0, 24, 16);
-    }
-
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
-        if (showOffers) {
-            // Titel
-            Component title = Component.translatable("gui.marketblocks.shop_title");
-            graphics.drawString(font, title, 8, 6, 4210752, false);
+        // Titel
+        Component title = Component.translatable("gui.marketblocks.shop_title");
+        graphics.drawString(font, title, 8, 6, 4210752, false);
 
-            // Owner Info für Nicht-Owner
-            if (!menu.isOwner() && blockEntity.getOwnerName() != null) {
-                Component ownerText = Component.translatable("gui.marketblocks.owner", blockEntity.getOwnerName());
-                int ownerWidth = font.width(ownerText);
-                graphics.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0x404040, false);
-            }
+        // Owner Info für Nicht-Owner
+        if (!menu.isOwner() && blockEntity.getOwnerName() != null) {
+            Component ownerText = Component.translatable("gui.marketblocks.owner", blockEntity.getOwnerName());
+            int ownerWidth = font.width(ownerText);
+            graphics.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0x404040, false);
+        }
 
-            // Status-Meldungen
-            if (blockEntity.hasOffer()) {
-                if (!blockEntity.isOfferAvailable()) {
-                    Component noStockText = Component.translatable("gui.marketblocks.out_of_stock");
-                    graphics.drawString(font, noStockText, 8, 84, 0xFF0000, false);
-                } else if (!menu.isOwner()) {
-                    Component availableText = Component.translatable("gui.marketblocks.available");
-                    graphics.drawString(font, availableText, 8, 84, 0x00FF00, false);
-                }
+        // Status-Meldungen
+        if (blockEntity.hasOffer()) {
+            if (!blockEntity.isOfferAvailable()) {
+                Component noStockText = Component.translatable("gui.marketblocks.out_of_stock");
+                graphics.drawString(font, noStockText, 8, 84, 0xFF0000, false);
             } else if (!menu.isOwner()) {
-                Component noOfferText = Component.translatable("gui.marketblocks.no_offers");
-                graphics.drawString(font, noOfferText, 8, 84, 0x808080, false);
+                Component availableText = Component.translatable("gui.marketblocks.available");
+                graphics.drawString(font, availableText, 8, 84, 0x00FF00, false);
             }
-        } else {
-            // Inventar-Modus Titel
-            Component title = Component.translatable("gui.marketblocks.inventory_title");
-            graphics.drawString(font, title, 8, 6, 4210752, false);
+        } else if (!menu.isOwner()) {
+            Component noOfferText = Component.translatable("gui.marketblocks.no_offers");
+            graphics.drawString(font, noOfferText, 8, 84, 0x808080, false);
         }
 
         // Spieler Inventar Label
@@ -434,11 +297,9 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
     protected void renderTooltip(GuiGraphics graphics, int x, int y) {
         super.renderTooltip(graphics, x, y);
 
-        if (showOffers) {
-            SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-            if (blockEntity.hasOffer() && !creatingOffer) {
-                renderOfferTooltips(graphics, x, y, blockEntity);
-            }
+        SmallShopBlockEntity blockEntity = menu.getBlockEntity();
+        if (blockEntity.hasOffer() && !creatingOffer) {
+            renderOfferTooltips(graphics, x, y, blockEntity);
         }
     }
 
@@ -497,12 +358,8 @@ public class SmallShopScreen extends AbstractContainerScreen<SmallShopMenu> {
                 minecraft.player.closeContainer();
                 return true;
             } else {
-                // E wechselt Tab
-                if (showOffers) {
-                    switchToInventory();
-                } else {
-                    switchToOffers();
-                }
+                // E wechselt zu Inventory
+                switchToInventory();
                 return true;
             }
         }

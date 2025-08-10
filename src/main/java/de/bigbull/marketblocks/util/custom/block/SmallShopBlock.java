@@ -7,6 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -57,9 +58,22 @@ public class SmallShopBlock extends BaseEntityBlock {
                     shopEntity.setOwner(player);
                 }
 
-                // Öffne GUI
+                // Öffne GUI - standardmäßig Offers für Owner, sonst je nach Verfügbarkeit
                 if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.openMenu(shopEntity, pos);
+                    boolean isOwner = shopEntity.isOwner(player);
+
+                    if (isOwner) {
+                        // Owner startet immer mit Offers-Menu
+                        serverPlayer.openMenu(new SmallShopOffersMenuProvider(shopEntity), pos);
+                    } else {
+                        // Nicht-Owner sehen nur Offers wenn ein Angebot existiert
+                        if (shopEntity.hasOffer()) {
+                            serverPlayer.openMenu(new SmallShopOffersMenuProvider(shopEntity), pos);
+                        } else {
+                            // Fallback: Info-Message oder nichts tun
+                            // Hier könnte eine Message gesendet werden
+                        }
+                    }
                 }
             }
         }
@@ -69,7 +83,11 @@ public class SmallShopBlock extends BaseEntityBlock {
     @Override
     protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
-        return blockEntity instanceof MenuProvider ? (MenuProvider) blockEntity : null;
+        if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
+            // Standardmäßig Offers-Menu zurückgeben
+            return new SmallShopOffersMenuProvider(shopEntity);
+        }
+        return null;
     }
 
     @Override
@@ -92,5 +110,47 @@ public class SmallShopBlock extends BaseEntityBlock {
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new SmallShopBlockEntity(pos, state);
+    }
+
+    // MenuProvider für Offers-Menu
+    public static class SmallShopOffersMenuProvider implements MenuProvider {
+        private final SmallShopBlockEntity blockEntity;
+
+        public SmallShopOffersMenuProvider(SmallShopBlockEntity blockEntity) {
+            this.blockEntity = blockEntity;
+        }
+
+        @Override
+        public net.minecraft.network.chat.Component getDisplayName() {
+            return net.minecraft.network.chat.Component.translatable("container.marketblocks.small_shop_offers");
+        }
+
+        @Override
+        public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int containerId,
+                                                                              Inventory playerInventory,
+                                                                              Player player) {
+            return new de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu(containerId, playerInventory, blockEntity);
+        }
+    }
+
+    // MenuProvider für Inventory-Menu
+    public static class SmallShopInventoryMenuProvider implements MenuProvider {
+        private final SmallShopBlockEntity blockEntity;
+
+        public SmallShopInventoryMenuProvider(SmallShopBlockEntity blockEntity) {
+            this.blockEntity = blockEntity;
+        }
+
+        @Override
+        public net.minecraft.network.chat.Component getDisplayName() {
+            return net.minecraft.network.chat.Component.translatable("container.marketblocks.small_shop_inventory");
+        }
+
+        @Override
+        public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int containerId,
+                                                                              Inventory playerInventory,
+                                                                              Player player) {
+            return new de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu(containerId, playerInventory, blockEntity);
+        }
     }
 }

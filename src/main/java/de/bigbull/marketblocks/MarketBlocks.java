@@ -33,7 +33,6 @@ public class MarketBlocks {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-
     }
 
     @SubscribeEvent

@@ -12,25 +12,26 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-public class SmallShopMenu extends AbstractContainerMenu {
+/**
+ * Menü für den Angebots-Modus des SmallShop
+ */
+public class SmallShopOffersMenu extends AbstractContainerMenu {
     private final SmallShopBlockEntity blockEntity;
     private final Level level;
     private final Container container;
 
-    // Slot-Indizes
-    private static final int INPUT_SLOTS = 12; // 3x4 Input Inventar
-    private static final int OUTPUT_SLOTS = 12; // 3x4 Output Inventar
+    // Slot-Indizes für Offers-Modus
     private static final int PAYMENT_SLOTS = 2; // 2 Bezahlslots
     private static final int OFFER_SLOT = 1; // 1 Angebots-Slot
-    private static final int PLAYER_INVENTORY_START = INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS + OFFER_SLOT;
+    private static final int PLAYER_INVENTORY_START = PAYMENT_SLOTS + OFFER_SLOT;
     private static final int HOTBAR_START = PLAYER_INVENTORY_START + 27;
 
     // Data Slots für Client-Server Sync
     private final ContainerData data;
 
     // Constructor für Server
-    public SmallShopMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
-        super(RegistriesInit.SMALL_SHOP_MENU.get(), containerId);
+    public SmallShopOffersMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
+        super(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), containerId);
         this.blockEntity = blockEntity;
         this.level = playerInventory.player.level();
         this.container = blockEntity;
@@ -43,8 +44,8 @@ public class SmallShopMenu extends AbstractContainerMenu {
                     case 1 -> blockEntity.isOfferAvailable() ? 1 : 0;
                     case 2 -> blockEntity.isOwner(playerInventory.player) ? 1 : 0;
                     case 3 -> blockEntity.getOwnerId() != null ? 1 : 0;
-                    case 4 -> 0; // Aktueller Tab (0 = Angebot, 1 = Inventar)
-                    case 5 -> 0; // Zusätzliche Flags
+                    case 4 -> 0; // Reserviert für weitere Flags
+                    case 5 -> 0; // Reserviert für weitere Flags
                     default -> 0;
                 };
             }
@@ -67,7 +68,7 @@ public class SmallShopMenu extends AbstractContainerMenu {
     }
 
     // Constructor für Client
-    public SmallShopMenu(int containerId, Inventory playerInventory) {
+    public SmallShopOffersMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, new SmallShopBlockEntity(
                 playerInventory.player.blockPosition(),
                 playerInventory.player.level().getBlockState(playerInventory.player.blockPosition())
@@ -75,36 +76,21 @@ public class SmallShopMenu extends AbstractContainerMenu {
     }
 
     private void setupSlots(Inventory playerInventory) {
-        // Input Inventar (3x4 = 12 Slots) - Slots 0-11
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 3; col++) {
-                addSlot(new InputSlot(container, row * 3 + col, 8 + col * 18, 18 + row * 18));
-            }
-        }
+        // Payment Slots (2 Slots) - Slots 0-1
+        addSlot(new PaymentSlot(container, 24, 44, 35)); // Slot 24 in BlockEntity = Payment 1
+        addSlot(new PaymentSlot(container, 25, 62, 35)); // Slot 25 in BlockEntity = Payment 2
 
-        // Output Inventar (3x4 = 12 Slots) - Slots 12-23
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 3; col++) {
-                addSlot(new OutputSlot(container, INPUT_SLOTS + row * 3 + col,
-                        116 + col * 18, 18 + row * 18));
-            }
-        }
+        // Offer Result Slot - Slot 2
+        addSlot(new OfferSlot(container, 26, 120, 35)); // Slot 26 in BlockEntity = Offer Result
 
-        // Payment Slots (2 Slots) - Slots 24-25
-        addSlot(new PaymentSlot(container, INPUT_SLOTS + OUTPUT_SLOTS, 44, 35));
-        addSlot(new PaymentSlot(container, INPUT_SLOTS + OUTPUT_SLOTS + 1, 62, 35));
-
-        // Offer Result Slot - Slot 26
-        addSlot(new OfferSlot(container, INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS, 120, 35));
-
-        // Spieler Inventar - Slots 27-62
+        // Spieler Inventar - Slots 3-38
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 140 + row * 18));
             }
         }
 
-        // Spieler Hotbar - Slots 63-71
+        // Spieler Hotbar - Slots 39-47
         for (int col = 0; col < 9; col++) {
             addSlot(new Slot(playerInventory, col, 8 + col * 18, 198));
         }
@@ -125,10 +111,10 @@ public class SmallShopMenu extends AbstractContainerMenu {
                     return ItemStack.EMPTY;
                 }
             }
-            // Von Spieler zu Container
+            // Von Spieler zu Container (nur Payment Slots)
             else if (index >= PLAYER_INVENTORY_START) {
-                // Versuche in Input-Slots zu verschieben
-                if (!this.moveItemStackTo(itemstack1, 0, INPUT_SLOTS, false)) {
+                // Versuche in Payment-Slots zu verschieben
+                if (!this.moveItemStackTo(itemstack1, 0, PAYMENT_SLOTS, false)) {
                     if (index < HOTBAR_START) {
                         // Von Inventar zu Hotbar
                         if (!this.moveItemStackTo(itemstack1, HOTBAR_START, HOTBAR_START + 9, false)) {
@@ -180,28 +166,6 @@ public class SmallShopMenu extends AbstractContainerMenu {
     }
 
     // Custom Slot Klassen
-    public static class InputSlot extends Slot {
-        public InputSlot(Container container, int slot, int x, int y) {
-            super(container, slot, x, y);
-        }
-
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            return true; // Input-Slots akzeptieren alle Items
-        }
-    }
-
-    public static class OutputSlot extends Slot {
-        public OutputSlot(Container container, int slot, int x, int y) {
-            super(container, slot, x, y);
-        }
-
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            return false; // Output-Slots akzeptieren keine Items vom Spieler
-        }
-    }
-
     public static class PaymentSlot extends Slot {
         public PaymentSlot(Container container, int slot, int x, int y) {
             super(container, slot, x, y);

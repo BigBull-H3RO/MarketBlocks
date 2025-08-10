@@ -15,23 +15,25 @@ public class NetworkHandler {
 
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar("1");
+        PayloadRegistrar registrar = event.registrar(MarketBlocks.MODID)
+                .versioned("1.0.0")
+                .optional();
 
         registrar.playToServer(
                 CreateOfferPacket.TYPE,
-                CreateOfferPacket.STREAM_CODEC,
+                CreateOfferPacket.CODEC,
                 CreateOfferPacket::handle
         );
 
         registrar.playToServer(
                 DeleteOfferPacket.TYPE,
-                DeleteOfferPacket.STREAM_CODEC,
+                DeleteOfferPacket.CODEC,
                 DeleteOfferPacket::handle
         );
 
         registrar.playToServer(
                 SwitchTabPacket.TYPE,
-                SwitchTabPacket.STREAM_CODEC,
+                SwitchTabPacket.CODEC,
                 SwitchTabPacket::handle
         );
     }

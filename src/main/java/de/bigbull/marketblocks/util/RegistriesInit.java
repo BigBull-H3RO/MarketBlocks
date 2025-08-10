@@ -3,8 +3,10 @@ package de.bigbull.marketblocks.util;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
-import de.bigbull.marketblocks.util.custom.screen.SmallShopScreen;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.screen.SmallShopInventoryScreen;
+import de.bigbull.marketblocks.util.custom.screen.SmallShopOffersScreen;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -21,6 +23,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.awt.*;
 
 public class RegistriesInit {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MarketBlocks.MODID);
@@ -50,9 +54,12 @@ public class RegistriesInit {
             BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(
                     SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get()).build(null));
 
-    // Menu Registrierung
-    public static final DeferredHolder<MenuType<?>, MenuType<SmallShopMenu>> SMALL_SHOP_MENU =
-            MENU_TYPES.register("small_shop_menu", () -> new MenuType<>(SmallShopMenu::new, FeatureFlags.DEFAULT_FLAGS));
+    // Menu Registrierungen - Separate Menüs für Offers und Inventory
+    public static final DeferredHolder<MenuType<?>, MenuType<SmallShopOffersMenu>> SMALL_SHOP_OFFERS_MENU =
+            MENU_TYPES.register("small_shop_offers_menu", () -> new MenuType<>(SmallShopOffersMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<SmallShopInventoryMenu>> SMALL_SHOP_INVENTORY_MENU =
+            MENU_TYPES.register("small_shop_inventory_menu", () -> new MenuType<>(SmallShopInventoryMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     /**
      * Clientseitige Registrierung der Bildschirmklassen.
@@ -62,7 +69,8 @@ public class RegistriesInit {
 
         @SubscribeEvent
         public static void registerScreens(RegisterMenuScreensEvent event) {
-            event.register(SMALL_SHOP_MENU.get(), SmallShopScreen::new);
+            event.register(SMALL_SHOP_OFFERS_MENU.get(), SmallShopOffersScreen::new);
+            event.register(SMALL_SHOP_INVENTORY_MENU.get(), SmallShopInventoryScreen::new);
         }
     }
 }
