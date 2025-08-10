@@ -6,6 +6,7 @@ import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
+import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -55,7 +56,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
         // Tab-Buttons (nur für Owner sichtbar)
         if (isOwner) {
             this.offersButton = addRenderableWidget(new IconButton(
-                    leftPos - 28, topPos + 8, 24, 24,
+                    leftPos + imageWidth + 4, topPos + 8, 24, 24,
                     BUTTON_SPRITES, OFFERS_ICON,
                     button -> switchToOffers(),
                     Component.translatable("gui.marketblocks.offers_tab"),
@@ -63,7 +64,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
             ));
 
             this.inventoryButton = addRenderableWidget(new IconButton(
-                    leftPos - 28, topPos + 36, 24, 24,
+                    leftPos + imageWidth + 4, topPos + 36, 24, 24,
                     BUTTON_SPRITES, INVENTORY_ICON,
                     button -> {}, // Bereits im Inventory-Modus
                     Component.translatable("gui.marketblocks.inventory_tab"),
@@ -74,7 +75,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
 
     private void switchToOffers() {
         // Sende Paket zum Wechseln des Menüs
-        NetworkHandler.sendToServer(new SwitchTabPacket(menu.getBlockEntity().getBlockPos(), false)); // false = zu Offers wechseln
+        NetworkHandler.sendToServer(new SwitchTabPacket(menu.getBlockEntity().getBlockPos(), true)); // true = zu Offers wechseln
         playClickSound();
     }
 
@@ -124,7 +125,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
         }
 
         // Spieler Inventar Label
-        graphics.drawString(font, playerInventoryTitle, 8, imageHeight - 94, 4210752, false);
+        graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
 
     @Override

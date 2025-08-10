@@ -354,6 +354,11 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
                 }
             }
         }
+
+        // Falls nach dem Durchlauf noch Items übrig sind, dürfen sie nicht verloren gehen
+        if (!toAdd.isEmpty() && level != null && !level.isClientSide) {
+            net.minecraft.world.Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), toAdd);
+        }
     }
 
     public boolean isOfferAvailable() {

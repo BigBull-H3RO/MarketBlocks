@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util.custom.screen.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -32,6 +33,7 @@ public class IconButton extends Button {
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         boolean selected = selectedSupplier != null && selectedSupplier.getAsBoolean();
         graphics.blitSprite(sprites.get(isHoveredOrFocused(), selected), getX(), getY(), getWidth(), getHeight());
-        graphics.blitSprite(icon, getX() + 2, getY() + 2, 16, 16);
+        RenderSystem.setShaderTexture(0, icon);
+        graphics.blit(icon, getX() + 2, getY() + 2, 0, 0, 0, 16, 16, 16, 16);
     }
 }

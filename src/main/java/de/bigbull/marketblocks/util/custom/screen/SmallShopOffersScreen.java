@@ -8,6 +8,7 @@ import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
 import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -26,16 +27,16 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
     // Button Sprites
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/button"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/button_highlighted"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/button_selected")
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected")
     );
 
     private static final WidgetSprites ACTION_BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/action"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/action_highlighted"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/action_pressed"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/action_disabled")
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_pressed"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled")
     );
 
     // Icons
@@ -46,9 +47,6 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
     private boolean creatingOffer = false;
     private boolean lastIsOwner;
-
-    // Temporäre Slots für Angebots-Erstellung
-    private ItemStack tempResult = ItemStack.EMPTY;
 
     // Buttons
     private IconButton offersButton;
@@ -78,7 +76,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
         // Tab-Buttons (nur für Owner sichtbar)
         if (isOwner) {
             this.offersButton = addRenderableWidget(new IconButton(
-                    leftPos - 28, topPos + 8, 24, 24,
+                    leftPos + imageWidth + 4, topPos + 8, 24, 24,
                     BUTTON_SPRITES, OFFERS_ICON,
                     button -> {
                     }, // Bereits im Offers-Modus
@@ -87,7 +85,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
             ));
 
             this.inventoryButton = addRenderableWidget(new IconButton(
-                    leftPos - 28, topPos + 36, 24, 24,
+                    leftPos + imageWidth + 4, topPos + 36, 24, 24,
                     BUTTON_SPRITES, INVENTORY_ICON,
                     button -> switchToInventory(),
                     Component.translatable("gui.marketblocks.inventory_tab"),
@@ -138,13 +136,14 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
     private void switchToInventory() {
         // Sende Paket zum Wechseln des Menüs
-        NetworkHandler.sendToServer(new SwitchTabPacket(menu.getBlockEntity().getBlockPos(), true)); // true = zu Inventory wechseln
+        NetworkHandler.sendToServer(new SwitchTabPacket(menu.getBlockEntity().getBlockPos(), false)); // false = zu Inventory wechseln
         playClickSound();
     }
 
     private void startOfferCreation() {
         creatingOffer = true;
-        tempResult = ItemStack.EMPTY;
+        menu.setCreatingOffer(true);
+        menu.slots.get(2).set(ItemStack.EMPTY);
         playClickSound();
         init();
     }
@@ -153,10 +152,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
         // Hole Items aus Payment Slots
         ItemStack payment1 = menu.slots.get(0).getItem().copy();
         ItemStack payment2 = menu.slots.get(1).getItem().copy();
-
-        // Für das Result Item - hier könnte ein separater Dialog oder Input-Mechanismus sein
-        // Vorerst nehmen wir an, dass tempResult gesetzt wurde
-        ItemStack result = tempResult.copy();
+        ItemStack result = menu.slots.get(2).getItem().copy();
 
         if (!payment1.isEmpty() || !payment2.isEmpty() || !result.isEmpty()) {
             // Sende Netzwerk-Paket
@@ -170,8 +166,10 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
             // Leere die Slots
             menu.slots.get(0).set(ItemStack.EMPTY);
             menu.slots.get(1).set(ItemStack.EMPTY);
+            menu.slots.get(2).set(ItemStack.EMPTY);
 
             creatingOffer = false;
+            menu.setCreatingOffer(false);
             playSuccessSound();
             init();
         }
@@ -187,9 +185,13 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
             minecraft.player.getInventory().add(menu.slots.get(1).getItem());
             menu.slots.get(1).set(ItemStack.EMPTY);
         }
+        if (!menu.slots.get(2).getItem().isEmpty()) {
+            minecraft.player.getInventory().add(menu.slots.get(2).getItem());
+            menu.slots.get(2).set(ItemStack.EMPTY);
+        }
 
         creatingOffer = false;
-        tempResult = ItemStack.EMPTY;
+        menu.setCreatingOffer(false);
         playClickSound();
         init();
     }
@@ -292,7 +294,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
         }
 
         // Spieler Inventar Label
-        graphics.drawString(font, playerInventoryTitle, 8, imageHeight - 94, 4210752, false);
+        graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
 
     @Override

@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.custom.menu;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
@@ -22,6 +23,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
     private final SmallShopBlockEntity blockEntity;
     private final Level level;
     private final Container container;
+    private boolean creatingOffer = false;
 
     // Slot-Indizes für Offers-Modus
     private static final int PAYMENT_SLOTS = 2; // 2 Bezahlslots
@@ -119,13 +121,14 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         // Spieler Inventar - Slots 3-38
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 140 + row * 18));
+                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18,
+                        GuiConstants.PLAYER_INV_Y_START + row * 18));
             }
         }
 
         // Spieler Hotbar - Slots 39-47
         for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(playerInventory, col, 8 + col * 18, 198));
+            addSlot(new Slot(playerInventory, col, 8 + col * 18, GuiConstants.HOTBAR_Y));
         }
     }
 
@@ -198,6 +201,14 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         return data.get(3) == 1;
     }
 
+    public boolean isCreatingOffer() {
+        return creatingOffer;
+    }
+
+    public void setCreatingOffer(boolean creatingOffer) {
+        this.creatingOffer = creatingOffer;
+    }
+
     // Custom Slot Klassen
     public static class PaymentSlot extends Slot {
         public PaymentSlot(Container container, int slot, int x, int y) {
@@ -210,14 +221,14 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         }
     }
 
-    public static class OfferSlot extends Slot {
+    public class OfferSlot extends Slot {
         public OfferSlot(Container container, int slot, int x, int y) {
             super(container, slot, x, y);
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return false; // Offer-Slot akzeptiert keine Items direkt
+            return isOwner() && isCreatingOffer();
         }
 
         @Override
