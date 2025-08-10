@@ -45,6 +45,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icons/delete.png");
 
     private boolean creatingOffer = false;
+    private boolean lastIsOwner;
 
     // Temporäre Slots für Angebots-Erstellung
     private ItemStack tempResult = ItemStack.EMPTY;
@@ -69,6 +70,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         boolean isOwner = menu.isOwner();
+        this.lastIsOwner = isOwner;
 
         // Clear existing buttons
         clearWidgets();
@@ -370,6 +372,13 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     @Override
     public void containerTick() {
         super.containerTick();
+
+        boolean isOwner = menu.isOwner();
+        if (isOwner != lastIsOwner) {
+            lastIsOwner = isOwner;
+            init();
+            return;
+        }
 
         // Aktualisiere UI wenn sich Angebot ändert
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();

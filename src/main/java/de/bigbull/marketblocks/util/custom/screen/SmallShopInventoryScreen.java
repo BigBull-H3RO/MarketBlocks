@@ -34,6 +34,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
     // Buttons
     private IconButton offersButton;
     private IconButton inventoryButton;
+    private boolean lastIsOwner;
 
     public SmallShopInventoryScreen(SmallShopInventoryMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -46,6 +47,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
         super.init();
 
         boolean isOwner = menu.isOwner();
+        this.lastIsOwner = isOwner;
 
         // Clear existing buttons
         clearWidgets();
@@ -161,6 +163,13 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
     @Override
     public void containerTick() {
         super.containerTick();
+
+        boolean isOwner = menu.isOwner();
+        if (isOwner != lastIsOwner) {
+            lastIsOwner = isOwner;
+            init();
+            return;
+        }
 
         // Aktualisiere UI falls nötig
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
