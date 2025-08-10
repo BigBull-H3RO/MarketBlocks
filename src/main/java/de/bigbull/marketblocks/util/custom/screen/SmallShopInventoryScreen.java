@@ -22,9 +22,9 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
 
     // Button Sprites
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/button"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/button_highlighted"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button/button_selected")
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected")
     );
 
     // Icons
