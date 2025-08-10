@@ -8,7 +8,6 @@ import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopInventoryScreen;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopOffersScreen;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -21,10 +20,9 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-
-import java.awt.*;
 
 public class RegistriesInit {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MarketBlocks.MODID);
@@ -54,12 +52,12 @@ public class RegistriesInit {
             BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(
                     SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get()).build(null));
 
-    // Menu Registrierungen - Separate Menüs für Offers und Inventory
+    // Menu Registrierungen - FIXED VERSION mit IMenuTypeExtension
     public static final DeferredHolder<MenuType<?>, MenuType<SmallShopOffersMenu>> SMALL_SHOP_OFFERS_MENU =
-            MENU_TYPES.register("small_shop_offers_menu", () -> new MenuType<>(SmallShopOffersMenu::new, FeatureFlags.DEFAULT_FLAGS));
+            MENU_TYPES.register("small_shop_offers_menu", () -> IMenuTypeExtension.create(SmallShopOffersMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<SmallShopInventoryMenu>> SMALL_SHOP_INVENTORY_MENU =
-            MENU_TYPES.register("small_shop_inventory_menu", () -> new MenuType<>(SmallShopInventoryMenu::new, FeatureFlags.DEFAULT_FLAGS));
+            MENU_TYPES.register("small_shop_inventory_menu", () -> IMenuTypeExtension.create(SmallShopInventoryMenu::new));
 
     /**
      * Clientseitige Registrierung der Bildschirmklassen.

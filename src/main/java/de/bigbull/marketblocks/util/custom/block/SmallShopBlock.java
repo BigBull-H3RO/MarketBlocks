@@ -2,6 +2,8 @@ package de.bigbull.marketblocks.util.custom.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,6 +24,8 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 
 public class SmallShopBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
@@ -129,7 +133,7 @@ public class SmallShopBlock extends BaseEntityBlock {
         public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int containerId,
                                                                               Inventory playerInventory,
                                                                               Player player) {
-            return new de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu(containerId, playerInventory, blockEntity);
+            return new SmallShopOffersMenu(containerId, playerInventory, blockEntity);
         }
     }
 
@@ -150,7 +154,7 @@ public class SmallShopBlock extends BaseEntityBlock {
         public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int containerId,
                                                                               Inventory playerInventory,
                                                                               Player player) {
-            return new de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu(containerId, playerInventory, blockEntity);
+            return new SmallShopInventoryMenu(containerId, playerInventory, blockEntity);
         }
     }
 }

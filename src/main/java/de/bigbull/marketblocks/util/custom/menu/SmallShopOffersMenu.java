@@ -2,6 +2,8 @@ package de.bigbull.marketblocks.util.custom.menu;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -11,6 +13,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 /**
  * Menü für den Angebots-Modus des SmallShop
@@ -67,12 +70,42 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         }
     }
 
-    // Constructor für Client
-    public SmallShopOffersMenu(int containerId, Inventory playerInventory) {
-        this(containerId, playerInventory, new SmallShopBlockEntity(
-                playerInventory.player.blockPosition(),
-                playerInventory.player.level().getBlockState(playerInventory.player.blockPosition())
-        ));
+    // Constructor für Client - FIXED VERSION
+    public SmallShopOffersMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
+        super(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), containerId);
+
+        // BlockPos aus Buffer lesen
+        BlockPos pos = buf.readBlockPos();
+
+        // Versuche BlockEntity aus der Welt zu bekommen
+        BlockEntity be = playerInventory.player.level().getBlockEntity(pos);
+        if (be instanceof SmallShopBlockEntity shopEntity) {
+            this.blockEntity = shopEntity;
+        } else {
+            // Fallback: Dummy BlockEntity erstellen (sollte nicht passieren)
+            this.blockEntity = new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
+        }
+
+        this.level = playerInventory.player.level();
+        this.container = this.blockEntity;
+
+        this.data = new SimpleContainerData(6);
+        addDataSlots(this.data);
+
+        // Setup der Slots
+        setupSlots(playerInventory);
+    }
+
+    // Alternative: Statische Factory-Methode für Client-Constructor
+    public static SmallShopOffersMenu createClientMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
+        BlockPos pos = buf.readBlockPos();
+        BlockEntity be = playerInventory.player.level().getBlockEntity(pos);
+        if (be instanceof SmallShopBlockEntity shopEntity) {
+            return new SmallShopOffersMenu(containerId, playerInventory, shopEntity);
+        }
+        // Fallback - erstelle Dummy Entity
+        SmallShopBlockEntity dummy = new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
+        return new SmallShopOffersMenu(containerId, playerInventory, dummy);
     }
 
     private void setupSlots(Inventory playerInventory) {

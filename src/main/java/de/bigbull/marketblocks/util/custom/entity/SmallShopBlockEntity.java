@@ -54,12 +54,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         return Component.translatable("container.marketblocks.small_shop");
     }
 
-    // ❌ ALTE IMPLEMENTIERUNG ENTFERNT:
-    // return new SmallShopMenu(containerId, playerInventory, this);
-
-    // ✅ NEUE IMPLEMENTIERUNG:
-    // Diese Methode wird nicht mehr direkt verwendet, da wir separate MenuProvider haben
-    // Fallback für Kompatibilität - standardmäßig Offers Menu
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         // Fallback: Verwende Offers Menu als Standard
