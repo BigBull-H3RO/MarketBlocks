@@ -5,11 +5,12 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.CreateOfferPacket;
 import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
-import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -135,9 +136,23 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     }
 
     private void switchToInventory() {
-        // Sende Paket zum Wechseln des Menüs
-        NetworkHandler.sendToServer(new SwitchTabPacket(menu.getBlockEntity().getBlockPos(), false)); // false = zu Inventory wechseln
-        playClickSound();
+        // SIMPLIFIED: Direkter Client-seitiger Menü-Wechsel
+        if (menu.isOwner()) {
+            SmallShopBlockEntity blockEntity = menu.getBlockEntity();
+            SmallShopInventoryMenu newMenu = new SmallShopInventoryMenu(
+                    menu.containerId,
+                    minecraft.player.getInventory(),
+                    blockEntity
+            );
+
+            minecraft.setScreen(new SmallShopInventoryScreen(
+                    newMenu,
+                    minecraft.player.getInventory(),
+                    Component.translatable("container.marketblocks.small_shop_inventory")
+            ));
+
+            playClickSound();
+        }
     }
 
     private void startOfferCreation() {
@@ -149,12 +164,33 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     }
 
     private void confirmOffer() {
-        // Hole Items aus Payment Slots
-        ItemStack payment1 = menu.slots.get(0).getItem().copy();
-        ItemStack payment2 = menu.slots.get(1).getItem().copy();
-        ItemStack result = menu.slots.get(2).getItem().copy();
+        try {
+            // Hole Items aus Payment Slots
+            ItemStack payment1 = menu.slots.get(0).getItem().copy();
+            ItemStack payment2 = menu.slots.get(1).getItem().copy();
+            ItemStack result = menu.slots.get(2).getItem().copy();
 
-        if (!payment1.isEmpty() || !payment2.isEmpty() || !result.isEmpty()) {
+            // IMPROVED: Bessere Validation
+            if (result.isEmpty()) {
+                // Zeige Fehlermeldung
+                minecraft.gui.getChat().addMessage(
+                        Component.translatable("gui.marketblocks.error.no_result_item")
+                                .withStyle(ChatFormatting.RED)
+                );
+                playErrorSound();
+                return;
+            }
+
+            if (payment1.isEmpty() && payment2.isEmpty()) {
+                // Zeige Fehlermeldung
+                minecraft.gui.getChat().addMessage(
+                        Component.translatable("gui.marketblocks.error.no_payment_items")
+                                .withStyle(ChatFormatting.RED)
+                );
+                playErrorSound();
+                return;
+            }
+
             // Sende Netzwerk-Paket
             NetworkHandler.sendToServer(new CreateOfferPacket(
                     menu.getBlockEntity().getBlockPos(),
@@ -163,7 +199,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                     result
             ));
 
-            // Leere die Slots
+            // Leere die Slots erst nach erfolgreichem Senden
             menu.slots.get(0).set(ItemStack.EMPTY);
             menu.slots.get(1).set(ItemStack.EMPTY);
             menu.slots.get(2).set(ItemStack.EMPTY);
@@ -172,6 +208,10 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
             menu.setCreatingOffer(false);
             playSuccessSound();
             init();
+
+        } catch (Exception e) {
+            MarketBlocks.LOGGER.error("Error confirming offer", e);
+            playErrorSound();
         }
     }
 

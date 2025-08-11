@@ -2,10 +2,9 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.gui.GuiGraphics;
@@ -74,9 +73,23 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
     }
 
     private void switchToOffers() {
-        // Sende Paket zum Wechseln des Menüs
-        NetworkHandler.sendToServer(new SwitchTabPacket(menu.getBlockEntity().getBlockPos(), true)); // true = zu Offers wechseln
-        playClickSound();
+        // SIMPLIFIED: Direkter Client-seitiger Menü-Wechsel
+        if (menu.isOwner()) {
+            SmallShopBlockEntity blockEntity = menu.getBlockEntity();
+            SmallShopOffersMenu newMenu = new SmallShopOffersMenu(
+                    menu.containerId,
+                    minecraft.player.getInventory(),
+                    blockEntity
+            );
+
+            minecraft.setScreen(new SmallShopOffersScreen(
+                    newMenu,
+                    minecraft.player.getInventory(),
+                    Component.translatable("container.marketblocks.small_shop_offers")
+            ));
+
+            playClickSound();
+        }
     }
 
     @Override

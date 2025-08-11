@@ -115,8 +115,8 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         addSlot(new PaymentSlot(container, 24, 44, 35)); // Slot 24 in BlockEntity = Payment 1
         addSlot(new PaymentSlot(container, 25, 62, 35)); // Slot 25 in BlockEntity = Payment 2
 
-        // Offer Result Slot - Slot 2
-        addSlot(new OfferSlot(container, 26, 120, 35)); // Slot 26 in BlockEntity = Offer Result
+        // FIXED: Offer Result Slot mit Menu-Referenz - Slot 2
+        addSlot(new OfferSlot(container, 26, 120, 35, this)); // Slot 26 in BlockEntity = Offer Result
 
         // Spieler Inventar - Slots 3-38
         for (int row = 0; row < 3; row++) {
@@ -221,19 +221,41 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         }
     }
 
-    public class OfferSlot extends Slot {
-        public OfferSlot(Container container, int slot, int x, int y) {
+    public static class OfferSlot extends Slot {
+        private final SmallShopOffersMenu menu;
+
+        public OfferSlot(Container container, int slot, int x, int y, SmallShopOffersMenu menu) {
             super(container, slot, x, y);
+            this.menu = menu;
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return isOwner() && isCreatingOffer();
+            // FIXED: Erlaube Items nur während der Angebotserstellung und nur für Owner
+            return menu.isOwner() && menu.isCreatingOffer();
+        }
+
+        @Override
+        public boolean mayPickup(Player player) {
+            // FIXED: Während Erstellung kann Owner Items entfernen, sonst nur kaufen
+            if (menu.isCreatingOffer() && menu.isOwner()) {
+                return true;
+            }
+            // Normale Kauf-Logik: Nur wenn Angebot verfügbar ist
+            return menu.hasOffer() && menu.isOfferAvailable();
         }
 
         @Override
         public ItemStack remove(int amount) {
-            return super.remove(amount);
+            // FIXED: Kaufvorgang nur wenn nicht in Erstellung
+            if (!menu.isCreatingOffer() && menu.hasOffer() && menu.isOfferAvailable()) {
+                // Trigger purchase logic
+                return super.remove(amount);
+            } else if (menu.isCreatingOffer()) {
+                // Normale Entfernung während Erstellung
+                return super.remove(amount);
+            }
+            return ItemStack.EMPTY;
         }
     }
 }

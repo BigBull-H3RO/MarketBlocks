@@ -111,16 +111,16 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
 
     private void setupSlots(Inventory playerInventory) {
         // Input Inventar (3x4 = 12 Slots) - Slots 0-11
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 3; col++) {
-                addSlot(new InputSlot(container, row * 3 + col, 8 + col * 18, 18 + row * 18));
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 4; col++) {
+                addSlot(new InputSlot(container, row * 4 + col, 8 + col * 18, 18 + row * 18));
             }
         }
 
         // Output Inventar (3x4 = 12 Slots) - Slots 12-23
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 3; col++) {
-                addSlot(new OutputSlot(container, INPUT_SLOTS + row * 3 + col,
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 4; col++) {
+                addSlot(new OutputSlot(container, INPUT_SLOTS + row * 4 + col,
                         116 + col * 18, 18 + row * 18));
             }
         }
