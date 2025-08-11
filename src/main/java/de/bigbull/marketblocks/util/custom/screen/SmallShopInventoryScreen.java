@@ -2,9 +2,10 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.network.NetworkHandler;
+import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,6 +24,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
     // Button Sprites
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
     );
@@ -73,21 +75,10 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
     }
 
     private void switchToOffers() {
-        // SIMPLIFIED: Direkter Client-seitiger Menü-Wechsel
+        // Sende nur ein Paket an den Server, der anschließend das Menü öffnet
         if (menu.isOwner()) {
             SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-            SmallShopOffersMenu newMenu = new SmallShopOffersMenu(
-                    menu.containerId,
-                    minecraft.player.getInventory(),
-                    blockEntity
-            );
-
-            minecraft.setScreen(new SmallShopOffersScreen(
-                    newMenu,
-                    minecraft.player.getInventory(),
-                    Component.translatable("container.marketblocks.small_shop_offers")
-            ));
-
+            NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), true));
             playClickSound();
         }
     }

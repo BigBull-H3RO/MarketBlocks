@@ -113,7 +113,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         // Input Inventar (3x4 = 12 Slots) - Slots 0-11
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
-                addSlot(new InputSlot(container, row * 4 + col, 8 + col * 18, 18 + row * 18));
+                addSlot(new InputSlot(container, row * 4 + col, 8 + col * 18, 18 + row * 18, playerInventory.player));
             }
         }
 
@@ -223,21 +223,24 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
     // Custom Slot Klassen
     public static class InputSlot extends Slot {
         private final SmallShopBlockEntity blockEntity;
+        private final Player player;
 
-        public InputSlot(Container container, int slot, int x, int y) {
+        public InputSlot(Container container, int slot, int x, int y, Player player) {
             super(container, slot, x, y);
             this.blockEntity = container instanceof SmallShopBlockEntity ? (SmallShopBlockEntity) container : null;
+            this.player = player;
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
             // Nur Owner kann Items in Input-Slots platzieren
-            if (blockEntity != null) {
-                // Hier müssten wir den aktuellen Player ermitteln - das ist etwas tricky
-                // Alternative: Überprüfung in der Screen-Klasse
-                return true; // Vorerst erlauben, Überprüfung erfolgt anderswo
-            }
-            return false;
+            return blockEntity != null && blockEntity.isOwner(player);
+        }
+
+        @Override
+        public boolean mayPickup(Player player) {
+            // Entfernen nur für den Owner erlaubt
+            return blockEntity != null && blockEntity.isOwner(player);
         }
     }
 

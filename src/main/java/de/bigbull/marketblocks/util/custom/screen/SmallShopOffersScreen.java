@@ -5,8 +5,8 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.CreateOfferPacket;
 import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
+import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
@@ -28,15 +28,9 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
     // Button Sprites
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
-    );
-
-    private static final WidgetSprites ACTION_BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_pressed.png"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png")
     );
 
@@ -100,7 +94,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                 // Bestätigen/Abbrechen Buttons während Erstellung
                 this.confirmButton = addRenderableWidget(new IconButton(
                         leftPos + 80, topPos + 60, 20, 20,
-                        ACTION_BUTTON_SPRITES, CREATE_ICON,
+                        BUTTON_SPRITES, CREATE_ICON,
                         button -> confirmOffer(),
                         Component.translatable("gui.marketblocks.confirm_offer"),
                         () -> false
@@ -108,7 +102,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
                 this.cancelButton = addRenderableWidget(new IconButton(
                         leftPos + 104, topPos + 60, 20, 20,
-                        ACTION_BUTTON_SPRITES, DELETE_ICON,
+                        BUTTON_SPRITES, DELETE_ICON,
                         button -> cancelOfferCreation(),
                         Component.translatable("gui.marketblocks.cancel_offer"),
                         () -> false
@@ -117,7 +111,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                 // Erstellen Button wenn kein Angebot existiert
                 this.createOfferButton = addRenderableWidget(new IconButton(
                         leftPos + 80, topPos + 60, 20, 20,
-                        ACTION_BUTTON_SPRITES, CREATE_ICON,
+                        BUTTON_SPRITES, CREATE_ICON,
                         button -> startOfferCreation(),
                         Component.translatable("gui.marketblocks.create_offer"),
                         () -> false
@@ -126,7 +120,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                 // Löschen Button wenn Angebot existiert
                 this.deleteOfferButton = addRenderableWidget(new IconButton(
                         leftPos + 104, topPos + 60, 20, 20,
-                        ACTION_BUTTON_SPRITES, DELETE_ICON,
+                        BUTTON_SPRITES, DELETE_ICON,
                         button -> deleteOffer(),
                         Component.translatable("gui.marketblocks.delete_offer"),
                         () -> false
@@ -136,21 +130,10 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     }
 
     private void switchToInventory() {
-        // SIMPLIFIED: Direkter Client-seitiger Menü-Wechsel
+        // Sende nur ein Paket an den Server, der anschließend das Menü öffnet
         if (menu.isOwner()) {
             SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-            SmallShopInventoryMenu newMenu = new SmallShopInventoryMenu(
-                    menu.containerId,
-                    minecraft.player.getInventory(),
-                    blockEntity
-            );
-
-            minecraft.setScreen(new SmallShopInventoryScreen(
-                    newMenu,
-                    minecraft.player.getInventory(),
-                    Component.translatable("container.marketblocks.small_shop_inventory")
-            ));
-
+            NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), false));
             playClickSound();
         }
     }
