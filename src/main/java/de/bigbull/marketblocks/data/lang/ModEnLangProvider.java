@@ -46,5 +46,19 @@ public class ModEnLangProvider extends LanguageProvider {
         // Inventory Labels
         add("gui.marketblocks.input_inventory", "Input");
         add("gui.marketblocks.output_inventory", "Output");
+
+        // Error Messages
+        add("gui.marketblocks.error.no_result_item", "Please place an item in the result slot");
+        add("gui.marketblocks.error.no_payment_items", "Please place at least one payment item");
+        add("gui.marketblocks.error.invalid_offer", "Invalid offer configuration");
+
+        // Success Messages
+        add("gui.marketblocks.success.offer_created", "Offer successfully created");
+        add("gui.marketblocks.success.offer_deleted", "Offer successfully deleted");
+
+        // Additional Status Messages
+        add("gui.marketblocks.creating_offer", "Creating Offer...");
+        add("gui.marketblocks.offer_ready", "Offer Ready");
+        add("gui.marketblocks.insufficient_stock", "Insufficient Stock");
     }
 }

@@ -231,13 +231,14 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            // FIXED: Erlaube Items nur während der Angebotserstellung und nur für Owner
-            return menu.isOwner() && menu.isCreatingOffer();
+            // FIXED: Erlaube Items während der Angebotserstellung UND für Owner
+            // Aber NUR wenn wir im Erstellungsmodus sind
+            return menu.isOwner() && menu.isCreatingOffer();// Ansonsten keine Items erlauben (außer für Käufe)
         }
 
         @Override
         public boolean mayPickup(Player player) {
-            // FIXED: Während Erstellung kann Owner Items entfernen, sonst nur kaufen
+            // Während Erstellung kann Owner Items entfernen
             if (menu.isCreatingOffer() && menu.isOwner()) {
                 return true;
             }
@@ -247,9 +248,9 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
         @Override
         public ItemStack remove(int amount) {
-            // FIXED: Kaufvorgang nur wenn nicht in Erstellung
+            // Kaufvorgang, nur wenn nicht in Erstellung
             if (!menu.isCreatingOffer() && menu.hasOffer() && menu.isOfferAvailable()) {
-                // Trigger purchase logic
+                // Trigger purchase logic in BlockEntity
                 return super.remove(amount);
             } else if (menu.isCreatingOffer()) {
                 // Normale Entfernung während Erstellung
