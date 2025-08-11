@@ -231,9 +231,8 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            // FIXED: Erlaube Items während der Angebotserstellung UND für Owner
-            // Aber NUR wenn wir im Erstellungsmodus sind
-            return menu.isOwner() && menu.isCreatingOffer();// Ansonsten keine Items erlauben (außer für Käufe)
+            // Erlaube Items nur, wenn der Spieler der Besitzer ist und noch kein Angebot existiert
+            return menu.isOwner() && !menu.hasOffer();
         }
 
         @Override

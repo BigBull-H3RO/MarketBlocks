@@ -32,8 +32,12 @@ public class IconButton extends Button {
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         boolean selected = selectedSupplier != null && selectedSupplier.getAsBoolean();
-        graphics.blitSprite(sprites.get(isHoveredOrFocused(), selected), getX(), getY(), getWidth(), getHeight());
+        ResourceLocation background = sprites.get(isHoveredOrFocused(), selected);
+        RenderSystem.setShaderTexture(0, background);
+        graphics.blit(background, getX(), getY(), 0, 0, 0, getWidth(), getHeight(), 256, 256);
         RenderSystem.setShaderTexture(0, icon);
-        graphics.blit(icon, getX() + 2, getY() + 2, 0, 0, 0, 16, 16, 16, 16);
+        int iconX = getX() + (getWidth() - 16) / 2;
+        int iconY = getY() + (getHeight() - 16) / 2;
+        graphics.blit(icon, iconX, iconY, 0, 0, 0, 16, 16, 16, 16);
     }
 }
