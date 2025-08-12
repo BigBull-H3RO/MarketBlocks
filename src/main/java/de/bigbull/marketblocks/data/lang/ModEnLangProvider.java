@@ -47,6 +47,10 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.input_inventory", "Input");
         add("gui.marketblocks.output_inventory", "Output");
 
+        // Inventory Info
+        add("gui.marketblocks.inventory_owner_only", "Only the owner can manage inventory");
+        add("gui.marketblocks.inventory_flow_hint", "Items flow from Input to Output inventory");
+
         // Error Messages
         add("gui.marketblocks.error.no_result_item", "Please place an item in the result slot");
         add("gui.marketblocks.error.no_payment_items", "Please place at least one payment item");

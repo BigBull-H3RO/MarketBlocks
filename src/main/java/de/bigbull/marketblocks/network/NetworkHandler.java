@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.network;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.packets.*;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -48,15 +49,7 @@ public class NetworkHandler {
         );
     }
 
-    public static void sendToServer(Object packet) {
-        if (packet instanceof CreateOfferPacket createPacket) {
-            PacketDistributor.sendToServer(createPacket);
-        } else if (packet instanceof DeleteOfferPacket deletePacket) {
-            PacketDistributor.sendToServer(deletePacket);
-        } else if (packet instanceof CancelOfferPacket cancelPacket) {
-            PacketDistributor.sendToServer(cancelPacket);
-        } else if (packet instanceof SwitchTabPacket switchPacket) {
-            PacketDistributor.sendToServer(switchPacket);
-        }
+    public static void sendToServer(CustomPacketPayload packet) {
+        PacketDistributor.sendToServer(packet);
     }
 }

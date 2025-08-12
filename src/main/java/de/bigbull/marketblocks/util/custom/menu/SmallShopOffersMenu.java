@@ -38,16 +38,14 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         this.blockEntity = blockEntity;
         this.container = blockEntity;
 
-        this.data = new SimpleContainerData(6) {
+        this.data = new SimpleContainerData(5) {
             @Override
             public int get(int index) {
                 return switch (index) {
                     case 0 -> blockEntity.hasOffer() ? 1 : 0;
                     case 1 -> blockEntity.isOfferAvailable() ? 1 : 0;
                     case 2 -> blockEntity.isOwner(playerInventory.player) ? 1 : 0;
-                    case 3 -> blockEntity.getOwnerId() != null ? 1 : 0;
-                    case 4 -> 0; // Reserviert für weitere Flags
-                    case 5 -> 0; // Reserviert für weitere Flags
+                    case 3 -> 0; // Reserviert für weitere Flags
                     default -> 0;
                 };
             }
@@ -87,7 +85,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
         this.container = this.blockEntity;
 
-        this.data = new SimpleContainerData(6);
+        this.data = new SimpleContainerData(5);
         addDataSlots(this.data);
 
         // Setup der Slots
@@ -179,10 +177,6 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     public boolean isOwner() {
         return data.get(2) == 1;
-    }
-
-    public boolean hasOwner() {
-        return data.get(3) == 1;
     }
 
     public boolean isCreatingOffer() {

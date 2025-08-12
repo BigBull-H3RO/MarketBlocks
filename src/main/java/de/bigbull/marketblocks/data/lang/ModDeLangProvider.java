@@ -26,6 +26,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.inventory_tab", "Inventar anzeigen");
         add("gui.marketblocks.input_inventory", "Eingabe");
         add("gui.marketblocks.output_inventory", "Ausgabe");
+        add("gui.marketblocks.inventory_owner_only", "Nur der Besitzer kann das Inventar verwalten");
+        add("gui.marketblocks.inventory_flow_hint", "Items wandern vom Eingabe- ins Ausgabeinventar");
         add("gui.marketblocks.create_offer", "Angebot erstellen");
         add("gui.marketblocks.delete_offer", "Angebot löschen");
         add("gui.marketblocks.owner", "Besitzer: %s");

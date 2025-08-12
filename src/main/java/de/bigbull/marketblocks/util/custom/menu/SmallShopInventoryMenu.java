@@ -37,16 +37,14 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         this.blockEntity = blockEntity;
         this.container = blockEntity;
 
-        this.data = new SimpleContainerData(6) {
+        this.data = new SimpleContainerData(5) {
             @Override
             public int get(int index) {
                 return switch (index) {
                     case 0 -> blockEntity.hasOffer() ? 1 : 0;
                     case 1 -> blockEntity.isOfferAvailable() ? 1 : 0;
                     case 2 -> blockEntity.isOwner(playerInventory.player) ? 1 : 0;
-                    case 3 -> blockEntity.getOwnerId() != null ? 1 : 0;
-                    case 4 -> 0; // Reserviert für weitere Flags
-                    case 5 -> 0; // Reserviert für weitere Flags
+                    case 3 -> 0; // Reserviert für weitere Flags
                     default -> 0;
                 };
             }
@@ -86,7 +84,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
 
         this.container = this.blockEntity;
 
-        this.data = new SimpleContainerData(6);
+        this.data = new SimpleContainerData(5);
         addDataSlots(this.data);
 
         // Setup der Slots
@@ -97,7 +95,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         // Input Inventar (3x4 = 12 Slots) - Slots 0-11
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
-                addSlot(new InputSlot(container, row * 4 + col, 8 + col * 18, 18 + row * 18, playerInventory.player));
+                addSlot(new InputSlot(blockEntity, row * 4 + col, 8 + col * 18, 18 + row * 18, playerInventory.player));
             }
         }
 
@@ -200,31 +198,27 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         return data.get(2) == 1;
     }
 
-    public boolean hasOwner() {
-        return data.get(3) == 1;
-    }
-
     // Custom Slot Klassen
     public static class InputSlot extends Slot {
         private final SmallShopBlockEntity blockEntity;
         private final Player player;
 
-        public InputSlot(Container container, int slot, int x, int y, Player player) {
-            super(container, slot, x, y);
-            this.blockEntity = container instanceof SmallShopBlockEntity ? (SmallShopBlockEntity) container : null;
+        public InputSlot(SmallShopBlockEntity blockEntity, int slot, int x, int y, Player player) {
+            super(blockEntity, slot, x, y);
+            this.blockEntity = blockEntity;
             this.player = player;
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
             // Nur Owner kann Items in Input-Slots platzieren
-            return blockEntity != null && blockEntity.isOwner(player);
+            return blockEntity.isOwner(player);
         }
 
         @Override
         public boolean mayPickup(Player player) {
             // Entfernen nur für den Owner erlaubt
-            return blockEntity != null && blockEntity.isOwner(player);
+            return blockEntity.isOwner(player);
         }
     }
 

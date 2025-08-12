@@ -124,7 +124,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
 
         // Info für Nicht-Owner
         if (!menu.isOwner()) {
-            Component infoText = Component.literal("Only the owner can manage inventory");
+            Component infoText = Component.translatable("gui.marketblocks.inventory_owner_only");
             int infoWidth = font.width(infoText);
             graphics.drawString(font, infoText, (imageWidth - infoWidth) / 2, 84, 0x808080, false);
         }
@@ -139,7 +139,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
 
         // Tooltip für Transfer-Pfeil
         if (isMouseOver(x, y, leftPos + 58, topPos + 50, 24, 16)) {
-            Component tooltip = Component.literal("Items flow from Input to Output inventory");
+            Component tooltip = Component.translatable("gui.marketblocks.inventory_flow_hint");
             graphics.renderTooltip(font, tooltip, x, y);
         }
     }

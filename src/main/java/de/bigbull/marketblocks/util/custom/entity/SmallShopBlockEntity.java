@@ -503,21 +503,4 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         saveAdditional(tag, registries);
         return tag;
     }
-
-    // Inventar-Zugriff für UI
-    public NonNullList<ItemStack> getInputInventory() {
-        return inputInventory;
-    }
-
-    public NonNullList<ItemStack> getOutputInventory() {
-        return outputInventory;
-    }
-
-    public NonNullList<ItemStack> getPaymentSlots() {
-        return paymentSlots;
-    }
-
-    public ItemStack getOfferSlot() {
-        return offerSlot;
-    }
 }
