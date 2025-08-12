@@ -116,45 +116,10 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        ItemStack itemstack = ItemStack.EMPTY;
-        Slot slot = this.slots.get(index);
-
-        if (slot.hasItem()) {
-            ItemStack itemstack1 = slot.getItem();
-            itemstack = itemstack1.copy();
-
-            // Von Container zu Spieler
-            if (index < PLAYER_INVENTORY_START) {
-                if (!this.moveItemStackTo(itemstack1, PLAYER_INVENTORY_START, this.slots.size(), true)) {
-                    return ItemStack.EMPTY;
-                }
-            }
-            // Von Spieler zu Container (nur Payment Slots)
-            else if (index >= PLAYER_INVENTORY_START) {
-                // Versuche in Payment-Slots zu verschieben
-                if (!this.moveItemStackTo(itemstack1, 0, PAYMENT_SLOTS, false)) {
-                    if (index < HOTBAR_START) {
-                        // Von Inventar zu Hotbar
-                        if (!this.moveItemStackTo(itemstack1, HOTBAR_START, HOTBAR_START + 9, false)) {
-                            return ItemStack.EMPTY;
-                        }
-                    } else {
-                        // Von Hotbar zu Inventar
-                        if (!this.moveItemStackTo(itemstack1, PLAYER_INVENTORY_START, HOTBAR_START, false)) {
-                            return ItemStack.EMPTY;
-                        }
-                    }
-                }
-            }
-
-            if (itemstack1.isEmpty()) {
-                slot.setByPlayer(ItemStack.EMPTY);
-            } else {
-                slot.setChanged();
-            }
-        }
-
-        return itemstack;
+        return QuickMoveHelper.quickMoveStack(this, player, index,
+                PLAYER_INVENTORY_START, HOTBAR_START,
+                true, 0, PAYMENT_SLOTS,
+                this::moveItemStackTo);
     }
 
     @Override

@@ -50,36 +50,31 @@ public class SmallShopBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
-                                               Player player, BlockHitResult hitResult) {
-        if (!level.isClientSide) {
-            BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
-                // Setze Owner falls noch nicht gesetzt
-                if (shopEntity.getOwnerId() == null) {
-                    shopEntity.setOwner(player);
-                }
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+        if (level.isClientSide) {
+            return InteractionResult.sidedSuccess(true);
+        }
 
-                // Öffne GUI - standardmäßig Offers für Owner, sonst je nach Verfügbarkeit
-                if (player instanceof ServerPlayer serverPlayer) {
-                    boolean isOwner = shopEntity.isOwner(player);
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (!(blockEntity instanceof SmallShopBlockEntity shopEntity)) {
+            return InteractionResult.FAIL;
+        }
 
-                    if (isOwner) {
-                        // Owner startet immer mit Offers-Menu
-                        serverPlayer.openMenu(new SmallShopOffersMenuProvider(shopEntity), pos);
-                    } else {
-                        // Nicht-Owner sehen nur Offers wenn ein Angebot existiert
-                        if (shopEntity.hasOffer()) {
-                            serverPlayer.openMenu(new SmallShopOffersMenuProvider(shopEntity), pos);
-                        } else {
-                            // Fallback: Info-Message oder nichts tun
-                            // Hier könnte eine Message gesendet werden
-                        }
-                    }
-                }
+        if (shopEntity.getOwnerId() == null) {
+            shopEntity.setOwner(player);
+        }
+
+        if (player instanceof ServerPlayer serverPlayer) {
+            if (shopEntity.isOwner(player)) {
+                serverPlayer.openMenu(new SmallShopInventoryMenuProvider(shopEntity), pos);
+            } else if (shopEntity.hasOffer()) {
+                serverPlayer.openMenu(new SmallShopOffersMenuProvider(shopEntity), pos);
+            } else {
+                return InteractionResult.FAIL;
             }
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+
+        return InteractionResult.sidedSuccess(false);
     }
 
     @Override

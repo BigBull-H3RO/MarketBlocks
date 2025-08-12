@@ -149,24 +149,6 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Tab-Wechsel mit E für Owner
-        if (menu.isOwner() && minecraft.options.keyInventory.matches(keyCode, scanCode)) {
-            if (hasShiftDown()) {
-                // Shift+E schließt GUI
-                minecraft.player.closeContainer();
-                return true;
-            } else {
-                // E wechselt zu Offers
-                switchToOffers();
-                return true;
-            }
-        }
-
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    @Override
     public void containerTick() {
         super.containerTick();
 

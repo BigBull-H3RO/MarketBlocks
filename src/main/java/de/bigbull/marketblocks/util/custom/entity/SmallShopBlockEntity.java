@@ -21,6 +21,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.Collections;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, Container {
@@ -72,18 +73,13 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         return INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS + OFFER_SLOT;
     }
 
+    private static boolean allEmpty(NonNullList<ItemStack> list) {
+        return list.stream().allMatch(ItemStack::isEmpty);
+    }
+
     @Override
     public boolean isEmpty() {
-        for (ItemStack stack : inputInventory) {
-            if (!stack.isEmpty()) return false;
-        }
-        for (ItemStack stack : outputInventory) {
-            if (!stack.isEmpty()) return false;
-        }
-        for (ItemStack stack : paymentSlots) {
-            if (!stack.isEmpty()) return false;
-        }
-        return offerSlot.isEmpty();
+        return allEmpty(inputInventory) && allEmpty(outputInventory) && allEmpty(paymentSlots) && offerSlot.isEmpty();
     }
 
     @Override
@@ -392,32 +388,19 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         return hasOffer && hasResultItemInInput();
     }
 
+    private void dropItems(Level level, BlockPos pos, Iterable<ItemStack> stacks) {
+        for (ItemStack stack : stacks) {
+            if (!stack.isEmpty()) {
+                net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
+            }
+        }
+    }
+
     public void dropContents(Level level, BlockPos pos) {
-        // Droppe Input Inventar
-        for (ItemStack stack : inputInventory) {
-            if (!stack.isEmpty()) {
-                net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
-            }
-        }
-
-        // Droppe Output Inventar
-        for (ItemStack stack : outputInventory) {
-            if (!stack.isEmpty()) {
-                net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
-            }
-        }
-
-        // Droppe Payment Slots
-        for (ItemStack stack : paymentSlots) {
-            if (!stack.isEmpty()) {
-                net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
-            }
-        }
-
-        // Droppe Offer Slot
-        if (!offerSlot.isEmpty()) {
-            net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), offerSlot);
-        }
+        dropItems(level, pos, inputInventory);
+        dropItems(level, pos, outputInventory);
+        dropItems(level, pos, paymentSlots);
+        dropItems(level, pos, Collections.singletonList(offerSlot));
     }
 
     // NBT Speicherung
