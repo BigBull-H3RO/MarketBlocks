@@ -520,20 +520,4 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     public ItemStack getOfferSlot() {
         return offerSlot;
     }
-
-    // FIXED: Getter-Methoden für Slot-Zugriff
-    public ItemStack getPaymentSlot1() {
-        return getItem(PAYMENT_SLOT_1);
-
-    }
-
-    public ItemStack getPaymentSlot2() {
-        return getItem(PAYMENT_SLOT_2);
-
-    }
-
-    public ItemStack getOfferResultSlot() {
-        return getItem(OFFER_RESULT_SLOT);
-
-    }
 }

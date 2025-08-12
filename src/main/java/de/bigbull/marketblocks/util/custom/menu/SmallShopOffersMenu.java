@@ -94,18 +94,6 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         setupSlots(playerInventory);
     }
 
-    // Alternative: Statische Factory-Methode für Client-Constructor
-    public static SmallShopOffersMenu createClientMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        BlockPos pos = buf.readBlockPos();
-        BlockEntity be = playerInventory.player.level().getBlockEntity(pos);
-        if (be instanceof SmallShopBlockEntity shopEntity) {
-            return new SmallShopOffersMenu(containerId, playerInventory, shopEntity);
-        }
-        // Fallback - erstelle Dummy Entity
-        SmallShopBlockEntity dummy = new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
-        return new SmallShopOffersMenu(containerId, playerInventory, dummy);
-    }
-
     private void setupSlots(Inventory playerInventory) {
         // Payment Slots (2 Slots) - Slots 0-1
         addSlot(new PaymentSlot(container, SmallShopBlockEntity.PAYMENT_SLOT_1, 44, 35));
