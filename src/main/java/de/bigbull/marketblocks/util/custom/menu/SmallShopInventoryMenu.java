@@ -13,7 +13,6 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 /**
@@ -21,7 +20,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  */
 public class SmallShopInventoryMenu extends AbstractContainerMenu {
     private final SmallShopBlockEntity blockEntity;
-    private final Level level;
     private final Container container;
 
     // Slot-Indizes für Inventory-Modus
@@ -37,7 +35,6 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
     public SmallShopInventoryMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
         super(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), containerId);
         this.blockEntity = blockEntity;
-        this.level = playerInventory.player.level();
         this.container = blockEntity;
 
         this.data = new SimpleContainerData(6) {
@@ -87,7 +84,6 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
             this.blockEntity = new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
         }
 
-        this.level = playerInventory.player.level();
         this.container = this.blockEntity;
 
         this.data = new SimpleContainerData(6);

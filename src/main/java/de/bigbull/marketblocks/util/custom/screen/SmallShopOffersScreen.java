@@ -21,9 +21,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffersMenu> {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
     private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
@@ -54,7 +51,6 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     private IconButton deleteOfferButton;
     private IconButton confirmButton;
     private IconButton cancelButton;
-    private final List<OfferTemplateButton> offerButtons = new ArrayList<>();
 
     public SmallShopOffersScreen(SmallShopOffersMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -74,7 +70,6 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
         // Clear existing buttons
         clearWidgets();
-        offerButtons.clear();
 
         // Tab-Buttons (nur für Owner sichtbar)
         if (isOwner) {
@@ -229,6 +224,10 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
         graphics.blit(BACKGROUND, i, j, 0, 0, imageWidth, imageHeight);
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
+
+        if (blockEntity.hasOffer() && !creatingOffer) {
+            renderExistingOffer(graphics, blockEntity);
+        }
 
         // Render Handels-Pfeil
         boolean arrowActive = blockEntity.hasOffer() && blockEntity.isOfferAvailable();
