@@ -29,6 +29,11 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     private static final int PAYMENT_SLOTS = 2; // 2 Bezahlslots
     private static final int OFFER_SLOT = 1; // 1 Angebots-Slot
 
+    // Öffentliche Slot-Indizes für Zugriff in Menüs und Paketen
+    public static final int PAYMENT_SLOT_1 = INPUT_SLOTS + OUTPUT_SLOTS;
+    public static final int PAYMENT_SLOT_2 = PAYMENT_SLOT_1 + 1;
+    public static final int OFFER_RESULT_SLOT = INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS;
+
     // Inventare
     private final NonNullList<ItemStack> inputInventory = NonNullList.withSize(INPUT_SLOTS, ItemStack.EMPTY);
     private final NonNullList<ItemStack> outputInventory = NonNullList.withSize(OUTPUT_SLOTS, ItemStack.EMPTY);
@@ -87,11 +92,11 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
             return inputInventory.get(slot);
         } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS) {
             return outputInventory.get(slot - INPUT_SLOTS);
-        } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS) {
-            // FIXED: Payment slots sind 24 und 25 (nicht 26)
+        } else if (slot < OFFER_RESULT_SLOT) {
+            // Payment-Slots
             return paymentSlots.get(slot - INPUT_SLOTS - OUTPUT_SLOTS);
-        } else if (slot == INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS) {
-            // FIXED: Offer slot ist 26
+        } else if (slot == OFFER_RESULT_SLOT) {
+            // Slot für das Ergebnis des Angebots
             return offerSlot;
         }
         return ItemStack.EMPTY;
@@ -111,7 +116,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
             return result;
         }
 
-        if (slot == INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS) {
+        if (slot == OFFER_RESULT_SLOT) {
             ItemStack result = offerSlot.split(amount);
             if (!result.isEmpty()) {
                 setChanged();
@@ -132,7 +137,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
             return ContainerHelper.takeItem(list, localSlot);
         }
 
-        if (slot == INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS) {
+        if (slot == OFFER_RESULT_SLOT) {
             ItemStack result = offerSlot;
             offerSlot = ItemStack.EMPTY;
             return result;
@@ -153,7 +158,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
             return;
         }
 
-        if (slot == INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS) {
+        if (slot == OFFER_RESULT_SLOT) {
             offerSlot = stack;
             setChanged();
         }
@@ -166,11 +171,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
 
     @Override
     public void clearContent() {
+        // Löscht Inventar und Angebotszustand
         inputInventory.clear();
         outputInventory.clear();
         paymentSlots.clear();
         offerSlot = ItemStack.EMPTY;
+        offerPayment1 = ItemStack.EMPTY;
+        offerPayment2 = ItemStack.EMPTY;
+        offerResult = ItemStack.EMPTY;
+        hasOffer = false;
         setChanged();
+        updateOfferSlot();
     }
 
     // Hilfsmethoden für Slot-Management
@@ -179,7 +190,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
             return inputInventory;
         } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS) {
             return outputInventory;
-        } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS) {
+        } else if (slot < OFFER_RESULT_SLOT) {
             return paymentSlots;
         }
         return NonNullList.withSize(0, ItemStack.EMPTY);
@@ -190,7 +201,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
             return slot;
         } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS) {
             return slot - INPUT_SLOTS;
-        } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS) {
+        } else if (slot < OFFER_RESULT_SLOT) {
             return slot - INPUT_SLOTS - OUTPUT_SLOTS;
         }
         return -1;
@@ -503,14 +514,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
 
     // FIXED: Getter-Methoden für Slot-Zugriff
     public ItemStack getPaymentSlot1() {
-        return getItem(24); // Slot 24
+        return getItem(PAYMENT_SLOT_1);
+
     }
 
     public ItemStack getPaymentSlot2() {
-        return getItem(25); // Slot 25
+        return getItem(PAYMENT_SLOT_2);
+
     }
 
     public ItemStack getOfferResultSlot() {
-        return getItem(26); // Slot 26
+        return getItem(OFFER_RESULT_SLOT);
+
     }
 }

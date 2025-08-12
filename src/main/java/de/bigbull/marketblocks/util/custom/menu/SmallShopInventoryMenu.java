@@ -112,14 +112,14 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         // Spieler Inventar - Slots 24-50
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 103 +
-                        row * 18 + GuiConstants.PLAYER_INV_Y_START));
+                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18,
+                        GuiConstants.PLAYER_INV_Y_START + row * 18));
             }
         }
 
         // Spieler Hotbar - Slots 51-59
         for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(playerInventory, col, 8 + col * 18, 161 + GuiConstants.HOTBAR_Y));
+            addSlot(new Slot(playerInventory, col, 8 + col * 18, GuiConstants.HOTBAR_Y));
         }
     }
 

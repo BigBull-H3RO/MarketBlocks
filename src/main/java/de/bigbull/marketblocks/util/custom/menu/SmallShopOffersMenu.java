@@ -108,11 +108,11 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     private void setupSlots(Inventory playerInventory) {
         // Payment Slots (2 Slots) - Slots 0-1
-        addSlot(new PaymentSlot(container, 24, 44, 35)); // Slot 24 in BlockEntity = Payment 1
-        addSlot(new PaymentSlot(container, 25, 62, 35)); // Slot 25 in BlockEntity = Payment 2
+        addSlot(new PaymentSlot(container, SmallShopBlockEntity.PAYMENT_SLOT_1, 44, 35));
+        addSlot(new PaymentSlot(container, SmallShopBlockEntity.PAYMENT_SLOT_2, 62, 35));
 
-        // FIXED: Offer Result Slot mit Menu-Referenz - Slot 2
-        addSlot(new OfferSlot(container, 26, 120, 35, this)); // Slot 26 in BlockEntity = Offer Result
+        // Offer Result Slot mit Menu-Referenz - Slot 2
+        addSlot(new OfferSlot(container, SmallShopBlockEntity.OFFER_RESULT_SLOT, 120, 35, this));
 
         // Spieler Inventar - Slots 3-38
         for (int row = 0; row < 3; row++) {

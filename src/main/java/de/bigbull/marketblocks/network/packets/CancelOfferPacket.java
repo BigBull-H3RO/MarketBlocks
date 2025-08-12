@@ -15,9 +15,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Paket zum Abbrechen der Angebotserstellung.
- * Serverseitig werden die Slots 24-26 geleert und die Items dem Spieler
- * zurückgegeben oder vor dem Block gedroppt.
+ * Serverseitig werden die relevanten Payment- und Offer-Slots geleert und die
+ * Items dem Spieler zurückgegeben oder vor dem Block gedroppt.
  */
 public record CancelOfferPacket(BlockPos pos) implements CustomPacketPayload {
 
@@ -42,7 +41,12 @@ public record CancelOfferPacket(BlockPos pos) implements CustomPacketPayload {
 
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
                 if (shopEntity.isOwner(player)) {
-                    for (int slot = 24; slot <= 26; slot++) {
+                    int[] slots = {
+                            SmallShopBlockEntity.PAYMENT_SLOT_1,
+                            SmallShopBlockEntity.PAYMENT_SLOT_2,
+                            SmallShopBlockEntity.OFFER_RESULT_SLOT
+                    };
+                    for (int slot : slots) {
                         ItemStack stack = shopEntity.getItem(slot).copy();
                         if (!stack.isEmpty()) {
                             shopEntity.setItem(slot, ItemStack.EMPTY);

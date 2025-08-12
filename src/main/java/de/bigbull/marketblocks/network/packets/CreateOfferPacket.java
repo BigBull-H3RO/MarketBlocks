@@ -45,11 +45,10 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
                 // Prüfe ob Spieler der Owner ist
                 if (shopEntity.isOwner(player)) {
-                    // FIXED: Korrekte Slot-Indizes verwenden
-                    // Payment Slots sind 24 und 25, Offer Slot ist 26
-                    ItemStack payment1Slot = shopEntity.getItem(24).copy();
-                    ItemStack payment2Slot = shopEntity.getItem(25).copy();
-                    ItemStack offerSlot = shopEntity.getItem(26).copy();
+                    // Zugriff auf Slots über definierte Konstanten
+                    ItemStack payment1Slot = shopEntity.getItem(SmallShopBlockEntity.PAYMENT_SLOT_1).copy();
+                    ItemStack payment2Slot = shopEntity.getItem(SmallShopBlockEntity.PAYMENT_SLOT_2).copy();
+                    ItemStack offerSlot = shopEntity.getItem(SmallShopBlockEntity.OFFER_RESULT_SLOT).copy();
 
                     // Prüfe ob die Slots mit den Paketdaten übereinstimmen
                     boolean payment1Valid = validatePaymentSlot(packet.payment1(), payment1Slot);
@@ -59,9 +58,9 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                     // Wenn alle Items vorhanden sind, erstelle das Angebot
                     if (payment1Valid && payment2Valid && resultValid) {
                         // Entferne Items aus den Slots und gib sie dem Spieler zurück
-                        ItemStack payment1 = shopEntity.removeItemNoUpdate(24);
-                        ItemStack payment2 = shopEntity.removeItemNoUpdate(25);
-                        ItemStack result = shopEntity.removeItemNoUpdate(26);
+                        ItemStack payment1 = shopEntity.removeItemNoUpdate(SmallShopBlockEntity.PAYMENT_SLOT_1);
+                        ItemStack payment2 = shopEntity.removeItemNoUpdate(SmallShopBlockEntity.PAYMENT_SLOT_2);
+                        ItemStack result = shopEntity.removeItemNoUpdate(SmallShopBlockEntity.OFFER_RESULT_SLOT);
 
                         // Erstelle das Angebot mit Kopien
                         shopEntity.createOffer(payment1Slot, payment2Slot, offerSlot);

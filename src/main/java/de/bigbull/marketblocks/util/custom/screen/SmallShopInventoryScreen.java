@@ -41,8 +41,8 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
     public SmallShopInventoryScreen(SmallShopInventoryMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 176;
-        this.imageHeight = 166;
-        this.inventoryLabelY = this.imageHeight - 94;
+        this.imageHeight = GuiConstants.IMAGE_HEIGHT;
+        this.inventoryLabelY = GuiConstants.PLAYER_INV_LABEL_Y;
     }
 
     @Override

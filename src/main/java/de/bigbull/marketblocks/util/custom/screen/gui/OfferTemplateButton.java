@@ -9,12 +9,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
-
 /**
  * Button zum Anzeigen eines bestehenden Angebots.
- * Nutzt Supplier, um stets aktuelle ItemStacks und Pfeilstatus zu rendern.
  */
 public class OfferTemplateButton extends AbstractWidget {
     private static final ResourceLocation TRADE_ARROW =
@@ -22,30 +18,24 @@ public class OfferTemplateButton extends AbstractWidget {
     private static final ResourceLocation TRADE_ARROW_DISABLED =
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow_disabled.png");
 
-    private final Supplier<ItemStack> payment1Supplier;
-    private final Supplier<ItemStack> payment2Supplier;
-    private final Supplier<ItemStack> resultSupplier;
-    private final BooleanSupplier arrowActiveSupplier;
+    private ItemStack payment1 = ItemStack.EMPTY;
+    private ItemStack payment2 = ItemStack.EMPTY;
+    private ItemStack result = ItemStack.EMPTY;
+    private boolean arrowActive;
 
-    public OfferTemplateButton(int x, int y,
-                               Supplier<ItemStack> payment1Supplier,
-                               Supplier<ItemStack> payment2Supplier,
-                               Supplier<ItemStack> resultSupplier,
-                               BooleanSupplier arrowActiveSupplier) {
+    public OfferTemplateButton(int x, int y) {
         super(x, y, 100, 20, Component.empty());
-        this.payment1Supplier = payment1Supplier;
-        this.payment2Supplier = payment2Supplier;
-        this.resultSupplier = resultSupplier;
-        this.arrowActiveSupplier = arrowActiveSupplier;
+    }
+
+    public void update(ItemStack payment1, ItemStack payment2, ItemStack result, boolean arrowActive) {
+        this.payment1 = payment1;
+        this.payment2 = payment2;
+        this.result = result;
+        this.arrowActive = arrowActive;
     }
 
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        ItemStack payment1 = payment1Supplier.get();
-        ItemStack payment2 = payment2Supplier.get();
-        ItemStack result = resultSupplier.get();
-        boolean arrowActive = arrowActiveSupplier.getAsBoolean();
-
         // Hintergrund
         graphics.fill(getX() - 2, getY() - 2, getX() + 100, getY() + 20, 0x80000000);
 

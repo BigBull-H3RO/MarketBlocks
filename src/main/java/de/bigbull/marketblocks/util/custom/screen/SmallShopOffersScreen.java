@@ -8,6 +8,7 @@ import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
 import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
@@ -42,7 +43,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
     private boolean creatingOffer = false;
     private boolean lastIsOwner;
-    private boolean lastArrowActive;
+    private OfferTemplateButton offerButton;
 
     // Buttons
     private IconButton offersButton;
@@ -55,8 +56,8 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     public SmallShopOffersScreen(SmallShopOffersMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 176;
-        this.imageHeight = 166;
-        this.inventoryLabelY = this.imageHeight - 94;
+        this.imageHeight = GuiConstants.IMAGE_HEIGHT;
+        this.inventoryLabelY = GuiConstants.PLAYER_INV_LABEL_Y;
     }
 
     @Override
@@ -66,7 +67,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         boolean isOwner = menu.isOwner();
         this.lastIsOwner = isOwner;
-        this.lastArrowActive = blockEntity != null && blockEntity.hasOffer() && blockEntity.isOfferAvailable();
+        this.offerButton = new OfferTemplateButton(leftPos + 20, topPos + 8);
 
         // Clear existing buttons
         clearWidgets();
@@ -241,15 +242,13 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     }
 
     private void renderExistingOffer(GuiGraphics graphics, SmallShopBlockEntity blockEntity) {
-        OfferTemplateButton button = new OfferTemplateButton(
-                leftPos + 20,
-                topPos + 8,
-                blockEntity::getOfferPayment1,
-                blockEntity::getOfferPayment2,
-                blockEntity::getOfferResult,
-                blockEntity::isOfferAvailable
+        offerButton.update(
+                blockEntity.getOfferPayment1(),
+                blockEntity.getOfferPayment2(),
+                blockEntity.getOfferResult(),
+                blockEntity.isOfferAvailable()
         );
-        button.renderWidget(graphics, 0, 0, 0);
+        offerButton.renderWidget(graphics, 0, 0, 0);
     }
 
     private void renderCreationHints(GuiGraphics graphics) {
@@ -375,12 +374,6 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         if (blockEntity != null) {
-            boolean arrowActive = blockEntity.hasOffer() && blockEntity.isOfferAvailable();
-            if (arrowActive != lastArrowActive) {
-                lastArrowActive = arrowActive;
-                init();
-                return;
-            }
 
             // Weitere Live-Updates könnten hier implementiert werden
         }
