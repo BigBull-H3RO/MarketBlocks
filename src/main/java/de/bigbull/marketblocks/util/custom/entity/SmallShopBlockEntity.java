@@ -274,7 +274,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     // Angebots-Logik
     public void updateOfferSlot() {
         if (!hasOffer) {
-            offerSlot = ItemStack.EMPTY;
+            // Während der Angebotserstellung sollen die Slots unverändert bleiben
             return;
         }
 

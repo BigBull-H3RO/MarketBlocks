@@ -20,9 +20,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;
 
-public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffersMenu> {
+public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffersMenu> implements ContainerListener {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
     private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
     private static final ResourceLocation TRADE_ARROW_DISABLED = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow_disabled.png");
@@ -63,6 +65,10 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     @Override
     protected void init() {
         super.init();
+
+        // Listener erneut registrieren, um doppelte Einträge zu vermeiden
+        menu.removeSlotListener(this);
+        menu.addSlotListener(this);
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         boolean isOwner = menu.isOwner();
@@ -145,7 +151,6 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     private void startOfferCreation() {
         creatingOffer = true;
         menu.setCreatingOffer(true);
-        menu.slots.get(2).set(ItemStack.EMPTY);
         playClickSound();
         init();
     }
@@ -186,14 +191,11 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                     result
             ));
 
-            // Leere die Slots erst nach erfolgreichem Senden
-            menu.slots.get(0).set(ItemStack.EMPTY);
-            menu.slots.get(1).set(ItemStack.EMPTY);
-            menu.slots.get(2).set(ItemStack.EMPTY);
-
             creatingOffer = false;
             menu.setCreatingOffer(false);
+            menu.getBlockEntity().setHasOfferClient(true);
             playSuccessSound();
+            init();
 
         } catch (Exception e) {
             MarketBlocks.LOGGER.error("Error confirming offer", e);
@@ -203,6 +205,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
     private void cancelOfferCreation() {
         NetworkHandler.sendToServer(new CancelOfferPacket(menu.getBlockEntity().getBlockPos()));
+        onOfferCreationCancelled();
         playClickSound();
     }
 
@@ -220,6 +223,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     public void onOfferDeleted() {
         creatingOffer = false;
         menu.setCreatingOffer(false);
+        menu.getBlockEntity().setHasOfferClient(false);
         init();
     }
 
@@ -231,7 +235,9 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
-        if (blockEntity.hasOffer() && !creatingOffer) {
+        if (creatingOffer) {
+            renderOfferPreview(graphics);
+        } else if (blockEntity.hasOffer()) {
             renderExistingOffer(graphics, blockEntity);
         }
 
@@ -252,6 +258,16 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                 blockEntity.getOfferPayment2(),
                 blockEntity.getOfferResult(),
                 blockEntity.isOfferAvailable()
+        );
+        offerButton.renderWidget(graphics, 0, 0, 0);
+    }
+
+    private void renderOfferPreview(GuiGraphics graphics) {
+        offerButton.update(
+                menu.slots.get(0).getItem(),
+                menu.slots.get(1).getItem(),
+                menu.slots.get(2).getItem(),
+                true
         );
         offerButton.renderWidget(graphics, 0, 0, 0);
     }
@@ -302,6 +318,23 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
         }
     }
 
+    @Override
+    public void slotChanged(AbstractContainerMenu containerToSend, int dataSlotIndex, ItemStack stack) {
+        if (creatingOffer) {
+            offerButton.update(
+                    this.menu.slots.get(0).getItem(),
+                    this.menu.slots.get(1).getItem(),
+                    this.menu.slots.get(2).getItem(),
+                    true
+            );
+        }
+    }
+
+    @Override
+    public void dataChanged(AbstractContainerMenu containerMenu, int dataSlotIndex, int value) {
+        // keine zusätzlichen Aktionen nötig
+    }
+
     private void renderOfferTooltips(GuiGraphics graphics, int mouseX, int mouseY, SmallShopBlockEntity blockEntity) {
         int offerX = leftPos + 20;
         int offerY = topPos + 8;
@@ -349,24 +382,6 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Tab-Wechsel mit E für Owner
-        if (menu.isOwner() && minecraft.options.keyInventory.matches(keyCode, scanCode)) {
-            if (hasShiftDown()) {
-                // Shift+E schließt GUI
-                minecraft.player.closeContainer();
-                return true;
-            } else {
-                // E wechselt zu Inventory
-                switchToInventory();
-                return true;
-            }
-        }
-
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    @Override
     public void containerTick() {
         super.containerTick();
 
@@ -382,6 +397,12 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
             // Weitere Live-Updates könnten hier implementiert werden
         }
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        menu.removeSlotListener(this);
     }
 
     // Sound-Hilfsmethoden

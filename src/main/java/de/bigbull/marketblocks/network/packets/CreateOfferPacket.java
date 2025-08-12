@@ -70,9 +70,7 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                         level.sendBlockUpdated(packet.pos(), level.getBlockState(packet.pos()),
                                 level.getBlockState(packet.pos()), 3);
 
-                        returnStackToPlayer(player, payment1);
-                        returnStackToPlayer(player, payment2);
-                        returnStackToPlayer(player, result);
+                        returnStacksToPlayer(player, payment1, payment2, result);
 
                         MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), packet.pos());
                     } else {
@@ -92,11 +90,13 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                 actual.getCount() == expected.getCount();
     }
 
-    private static void returnStackToPlayer(ServerPlayer player, ItemStack stack) {
-        if (!stack.isEmpty()) {
-            player.getInventory().placeItemBackInInventory(stack);
+    private static void returnStacksToPlayer(ServerPlayer player, ItemStack... stacks) {
+        for (ItemStack stack : stacks) {
             if (!stack.isEmpty()) {
-                Containers.dropItemStack(player.level(), player.getX(), player.getY(), player.getZ(), stack);
+                player.getInventory().placeItemBackInInventory(stack);
+                if (!stack.isEmpty()) {
+                    Containers.dropItemStack(player.level(), player.getX(), player.getY(), player.getZ(), stack);
+                }
             }
         }
     }

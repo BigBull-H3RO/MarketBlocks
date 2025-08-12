@@ -38,13 +38,19 @@ public record OfferStatusPacket(BlockPos pos, boolean hasOffer) implements Custo
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
                 shopEntity.setHasOfferClient(packet.hasOffer());
             }
+            boolean wasCreating = false;
             if (context.player().containerMenu instanceof SmallShopOffersMenu menu) {
+                wasCreating = menu.isCreatingOffer();
                 menu.setCreatingOffer(false);
             }
             if (!packet.hasOffer()) {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.screen instanceof SmallShopOffersScreen screen) {
-                    screen.onOfferDeleted();
+                    if (wasCreating) {
+                        screen.onOfferCreationCancelled();
+                    } else {
+                        screen.onOfferDeleted();
+                    }
                 }
             }
         });

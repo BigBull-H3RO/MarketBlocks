@@ -233,8 +233,8 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPickup(Player player) {
-            // Während Erstellung kann Owner Items entfernen
-            if (menu.isCreatingOffer() && menu.isOwner()) {
+            // Owner kann Items entfernen, wenn kein Angebot existiert oder während der Erstellung
+            if (menu.isOwner() && (!menu.hasOffer() || menu.isCreatingOffer())) {
                 return true;
             }
             // Normale Kauf-Logik: Nur wenn Angebot verfügbar ist

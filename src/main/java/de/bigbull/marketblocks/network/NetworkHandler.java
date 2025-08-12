@@ -46,18 +46,6 @@ public class NetworkHandler {
                 OfferStatusPacket.CODEC,
                 OfferStatusPacket::handle
         );
-
-        registrar.playToClient(
-                CancelOfferResponsePacket.TYPE,
-                CancelOfferResponsePacket.CODEC,
-                CancelOfferResponsePacket::handle
-        );
-
-        registrar.playToClient(
-                DeleteOfferResponsePacket.TYPE,
-                DeleteOfferResponsePacket.CODEC,
-                DeleteOfferResponsePacket::handle
-        );
     }
 
     public static void sendToServer(Object packet) {

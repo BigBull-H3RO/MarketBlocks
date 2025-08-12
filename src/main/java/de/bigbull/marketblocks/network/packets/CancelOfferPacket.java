@@ -11,7 +11,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -56,7 +55,6 @@ public record CancelOfferPacket(BlockPos pos) implements CustomPacketPayload {
                             }
                         }
                     }
-                    PacketDistributor.sendToPlayer(player, new CancelOfferResponsePacket(packet.pos()));
                 }
             }
         });
