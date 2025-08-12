@@ -243,14 +243,16 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
         @Override
         public ItemStack remove(int amount) {
-            // Kaufvorgang, nur wenn nicht in Erstellung
-            if (!menu.isCreatingOffer() && menu.hasOffer() && menu.isOfferAvailable()) {
-                // Trigger purchase logic in BlockEntity
-                return super.remove(amount);
-            } else if (menu.isCreatingOffer()) {
-                // Normale Entfernung während Erstellung
+            // Owner darf Items jederzeit entfernen, solange kein aktives Angebot besteht
+            if (!menu.hasOffer() || menu.isCreatingOffer()) {
                 return super.remove(amount);
             }
+
+            // Käufer können nur entnehmen, wenn ein Angebot verfügbar ist
+            if (menu.hasOffer() && menu.isOfferAvailable()) {
+                return super.remove(amount);
+            }
+
             return ItemStack.EMPTY;
         }
     }

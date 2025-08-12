@@ -44,7 +44,7 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
                     // Sende Status-Update an alle Spieler mit geöffnetem Menü
                     ServerLevel serverLevel = (ServerLevel) level;
                     for (ServerPlayer p : serverLevel.players()) {
-                        if (p != player && p.containerMenu instanceof SmallShopOffersMenu menu && menu.getBlockEntity() == shopEntity) {
+                        if (p.containerMenu instanceof SmallShopOffersMenu menu && menu.getBlockEntity() == shopEntity) {
                             PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), false));
                         }
                     }

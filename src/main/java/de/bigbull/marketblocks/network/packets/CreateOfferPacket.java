@@ -24,9 +24,9 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
     public static final StreamCodec<RegistryFriendlyByteBuf, CreateOfferPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             CreateOfferPacket::pos,
-            ItemStack.STREAM_CODEC,
+            ItemStack.OPTIONAL_STREAM_CODEC,
             CreateOfferPacket::payment1,
-            ItemStack.STREAM_CODEC,
+            ItemStack.OPTIONAL_STREAM_CODEC,
             CreateOfferPacket::payment2,
             ItemStack.STREAM_CODEC,
             CreateOfferPacket::result,
