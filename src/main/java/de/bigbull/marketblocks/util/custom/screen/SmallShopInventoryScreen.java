@@ -41,7 +41,8 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
     public SmallShopInventoryScreen(SmallShopInventoryMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 176;
-        this.imageHeight = GuiConstants.IMAGE_HEIGHT;
+        this.imageHeight = 166;
+        this.inventoryLabelY = this.imageHeight - 94;
     }
 
     @Override
@@ -99,11 +100,11 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
 
         // Output Label
         int outputWidth = font.width(outputLabel);
-        graphics.fill(leftPos + 114, topPos + 4, leftPos + 116 + outputWidth, topPos + 14, 0x80000000);
-        graphics.drawString(font, outputLabel, leftPos + 116, topPos + 6, 0xFFFFFF, false);
+        graphics.fill(leftPos + 96, topPos + 4, leftPos + 98 + outputWidth, topPos + 14, 0x80000000);
+        graphics.drawString(font, outputLabel, leftPos + 98, topPos + 6, 0xFFFFFF, false);
 
         // Render Transfer-Pfeil zwischen Input und Output
-        graphics.blit(TRADE_ARROW, leftPos + 76, topPos + 50, 0, 0, 24, 16);
+        graphics.blit(TRADE_ARROW, leftPos + 58, topPos + 50, 0, 0, 24, 16);
     }
 
     @Override
@@ -137,7 +138,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
         super.renderTooltip(graphics, x, y);
 
         // Tooltip für Transfer-Pfeil
-        if (isMouseOver(x, y, leftPos + 76, topPos + 50, 24, 16)) {
+        if (isMouseOver(x, y, leftPos + 58, topPos + 50, 24, 16)) {
             Component tooltip = Component.literal("Items flow from Input to Output inventory");
             graphics.renderTooltip(font, tooltip, x, y);
         }

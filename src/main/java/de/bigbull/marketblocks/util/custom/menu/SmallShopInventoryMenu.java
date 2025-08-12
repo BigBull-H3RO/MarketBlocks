@@ -97,18 +97,6 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         setupSlots(playerInventory);
     }
 
-    // Alternative: Statische Factory-Methode für Client-Constructor
-    public static SmallShopInventoryMenu createClientMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        BlockPos pos = buf.readBlockPos();
-        BlockEntity be = playerInventory.player.level().getBlockEntity(pos);
-        if (be instanceof SmallShopBlockEntity shopEntity) {
-            return new SmallShopInventoryMenu(containerId, playerInventory, shopEntity);
-        }
-        // Fallback - erstelle Dummy Entity
-        SmallShopBlockEntity dummy = new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
-        return new SmallShopInventoryMenu(containerId, playerInventory, dummy);
-    }
-
     private void setupSlots(Inventory playerInventory) {
         // Input Inventar (3x4 = 12 Slots) - Slots 0-11
         for (int row = 0; row < 3; row++) {
@@ -121,21 +109,21 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
                 addSlot(new OutputSlot(container, INPUT_SLOTS + row * 4 + col,
-                        116 + col * 18, 18 + row * 18));
+                        98 + col * 18, 18 + row * 18));
             }
         }
 
         // Spieler Inventar - Slots 24-50
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18,
-                        GuiConstants.PLAYER_INV_Y_START + row * 18));
+                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 103 +
+                        row * 18 + GuiConstants.PLAYER_INV_Y_START));
             }
         }
 
         // Spieler Hotbar - Slots 51-59
         for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(playerInventory, col, 8 + col * 18, GuiConstants.HOTBAR_Y));
+            addSlot(new Slot(playerInventory, col, 8 + col * 18, 161 + GuiConstants.HOTBAR_Y));
         }
     }
 

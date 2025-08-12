@@ -238,6 +238,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         return hasOffer;
     }
 
+    public void setHasOfferClient(boolean hasOffer) {
+        this.hasOffer = hasOffer;
+    }
+
     public ItemStack getOfferPayment1() {
         return offerPayment1;
     }

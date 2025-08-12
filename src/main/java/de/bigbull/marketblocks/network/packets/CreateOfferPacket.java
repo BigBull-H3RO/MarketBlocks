@@ -8,8 +8,10 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack payment2, ItemStack result)
@@ -44,30 +46,30 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                 // Prüfe ob Spieler der Owner ist
                 if (shopEntity.isOwner(player)) {
                     // FIXED: Korrekte Slot-Indizes verwenden
-                    // Payment Slots sind 24 und 25 in der BlockEntity
+                    // Payment Slots sind 24 und 25, Offer Slot ist 26
                     ItemStack payment1Slot = shopEntity.getItem(24).copy();
                     ItemStack payment2Slot = shopEntity.getItem(25).copy();
+                    ItemStack offerSlot = shopEntity.getItem(26).copy();
 
-                    // Prüfe ob die Zahlungsslots mit den Paketdaten übereinstimmen
+                    // Prüfe ob die Slots mit den Paketdaten übereinstimmen
                     boolean payment1Valid = validatePaymentSlot(packet.payment1(), payment1Slot);
                     boolean payment2Valid = validatePaymentSlot(packet.payment2(), payment2Slot);
+                    boolean resultValid = validatePaymentSlot(packet.result(), offerSlot);
 
-                    // Resultat im Spielerinventar suchen (NICHT im Block!)
-                    int resultSlot = findResultItemInPlayerInventory(player, packet.result());
+                    // Wenn alle Items vorhanden sind, erstelle das Angebot
+                    if (payment1Valid && payment2Valid && resultValid) {
+                        // Entferne Items aus den Slots und gib sie dem Spieler zurück
+                        ItemStack payment1 = shopEntity.removeItemNoUpdate(24);
+                        ItemStack payment2 = shopEntity.removeItemNoUpdate(25);
+                        ItemStack result = shopEntity.removeItemNoUpdate(26);
 
-                    // Wenn alle Items vorhanden sind, entferne sie und erstelle das Angebot
-                    if (payment1Valid && payment2Valid && resultSlot != -1) {
-                        // Entferne Payment-Items aus Block
-                        ItemStack payment1 = payment1Slot.isEmpty() ? ItemStack.EMPTY :
-                                shopEntity.removeItem(24, payment1Slot.getCount());
-                        ItemStack payment2 = payment2Slot.isEmpty() ? ItemStack.EMPTY :
-                                shopEntity.removeItem(25, payment2Slot.getCount());
+                        // Erstelle das Angebot mit Kopien
+                        shopEntity.createOffer(payment1Slot, payment2Slot, offerSlot);
+                        PacketDistributor.sendToPlayer(player, new OfferStatusPacket(packet.pos(), true));
 
-                        // Entferne Result-Item aus Spielerinventar
-                        ItemStack result = player.getInventory().getItem(resultSlot).split(packet.result().getCount());
-
-                        // Erstelle das Angebot
-                        shopEntity.createOffer(payment1, payment2, result);
+                        returnStackToPlayer(player, payment1);
+                        returnStackToPlayer(player, payment2);
+                        returnStackToPlayer(player, result);
 
                         MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), packet.pos());
                     } else {
@@ -87,16 +89,12 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                 actual.getCount() == expected.getCount();
     }
 
-    private static int findResultItemInPlayerInventory(ServerPlayer player, ItemStack resultItem) {
-        if (resultItem.isEmpty()) return -1;
-
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (ItemStack.isSameItemSameComponents(stack, resultItem) &&
-                    stack.getCount() >= resultItem.getCount()) {
-                return i;
+    private static void returnStackToPlayer(ServerPlayer player, ItemStack stack) {
+        if (!stack.isEmpty()) {
+            player.getInventory().placeItemBackInInventory(stack);
+            if (!stack.isEmpty()) {
+                Containers.dropItemStack(player.level(), player.getX(), player.getY(), player.getZ(), stack);
             }
         }
-        return -1;
     }
 }

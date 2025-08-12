@@ -1,9 +1,7 @@
 package de.bigbull.marketblocks.network;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.packets.CreateOfferPacket;
-import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
-import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
+import de.bigbull.marketblocks.network.packets.*;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -32,9 +30,27 @@ public class NetworkHandler {
         );
 
         registrar.playToServer(
+                CancelOfferPacket.TYPE,
+                CancelOfferPacket.CODEC,
+                CancelOfferPacket::handle
+        );
+
+        registrar.playToServer(
                 SwitchTabPacket.TYPE,
                 SwitchTabPacket.CODEC,
                 SwitchTabPacket::handle
+        );
+
+        registrar.playToClient(
+                OfferStatusPacket.TYPE,
+                OfferStatusPacket.CODEC,
+                OfferStatusPacket::handle
+        );
+
+        registrar.playToClient(
+                CancelOfferResponsePacket.TYPE,
+                CancelOfferResponsePacket.CODEC,
+                CancelOfferResponsePacket::handle
         );
     }
 
@@ -43,6 +59,8 @@ public class NetworkHandler {
             PacketDistributor.sendToServer(createPacket);
         } else if (packet instanceof DeleteOfferPacket deletePacket) {
             PacketDistributor.sendToServer(deletePacket);
+        } else if (packet instanceof CancelOfferPacket cancelPacket) {
+            PacketDistributor.sendToServer(cancelPacket);
         } else if (packet instanceof SwitchTabPacket switchPacket) {
             PacketDistributor.sendToServer(switchPacket);
         }
