@@ -3,7 +3,9 @@ package de.bigbull.marketblocks.network.packets;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.screen.SmallShopOffersScreen;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -38,6 +40,12 @@ public record OfferStatusPacket(BlockPos pos, boolean hasOffer) implements Custo
             }
             if (context.player().containerMenu instanceof SmallShopOffersMenu menu) {
                 menu.setCreatingOffer(false);
+            }
+            if (!packet.hasOffer()) {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.screen instanceof SmallShopOffersScreen screen) {
+                    screen.onOfferDeleted();
+                }
             }
         });
     }

@@ -52,6 +52,12 @@ public class NetworkHandler {
                 CancelOfferResponsePacket.CODEC,
                 CancelOfferResponsePacket::handle
         );
+
+        registrar.playToClient(
+                DeleteOfferResponsePacket.TYPE,
+                DeleteOfferResponsePacket.CODEC,
+                DeleteOfferResponsePacket::handle
+        );
     }
 
     public static void sendToServer(Object packet) {

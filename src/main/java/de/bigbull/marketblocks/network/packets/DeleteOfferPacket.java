@@ -2,13 +2,16 @@ package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
@@ -36,6 +39,18 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
                 // Prüfe ob Spieler der Owner ist
                 if (shopEntity.isOwner(player)) {
                     shopEntity.clearOffer();
+                    shopEntity.updateOfferSlot();
+
+                    // Sende Status-Update an alle Spieler mit geöffnetem Menü
+                    ServerLevel serverLevel = (ServerLevel) level;
+                    for (ServerPlayer p : serverLevel.players()) {
+                        if (p.containerMenu instanceof SmallShopOffersMenu menu && menu.getBlockEntity() == shopEntity) {
+                            PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), false));
+                        }
+                    }
+
+                    PacketDistributor.sendToPlayer(player, new DeleteOfferResponsePacket(packet.pos()));
+
                     MarketBlocks.LOGGER.info("Player {} deleted offer at {}", player.getName().getString(), packet.pos());
                 }
             }

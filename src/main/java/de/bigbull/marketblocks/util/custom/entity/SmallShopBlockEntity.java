@@ -233,6 +233,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         this.offerResult = result.copy();
         this.hasOffer = true;
         setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
         updateOfferSlot();
     }
 
@@ -243,6 +246,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         this.hasOffer = false;
         this.offerSlot = ItemStack.EMPTY;
         setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
     }
 
     public boolean hasOffer() {
@@ -266,7 +272,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     }
 
     // Angebots-Logik
-    private void updateOfferSlot() {
+    public void updateOfferSlot() {
         if (!hasOffer) {
             offerSlot = ItemStack.EMPTY;
             return;
@@ -342,6 +348,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         }
 
         setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
         updateOfferSlot(); // Prüfe ob noch ein Kauf möglich ist
     }
 

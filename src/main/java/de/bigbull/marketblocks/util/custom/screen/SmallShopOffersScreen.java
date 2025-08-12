@@ -215,6 +215,11 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     private void deleteOffer() {
         NetworkHandler.sendToServer(new DeleteOfferPacket(menu.getBlockEntity().getBlockPos()));
         playClickSound();
+    }
+
+    public void onOfferDeleted() {
+        creatingOffer = false;
+        menu.setCreatingOffer(false);
         init();
     }
 

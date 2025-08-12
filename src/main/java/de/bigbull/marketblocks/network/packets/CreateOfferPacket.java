@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -64,7 +65,10 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
 
                         // Erstelle das Angebot mit Kopien
                         shopEntity.createOffer(payment1Slot, payment2Slot, offerSlot);
-                        PacketDistributor.sendToPlayer(player, new OfferStatusPacket(packet.pos(), true));
+                        PacketDistributor.sendToPlayersTrackingChunk(player.serverLevel(), new ChunkPos(packet.pos()),
+                                new OfferStatusPacket(packet.pos(), true));
+                        level.sendBlockUpdated(packet.pos(), level.getBlockState(packet.pos()),
+                                level.getBlockState(packet.pos()), 3);
 
                         returnStackToPlayer(player, payment1);
                         returnStackToPlayer(player, payment2);
