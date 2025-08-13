@@ -21,19 +21,27 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 
-import java.util.List;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
-    private static final int INPUT_SLOTS = 12; // 3x4 Input Inventar
-    private static final int OUTPUT_SLOTS = 12; // 3x4 Output Inventar
-    private static final int PAYMENT_SLOTS = 2; // 2 Bezahlslots
-    private static final int OFFER_SLOT = 1; // 1 Angebots-Slot
+    private static final int INPUT_SLOTS = 12;
+    private static final int OUTPUT_SLOTS = 12;
+    private static final int PAYMENT_SLOTS = 2;
+    private static final int OFFER_SLOT = 1;
 
-    // Öffentliche Slot-Indizes für Zugriff in Menüs und Paketen
-    public static final int PAYMENT_SLOT_1 = INPUT_SLOTS + OUTPUT_SLOTS;
-    public static final int PAYMENT_SLOT_2 = PAYMENT_SLOT_1 + 1;
-    public static final int OFFER_RESULT_SLOT = INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS;
+    // Angebots-System
+    private ItemStack offerPayment1 = ItemStack.EMPTY;
+    private ItemStack offerPayment2 = ItemStack.EMPTY;
+    private ItemStack offerResult = ItemStack.EMPTY;
+    private boolean hasOffer = false;
+
+    // Owner System
+    private UUID ownerId = null;
+    private String ownerName = "";
+
+    public SmallShopBlockEntity(BlockPos pos, BlockState state) {
+        super(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), pos, state);
+    }
 
     // Inventare
     private final ItemStackHandler inputHandler = new ItemStackHandler(INPUT_SLOTS) {
@@ -78,20 +86,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private final CombinedInvWrapper combinedHandler =
             new CombinedInvWrapper(inputHandler, outputHandler, paymentHandler, offerHandler);
 
-    // Angebots-System
-    private ItemStack offerPayment1 = ItemStack.EMPTY;
-    private ItemStack offerPayment2 = ItemStack.EMPTY;
-    private ItemStack offerResult = ItemStack.EMPTY;
-    private boolean hasOffer = false;
-
-    // Owner System
-    private UUID ownerId = null;
-    private String ownerName = "";
-
-    public SmallShopBlockEntity(BlockPos pos, BlockState state) {
-        super(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), pos, state);
-    }
-
     @Override
     public Component getDisplayName() {
         return Component.translatable("container.marketblocks.small_shop");
@@ -99,11 +93,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        // Fallback: Verwende Offers Menu als Standard
         return new SmallShopOffersMenu(containerId, playerInventory, this);
     }
 
-    // ItemStackHandler Getter
     public ItemStackHandler getInputHandler() {
         return inputHandler;
     }
@@ -131,65 +123,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    // Inventar-Utils
-    public int getContainerSize() {
-        return INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS + OFFER_SLOT;
-    }
-
-    private static boolean allEmpty(ItemStackHandler handler) {
-        for (int i = 0; i < handler.getSlots(); i++) {
-            if (!handler.getStackInSlot(i).isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public boolean isEmpty() {
-        return allEmpty(inputHandler) && allEmpty(outputHandler) &&
-                allEmpty(paymentHandler) && offerHandler.getStackInSlot(0).isEmpty();
-    }
-
-    public ItemStack getItem(int slot) {
-        ItemStackHandler handler = getHandler(slot);
-        int local = getLocalSlot(slot);
-        return handler != null ? handler.getStackInSlot(local) : ItemStack.EMPTY;
-    }
-
-    public ItemStack removeItem(int slot, int amount) {
-        ItemStackHandler handler = getHandler(slot);
-        int local = getLocalSlot(slot);
-        if (handler != null) {
-            ItemStack result = handler.extractItem(local, amount, false);
-            if (handler != offerHandler && !result.isEmpty()) {
-                updateOfferSlot();
-            }
-            return result;
-        }
-
-        return ItemStack.EMPTY;
-    }
-
-    public ItemStack removeItemNoUpdate(int slot) {
-        ItemStackHandler handler = getHandler(slot);
-        int local = getLocalSlot(slot);
-        if (handler != null) {
-            ItemStack stack = handler.getStackInSlot(local);
-            handler.setStackInSlot(local, ItemStack.EMPTY);
-            return stack;
-        }
-
-        return ItemStack.EMPTY;
-    }
-
-    public void setItem(int slot, ItemStack stack) {
-        ItemStackHandler handler = getHandler(slot);
-        int local = getLocalSlot(slot);
-        if (handler != null) {
-            handler.setStackInSlot(local, stack);
-        }
-    }
-
     public boolean stillValid(Player player) {
         if (level == null || level.getBlockEntity(worldPosition) != this) {
             return false;
@@ -198,47 +131,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
                 worldPosition.getX() + 0.5,
                 worldPosition.getY() + 0.5,
                 worldPosition.getZ() + 0.5) <= 64.0;
-    }
-
-    public void clearContent() {
-        List<ItemStackHandler> handlers = List.of(inputHandler, outputHandler, paymentHandler, offerHandler);
-        for (ItemStackHandler handler : handlers) {
-            for (int i = 0; i < handler.getSlots(); i++) {
-                handler.setStackInSlot(i, ItemStack.EMPTY);
-            }
-        }
-        offerPayment1 = ItemStack.EMPTY;
-        offerPayment2 = ItemStack.EMPTY;
-        offerResult = ItemStack.EMPTY;
-        hasOffer = false;
-        setChanged();
-        updateOfferSlot();
-    }
-
-    private ItemStackHandler getHandler(int slot) {
-        if (slot < INPUT_SLOTS) {
-            return inputHandler;
-        } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS) {
-            return outputHandler;
-        } else if (slot < OFFER_RESULT_SLOT) {
-            return paymentHandler;
-        } else if (slot == OFFER_RESULT_SLOT) {
-            return offerHandler;
-        }
-        return null;
-    }
-
-    private int getLocalSlot(int slot) {
-        if (slot < INPUT_SLOTS) {
-            return slot;
-        } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS) {
-            return slot - INPUT_SLOTS;
-        } else if (slot < OFFER_RESULT_SLOT) {
-            return slot - INPUT_SLOTS - OUTPUT_SLOTS;
-        } else if (slot == OFFER_RESULT_SLOT) {
-            return 0;
-        }
-        return -1;
     }
 
     // Owner-System
@@ -324,7 +216,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         ItemStack payment1 = paymentHandler.getStackInSlot(0);
         ItemStack payment2 = paymentHandler.getStackInSlot(1);
 
-        // Prüfe erste Bezahlung
         if (!offerPayment1.isEmpty()) {
             if (!ItemStack.isSameItemSameComponents(payment1, offerPayment1) ||
                     payment1.getCount() < offerPayment1.getCount()) {
@@ -332,12 +223,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
 
-        // Prüfe zweite Bezahlung
         if (!offerPayment2.isEmpty()) {
-            if (!ItemStack.isSameItemSameComponents(payment2, offerPayment2) ||
-                    payment2.getCount() < offerPayment2.getCount()) {
-                return false;
-            }
+            return ItemStack.isSameItemSameComponents(payment2, offerPayment2) &&
+                    payment2.getCount() >= offerPayment2.getCount();
         }
 
         return true;
@@ -384,7 +272,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
-        updateOfferSlot(); // Prüfe ob noch ein Kauf möglich ist
+        updateOfferSlot();
     }
 
     private void removeFromInput(ItemStack toRemove) {
@@ -504,7 +392,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         tag.putString("OwnerName", ownerName);
     }
 
-    // Synchronisation
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);

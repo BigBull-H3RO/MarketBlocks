@@ -42,7 +42,7 @@ public final class QuickMoveHelper {
         ItemStack itemstack = ItemStack.EMPTY;
         Slot slot = menu.slots.get(index);
 
-        if (slot != null && slot.hasItem()) {
+        if (slot.hasItem()) {
             ItemStack itemstack1 = slot.getItem();
             itemstack = itemstack1.copy();
 

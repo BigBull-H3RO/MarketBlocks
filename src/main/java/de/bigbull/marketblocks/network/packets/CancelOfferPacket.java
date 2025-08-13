@@ -40,25 +40,24 @@ public record CancelOfferPacket(BlockPos pos) implements CustomPacketPayload {
 
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
                 if (shopEntity.isOwner(player)) {
-                    ItemStack payment1 = shopEntity.getPaymentHandler().extractItem(0, Integer.MAX_VALUE, false);
-                    if (!payment1.isEmpty() && !player.getInventory().add(payment1)) {
-                        Containers.dropItemStack(level, packet.pos().getX() + 0.5, packet.pos().getY() + 1,
-                                packet.pos().getZ() + 0.5, payment1);
-                    }
-
-                    ItemStack payment2 = shopEntity.getPaymentHandler().extractItem(1, Integer.MAX_VALUE, false);
-                    if (!payment2.isEmpty() && !player.getInventory().add(payment2)) {
-                        Containers.dropItemStack(level, packet.pos().getX() + 0.5, packet.pos().getY() + 1,
-                                packet.pos().getZ() + 0.5, payment2);
-                    }
-
-                    ItemStack offer = shopEntity.getOfferHandler().extractItem(0, Integer.MAX_VALUE, false);
-                    if (!offer.isEmpty() && !player.getInventory().add(offer)) {
-                        Containers.dropItemStack(level, packet.pos().getX() + 0.5, packet.pos().getY() + 1,
-                                packet.pos().getZ() + 0.5, offer);
+                    int[] slotIndices = {0, 1, 0};
+                    for (int i = 0; i < slotIndices.length; i++) {
+                        ItemStack stack;
+                        if (i < 2) {
+                            stack = shopEntity.getPaymentHandler().extractItem(slotIndices[i], Integer.MAX_VALUE, false);
+                        } else {
+                            stack = shopEntity.getOfferHandler().extractItem(slotIndices[i], Integer.MAX_VALUE, false);
+                        }
+                        returnOrDropItem(player, level, packet.pos(), stack);
                     }
                 }
             }
         });
+    }
+
+    private static void returnOrDropItem(ServerPlayer player, Level level, BlockPos pos, ItemStack stack) {
+        if (!stack.isEmpty() && !player.getInventory().add(stack)) {
+            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, stack);
+        }
     }
 }

@@ -363,13 +363,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         if (isOwner != lastIsOwner) {
             lastIsOwner = isOwner;
             init();
-            return;
-        }
-
-        SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-        if (blockEntity != null) {
-
-            // Weitere Live-Updates könnten hier implementiert werden
         }
     }
 

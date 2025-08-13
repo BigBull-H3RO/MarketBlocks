@@ -2,14 +2,14 @@ package de.bigbull.marketblocks.util.custom.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
+import de.bigbull.marketblocks.util.custom.menu.GenericMenuProvider;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -67,7 +67,13 @@ public class SmallShopBlock extends BaseEntityBlock {
         if (player instanceof ServerPlayer serverPlayer) {
             if (shopEntity.hasOffer() || shopEntity.isOwner(player)) {
                 // Besitzer sehen standardmäßig ebenfalls das Offers-Menü
-                serverPlayer.openMenu(new SmallShopOffersMenuProvider(shopEntity), pos);
+                serverPlayer.openMenu(
+                        new GenericMenuProvider(
+                                Component.translatable("container.marketblocks.small_shop_offers"),
+                                (id, inv, p) -> new SmallShopOffersMenu(id, inv, shopEntity)
+                        ),
+                        pos
+                );
             } else {
                 return InteractionResult.FAIL;
             }
@@ -81,7 +87,10 @@ public class SmallShopBlock extends BaseEntityBlock {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
             // Standardmäßig Offers-Menu zurückgeben
-            return new SmallShopOffersMenuProvider(shopEntity);
+            return new GenericMenuProvider(
+                    Component.translatable("container.marketblocks.small_shop_offers"),
+                    (id, inv, player) -> new SmallShopOffersMenu(id, inv, shopEntity)
+            );
         }
         return null;
     }
@@ -106,47 +115,5 @@ public class SmallShopBlock extends BaseEntityBlock {
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new SmallShopBlockEntity(pos, state);
-    }
-
-    // MenuProvider für Offers-Menu
-    public static class SmallShopOffersMenuProvider implements MenuProvider {
-        private final SmallShopBlockEntity blockEntity;
-
-        public SmallShopOffersMenuProvider(SmallShopBlockEntity blockEntity) {
-            this.blockEntity = blockEntity;
-        }
-
-        @Override
-        public net.minecraft.network.chat.Component getDisplayName() {
-            return net.minecraft.network.chat.Component.translatable("container.marketblocks.small_shop_offers");
-        }
-
-        @Override
-        public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int containerId,
-                                                                              Inventory playerInventory,
-                                                                              Player player) {
-            return new SmallShopOffersMenu(containerId, playerInventory, blockEntity);
-        }
-    }
-
-    // MenuProvider für Inventory-Menu
-    public static class SmallShopInventoryMenuProvider implements MenuProvider {
-        private final SmallShopBlockEntity blockEntity;
-
-        public SmallShopInventoryMenuProvider(SmallShopBlockEntity blockEntity) {
-            this.blockEntity = blockEntity;
-        }
-
-        @Override
-        public net.minecraft.network.chat.Component getDisplayName() {
-            return net.minecraft.network.chat.Component.translatable("container.marketblocks.small_shop_inventory");
-        }
-
-        @Override
-        public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int containerId,
-                                                                              Inventory playerInventory,
-                                                                              Player player) {
-            return new SmallShopInventoryMenu(containerId, playerInventory, blockEntity);
-        }
     }
 }

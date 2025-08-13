@@ -23,30 +23,28 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
     private final IItemHandler inputHandler;
     private final IItemHandler outputHandler;
 
-    // Slot-Indizes für Inventory-Modus
     private static final int INPUT_SLOTS = 12; // 3x4 Input Inventar
     private static final int OUTPUT_SLOTS = 12; // 3x4 Output Inventar
     private static final int PLAYER_INVENTORY_START = INPUT_SLOTS + OUTPUT_SLOTS;
     private static final int HOTBAR_START = PLAYER_INVENTORY_START + 27;
 
-    // Data Slots für Client-Server Sync
     private final ContainerData data;
 
-    // Constructor für Server
-    public SmallShopInventoryMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
+    private SmallShopInventoryMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity, boolean init) {
         super(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), containerId);
         this.blockEntity = blockEntity;
         this.inputHandler = blockEntity.getInputHandler();
         this.outputHandler = blockEntity.getOutputHandler();
-
         this.data = SmallShopMenuData.create(blockEntity, playerInventory.player);
 
         addDataSlots(this.data);
-
-        // Setup der Slots
         setupSlots(playerInventory);
+    }
 
-        // Owner setzen falls noch nicht gesetzt
+    // Constructor für Server
+    public SmallShopInventoryMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
+        this(containerId, playerInventory, blockEntity, true);
+
         if (blockEntity.getOwnerId() == null) {
             blockEntity.setOwner(playerInventory.player);
         }
@@ -54,39 +52,29 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
 
     // Constructor für Client
     public SmallShopInventoryMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        super(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), containerId);
+        this(containerId, playerInventory, readBlockEntity(playerInventory, buf), true);
+    }
 
-        // BlockPos aus Buffer lesen
+    private static SmallShopBlockEntity readBlockEntity(Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         BlockPos pos = buf.readBlockPos();
-
-        // Versuche BlockEntity aus der Welt zu bekommen
         BlockEntity be = playerInventory.player.level().getBlockEntity(pos);
+
         if (be instanceof SmallShopBlockEntity shopEntity) {
-            this.blockEntity = shopEntity;
-        } else {
-            // Fallback: Dummy BlockEntity erstellen (sollte nicht passieren)
-            this.blockEntity = new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
+            return shopEntity;
         }
 
-        this.inputHandler = this.blockEntity.getInputHandler();
-        this.outputHandler = this.blockEntity.getOutputHandler();
-
-        this.data = SmallShopMenuData.create(this.blockEntity, playerInventory.player);
-        addDataSlots(this.data);
-
-        // Setup der Slots
-        setupSlots(playerInventory);
+        return new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
     }
 
     private void setupSlots(Inventory playerInventory) {
-        // Input Inventar (3x4 = 12 Slots) - Slots 0-11
+        // Input Inventar
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
                 addSlot(new InputSlot(blockEntity, inputHandler, row * 4 + col, 8 + col * 18, 18 + row * 18, playerInventory.player));
             }
         }
 
-        // Output Inventar (3x4 = 12 Slots) - Slots 12-23
+        // Output Inventar
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
                 addSlot(new OutputSlot(outputHandler, row * 4 + col,
@@ -94,7 +82,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
             }
         }
 
-        // Spieler Inventar - Slots 24-50
+        // Player Inventar
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18,
@@ -102,7 +90,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
             }
         }
 
-        // Spieler Hotbar - Slots 51-59
+        // Player Hotbar
         for (int col = 0; col < 9; col++) {
             addSlot(new Slot(playerInventory, col, 8 + col * 18, GuiConstants.HOTBAR_Y));
         }
@@ -122,24 +110,14 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         return this.blockEntity.stillValid(player);
     }
 
-    // Getter für UI
     public SmallShopBlockEntity getBlockEntity() {
         return blockEntity;
-    }
-
-    public boolean hasOffer() {
-        return data.get(0) == 1;
-    }
-
-    public boolean isOfferAvailable() {
-        return data.get(1) == 1;
     }
 
     public boolean isOwner() {
         return data.get(2) == 1;
     }
 
-    // Custom Slot Klassen
     public static class InputSlot extends SlotItemHandler {
         private final SmallShopBlockEntity blockEntity;
         private final Player player;
@@ -152,13 +130,11 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            // Nur Owner kann Items in Input-Slots platzieren
             return blockEntity.isOwner(player);
         }
 
         @Override
         public boolean mayPickup(Player player) {
-            // Entfernen nur für den Owner erlaubt
             return blockEntity.isOwner(player);
         }
     }
@@ -170,7 +146,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return false; // Output-Slots akzeptieren keine Items vom Spieler
+            return false;
         }
     }
 }

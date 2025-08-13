@@ -43,42 +43,54 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
             ServerPlayer player = (ServerPlayer) context.player();
             Level level = player.level();
 
-            if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
-                // Prüfe ob Spieler der Owner ist
-                if (shopEntity.isOwner(player)) {
-                    // Zugriff auf Slots über ItemStackHandler
-                    ItemStack payment1Slot = shopEntity.getPaymentHandler().getStackInSlot(0).copy();
-                    ItemStack payment2Slot = shopEntity.getPaymentHandler().getStackInSlot(1).copy();
-                    ItemStack offerSlot = shopEntity.getOfferHandler().getStackInSlot(0).copy();
+            if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity && shopEntity.isOwner(player)) {
+                ItemStack[] slotCopies = copySlots(shopEntity);
 
-                    // Prüfe ob die Slots mit den Paketdaten übereinstimmen
-                    boolean payment1Valid = validatePaymentSlot(packet.payment1(), payment1Slot);
-                    boolean payment2Valid = validatePaymentSlot(packet.payment2(), payment2Slot);
-                    boolean resultValid = validatePaymentSlot(packet.result(), offerSlot);
+                if (slotsAreValid(packet, slotCopies)) {
+                    ItemStack[] extracted = extractItems(shopEntity, slotCopies);
 
-                    // Wenn alle Items vorhanden sind, erstelle das Angebot
-                    if (payment1Valid && payment2Valid && resultValid) {
-                        // Entferne Items aus den Slots und gib sie dem Spieler zurück
-                        ItemStack payment1 = shopEntity.getPaymentHandler().extractItem(0, payment1Slot.getCount(), false);
-                        ItemStack payment2 = shopEntity.getPaymentHandler().extractItem(1, payment2Slot.getCount(), false);
-                        ItemStack result = shopEntity.getOfferHandler().extractItem(0, offerSlot.getCount(), false);
+                    shopEntity.createOffer(slotCopies[0], slotCopies[1], slotCopies[2]);
+                    PacketDistributor.sendToPlayersTrackingChunk(player.serverLevel(), new ChunkPos(packet.pos()),
+                            new OfferStatusPacket(packet.pos(), true));
+                    level.sendBlockUpdated(packet.pos(), level.getBlockState(packet.pos()),
+                            level.getBlockState(packet.pos()), 3);
 
-                        // Erstelle das Angebot mit Kopien
-                        shopEntity.createOffer(payment1Slot, payment2Slot, offerSlot);
-                        PacketDistributor.sendToPlayersTrackingChunk(player.serverLevel(), new ChunkPos(packet.pos()),
-                                new OfferStatusPacket(packet.pos(), true));
-                        level.sendBlockUpdated(packet.pos(), level.getBlockState(packet.pos()),
-                                level.getBlockState(packet.pos()), 3);
+                    returnStacksToPlayer(player, extracted);
 
-                        returnStacksToPlayer(player, payment1, payment2, result);
-
-                        MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), packet.pos());
-                    } else {
-                        MarketBlocks.LOGGER.warn("Invalid offer creation attempt by player {}", player.getName().getString());
-                    }
+                    MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), packet.pos());
+                } else {
+                    MarketBlocks.LOGGER.warn("Invalid offer creation attempt by player {}", player.getName().getString());
                 }
             }
         });
+    }
+
+    private static ItemStack[] copySlots(SmallShopBlockEntity shopEntity) {
+        ItemStack[] slots = new ItemStack[3];
+        for (int i = 0; i < 2; i++) {
+            slots[i] = shopEntity.getPaymentHandler().getStackInSlot(i).copy();
+        }
+        slots[2] = shopEntity.getOfferHandler().getStackInSlot(0).copy();
+        return slots;
+    }
+
+    private static boolean slotsAreValid(CreateOfferPacket packet, ItemStack[] slots) {
+        ItemStack[] expected = {packet.payment1(), packet.payment2(), packet.result()};
+        for (int i = 0; i < expected.length; i++) {
+            if (!validatePaymentSlot(expected[i], slots[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static ItemStack[] extractItems(SmallShopBlockEntity shopEntity, ItemStack[] slots) {
+        ItemStack[] extracted = new ItemStack[3];
+        for (int i = 0; i < 2; i++) {
+            extracted[i] = shopEntity.getPaymentHandler().extractItem(i, slots[i].getCount(), false);
+        }
+        extracted[2] = shopEntity.getOfferHandler().extractItem(0, slots[2].getCount(), false);
+        return extracted;
     }
 
     private static boolean validatePaymentSlot(ItemStack expected, ItemStack actual) {

@@ -1,10 +1,13 @@
 package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.GenericMenuProvider;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -39,9 +42,21 @@ public record SwitchTabPacket(BlockPos pos, boolean showOffers) implements Custo
 
             if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity blockEntity) {
                 if (packet.showOffers()) {
-                    player.openMenu(new SmallShopBlock.SmallShopOffersMenuProvider(blockEntity), pos);
+                    player.openMenu(
+                            new GenericMenuProvider(
+                                    Component.translatable("container.marketblocks.small_shop_offers"),
+                                    (id, inv, p) -> new SmallShopOffersMenu(id, inv, blockEntity)
+                            ),
+                            pos
+                    );
                 } else if (blockEntity.isOwner(player)) {
-                    player.openMenu(new SmallShopBlock.SmallShopInventoryMenuProvider(blockEntity), pos);
+                    player.openMenu(
+                            new GenericMenuProvider(
+                                    Component.translatable("container.marketblocks.small_shop_inventory"),
+                                    (id, inv, p) -> new SmallShopInventoryMenu(id, inv, blockEntity)
+                            ),
+                            pos
+                    );
                 }
             }
         });

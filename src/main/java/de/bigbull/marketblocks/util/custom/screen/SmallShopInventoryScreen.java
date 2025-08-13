@@ -124,13 +124,6 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
         if (isOwner != lastIsOwner) {
             lastIsOwner = isOwner;
             init();
-            return;
-        }
-
-        // Aktualisiere UI falls nötig
-        SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-        if (blockEntity != null) {
-            // Könnte hier Live-Updates für Inventar-Änderungen implementieren
         }
     }
 
