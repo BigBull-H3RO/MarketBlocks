@@ -65,9 +65,8 @@ public class SmallShopBlock extends BaseEntityBlock {
         }
 
         if (player instanceof ServerPlayer serverPlayer) {
-            if (shopEntity.isOwner(player)) {
-                serverPlayer.openMenu(new SmallShopInventoryMenuProvider(shopEntity), pos);
-            } else if (shopEntity.hasOffer()) {
+            if (shopEntity.hasOffer() || shopEntity.isOwner(player)) {
+                // Besitzer sehen standardmäßig ebenfalls das Offers-Menü
                 serverPlayer.openMenu(new SmallShopOffersMenuProvider(shopEntity), pos);
             } else {
                 return InteractionResult.FAIL;

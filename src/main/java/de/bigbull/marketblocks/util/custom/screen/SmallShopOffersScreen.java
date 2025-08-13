@@ -57,7 +57,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
     public SmallShopOffersScreen(SmallShopOffersMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
-        this.imageWidth = 176;
+        this.imageWidth = GuiConstants.IMAGE_WIDTH;
         this.imageHeight = GuiConstants.IMAGE_HEIGHT;
         this.inventoryLabelY = GuiConstants.PLAYER_INV_LABEL_Y;
     }
@@ -73,7 +73,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         boolean isOwner = menu.isOwner();
         this.lastIsOwner = isOwner;
-        this.offerButton = new OfferTemplateButton(leftPos + 20, topPos + 8);
+        this.offerButton = new OfferTemplateButton(leftPos + 46, topPos + 20);
 
         // Clear existing buttons
         clearWidgets();
@@ -103,7 +103,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
             if (creatingOffer) {
                 // Bestätigen/Abbrechen Buttons während Erstellung
                 this.confirmButton = addRenderableWidget(new IconButton(
-                        leftPos + 80, topPos + 60, 20, 20,
+                        leftPos + 148, topPos + 6, 20, 20,
                         BUTTON_SPRITES, CREATE_ICON,
                         button -> confirmOffer(),
                         Component.translatable("gui.marketblocks.confirm_offer"),
@@ -111,7 +111,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                 ));
 
                 this.cancelButton = addRenderableWidget(new IconButton(
-                        leftPos + 104, topPos + 60, 20, 20,
+                        leftPos + 148, topPos + 28, 20, 20,
                         BUTTON_SPRITES, DELETE_ICON,
                         button -> cancelOfferCreation(),
                         Component.translatable("gui.marketblocks.cancel_offer"),
@@ -120,7 +120,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
             } else if (!blockEntity.hasOffer()) {
                 // Erstellen Button wenn kein Angebot existiert
                 this.createOfferButton = addRenderableWidget(new IconButton(
-                        leftPos + 80, topPos + 60, 20, 20,
+                        leftPos + 148, topPos + 6, 20, 20,
                         BUTTON_SPRITES, CREATE_ICON,
                         button -> startOfferCreation(),
                         Component.translatable("gui.marketblocks.create_offer"),
@@ -129,7 +129,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
             } else {
                 // Löschen Button wenn Angebot existiert
                 this.deleteOfferButton = addRenderableWidget(new IconButton(
-                        leftPos + 104, topPos + 60, 20, 20,
+                        leftPos + 148, topPos + 28, 20, 20,
                         BUTTON_SPRITES, DELETE_ICON,
                         button -> deleteOffer(),
                         Component.translatable("gui.marketblocks.delete_offer"),

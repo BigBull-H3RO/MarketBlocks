@@ -24,7 +24,7 @@ public class OfferTemplateButton extends AbstractWidget {
     private boolean arrowActive;
 
     public OfferTemplateButton(int x, int y) {
-        super(x, y, 100, 20, Component.empty());
+        super(x, y, 86, 17, Component.empty());
     }
 
     public void update(ItemStack payment1, ItemStack payment2, ItemStack result, boolean arrowActive) {
@@ -37,7 +37,7 @@ public class OfferTemplateButton extends AbstractWidget {
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         // Hintergrund
-        graphics.fill(getX() - 2, getY() - 2, getX() + 100, getY() + 20, 0x80000000);
+        graphics.fill(getX() - 2, getY() - 2, getX() + 86, getY() + 17, 0x80000000);
 
         // Zahlungsitems
         if (!payment1.isEmpty()) {

@@ -98,11 +98,11 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     private void setupSlots(Inventory playerInventory) {
         // Payment Slots (2 Slots) - Slots 0-1
-        addSlot(new PaymentSlot(paymentHandler, 0, 44, 35));
-        addSlot(new PaymentSlot(paymentHandler, 1, 62, 35));
+        addSlot(new PaymentSlot(paymentHandler, 0, 36, 52));
+        addSlot(new PaymentSlot(paymentHandler, 1, 62, 52));
 
         // Offer Result Slot mit Menu-Referenz - Slot 2
-        addSlot(new OfferSlot(offerHandler, 0, 120, 35, this));
+        addSlot(new OfferSlot(offerHandler, 0, 120, 52, this));
 
         // Spieler Inventar - Slots 3-38
         for (int row = 0; row < 3; row++) {
