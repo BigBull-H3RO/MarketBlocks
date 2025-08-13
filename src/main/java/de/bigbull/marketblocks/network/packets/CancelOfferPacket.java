@@ -40,20 +40,22 @@ public record CancelOfferPacket(BlockPos pos) implements CustomPacketPayload {
 
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
                 if (shopEntity.isOwner(player)) {
-                    int[] slots = {
-                            SmallShopBlockEntity.PAYMENT_SLOT_1,
-                            SmallShopBlockEntity.PAYMENT_SLOT_2,
-                            SmallShopBlockEntity.OFFER_RESULT_SLOT
-                    };
-                    for (int slot : slots) {
-                        ItemStack stack = shopEntity.getItem(slot).copy();
-                        if (!stack.isEmpty()) {
-                            shopEntity.setItem(slot, ItemStack.EMPTY);
-                            if (!player.getInventory().add(stack)) {
-                                Containers.dropItemStack(level, packet.pos().getX() + 0.5, packet.pos().getY() + 1,
-                                        packet.pos().getZ() + 0.5, stack);
-                            }
-                        }
+                    ItemStack payment1 = shopEntity.getPaymentHandler().extractItem(0, Integer.MAX_VALUE, false);
+                    if (!payment1.isEmpty() && !player.getInventory().add(payment1)) {
+                        Containers.dropItemStack(level, packet.pos().getX() + 0.5, packet.pos().getY() + 1,
+                                packet.pos().getZ() + 0.5, payment1);
+                    }
+
+                    ItemStack payment2 = shopEntity.getPaymentHandler().extractItem(1, Integer.MAX_VALUE, false);
+                    if (!payment2.isEmpty() && !player.getInventory().add(payment2)) {
+                        Containers.dropItemStack(level, packet.pos().getX() + 0.5, packet.pos().getY() + 1,
+                                packet.pos().getZ() + 0.5, payment2);
+                    }
+
+                    ItemStack offer = shopEntity.getOfferHandler().extractItem(0, Integer.MAX_VALUE, false);
+                    if (!offer.isEmpty() && !player.getInventory().add(offer)) {
+                        Containers.dropItemStack(level, packet.pos().getX() + 0.5, packet.pos().getY() + 1,
+                                packet.pos().getZ() + 0.5, offer);
                     }
                 }
             }

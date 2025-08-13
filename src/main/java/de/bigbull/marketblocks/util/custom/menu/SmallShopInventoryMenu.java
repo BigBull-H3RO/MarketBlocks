@@ -5,7 +5,6 @@ import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -14,13 +13,16 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 /**
  * Menü für den Inventar-Modus des SmallShop
  */
 public class SmallShopInventoryMenu extends AbstractContainerMenu {
     private final SmallShopBlockEntity blockEntity;
-    private final Container container;
+    private final IItemHandler inputHandler;
+    private final IItemHandler outputHandler;
 
     // Slot-Indizes für Inventory-Modus
     private static final int INPUT_SLOTS = 12; // 3x4 Input Inventar
@@ -35,7 +37,8 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
     public SmallShopInventoryMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
         super(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), containerId);
         this.blockEntity = blockEntity;
-        this.container = blockEntity;
+        this.inputHandler = blockEntity.getInputHandler();
+        this.outputHandler = blockEntity.getOutputHandler();
 
         this.data = new SimpleContainerData(5) {
             @Override
@@ -66,7 +69,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         }
     }
 
-    // Constructor für Client - FIXED VERSION
+    // Constructor für Client
     public SmallShopInventoryMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         super(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), containerId);
 
@@ -82,7 +85,8 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
             this.blockEntity = new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
         }
 
-        this.container = this.blockEntity;
+        this.inputHandler = this.blockEntity.getInputHandler();
+        this.outputHandler = this.blockEntity.getOutputHandler();
 
         this.data = new SimpleContainerData(5);
         addDataSlots(this.data);
@@ -95,14 +99,14 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         // Input Inventar (3x4 = 12 Slots) - Slots 0-11
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
-                addSlot(new InputSlot(blockEntity, row * 4 + col, 8 + col * 18, 18 + row * 18, playerInventory.player));
+                addSlot(new InputSlot(blockEntity, inputHandler, row * 4 + col, 8 + col * 18, 18 + row * 18, playerInventory.player));
             }
         }
 
         // Output Inventar (3x4 = 12 Slots) - Slots 12-23
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
-                addSlot(new OutputSlot(container, INPUT_SLOTS + row * 4 + col,
+                addSlot(new OutputSlot(outputHandler, row * 4 + col,
                         98 + col * 18, 18 + row * 18));
             }
         }
@@ -132,7 +136,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return this.container.stillValid(player);
+        return this.blockEntity.stillValid(player);
     }
 
     // Getter für UI
@@ -153,12 +157,12 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
     }
 
     // Custom Slot Klassen
-    public static class InputSlot extends Slot {
+    public static class InputSlot extends SlotItemHandler {
         private final SmallShopBlockEntity blockEntity;
         private final Player player;
 
-        public InputSlot(SmallShopBlockEntity blockEntity, int slot, int x, int y, Player player) {
-            super(blockEntity, slot, x, y);
+        public InputSlot(SmallShopBlockEntity blockEntity, IItemHandler handler, int slot, int x, int y, Player player) {
+            super(handler, slot, x, y);
             this.blockEntity = blockEntity;
             this.player = player;
         }
@@ -176,9 +180,9 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         }
     }
 
-    public static class OutputSlot extends Slot {
-        public OutputSlot(Container container, int slot, int x, int y) {
-            super(container, slot, x, y);
+    public static class OutputSlot extends SlotItemHandler {
+        public OutputSlot(IItemHandler handler, int slot, int x, int y) {
+            super(handler, slot, x, y);
         }
 
         @Override

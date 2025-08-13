@@ -4,14 +4,11 @@ import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.Container;
-import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -20,11 +17,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 
-import java.util.Collections;
 import java.util.UUID;
 
-public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, Container {
+public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private static final int INPUT_SLOTS = 12; // 3x4 Input Inventar
     private static final int OUTPUT_SLOTS = 12; // 3x4 Output Inventar
     private static final int PAYMENT_SLOTS = 2; // 2 Bezahlslots
@@ -36,10 +35,47 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     public static final int OFFER_RESULT_SLOT = INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS;
 
     // Inventare
-    private final NonNullList<ItemStack> inputInventory = NonNullList.withSize(INPUT_SLOTS, ItemStack.EMPTY);
-    private final NonNullList<ItemStack> outputInventory = NonNullList.withSize(OUTPUT_SLOTS, ItemStack.EMPTY);
-    private final NonNullList<ItemStack> paymentSlots = NonNullList.withSize(PAYMENT_SLOTS, ItemStack.EMPTY);
-    private ItemStack offerSlot = ItemStack.EMPTY;
+    private final ItemStackHandler inputHandler = new ItemStackHandler(INPUT_SLOTS) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            markDirty();
+            updateOfferSlot();
+        }
+    };
+
+    private final ItemStackHandler outputHandler = new ItemStackHandler(OUTPUT_SLOTS) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            markDirty();
+        }
+    };
+
+    private final ItemStackHandler paymentHandler = new ItemStackHandler(PAYMENT_SLOTS) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            markDirty();
+            updateOfferSlot();
+        }
+    };
+
+    private final ItemStackHandler offerHandler = new ItemStackHandler(OFFER_SLOT) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            markDirty();
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            ItemStack result = super.extractItem(slot, amount, simulate);
+            if (!simulate && !result.isEmpty()) {
+                processPurchase();
+            }
+            return result;
+        }
+    };
+
+    private final CombinedInvWrapper combinedHandler =
+            new CombinedInvWrapper(inputHandler, outputHandler, paymentHandler, offerHandler);
 
     // Angebots-System
     private ItemStack offerPayment1 = ItemStack.EMPTY;
@@ -66,112 +102,114 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         return new SmallShopOffersMenu(containerId, playerInventory, this);
     }
 
-    // Container Implementation
-    @Override
+    // ItemStackHandler Getter
+    public ItemStackHandler getInputHandler() {
+        return inputHandler;
+    }
+
+    public ItemStackHandler getOutputHandler() {
+        return outputHandler;
+    }
+
+    public ItemStackHandler getPaymentHandler() {
+        return paymentHandler;
+    }
+
+    public ItemStackHandler getOfferHandler() {
+        return offerHandler;
+    }
+
+    public IItemHandler getCombinedHandler() {
+        return combinedHandler;
+    }
+
+    private void markDirty() {
+        setChanged();
+        if (level != null) {
+            level.invalidateCapabilities(worldPosition);
+        }
+    }
+
+    // Inventar-Utils
     public int getContainerSize() {
-        // FIXED: Total = INPUT + OUTPUT + PAYMENT + OFFER = 12 + 12 + 2 + 1 = 27
         return INPUT_SLOTS + OUTPUT_SLOTS + PAYMENT_SLOTS + OFFER_SLOT;
     }
 
-    private static boolean allEmpty(NonNullList<ItemStack> list) {
-        return list.stream().allMatch(ItemStack::isEmpty);
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return allEmpty(inputInventory) && allEmpty(outputInventory) && allEmpty(paymentSlots) && offerSlot.isEmpty();
-    }
-
-    @Override
-    public ItemStack getItem(int slot) {
-        if (slot < INPUT_SLOTS) {
-            return inputInventory.get(slot);
-        } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS) {
-            return outputInventory.get(slot - INPUT_SLOTS);
-        } else if (slot < OFFER_RESULT_SLOT) {
-            // Payment-Slots
-            return paymentSlots.get(slot - INPUT_SLOTS - OUTPUT_SLOTS);
-        } else if (slot == OFFER_RESULT_SLOT) {
-            // Slot für das Ergebnis des Angebots
-            return offerSlot;
+    private static boolean allEmpty(ItemStackHandler handler) {
+        for (int i = 0; i < handler.getSlots(); i++) {
+            if (!handler.getStackInSlot(i).isEmpty()) {
+                return false;
+            }
         }
-        return ItemStack.EMPTY;
+        return true;
     }
 
-    @Override
-    public ItemStack removeItem(int slot, int amount) {
-        NonNullList<ItemStack> list = getInventoryList(slot);
-        int localSlot = getLocalSlot(slot);
+    public boolean isEmpty() {
+        return allEmpty(inputHandler) && allEmpty(outputHandler) &&
+                allEmpty(paymentHandler) && offerHandler.getStackInSlot(0).isEmpty();
+    }
 
-        if (localSlot >= 0 && localSlot < list.size()) {
-            ItemStack result = ContainerHelper.removeItem(list, localSlot, amount);
-            if (!result.isEmpty()) {
-                setChanged();
+    public ItemStack getItem(int slot) {
+        ItemStackHandler handler = getHandler(slot);
+        int local = getLocalSlot(slot);
+        return handler != null ? handler.getStackInSlot(local) : ItemStack.EMPTY;
+    }
+
+    public ItemStack removeItem(int slot, int amount) {
+        ItemStackHandler handler = getHandler(slot);
+        int local = getLocalSlot(slot);
+        if (handler != null) {
+            ItemStack result = handler.extractItem(local, amount, false);
+            if (handler != offerHandler && !result.isEmpty()) {
                 updateOfferSlot();
             }
             return result;
         }
 
-        if (slot == OFFER_RESULT_SLOT) {
-            ItemStack result = offerSlot.split(amount);
-            if (!result.isEmpty()) {
-                setChanged();
-                processPurchase();
-            }
-            return result;
-        }
-
         return ItemStack.EMPTY;
     }
 
-    @Override
     public ItemStack removeItemNoUpdate(int slot) {
-        NonNullList<ItemStack> list = getInventoryList(slot);
-        int localSlot = getLocalSlot(slot);
-
-        if (localSlot >= 0 && localSlot < list.size()) {
-            return ContainerHelper.takeItem(list, localSlot);
-        }
-
-        if (slot == OFFER_RESULT_SLOT) {
-            ItemStack result = offerSlot;
-            offerSlot = ItemStack.EMPTY;
-            return result;
+        ItemStackHandler handler = getHandler(slot);
+        int local = getLocalSlot(slot);
+        if (handler != null) {
+            ItemStack stack = handler.getStackInSlot(local);
+            handler.setStackInSlot(local, ItemStack.EMPTY);
+            return stack;
         }
 
         return ItemStack.EMPTY;
     }
 
-    @Override
     public void setItem(int slot, ItemStack stack) {
-        NonNullList<ItemStack> list = getInventoryList(slot);
-        int localSlot = getLocalSlot(slot);
-
-        if (localSlot >= 0 && localSlot < list.size()) {
-            list.set(localSlot, stack);
-            setChanged();
-            updateOfferSlot();
-            return;
-        }
-
-        if (slot == OFFER_RESULT_SLOT) {
-            offerSlot = stack;
-            setChanged();
+        ItemStackHandler handler = getHandler(slot);
+        int local = getLocalSlot(slot);
+        if (handler != null) {
+            handler.setStackInSlot(local, stack);
         }
     }
 
-    @Override
     public boolean stillValid(Player player) {
-        return Container.stillValidBlockEntity(this, player);
+        if (level == null || level.getBlockEntity(worldPosition) != this) {
+            return false;
+        }
+        return player.distanceToSqr(
+                worldPosition.getX() + 0.5,
+                worldPosition.getY() + 0.5,
+                worldPosition.getZ() + 0.5) <= 64.0;
     }
 
-    @Override
     public void clearContent() {
-        // Löscht Inventar und Angebotszustand
-        inputInventory.clear();
-        outputInventory.clear();
-        paymentSlots.clear();
-        offerSlot = ItemStack.EMPTY;
+        for (int i = 0; i < inputHandler.getSlots(); i++) {
+            inputHandler.setStackInSlot(i, ItemStack.EMPTY);
+        }
+        for (int i = 0; i < outputHandler.getSlots(); i++) {
+            outputHandler.setStackInSlot(i, ItemStack.EMPTY);
+        }
+        for (int i = 0; i < paymentHandler.getSlots(); i++) {
+            paymentHandler.setStackInSlot(i, ItemStack.EMPTY);
+        }
+        offerHandler.setStackInSlot(0, ItemStack.EMPTY);
         offerPayment1 = ItemStack.EMPTY;
         offerPayment2 = ItemStack.EMPTY;
         offerResult = ItemStack.EMPTY;
@@ -180,16 +218,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         updateOfferSlot();
     }
 
-    // Hilfsmethoden für Slot-Management
-    private NonNullList<ItemStack> getInventoryList(int slot) {
+    private ItemStackHandler getHandler(int slot) {
         if (slot < INPUT_SLOTS) {
-            return inputInventory;
+            return inputHandler;
         } else if (slot < INPUT_SLOTS + OUTPUT_SLOTS) {
-            return outputInventory;
+            return outputHandler;
         } else if (slot < OFFER_RESULT_SLOT) {
-            return paymentSlots;
+            return paymentHandler;
+        } else if (slot == OFFER_RESULT_SLOT) {
+            return offerHandler;
         }
-        return NonNullList.withSize(0, ItemStack.EMPTY);
+        return null;
     }
 
     private int getLocalSlot(int slot) {
@@ -199,6 +238,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
             return slot - INPUT_SLOTS;
         } else if (slot < OFFER_RESULT_SLOT) {
             return slot - INPUT_SLOTS - OUTPUT_SLOTS;
+        } else if (slot == OFFER_RESULT_SLOT) {
+            return 0;
         }
         return -1;
     }
@@ -240,7 +281,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         this.offerPayment2 = ItemStack.EMPTY;
         this.offerResult = ItemStack.EMPTY;
         this.hasOffer = false;
-        this.offerSlot = ItemStack.EMPTY;
+        this.offerHandler.setStackInSlot(0, ItemStack.EMPTY);
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
@@ -270,23 +311,21 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     // Angebots-Logik
     public void updateOfferSlot() {
         if (!hasOffer) {
-            // Während der Angebotserstellung sollen die Slots unverändert bleiben
             return;
         }
 
-        // Prüfe ob genügend Bezahlitems vorhanden sind
         if (canAfford() && hasResultItemInInput()) {
-            if (offerSlot.isEmpty()) {
-                offerSlot = offerResult.copy();
+            if (offerHandler.getStackInSlot(0).isEmpty()) {
+                offerHandler.setStackInSlot(0, offerResult.copy());
             }
         } else {
-            offerSlot = ItemStack.EMPTY;
+            offerHandler.setStackInSlot(0, ItemStack.EMPTY);
         }
     }
 
     private boolean canAfford() {
-        ItemStack payment1 = paymentSlots.get(0);
-        ItemStack payment2 = paymentSlots.get(1);
+        ItemStack payment1 = paymentHandler.getStackInSlot(0);
+        ItemStack payment2 = paymentHandler.getStackInSlot(1);
 
         // Prüfe erste Bezahlung
         if (!offerPayment1.isEmpty()) {
@@ -310,7 +349,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     private boolean hasResultItemInInput() {
         if (offerResult.isEmpty()) return false;
 
-        for (ItemStack stack : inputInventory) {
+        for (int i = 0; i < inputHandler.getSlots(); i++) {
+            ItemStack stack = inputHandler.getStackInSlot(i);
             if (ItemStack.isSameItemSameComponents(stack, offerResult) &&
                     stack.getCount() >= offerResult.getCount()) {
                 return true;
@@ -326,10 +366,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
 
         // Entferne Bezahlung aus Payment-Slots
         if (!offerPayment1.isEmpty()) {
-            paymentSlots.get(0).shrink(offerPayment1.getCount());
+            paymentHandler.extractItem(0, offerPayment1.getCount(), false);
         }
         if (!offerPayment2.isEmpty()) {
-            paymentSlots.get(1).shrink(offerPayment2.getCount());
+            paymentHandler.extractItem(1, offerPayment2.getCount(), false);
         }
 
         // Entferne Result-Item aus Input-Inventar
@@ -352,35 +392,27 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
 
     private void removeFromInput(ItemStack toRemove) {
         int remaining = toRemove.getCount();
-        for (int i = 0; i < inputInventory.size() && remaining > 0; i++) {
-            ItemStack stack = inputInventory.get(i);
+        for (int i = 0; i < inputHandler.getSlots() && remaining > 0; i++) {
+            ItemStack stack = inputHandler.getStackInSlot(i);
             if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
                 int toTake = Math.min(remaining, stack.getCount());
-                stack.shrink(toTake);
+                inputHandler.extractItem(i, toTake, false);
                 remaining -= toTake;
             }
         }
     }
 
     private void addToOutput(ItemStack toAdd) {
-        for (int i = 0; i < outputInventory.size(); i++) {
-            ItemStack stack = outputInventory.get(i);
-            if (stack.isEmpty()) {
-                outputInventory.set(i, toAdd);
+        ItemStack remaining = toAdd;
+        for (int i = 0; i < outputHandler.getSlots(); i++) {
+            remaining = outputHandler.insertItem(i, remaining, false);
+            if (remaining.isEmpty()) {
                 return;
-            } else if (ItemStack.isSameItemSameComponents(stack, toAdd)) {
-                int canAdd = Math.min(toAdd.getCount(), stack.getMaxStackSize() - stack.getCount());
-                if (canAdd > 0) {
-                    stack.grow(canAdd);
-                    toAdd.shrink(canAdd);
-                    if (toAdd.isEmpty()) return;
-                }
             }
         }
 
-        // Falls nach dem Durchlauf noch Items übrig sind, dürfen sie nicht verloren gehen
-        if (!toAdd.isEmpty() && level != null && !level.isClientSide) {
-            net.minecraft.world.Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), toAdd);
+        if (!remaining.isEmpty() && level != null && !level.isClientSide) {
+            net.minecraft.world.Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remaining);
         }
     }
 
@@ -388,8 +420,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
         return hasOffer && hasResultItemInInput();
     }
 
-    private void dropItems(Level level, BlockPos pos, Iterable<ItemStack> stacks) {
-        for (ItemStack stack : stacks) {
+    private void dropItems(Level level, BlockPos pos, ItemStackHandler handler) {
+        for (int i = 0; i < handler.getSlots(); i++) {
+            ItemStack stack = handler.getStackInSlot(i);
             if (!stack.isEmpty()) {
                 net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
             }
@@ -397,10 +430,13 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     }
 
     public void dropContents(Level level, BlockPos pos) {
-        dropItems(level, pos, inputInventory);
-        dropItems(level, pos, outputInventory);
-        dropItems(level, pos, paymentSlots);
-        dropItems(level, pos, Collections.singletonList(offerSlot));
+        dropItems(level, pos, inputHandler);
+        dropItems(level, pos, outputHandler);
+        dropItems(level, pos, paymentHandler);
+        ItemStack offer = offerHandler.getStackInSlot(0);
+        if (!offer.isEmpty()) {
+            net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), offer);
+        }
     }
 
     // NBT Speicherung
@@ -408,12 +444,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
 
-        ContainerHelper.loadAllItems(tag.getCompound("InputInventory"), inputInventory, registries);
-        ContainerHelper.loadAllItems(tag.getCompound("OutputInventory"), outputInventory, registries);
-        ContainerHelper.loadAllItems(tag.getCompound("PaymentSlots"), paymentSlots, registries);
-
+        if (tag.contains("InputInventory")) {
+            inputHandler.deserializeNBT(registries, tag.getCompound("InputInventory"));
+        }
+        if (tag.contains("OutputInventory")) {
+            outputHandler.deserializeNBT(registries, tag.getCompound("OutputInventory"));
+        }
+        if (tag.contains("PaymentSlots")) {
+            paymentHandler.deserializeNBT(registries, tag.getCompound("PaymentSlots"));
+        }
         if (tag.contains("OfferSlot")) {
-            offerSlot = ItemStack.parseOptional(registries, tag.getCompound("OfferSlot"));
+            offerHandler.setStackInSlot(0, ItemStack.parseOptional(registries, tag.getCompound("OfferSlot")));
         }
 
         if (tag.contains("OfferPayment1")) {
@@ -440,20 +481,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider, C
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
 
-        CompoundTag inputTag = new CompoundTag();
-        ContainerHelper.saveAllItems(inputTag, inputInventory, registries);
-        tag.put("InputInventory", inputTag);
-
-        CompoundTag outputTag = new CompoundTag();
-        ContainerHelper.saveAllItems(outputTag, outputInventory, registries);
-        tag.put("OutputInventory", outputTag);
-
-        CompoundTag paymentTag = new CompoundTag();
-        ContainerHelper.saveAllItems(paymentTag, paymentSlots, registries);
-        tag.put("PaymentSlots", paymentTag);
-
-        if (!offerSlot.isEmpty()) {
-            tag.put("OfferSlot", offerSlot.save(registries));
+        tag.put("InputInventory", inputHandler.serializeNBT(registries));
+        tag.put("OutputInventory", outputHandler.serializeNBT(registries));
+        tag.put("PaymentSlots", paymentHandler.serializeNBT(registries));
+        ItemStack offer = offerHandler.getStackInSlot(0);
+        if (!offer.isEmpty()) {
+            tag.put("OfferSlot", offer.save(registries));
         }
 
         if (!offerPayment1.isEmpty()) {

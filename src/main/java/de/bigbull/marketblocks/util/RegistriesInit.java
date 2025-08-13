@@ -19,6 +19,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -69,6 +71,18 @@ public class RegistriesInit {
         public static void registerScreens(RegisterMenuScreensEvent event) {
             event.register(SMALL_SHOP_OFFERS_MENU.get(), SmallShopOffersScreen::new);
             event.register(SMALL_SHOP_INVENTORY_MENU.get(), SmallShopInventoryScreen::new);
+        }
+    }
+
+    @EventBusSubscriber(modid = MarketBlocks.MODID)
+    public static class CapabilityInit {
+        @SubscribeEvent
+        public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+            event.registerBlockEntity(
+                    Capabilities.ItemHandler.BLOCK,
+                    RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(),
+                    (be, side) -> be.getCombinedHandler()
+            );
         }
     }
 }

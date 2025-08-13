@@ -5,7 +5,6 @@ import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -14,13 +13,16 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 /**
  * Menü für den Angebots-Modus des SmallShop
  */
 public class SmallShopOffersMenu extends AbstractContainerMenu {
     private final SmallShopBlockEntity blockEntity;
-    private final Container container;
+    private final IItemHandler paymentHandler;
+    private final IItemHandler offerHandler;
     private boolean creatingOffer = false;
 
     // Slot-Indizes für Offers-Modus
@@ -36,7 +38,8 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
     public SmallShopOffersMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
         super(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), containerId);
         this.blockEntity = blockEntity;
-        this.container = blockEntity;
+        this.paymentHandler = blockEntity.getPaymentHandler();
+        this.offerHandler = blockEntity.getOfferHandler();
 
         this.data = new SimpleContainerData(5) {
             @Override
@@ -83,7 +86,8 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
             this.blockEntity = new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
         }
 
-        this.container = this.blockEntity;
+        this.paymentHandler = this.blockEntity.getPaymentHandler();
+        this.offerHandler = this.blockEntity.getOfferHandler();
 
         this.data = new SimpleContainerData(5);
         addDataSlots(this.data);
@@ -94,11 +98,11 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     private void setupSlots(Inventory playerInventory) {
         // Payment Slots (2 Slots) - Slots 0-1
-        addSlot(new PaymentSlot(container, SmallShopBlockEntity.PAYMENT_SLOT_1, 44, 35));
-        addSlot(new PaymentSlot(container, SmallShopBlockEntity.PAYMENT_SLOT_2, 62, 35));
+        addSlot(new PaymentSlot(paymentHandler, 0, 44, 35));
+        addSlot(new PaymentSlot(paymentHandler, 1, 62, 35));
 
         // Offer Result Slot mit Menu-Referenz - Slot 2
-        addSlot(new OfferSlot(container, SmallShopBlockEntity.OFFER_RESULT_SLOT, 120, 35, this));
+        addSlot(new OfferSlot(offerHandler, 0, 120, 35, this));
 
         // Spieler Inventar - Slots 3-38
         for (int row = 0; row < 3; row++) {
@@ -124,7 +128,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return this.container.stillValid(player);
+        return this.blockEntity.stillValid(player);
     }
 
     // Getter für UI
@@ -153,9 +157,9 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
     }
 
     // Custom Slot Klassen
-    public static class PaymentSlot extends Slot {
-        public PaymentSlot(Container container, int slot, int x, int y) {
-            super(container, slot, x, y);
+    public static class PaymentSlot extends SlotItemHandler {
+        public PaymentSlot(IItemHandler handler, int slot, int x, int y) {
+            super(handler, slot, x, y);
         }
 
         @Override
@@ -164,11 +168,11 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         }
     }
 
-    public static class OfferSlot extends Slot {
+    public static class OfferSlot extends SlotItemHandler {
         private final SmallShopOffersMenu menu;
 
-        public OfferSlot(Container container, int slot, int x, int y, SmallShopOffersMenu menu) {
-            super(container, slot, x, y);
+        public OfferSlot(IItemHandler handler, int slot, int x, int y, SmallShopOffersMenu menu) {
+            super(handler, slot, x, y);
             this.menu = menu;
         }
 
