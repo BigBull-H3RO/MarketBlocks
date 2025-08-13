@@ -9,7 +9,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -40,23 +39,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         this.inputHandler = blockEntity.getInputHandler();
         this.outputHandler = blockEntity.getOutputHandler();
 
-        this.data = new SimpleContainerData(5) {
-            @Override
-            public int get(int index) {
-                return switch (index) {
-                    case 0 -> blockEntity.hasOffer() ? 1 : 0;
-                    case 1 -> blockEntity.isOfferAvailable() ? 1 : 0;
-                    case 2 -> blockEntity.isOwner(playerInventory.player) ? 1 : 0;
-                    case 3 -> 0; // Reserviert für weitere Flags
-                    default -> 0;
-                };
-            }
-
-            @Override
-            public void set(int index, int value) {
-                // Data wird vom Server gesteuert
-            }
-        };
+        this.data = SmallShopMenuData.create(blockEntity, playerInventory.player);
 
         addDataSlots(this.data);
 
@@ -88,7 +71,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         this.inputHandler = this.blockEntity.getInputHandler();
         this.outputHandler = this.blockEntity.getOutputHandler();
 
-        this.data = new SimpleContainerData(5);
+        this.data = SmallShopMenuData.create(this.blockEntity, playerInventory.player);
         addDataSlots(this.data);
 
         // Setup der Slots

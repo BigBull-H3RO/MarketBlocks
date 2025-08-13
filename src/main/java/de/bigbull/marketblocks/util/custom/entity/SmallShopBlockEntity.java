@@ -21,6 +21,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 
+import java.util.List;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
@@ -200,16 +201,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void clearContent() {
-        for (int i = 0; i < inputHandler.getSlots(); i++) {
-            inputHandler.setStackInSlot(i, ItemStack.EMPTY);
+        List<ItemStackHandler> handlers = List.of(inputHandler, outputHandler, paymentHandler, offerHandler);
+        for (ItemStackHandler handler : handlers) {
+            for (int i = 0; i < handler.getSlots(); i++) {
+                handler.setStackInSlot(i, ItemStack.EMPTY);
+            }
         }
-        for (int i = 0; i < outputHandler.getSlots(); i++) {
-            outputHandler.setStackInSlot(i, ItemStack.EMPTY);
-        }
-        for (int i = 0; i < paymentHandler.getSlots(); i++) {
-            paymentHandler.setStackInSlot(i, ItemStack.EMPTY);
-        }
-        offerHandler.setStackInSlot(0, ItemStack.EMPTY);
         offerPayment1 = ItemStack.EMPTY;
         offerPayment2 = ItemStack.EMPTY;
         offerResult = ItemStack.EMPTY;

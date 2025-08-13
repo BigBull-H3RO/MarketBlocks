@@ -7,35 +7,17 @@ import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
-import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 
-public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopInventoryMenu> {
+public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopInventoryMenu> {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_inventory.png");
     private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
 
-    // Button Sprites
-    private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
-    );
-
-    // Icons
-    private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/offers.png");
-    private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/inventory.png");
-
-    // Buttons
-    private IconButton offersButton;
-    private IconButton inventoryButton;
     private boolean lastIsOwner;
 
     public SmallShopInventoryScreen(SmallShopInventoryMenu menu, Inventory inv, Component title) {
@@ -57,21 +39,7 @@ public class SmallShopInventoryScreen extends AbstractContainerScreen<SmallShopI
 
         // Tab-Buttons (nur für Owner sichtbar)
         if (isOwner) {
-            this.offersButton = addRenderableWidget(new IconButton(
-                    leftPos + imageWidth + 4, topPos + 8, 24, 24,
-                    BUTTON_SPRITES, OFFERS_ICON,
-                    button -> switchToOffers(),
-                    Component.translatable("gui.marketblocks.offers_tab"),
-                    () -> false
-            ));
-
-            this.inventoryButton = addRenderableWidget(new IconButton(
-                    leftPos + imageWidth + 4, topPos + 36, 24, 24,
-                    BUTTON_SPRITES, INVENTORY_ICON,
-                    button -> {}, // Bereits im Inventory-Modus
-                    Component.translatable("gui.marketblocks.inventory_tab"),
-                    () -> true // Immer selected da wir im Inventory-Modus sind
-            ));
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, false, this::switchToOffers, () -> {});
         }
     }
 

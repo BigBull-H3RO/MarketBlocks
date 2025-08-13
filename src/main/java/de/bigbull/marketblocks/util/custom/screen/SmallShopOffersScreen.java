@@ -14,7 +14,6 @@ import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -24,12 +23,12 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;
 
-public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffersMenu> implements ContainerListener {
+public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffersMenu> implements ContainerListener {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
     private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
     private static final ResourceLocation TRADE_ARROW_DISABLED = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow_disabled.png");
 
-    // Button Sprites
+    // Button Sprites für weitere Aktionen
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
@@ -38,22 +37,12 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
     );
 
     // Icons
-    private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/offers.png");
-    private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/inventory.png");
     private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
 
     private boolean creatingOffer = false;
     private boolean lastIsOwner;
     private OfferTemplateButton offerButton;
-
-    // Buttons
-    private IconButton offersButton;
-    private IconButton inventoryButton;
-    private IconButton createOfferButton;
-    private IconButton deleteOfferButton;
-    private IconButton confirmButton;
-    private IconButton cancelButton;
 
     public SmallShopOffersScreen(SmallShopOffersMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -80,29 +69,14 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
 
         // Tab-Buttons (nur für Owner sichtbar)
         if (isOwner) {
-            this.offersButton = addRenderableWidget(new IconButton(
-                    leftPos + imageWidth + 4, topPos + 8, 24, 24,
-                    BUTTON_SPRITES, OFFERS_ICON,
-                    button -> {
-                    }, // Bereits im Offers-Modus
-                    Component.translatable("gui.marketblocks.offers_tab"),
-                    () -> true // Immer selected da wir im Offers-Modus sind
-            ));
-
-            this.inventoryButton = addRenderableWidget(new IconButton(
-                    leftPos + imageWidth + 4, topPos + 36, 24, 24,
-                    BUTTON_SPRITES, INVENTORY_ICON,
-                    button -> switchToInventory(),
-                    Component.translatable("gui.marketblocks.inventory_tab"),
-                    () -> false
-            ));
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, true, () -> {}, this::switchToInventory);
         }
 
         // Angebots-Buttons
         if (isOwner) {
             if (creatingOffer) {
                 // Bestätigen/Abbrechen Buttons während Erstellung
-                this.confirmButton = addRenderableWidget(new IconButton(
+                IconButton confirmButton = addRenderableWidget(new IconButton(
                         leftPos + 148, topPos + 6, 20, 20,
                         BUTTON_SPRITES, CREATE_ICON,
                         button -> confirmOffer(),
@@ -110,7 +84,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                         () -> false
                 ));
 
-                this.cancelButton = addRenderableWidget(new IconButton(
+                IconButton cancelButton = addRenderableWidget(new IconButton(
                         leftPos + 148, topPos + 28, 20, 20,
                         BUTTON_SPRITES, DELETE_ICON,
                         button -> cancelOfferCreation(),
@@ -119,7 +93,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                 ));
             } else if (!blockEntity.hasOffer()) {
                 // Erstellen Button wenn kein Angebot existiert
-                this.createOfferButton = addRenderableWidget(new IconButton(
+                IconButton createOfferButton = addRenderableWidget(new IconButton(
                         leftPos + 148, topPos + 6, 20, 20,
                         BUTTON_SPRITES, CREATE_ICON,
                         button -> startOfferCreation(),
@@ -128,7 +102,7 @@ public class SmallShopOffersScreen extends AbstractContainerScreen<SmallShopOffe
                 ));
             } else {
                 // Löschen Button wenn Angebot existiert
-                this.deleteOfferButton = addRenderableWidget(new IconButton(
+                IconButton deleteOfferButton = addRenderableWidget(new IconButton(
                         leftPos + 148, topPos + 28, 20, 20,
                         BUTTON_SPRITES, DELETE_ICON,
                         button -> deleteOffer(),
