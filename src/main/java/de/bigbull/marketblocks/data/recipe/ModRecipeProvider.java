@@ -21,11 +21,12 @@ public class ModRecipeProvider extends RecipeProvider {
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.SMALL_SHOP_BLOCK.get(), 2)
-                .pattern("#T#")
-                .pattern("#V#")
                 .pattern("###")
-                .define('W', Items.DIAMOND)
-                .save(recipeOutput, getModId("vibranium_upgrade_smithing_template"));
+                .pattern("#D#")
+                .pattern("###")
+                .define('#', Items.OAK_PLANKS)
+                .define('D', Items.DIAMOND)
+                .save(recipeOutput, getModId("small_shop_block"));
     }
 
     public ResourceLocation getModId(String path) {
