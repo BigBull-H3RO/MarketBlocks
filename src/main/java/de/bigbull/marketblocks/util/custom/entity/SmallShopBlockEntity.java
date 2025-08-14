@@ -220,11 +220,14 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private boolean canAfford() {
+    public boolean canAfford() {
         ItemStack payment1 = paymentHandler.getStackInSlot(0);
         ItemStack payment2 = paymentHandler.getStackInSlot(1);
 
-        if (!offerPayment1.isEmpty() && !offerPayment2.isEmpty() && ItemStack.isSameItemSameComponents(offerPayment1, offerPayment2)) {
+        // Fall 1: Beide Payments sind das gleiche Item (stackable)
+        if (!offerPayment1.isEmpty() && !offerPayment2.isEmpty() &&
+                ItemStack.isSameItemSameComponents(offerPayment1, offerPayment2)) {
+
             int total = 0;
             if (ItemStack.isSameItemSameComponents(payment1, offerPayment1)) {
                 total += payment1.getCount();
@@ -235,28 +238,35 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             return total >= offerPayment1.getCount() + offerPayment2.getCount();
         }
 
+        // Fall 2: Zwei verschiedene Payment-Items
         if (!offerPayment1.isEmpty() && !offerPayment2.isEmpty()) {
-            boolean case1 = ItemStack.isSameItemSameComponents(payment1, offerPayment1) && payment1.getCount() >= offerPayment1.getCount()
-                    && ItemStack.isSameItemSameComponents(payment2, offerPayment2) && payment2.getCount() >= offerPayment2.getCount();
-            boolean case2 = ItemStack.isSameItemSameComponents(payment1, offerPayment2) && payment1.getCount() >= offerPayment2.getCount()
-                    && ItemStack.isSameItemSameComponents(payment2, offerPayment1) && payment2.getCount() >= offerPayment1.getCount();
+            // Prüfe beide möglichen Slot-Kombinationen
+            boolean case1 = ItemStack.isSameItemSameComponents(payment1, offerPayment1) &&
+                    payment1.getCount() >= offerPayment1.getCount() &&
+                    ItemStack.isSameItemSameComponents(payment2, offerPayment2) &&
+                    payment2.getCount() >= offerPayment2.getCount();
+
+            boolean case2 = ItemStack.isSameItemSameComponents(payment1, offerPayment2) &&
+                    payment1.getCount() >= offerPayment2.getCount() &&
+                    ItemStack.isSameItemSameComponents(payment2, offerPayment1) &&
+                    payment2.getCount() >= offerPayment1.getCount();
+
             return case1 || case2;
         }
 
-        if (!offerPayment1.isEmpty()) {
-            return (ItemStack.isSameItemSameComponents(payment1, offerPayment2) && payment1.getCount() >= offerPayment2.getCount()) ||
-                    (ItemStack.isSameItemSameComponents(payment2, offerPayment2) && payment2.getCount() >= offerPayment2.getCount());
+        // Fall 3: Nur ein Payment-Item (offerPayment2 ist leer)
+        if (!offerPayment1.isEmpty() && offerPayment2.isEmpty()) {
+            return (ItemStack.isSameItemSameComponents(payment1, offerPayment1) &&
+                    payment1.getCount() >= offerPayment1.getCount()) ||
+                    (ItemStack.isSameItemSameComponents(payment2, offerPayment1) &&
+                            payment2.getCount() >= offerPayment1.getCount());
         }
 
-        if (!offerPayment2.isEmpty()) {
-            return (ItemStack.isSameItemSameComponents(payment1, offerPayment2) && payment1.getCount() >= offerPayment2.getCount()) ||
-                    (ItemStack.isSameItemSameComponents(payment2, offerPayment2) && payment2.getCount() >= offerPayment2.getCount());
-        }
-
-        return true;
+        // Fall 4: Kein Payment erforderlich (sollte nicht vorkommen, aber sicherheitshalber)
+        return offerPayment1.isEmpty() && offerPayment2.isEmpty();
     }
 
-    private boolean hasResultItemInInput() {
+    public boolean hasResultItemInInput() {
         if (offerResult.isEmpty()) return false;
 
         for (int i = 0; i < inputHandler.getSlots(); i++) {
@@ -312,8 +322,15 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    // Korrigierte removePayment Methode
     private void removePayment(ItemStack required, int amount) {
+        if (required.isEmpty() || amount <= 0) {
+            return;
+        }
+
         int remaining = amount;
+
+        // Durchlaufe beide Payment-Slots und entferne die erforderliche Menge
         for (int i = 0; i < PAYMENT_SLOTS && remaining > 0; i++) {
             ItemStack stack = paymentHandler.getStackInSlot(i);
             if (ItemStack.isSameItemSameComponents(stack, required)) {

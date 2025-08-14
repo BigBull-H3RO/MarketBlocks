@@ -19,7 +19,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
     private final SmallShopBlockEntity blockEntity;
     private final IItemHandler paymentHandler;
     private final IItemHandler offerHandler;
-    private boolean creatingOffer = false;
+    // ENTFERNT: private boolean creatingOffer = false;
 
     private static final int PAYMENT_SLOTS = 2;
     private static final int OFFER_SLOT = 1;
@@ -83,35 +83,68 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
             p2 = ItemStack.EMPTY;
         }
 
+        // Prüfe wie viele Transaktionen möglich sind
         int count1 = countPayment(p1);
         int count2 = p2.isEmpty() ? Integer.MAX_VALUE : countPayment(p2);
         int tradeSize1 = p1.isEmpty() ? 0 : p1.getCount();
         int tradeSize2 = p2.isEmpty() ? 0 : p2.getCount();
-        int trades = tradeSize1 == 0 ? 0 : count1 / tradeSize1;
-        if (!p2.isEmpty()) {
-            trades = Math.min(trades, count2 / tradeSize2);
+
+        int maxTrades = 0;
+        if (tradeSize1 > 0) {
+            maxTrades = count1 / tradeSize1;
+            if (!p2.isEmpty() && tradeSize2 > 0) {
+                maxTrades = Math.min(maxTrades, count2 / tradeSize2);
+            }
         }
-        if (trades <= 0) {
+
+        if (maxTrades <= 0) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack result = ItemStack.EMPTY;
-        for (int i = 0; i < trades; i++) {
-            ItemStack extracted = blockEntity.getOfferHandler().extractItem(0, blockEntity.getOfferResult().getCount(), false);
+        // Extrahiere so viele Result-Items wie möglich (aber maximal was verfügbar ist)
+        ItemStack resultTemplate = blockEntity.getOfferResult();
+        ItemStack totalResult = ItemStack.EMPTY;
+
+        for (int i = 0; i < maxTrades; i++) {
+            // Prüfe ob noch genug Input-Items vorhanden sind
+            if (!blockEntity.hasResultItemInInput()) {
+                break;
+            }
+
+            // Prüfe ob noch genug Payment-Items vorhanden sind
+            if (!blockEntity.canAfford()) {
+                break;
+            }
+
+            // Simuliere die Extraktion des Result-Items
+            ItemStack extracted = blockEntity.getOfferHandler().extractItem(0, resultTemplate.getCount(), true);
             if (extracted.isEmpty()) {
                 break;
             }
-            if (result.isEmpty()) {
-                result = extracted;
-            } else {
-                result.grow(extracted.getCount());
+
+            // Führe die echte Extraktion durch (dies löst automatisch processPurchase() aus)
+            extracted = blockEntity.getOfferHandler().extractItem(0, resultTemplate.getCount(), false);
+            if (extracted.isEmpty()) {
+                break;
             }
+
+            if (totalResult.isEmpty()) {
+                totalResult = extracted.copy();
+            } else {
+                totalResult.grow(extracted.getCount());
+            }
+
         }
 
-        if (!result.isEmpty()) {
-            if (!moveItemStackTo(result, PLAYER_INVENTORY_START, slots.size(), true)) {
-                player.drop(result, false);
+        // Verschiebe die extrahierten Items ins Spieler-Inventar
+        if (!totalResult.isEmpty()) {
+            ItemStack remaining = totalResult;
+            if (!moveItemStackTo(remaining, PLAYER_INVENTORY_START, slots.size(), true)) {
+                // Falls das Inventar voll ist, droppe die Items
+                player.drop(remaining, false);
+                return ItemStack.EMPTY;
             }
+            return totalResult;
         }
 
         return ItemStack.EMPTY;
@@ -152,13 +185,9 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         return data.get(2) == 1;
     }
 
-    public boolean isCreatingOffer() {
-        return creatingOffer;
-    }
-
-    public void setCreatingOffer(boolean creatingOffer) {
-        this.creatingOffer = creatingOffer;
-    }
+    // ENTFERNTE METHODEN:
+    // public boolean isCreatingOffer()
+    // public void setCreatingOffer(boolean creatingOffer)
 
     public static class PaymentSlot extends SlotItemHandler {
         public PaymentSlot(IItemHandler handler, int slot, int x, int y) {
@@ -181,25 +210,26 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return menu.isOwner() && !menu.hasOffer();
+            // Owner kann immer Items platzieren (für Angebotserstellung)
+            // Nicht-Owner können keine Items platzieren
+            return menu.isOwner();
         }
 
         @Override
         public boolean mayPickup(Player player) {
-            if (menu.isOwner() && (!menu.hasOffer() || menu.isCreatingOffer())) {
+            // Owner kann immer Items nehmen
+            if (menu.isOwner()) {
                 return true;
             }
 
+            // Nicht-Owner können nur kaufen wenn Angebot verfügbar ist
             return menu.hasOffer() && menu.isOfferAvailable();
         }
 
         @Override
         public ItemStack remove(int amount) {
-            if (!menu.hasOffer() || menu.isCreatingOffer()) {
-                return super.remove(amount);
-            }
-
-            if (menu.hasOffer() && menu.isOfferAvailable()) {
+            // Standard-Verhalten für Owner oder Käufe
+            if (menu.isOwner() || (menu.hasOffer() && menu.isOfferAvailable())) {
                 return super.remove(amount);
             }
 

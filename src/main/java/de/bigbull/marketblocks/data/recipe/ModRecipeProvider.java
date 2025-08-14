@@ -20,12 +20,13 @@ public class ModRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.SMALL_SHOP_BLOCK.get(), 2)
-                .pattern("###")
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.SMALL_SHOP_BLOCK.get(), 1)
+                .pattern("#E#")
                 .pattern("#D#")
                 .pattern("###")
                 .define('#', Items.OAK_PLANKS)
                 .define('D', Items.DIAMOND)
+                .define('E', Items.EMERALD)
                 .unlockedBy("has_oak_planks", has(Items.OAK_PLANKS))
                 .save(recipeOutput, getModId("small_shop_block"));
     }

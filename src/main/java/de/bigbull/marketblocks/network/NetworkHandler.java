@@ -31,12 +31,6 @@ public class NetworkHandler {
         );
 
         registrar.playToServer(
-                CancelOfferPacket.TYPE,
-                CancelOfferPacket.CODEC,
-                CancelOfferPacket::handle
-        );
-
-        registrar.playToServer(
                 SwitchTabPacket.TYPE,
                 SwitchTabPacket.CODEC,
                 SwitchTabPacket::handle

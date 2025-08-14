@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopOffersScreen;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -38,19 +37,12 @@ public record OfferStatusPacket(BlockPos pos, boolean hasOffer) implements Custo
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
                 shopEntity.setHasOfferClient(packet.hasOffer());
             }
-            boolean wasCreating = false;
-            if (context.player().containerMenu instanceof SmallShopOffersMenu menu) {
-                wasCreating = menu.isCreatingOffer();
-                menu.setCreatingOffer(false);
-            }
+
+            // Vereinfachte Screen-Updates ohne creatingOffer-Logic
             if (!packet.hasOffer()) {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.screen instanceof SmallShopOffersScreen screen) {
-                    if (wasCreating) {
-                        screen.onOfferCreationCancelled();
-                    } else {
-                        screen.onOfferDeleted();
-                    }
+                    screen.onOfferDeleted();
                 }
             }
         });

@@ -8,11 +8,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.function.Consumer;
-
-/**
- * Button zum Anzeigen eines bestehenden Angebots.
- */
 public class OfferTemplateButton extends Button {
     private static final ResourceLocation TRADE_ARROW =
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
@@ -23,11 +18,9 @@ public class OfferTemplateButton extends Button {
     private ItemStack payment2 = ItemStack.EMPTY;
     private ItemStack result = ItemStack.EMPTY;
     private boolean arrowActive;
-    private final Consumer<OfferTemplateButton> onPress;
 
-    public OfferTemplateButton(int x, int y, Consumer<OfferTemplateButton> onPress) {
-        super(x, y, 86, 20, Component.empty(), b -> {}, DEFAULT_NARRATION);
-        this.onPress = onPress;
+    public OfferTemplateButton(int x, int y, OnPress onPress) {
+        super(x, y, 86, 20, Component.empty(), onPress, DEFAULT_NARRATION);
     }
 
     public void update(ItemStack payment1, ItemStack payment2, ItemStack result, boolean arrowActive) {
@@ -39,33 +32,56 @@ public class OfferTemplateButton extends Button {
 
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.renderWidget(graphics, mouseX, mouseY, partialTick);
+        if (!this.visible) return;
+
+        // Immer einen sichtbaren Hintergrund rendern
+        int backgroundColor;
+        if (!this.active) {
+            backgroundColor = 0x40000000; // Dunkelgrau für inaktiv
+        } else if (this.isHoveredOrFocused()) {
+            backgroundColor = 0x80FFFFFF; // Hell für Hover
+        } else {
+            backgroundColor = 0x60000000; // Mittelgrau für normal
+        }
+
+        // Render Hintergrund
+        graphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), backgroundColor);
+
+        // Render Rahmen
+        graphics.fill(getX(), getY(), getX() + getWidth(), getY() + 1, 0xFF000000); // Top
+        graphics.fill(getX(), getY() + getHeight() - 1, getX() + getWidth(), getY() + getHeight(), 0xFF000000); // Bottom
+        graphics.fill(getX(), getY(), getX() + 1, getY() + getHeight(), 0xFF000000); // Left
+        graphics.fill(getX() + getWidth() - 1, getY(), getX() + getWidth(), getY() + getHeight(), 0xFF000000); // Right
 
         int itemX = getX() + 2;
         int itemY = getY() + 2;
 
+        // Render Payment 1
         if (!payment1.isEmpty()) {
             graphics.renderItem(payment1, itemX, itemY);
             graphics.renderItemDecorations(Minecraft.getInstance().font, payment1, itemX, itemY);
         }
 
+        // Render Payment 2
         if (!payment2.isEmpty()) {
             graphics.renderItem(payment2, itemX + 18, itemY);
             graphics.renderItemDecorations(Minecraft.getInstance().font, payment2, itemX + 18, itemY);
         }
 
+        // Render Pfeil
         ResourceLocation arrowTexture = arrowActive ? TRADE_ARROW : TRADE_ARROW_DISABLED;
-        graphics.blit(arrowTexture, getX() + 46, getY() + 3, 0, 0, 12, 8, 24, 16);
+        graphics.blit(arrowTexture, getX() + 40, getY() + 2, 0, 0, 12, 8, 24, 16);
 
+        // Render Result
         if (!result.isEmpty()) {
             graphics.renderItem(result, getX() + 66, itemY);
             graphics.renderItemDecorations(Minecraft.getInstance().font, result, getX() + 66, itemY);
         }
     }
 
-    public void onPress() {
-        if (this.active && this.visible) {
-            this.onPress.accept(this);
-        }
+    @Override
+    protected boolean clicked(double mouseX, double mouseY) {
+        return this.active && this.visible && mouseX >= this.getX() && mouseY >= this.getY() &&
+                mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
     }
 }
