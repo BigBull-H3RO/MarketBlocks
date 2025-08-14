@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
@@ -76,64 +77,23 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
             return ItemStack.EMPTY;
         }
 
-        ItemStack p1 = blockEntity.getOfferPayment1();
-        ItemStack p2 = blockEntity.getOfferPayment2();
-        if (p1.isEmpty() && !p2.isEmpty()) {
-            p1 = p2;
-            p2 = ItemStack.EMPTY;
-        }
+        Slot offerSlot = this.slots.get(2);
 
-        // Prüfe wie viele Transaktionen möglich sind
-        int count1 = countPayment(p1);
-        int count2 = p2.isEmpty() ? Integer.MAX_VALUE : countPayment(p2);
-        int tradeSize1 = p1.isEmpty() ? 0 : p1.getCount();
-        int tradeSize2 = p2.isEmpty() ? 0 : p2.getCount();
-
-        int maxTrades = 0;
-        if (tradeSize1 > 0) {
-            maxTrades = count1 / tradeSize1;
-            if (!p2.isEmpty() && tradeSize2 > 0) {
-                maxTrades = Math.min(maxTrades, count2 / tradeSize2);
-            }
-        }
-
-        if (maxTrades <= 0) {
-            return ItemStack.EMPTY;
-        }
-
-        // Extrahiere so viele Result-Items wie möglich (aber maximal was verfügbar ist)
         ItemStack resultTemplate = blockEntity.getOfferResult();
         ItemStack totalResult = ItemStack.EMPTY;
 
-        for (int i = 0; i < maxTrades; i++) {
-            // Prüfe ob noch genug Input-Items vorhanden sind
-            if (!blockEntity.hasResultItemInInput()) {
-                break;
-            }
-
-            // Prüfe ob noch genug Payment-Items vorhanden sind
-            if (!blockEntity.canAfford()) {
-                break;
-            }
-
-            // Simuliere die Extraktion des Result-Items
-            ItemStack extracted = blockEntity.getOfferHandler().extractItem(0, resultTemplate.getCount(), true);
+        while (blockEntity.canAfford() && blockEntity.hasResultItemInInput()) {
+            ItemStack extracted = offerSlot.remove(resultTemplate.getCount());
             if (extracted.isEmpty()) {
                 break;
             }
-
-            // Führe die echte Extraktion durch (dies löst automatisch processPurchase() aus)
-            extracted = blockEntity.getOfferHandler().extractItem(0, resultTemplate.getCount(), false);
-            if (extracted.isEmpty()) {
-                break;
-            }
+            offerSlot.onTake(player, extracted);
 
             if (totalResult.isEmpty()) {
                 totalResult = extracted.copy();
             } else {
                 totalResult.grow(extracted.getCount());
             }
-
         }
 
         // Verschiebe die extrahierten Items ins Spieler-Inventar
@@ -148,20 +108,6 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         }
 
         return ItemStack.EMPTY;
-    }
-
-    private int countPayment(ItemStack required) {
-        if (required.isEmpty()) {
-            return 0;
-        }
-        int total = 0;
-        for (int i = 0; i < PAYMENT_SLOTS; i++) {
-            ItemStack stack = paymentHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, required)) {
-                total += stack.getCount();
-            }
-        }
-        return total;
     }
 
     @Override

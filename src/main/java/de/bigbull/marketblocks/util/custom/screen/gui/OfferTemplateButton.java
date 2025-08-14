@@ -32,26 +32,7 @@ public class OfferTemplateButton extends Button {
 
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        if (!this.visible) return;
-
-        // Immer einen sichtbaren Hintergrund rendern
-        int backgroundColor;
-        if (!this.active) {
-            backgroundColor = 0x40000000; // Dunkelgrau für inaktiv
-        } else if (this.isHoveredOrFocused()) {
-            backgroundColor = 0x80FFFFFF; // Hell für Hover
-        } else {
-            backgroundColor = 0x60000000; // Mittelgrau für normal
-        }
-
-        // Render Hintergrund
-        graphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), backgroundColor);
-
-        // Render Rahmen
-        graphics.fill(getX(), getY(), getX() + getWidth(), getY() + 1, 0xFF000000); // Top
-        graphics.fill(getX(), getY() + getHeight() - 1, getX() + getWidth(), getY() + getHeight(), 0xFF000000); // Bottom
-        graphics.fill(getX(), getY(), getX() + 1, getY() + getHeight(), 0xFF000000); // Left
-        graphics.fill(getX() + getWidth() - 1, getY(), getX() + getWidth(), getY() + getHeight(), 0xFF000000); // Right
+        super.renderWidget(graphics, mouseX, mouseY, partialTick);
 
         int itemX = getX() + 2;
         int itemY = getY() + 2;

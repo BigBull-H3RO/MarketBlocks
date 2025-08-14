@@ -66,14 +66,14 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         // Clear existing buttons
         clearWidgets();
 
-        // OfferTemplateButton - immer sichtbar und klickbar
+        // OfferTemplateButton - immer sichtbar
         this.offerButton = addRenderableWidget(new OfferTemplateButton(
                 leftPos + 46, topPos + 20,
                 button -> onOfferClicked()
         ));
 
-        // Button ist immer aktiv und sichtbar
-        this.offerButton.active = true;
+        // Buttonzustand abhängig vom Angebot
+        this.offerButton.active = blockEntity.hasOffer();
         this.offerButton.visible = true;
 
         // Tab-Buttons (nur für Owner sichtbar)
@@ -180,6 +180,9 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         graphics.blit(BACKGROUND, i, j, 0, 0, imageWidth, imageHeight);
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
+
+        // Buttonzustand aktualisieren
+        offerButton.active = blockEntity.hasOffer();
 
         // Update OfferTemplateButton basierend auf aktuellem Zustand
         if (blockEntity.hasOffer()) {
