@@ -62,10 +62,73 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
+        if (index == 2 && !isOwner()) {
+            return quickMoveResult(player);
+        }
         return QuickMoveHelper.quickMoveStack(this, player, index,
                 PLAYER_INVENTORY_START, HOTBAR_START,
                 true, 0, PAYMENT_SLOTS,
                 this::moveItemStackTo);
+    }
+
+    private ItemStack quickMoveResult(Player player) {
+        if (!hasOffer()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack p1 = blockEntity.getOfferPayment1();
+        ItemStack p2 = blockEntity.getOfferPayment2();
+        if (p1.isEmpty() && !p2.isEmpty()) {
+            p1 = p2;
+            p2 = ItemStack.EMPTY;
+        }
+
+        int count1 = countPayment(p1);
+        int count2 = p2.isEmpty() ? Integer.MAX_VALUE : countPayment(p2);
+        int tradeSize1 = p1.isEmpty() ? 0 : p1.getCount();
+        int tradeSize2 = p2.isEmpty() ? 0 : p2.getCount();
+        int trades = tradeSize1 == 0 ? 0 : count1 / tradeSize1;
+        if (!p2.isEmpty()) {
+            trades = Math.min(trades, count2 / tradeSize2);
+        }
+        if (trades <= 0) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack result = ItemStack.EMPTY;
+        for (int i = 0; i < trades; i++) {
+            ItemStack extracted = blockEntity.getOfferHandler().extractItem(0, blockEntity.getOfferResult().getCount(), false);
+            if (extracted.isEmpty()) {
+                break;
+            }
+            if (result.isEmpty()) {
+                result = extracted;
+            } else {
+                result.grow(extracted.getCount());
+            }
+        }
+
+        if (!result.isEmpty()) {
+            if (!moveItemStackTo(result, PLAYER_INVENTORY_START, slots.size(), true)) {
+                player.drop(result, false);
+            }
+        }
+
+        return ItemStack.EMPTY;
+    }
+
+    private int countPayment(ItemStack required) {
+        if (required.isEmpty()) {
+            return 0;
+        }
+        int total = 0;
+        for (int i = 0; i < PAYMENT_SLOTS; i++) {
+            ItemStack stack = paymentHandler.getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(stack, required)) {
+                total += stack.getCount();
+            }
+        }
+        return total;
     }
 
     @Override

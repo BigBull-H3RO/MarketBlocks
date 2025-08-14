@@ -44,10 +44,11 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
             Level level = player.level();
 
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity && shopEntity.isOwner(player)) {
-                ItemStack[] slotCopies = copySlots(shopEntity);
+                SlotData data = copySlots(shopEntity);
+                ItemStack[] slotCopies = data.slots();
 
                 if (slotsAreValid(packet, slotCopies)) {
-                    ItemStack[] extracted = extractItems(shopEntity, slotCopies);
+                    ItemStack[] extracted = extractItems(shopEntity, data);
 
                     shopEntity.createOffer(slotCopies[0], slotCopies[1], slotCopies[2]);
                     PacketDistributor.sendToPlayersTrackingChunk(player.serverLevel(), new ChunkPos(packet.pos()),
@@ -65,13 +66,20 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
         });
     }
 
-    private static ItemStack[] copySlots(SmallShopBlockEntity shopEntity) {
-        ItemStack[] slots = new ItemStack[3];
-        for (int i = 0; i < 2; i++) {
-            slots[i] = shopEntity.getPaymentHandler().getStackInSlot(i).copy();
+    private record SlotData(ItemStack[] slots, boolean swapped) {}
+
+    private static SlotData copySlots(SmallShopBlockEntity shopEntity) {
+        ItemStack slot0 = shopEntity.getPaymentHandler().getStackInSlot(0).copy();
+        ItemStack slot1 = shopEntity.getPaymentHandler().getStackInSlot(1).copy();
+        boolean swapped = false;
+        if (slot0.isEmpty() && !slot1.isEmpty()) {
+            slot0 = slot1;
+            slot1 = ItemStack.EMPTY;
+            swapped = true;
         }
-        slots[2] = shopEntity.getOfferHandler().getStackInSlot(0).copy();
-        return slots;
+
+        ItemStack result = shopEntity.getOfferHandler().getStackInSlot(0).copy();
+        return new SlotData(new ItemStack[]{slot0, slot1, result}, swapped);
     }
 
     private static boolean slotsAreValid(CreateOfferPacket packet, ItemStack[] slots) {
@@ -84,10 +92,15 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
         return true;
     }
 
-    private static ItemStack[] extractItems(SmallShopBlockEntity shopEntity, ItemStack[] slots) {
+    private static ItemStack[] extractItems(SmallShopBlockEntity shopEntity, SlotData data) {
+        ItemStack[] slots = data.slots();
         ItemStack[] extracted = new ItemStack[3];
-        for (int i = 0; i < 2; i++) {
-            extracted[i] = shopEntity.getPaymentHandler().extractItem(i, slots[i].getCount(), false);
+        if (data.swapped()) {
+            extracted[0] = shopEntity.getPaymentHandler().extractItem(1, slots[0].getCount(), false);
+            extracted[1] = ItemStack.EMPTY;
+        } else {
+            extracted[0] = shopEntity.getPaymentHandler().extractItem(0, slots[0].getCount(), false);
+            extracted[1] = shopEntity.getPaymentHandler().extractItem(1, slots[1].getCount(), false);
         }
         extracted[2] = shopEntity.getOfferHandler().extractItem(0, slots[2].getCount(), false);
         return extracted;

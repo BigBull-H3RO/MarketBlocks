@@ -20,7 +20,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerListener;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffersMenu> implements ContainerListener {
@@ -62,10 +64,13 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         boolean isOwner = menu.isOwner();
         this.lastIsOwner = isOwner;
-        this.offerButton = new OfferTemplateButton(leftPos + 46, topPos + 20);
 
         // Clear existing buttons
         clearWidgets();
+
+        this.offerButton = addRenderableWidget(new OfferTemplateButton(leftPos + 46, topPos + 20, b -> onOfferClicked()));
+        this.offerButton.active = !isOwner;
+        this.offerButton.visible = creatingOffer || blockEntity.hasOffer();
 
         // Tab-Buttons (nur für Owner sichtbar)
         if (isOwner) {
@@ -135,6 +140,11 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             ItemStack payment1 = menu.slots.get(0).getItem().copy();
             ItemStack payment2 = menu.slots.get(1).getItem().copy();
             ItemStack result = menu.slots.get(2).getItem().copy();
+
+            if (payment1.isEmpty() && !payment2.isEmpty()) {
+                payment1 = payment2;
+                payment2 = ItemStack.EMPTY;
+            }
 
             // IMPROVED: Bessere Validation
             if (result.isEmpty()) {
@@ -213,6 +223,8 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             renderOfferPreview(graphics);
         } else if (blockEntity.hasOffer()) {
             renderExistingOffer(graphics, blockEntity);
+        } else {
+            offerButton.visible = false;
         }
 
         // Render Handels-Pfeil
@@ -227,23 +239,29 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     }
 
     private void renderExistingOffer(GuiGraphics graphics, SmallShopBlockEntity blockEntity) {
+        offerButton.visible = true;
         offerButton.update(
                 blockEntity.getOfferPayment1(),
                 blockEntity.getOfferPayment2(),
                 blockEntity.getOfferResult(),
                 blockEntity.isOfferAvailable()
         );
-        offerButton.renderWidget(graphics, 0, 0, 0);
     }
 
     private void renderOfferPreview(GuiGraphics graphics) {
+        ItemStack p1 = menu.slots.get(0).getItem();
+        ItemStack p2 = menu.slots.get(1).getItem();
+        if (p1.isEmpty() && !p2.isEmpty()) {
+            p1 = p2;
+            p2 = ItemStack.EMPTY;
+        }
+        offerButton.visible = true;
         offerButton.update(
-                menu.slots.get(0).getItem(),
-                menu.slots.get(1).getItem(),
+                p1,
+                p2,
                 menu.slots.get(2).getItem(),
                 true
         );
-        offerButton.renderWidget(graphics, 0, 0, 0);
     }
 
     private void renderCreationHints(GuiGraphics graphics) {
@@ -295,9 +313,15 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     @Override
     public void slotChanged(AbstractContainerMenu containerToSend, int dataSlotIndex, ItemStack stack) {
         if (creatingOffer) {
+            ItemStack p1 = this.menu.slots.get(0).getItem();
+            ItemStack p2 = this.menu.slots.get(1).getItem();
+            if (p1.isEmpty() && !p2.isEmpty()) {
+                p1 = p2;
+                p2 = ItemStack.EMPTY;
+            }
             offerButton.update(
-                    this.menu.slots.get(0).getItem(),
-                    this.menu.slots.get(1).getItem(),
+                    p1,
+                    p2,
                     this.menu.slots.get(2).getItem(),
                     true
             );
@@ -370,6 +394,55 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     public void removed() {
         super.removed();
         menu.removeSlotListener(this);
+    }
+
+    private void onOfferClicked() {
+        if (menu.isOwner()) {
+            return;
+        }
+        SmallShopBlockEntity blockEntity = menu.getBlockEntity();
+        if (!blockEntity.hasOffer()) {
+            return;
+        }
+
+        ItemStack first = blockEntity.getOfferPayment1();
+        ItemStack second = blockEntity.getOfferPayment2();
+        if (first.isEmpty() && !second.isEmpty()) {
+            first = second;
+            second = ItemStack.EMPTY;
+        }
+
+        fillPaymentSlot(first, 0);
+        if (!second.isEmpty()) {
+            fillPaymentSlot(second, 1);
+        }
+    }
+
+    private void fillPaymentSlot(ItemStack required, int slotIndex) {
+        if (required.isEmpty()) {
+            return;
+        }
+        for (int iteration = 0; iteration < 64; iteration++) {
+            Slot target = menu.slots.get(slotIndex);
+            ItemStack current = target.getItem();
+            int max = Math.min(target.getMaxStackSize(), required.getMaxStackSize());
+            if (!current.isEmpty() && (!ItemStack.isSameItemSameComponents(current, required) || current.getCount() >= max)) {
+                break;
+            }
+            boolean moved = false;
+            for (int i = 3; i < menu.slots.size(); i++) {
+                Slot invSlot = menu.slots.get(i);
+                ItemStack invStack = invSlot.getItem();
+                if (ItemStack.isSameItemSameComponents(invStack, required)) {
+                    minecraft.gameMode.handleInventoryMouseClick(menu.containerId, i, 0, ClickType.QUICK_MOVE, minecraft.player);
+                    moved = true;
+                    break;
+                }
+            }
+            if (!moved) {
+                break;
+            }
+        }
     }
 
     // Sound-Hilfsmethoden

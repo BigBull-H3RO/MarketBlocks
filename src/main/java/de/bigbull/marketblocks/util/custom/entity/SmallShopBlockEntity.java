@@ -224,16 +224,33 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         ItemStack payment1 = paymentHandler.getStackInSlot(0);
         ItemStack payment2 = paymentHandler.getStackInSlot(1);
 
-        if (!offerPayment1.isEmpty()) {
-            if (!ItemStack.isSameItemSameComponents(payment1, offerPayment1) ||
-                    payment1.getCount() < offerPayment1.getCount()) {
-                return false;
+        if (!offerPayment1.isEmpty() && !offerPayment2.isEmpty() && ItemStack.isSameItemSameComponents(offerPayment1, offerPayment2)) {
+            int total = 0;
+            if (ItemStack.isSameItemSameComponents(payment1, offerPayment1)) {
+                total += payment1.getCount();
             }
+            if (ItemStack.isSameItemSameComponents(payment2, offerPayment1)) {
+                total += payment2.getCount();
+            }
+            return total >= offerPayment1.getCount() + offerPayment2.getCount();
+        }
+
+        if (!offerPayment1.isEmpty() && !offerPayment2.isEmpty()) {
+            boolean case1 = ItemStack.isSameItemSameComponents(payment1, offerPayment1) && payment1.getCount() >= offerPayment1.getCount()
+                    && ItemStack.isSameItemSameComponents(payment2, offerPayment2) && payment2.getCount() >= offerPayment2.getCount();
+            boolean case2 = ItemStack.isSameItemSameComponents(payment1, offerPayment2) && payment1.getCount() >= offerPayment2.getCount()
+                    && ItemStack.isSameItemSameComponents(payment2, offerPayment1) && payment2.getCount() >= offerPayment1.getCount();
+            return case1 || case2;
+        }
+
+        if (!offerPayment1.isEmpty()) {
+            return (ItemStack.isSameItemSameComponents(payment1, offerPayment2) && payment1.getCount() >= offerPayment2.getCount()) ||
+                    (ItemStack.isSameItemSameComponents(payment2, offerPayment2) && payment2.getCount() >= offerPayment2.getCount());
         }
 
         if (!offerPayment2.isEmpty()) {
-            return ItemStack.isSameItemSameComponents(payment2, offerPayment2) &&
-                    payment2.getCount() >= offerPayment2.getCount();
+            return (ItemStack.isSameItemSameComponents(payment1, offerPayment2) && payment1.getCount() >= offerPayment2.getCount()) ||
+                    (ItemStack.isSameItemSameComponents(payment2, offerPayment2) && payment2.getCount() >= offerPayment2.getCount());
         }
 
         return true;
@@ -259,10 +276,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         // Entferne Bezahlung aus Payment-Slots
         if (!offerPayment1.isEmpty()) {
-            paymentHandler.extractItem(0, offerPayment1.getCount(), false);
+            removePayment(offerPayment1, offerPayment1.getCount());
         }
         if (!offerPayment2.isEmpty()) {
-            paymentHandler.extractItem(1, offerPayment2.getCount(), false);
+            removePayment(offerPayment2, offerPayment2.getCount());
         }
 
         // Entferne Result-Item aus Input-Inventar
@@ -290,6 +307,18 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
                 int toTake = Math.min(remaining, stack.getCount());
                 inputHandler.extractItem(i, toTake, false);
+                remaining -= toTake;
+            }
+        }
+    }
+
+    private void removePayment(ItemStack required, int amount) {
+        int remaining = amount;
+        for (int i = 0; i < PAYMENT_SLOTS && remaining > 0; i++) {
+            ItemStack stack = paymentHandler.getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(stack, required)) {
+                int toTake = Math.min(remaining, stack.getCount());
+                paymentHandler.extractItem(i, toTake, false);
                 remaining -= toTake;
             }
         }
