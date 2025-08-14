@@ -12,15 +12,7 @@ import java.util.function.Supplier;
  * Eine einfache generische MenuProvider-Implementierung, die über einen {@link Supplier}
  * ein neues {@link AbstractContainerMenu} erzeugt und einen anpassbaren Anzeigenamen besitzt.
  */
-public class GenericMenuProvider implements MenuProvider {
-
-    private final Component displayName;
-    private final MenuSupplier menuSupplier;
-
-    public GenericMenuProvider(Component displayName, MenuSupplier menuSupplier) {
-        this.displayName = displayName;
-        this.menuSupplier = menuSupplier;
-    }
+public record GenericMenuProvider(Component displayName, MenuSupplier menuSupplier) implements MenuProvider {
 
     @Override
     public Component getDisplayName() {

@@ -21,6 +21,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 
+import java.util.Map;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
@@ -82,6 +83,13 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             return result;
         }
     };
+
+    private final Map<String, ItemStackHandler> handlerMap = Map.of(
+            "InputInventory", inputHandler,
+            "OutputInventory", outputHandler,
+            "PaymentSlots", paymentHandler,
+            "OfferSlot", offerHandler
+    );
 
     private final CombinedInvWrapper combinedHandler =
             new CombinedInvWrapper(inputHandler, outputHandler, paymentHandler, offerHandler);
@@ -315,13 +323,19 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void dropContents(Level level, BlockPos pos) {
-        dropItems(level, pos, inputHandler);
-        dropItems(level, pos, outputHandler);
-        dropItems(level, pos, paymentHandler);
-        ItemStack offer = offerHandler.getStackInSlot(0);
-        if (!offer.isEmpty()) {
-            net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), offer);
-        }
+        handlerMap.values().forEach(handler -> dropItems(level, pos, handler));
+    }
+
+    private void saveHandlers(CompoundTag tag, HolderLookup.Provider registries) {
+        handlerMap.forEach((name, handler) -> tag.put(name, handler.serializeNBT(registries)));
+    }
+
+    private void loadHandlers(CompoundTag tag, HolderLookup.Provider registries) {
+        handlerMap.forEach((name, handler) -> {
+            if (tag.contains(name)) {
+                handler.deserializeNBT(registries, tag.getCompound(name));
+            }
+        });
     }
 
     // NBT Speicherung
@@ -329,18 +343,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
 
-        if (tag.contains("InputInventory")) {
-            inputHandler.deserializeNBT(registries, tag.getCompound("InputInventory"));
-        }
-        if (tag.contains("OutputInventory")) {
-            outputHandler.deserializeNBT(registries, tag.getCompound("OutputInventory"));
-        }
-        if (tag.contains("PaymentSlots")) {
-            paymentHandler.deserializeNBT(registries, tag.getCompound("PaymentSlots"));
-        }
-        if (tag.contains("OfferSlot")) {
-            offerHandler.setStackInSlot(0, ItemStack.parseOptional(registries, tag.getCompound("OfferSlot")));
-        }
+        loadHandlers(tag, registries);
 
         if (tag.contains("OfferPayment1")) {
             offerPayment1 = ItemStack.parseOptional(registries, tag.getCompound("OfferPayment1"));
@@ -366,13 +369,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
 
-        tag.put("InputInventory", inputHandler.serializeNBT(registries));
-        tag.put("OutputInventory", outputHandler.serializeNBT(registries));
-        tag.put("PaymentSlots", paymentHandler.serializeNBT(registries));
-        ItemStack offer = offerHandler.getStackInSlot(0);
-        if (!offer.isEmpty()) {
-            tag.put("OfferSlot", offer.save(registries));
-        }
+        saveHandlers(tag, registries);
 
         if (!offerPayment1.isEmpty()) {
             tag.put("OfferPayment1", offerPayment1.save(registries));
