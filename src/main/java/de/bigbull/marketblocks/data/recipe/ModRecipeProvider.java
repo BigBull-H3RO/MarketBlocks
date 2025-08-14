@@ -26,6 +26,7 @@ public class ModRecipeProvider extends RecipeProvider {
                 .pattern("###")
                 .define('#', Items.OAK_PLANKS)
                 .define('D', Items.DIAMOND)
+                .unlockedBy("has_oak_planks", has(Items.OAK_PLANKS))
                 .save(recipeOutput, getModId("small_shop_block"));
     }
 
