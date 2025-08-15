@@ -107,6 +107,76 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         return ret;
     }
 
+    /**
+     * Automatisches Befüllen der Payment-Slots basierend auf einem Angebot
+     * (Implementierung basierend auf Vanilla MerchantMenu.tryMoveItems())
+     */
+    public void autoFillPaymentSlots(ItemStack required1, ItemStack required2) {
+        // Leere zuerst die Payment-Slots (wie in Vanilla MerchantMenu)
+        clearPaymentSlots();
+
+        // Fülle Payment-Slots basierend auf dem Angebot
+        if (!required1.isEmpty()) {
+            moveFromInventoryToPaymentSlot(0, required1);
+        }
+        if (!required2.isEmpty()) {
+            moveFromInventoryToPaymentSlot(1, required2);
+        }
+    }
+
+    /**
+     * Leert die Payment-Slots und gibt Items zurück ins Spielerinventar
+     * (Basiert auf Vanilla MerchantMenu.tryMoveItems())
+     */
+    private void clearPaymentSlots() {
+        // Payment Slot 0 leeren
+        ItemStack stack0 = this.slots.get(0).getItem();
+        if (!stack0.isEmpty()) {
+            if (this.moveItemStackTo(stack0, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                this.slots.get(0).set(stack0.isEmpty() ? ItemStack.EMPTY : stack0);
+            }
+        }
+
+        // Payment Slot 1 leeren
+        ItemStack stack1 = this.slots.get(1).getItem();
+        if (!stack1.isEmpty()) {
+            if (this.moveItemStackTo(stack1, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                this.slots.get(1).set(stack1.isEmpty() ? ItemStack.EMPTY : stack1);
+            }
+        }
+    }
+
+    /**
+     * Bewegt Items vom Spielerinventar in einen Payment-Slot
+     * (Direkt adaptiert von Vanilla MerchantMenu.moveFromInventoryToPaymentSlot())
+     */
+    private void moveFromInventoryToPaymentSlot(int paymentSlotIndex, ItemStack required) {
+        for (int i = PLAYER_INVENTORY_START; i < this.slots.size(); i++) {
+            ItemStack inventoryStack = this.slots.get(i).getItem();
+            if (!inventoryStack.isEmpty() && ItemStack.isSameItemSameComponents(inventoryStack, required)) {
+                ItemStack currentPaymentStack = this.slots.get(paymentSlotIndex).getItem();
+
+                if (currentPaymentStack.isEmpty() || ItemStack.isSameItemSameComponents(inventoryStack, currentPaymentStack)) {
+                    int maxStackSize = Math.min(inventoryStack.getMaxStackSize(), this.slots.get(paymentSlotIndex).getMaxStackSize());
+                    int spaceInPaymentSlot = maxStackSize - currentPaymentStack.getCount();
+                    int amountToTransfer = Math.min(spaceInPaymentSlot, inventoryStack.getCount());
+
+                    if (amountToTransfer > 0) {
+                        ItemStack newPaymentStack = inventoryStack.copyWithCount(currentPaymentStack.getCount() + amountToTransfer);
+                        inventoryStack.shrink(amountToTransfer);
+                        this.slots.get(i).set(inventoryStack.isEmpty() ? ItemStack.EMPTY : inventoryStack);
+                        this.slots.get(paymentSlotIndex).set(newPaymentStack);
+
+                        // Prüfe ob wir genug haben für das Angebot
+                        if (newPaymentStack.getCount() >= required.getCount()) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public boolean stillValid(Player player) {
         return this.blockEntity.stillValid(player);

@@ -20,7 +20,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffersMenu> implements ContainerListener {
@@ -333,82 +332,8 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             required2 = ItemStack.EMPTY;
         }
 
-        // Fülle erste Payment-Slot
-        if (!required1.isEmpty()) {
-            fillPaymentSlotOptimized(required1, 0);
-        }
-
-        // Fülle zweite Payment-Slot
-        if (!required2.isEmpty()) {
-            fillPaymentSlotOptimized(required2, 1);
-        }
-    }
-
-    /**
-     * Optimierte Methode zum Befüllen eines Payment-Slots
-     */
-    private void fillPaymentSlotOptimized(ItemStack required, int slotIndex) {
-        if (required.isEmpty()) return;
-
-        Slot targetSlot = menu.slots.get(slotIndex);
-        int neededAmount = required.getCount();
-        int currentAmount = 0;
-
-        // Prüfe aktuellen Inhalt des Ziel-Slots
-        ItemStack currentStack = targetSlot.getItem();
-        if (!currentStack.isEmpty() && ItemStack.isSameItemSameComponents(currentStack, required)) {
-            currentAmount = currentStack.getCount();
-        }
-
-        // Bereits genug im Slot?
-        if (currentAmount >= neededAmount) {
-            return;
-        }
-
-        int stillNeeded = neededAmount - currentAmount;
-
-        // Durchsuche Spielerinventar nach passenden Items
-        for (int i = 3; i < menu.slots.size() && stillNeeded > 0; i++) {
-            Slot sourceSlot = menu.slots.get(i);
-            ItemStack sourceStack = sourceSlot.getItem();
-
-            if (sourceStack.isEmpty() || !ItemStack.isSameItemSameComponents(sourceStack, required)) {
-                continue;
-            }
-
-            // Berechne wie viele Items wir von diesem Stack nehmen können
-            int availableInStack = sourceStack.getCount();
-            int toTake = Math.min(stillNeeded, availableInStack);
-            int maxInSlot = Math.min(targetSlot.getMaxStackSize(), required.getMaxStackSize());
-            int canFitInTarget = maxInSlot - currentAmount;
-
-            toTake = Math.min(toTake, canFitInTarget);
-
-            if (toTake > 0) {
-                // Erstelle den Stack der transferiert werden soll
-                ItemStack transferStack = sourceStack.copy();
-                transferStack.setCount(toTake);
-
-                // Entferne aus Source
-                sourceStack.shrink(toTake);
-                sourceSlot.set(sourceStack.isEmpty() ? ItemStack.EMPTY : sourceStack);
-
-                // Füge zu Target hinzu
-                if (currentStack.isEmpty()) {
-                    targetSlot.set(transferStack);
-                    currentStack = transferStack;
-                } else {
-                    currentStack.grow(toTake);
-                    targetSlot.set(currentStack);
-                }
-
-                currentAmount += toTake;
-                stillNeeded -= toTake;
-            }
-        }
-
-        // Markiere Slots als geändert
-        targetSlot.setChanged();
+        // Rufe die Auto-Fill Methode des Menus auf
+        menu.autoFillPaymentSlots(required1, required2);
     }
 
     // Sound-Hilfsmethoden
