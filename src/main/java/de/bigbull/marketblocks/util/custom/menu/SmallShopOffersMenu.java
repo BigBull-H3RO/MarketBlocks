@@ -70,33 +70,25 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         final ItemStack stackInSlot = slot.getItem();
         ItemStack ret = stackInSlot.copy();
 
-        // === RESULT SLOT (Index 2) - Bulk-Kauf ===
         if (index == 2) {
-            if (isOwner()) {
-                // Owner: normales Verschieben ins Spielerinventar (kein Kauf)
-                if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
-                    return ItemStack.EMPTY;
-                }
-                if (stackInSlot.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
-                else slot.setChanged();
-                slot.onTake(player, stackInSlot);
-                return ret;
+            ItemStack result = stackInSlot.copy();
+            if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                return ItemStack.EMPTY;
             }
 
-            // Nicht-Owner: Bulk-Kauf
-            return performBulkPurchase(player);
+            blockEntity.performPurchase();
+            blockEntity.updateOfferSlot();
+
+            slot.onTake(player, stackInSlot);
+            return result;
         }
 
-        // === ALLE ANDEREN SLOTS ===
         if (index < PLAYER_INVENTORY_START) {
-            // Vom Container (Payment) -> Spieler
             if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
         } else {
-            // Vom Spieler -> bevorzugt in Payment-Slots (0..2 exklusiv)
             if (!this.moveItemStackTo(stackInSlot, 0, PAYMENT_SLOTS, false)) {
-                // Inventar <-> Hotbar fallback (Vanilla)
                 if (index < HOTBAR_START) {
                     if (!this.moveItemStackTo(stackInSlot, HOTBAR_START, HOTBAR_START + 9, false)) {
                         return ItemStack.EMPTY;
@@ -113,43 +105,6 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         if (stackInSlot.getCount() == ret.getCount()) return ItemStack.EMPTY;
         slot.onTake(player, stackInSlot);
         return ret;
-    }
-
-    /**
-     * Führt einen Bulk-Kauf durch (Shift+Click auf Result-Slot)
-     */
-    private ItemStack performBulkPurchase(Player player) {
-        if (!hasOffer() || !isOfferAvailable()) {
-            return ItemStack.EMPTY;
-        }
-
-        ItemStack resultTemplate = blockEntity.getOfferResult();
-        if (resultTemplate.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-
-        int totalItemsBought = 0;
-
-        while (blockEntity.canAfford() && blockEntity.hasResultItemInInput()) {
-            ItemStack toTransfer = resultTemplate.copy();
-            boolean moved = this.moveItemStackTo(toTransfer, PLAYER_INVENTORY_START, this.slots.size(), true);
-            if (!moved || !toTransfer.isEmpty()) {
-                break;
-            }
-
-            blockEntity.performPurchase();
-            totalItemsBought += resultTemplate.getCount();
-        }
-
-        blockEntity.updateOfferSlot();
-
-        if (totalItemsBought > 0) {
-            ItemStack result = resultTemplate.copy();
-            result.setCount(totalItemsBought);
-            return result;
-        }
-
-        return ItemStack.EMPTY;
     }
 
     @Override
