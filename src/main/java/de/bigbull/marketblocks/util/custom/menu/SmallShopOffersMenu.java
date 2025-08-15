@@ -16,11 +16,13 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 /**
  * Menü für den Angebots-Modus des SmallShop
  */
+/**
+ * Menü für den Angebots-Modus des SmallShop
+ */
 public class SmallShopOffersMenu extends AbstractContainerMenu {
     private final SmallShopBlockEntity blockEntity;
     private final IItemHandler paymentHandler;
     private final IItemHandler offerHandler;
-    // ENTFERNT: private boolean creatingOffer = false;
 
     private static final int PAYMENT_SLOTS = 2;
     private static final int OFFER_SLOT = 1;
@@ -63,51 +65,91 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (index == 2 && !isOwner()) {
-            return quickMoveResult(player);
-        }
-        return QuickMoveHelper.quickMoveStack(this, player, index,
-                PLAYER_INVENTORY_START, HOTBAR_START,
-                true, 0, PAYMENT_SLOTS,
-                this::moveItemStackTo);
-    }
+        if (index < 0 || index >= this.slots.size()) return ItemStack.EMPTY;
 
-    private ItemStack quickMoveResult(Player player) {
-        if (!hasOffer()) {
-            return ItemStack.EMPTY;
-        }
+        // Gemeinsame Slot/Stack-Variablen
+        final Slot slot = this.slots.get(index);
+        if (slot == null || !slot.hasItem()) return ItemStack.EMPTY;
 
-        Slot offerSlot = this.slots.get(2);
+        final ItemStack stackInSlot = slot.getItem();
+        ItemStack ret = stackInSlot.copy();
 
-        ItemStack resultTemplate = blockEntity.getOfferResult();
-        ItemStack totalResult = ItemStack.EMPTY;
+        // === RESULT SLOT (Index 2) ===
+        if (index == 2) {
+            if (isOwner()) {
+                // Owner: normales Verschieben ins Spielerinventar (kein Kauf)
+                if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                    return ItemStack.EMPTY;
+                }
+                // Slot-Update wie in Vanilla
+                if (stackInSlot.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+                else slot.setChanged();
 
-        while (blockEntity.canAfford() && blockEntity.hasResultItemInInput()) {
-            ItemStack extracted = offerSlot.remove(resultTemplate.getCount());
-            if (extracted.isEmpty()) {
-                break;
+                slot.onTake(player, stackInSlot);
+                return ret; // früh raus, kein Tail-Handling mehr
             }
-            offerSlot.onTake(player, extracted);
 
-            if (totalResult.isEmpty()) {
-                totalResult = extracted.copy();
-            } else {
-                totalResult.grow(extracted.getCount());
+            // Nicht-Owner: stapelweise kaufen – begrenzt durch Input & Payment
+            final ItemStack template = this.blockEntity.getOfferResult();
+            if (template.isEmpty() || !hasOffer() || !isOfferAvailable()) return ItemStack.EMPTY;
+
+            final int maxBatches = this.blockEntity.calculateMaxPurchasable(template);
+            if (maxBatches <= 0) return ItemStack.EMPTY;
+
+            final Slot offerSlot = slot; // = slots.get(2)
+            int boughtItems = 0;
+            final int targetItems = maxBatches * Math.max(1, template.getCount());
+
+            while (boughtItems < targetItems && offerSlot.hasItem()) {
+                // Entfernt genau einen Batch aus dem Offer-Slot -> triggert in BE processPurchase()
+                ItemStack removed = offerSlot.remove(Math.max(1, template.getCount()));
+                if (removed.isEmpty()) break;
+
+                // Versuch: Alles in Spielerinventar einsortieren
+                if (!this.moveItemStackTo(removed, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                    // Kein Platz → drop & Abbruch (keine Duplizierung, der Kauf war bereits erfolgt)
+                    player.drop(removed, false);
+                    break;
+                }
+
+                offerSlot.onTake(player, removed);
+                boughtItems += removed.getCount();
             }
+
+            if (boughtItems <= 0) return ItemStack.EMPTY;
+
+            // Rückgabestack: Summe der gekauften Items (für Merge-UX)
+            ret = template.copy();
+            ret.setCount(boughtItems);
+            return ret; // früh raus
         }
 
-        // Verschiebe die extrahierten Items ins Spieler-Inventar
-        if (!totalResult.isEmpty()) {
-            ItemStack remaining = totalResult;
-            if (!moveItemStackTo(remaining, PLAYER_INVENTORY_START, slots.size(), true)) {
-                // Falls das Inventar voll ist, droppe die Items
-                player.drop(remaining, false);
+        // === ALLE ANDEREN SLOTS (0..1 Payment, 3.. Spielerinventar) ===
+        if (index < PLAYER_INVENTORY_START) {
+            // Vom Container (Payment) -> Spieler
+            if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
-            return totalResult;
+        } else {
+            // Vom Spieler -> bevorzugt in Payment-Slots (0..2 exklusiv)
+            if (!this.moveItemStackTo(stackInSlot, 0, PAYMENT_SLOTS, false)) {
+                // Inventar <-> Hotbar fallback (Vanilla)
+                if (index < HOTBAR_START) {
+                    if (!this.moveItemStackTo(stackInSlot, HOTBAR_START, HOTBAR_START + 9, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, HOTBAR_START, false)) {
+                    return ItemStack.EMPTY;
+                }
+            }
         }
 
-        return ItemStack.EMPTY;
+        if (stackInSlot.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+        else slot.setChanged();
+
+        if (stackInSlot.getCount() == ret.getCount()) return ItemStack.EMPTY;
+        slot.onTake(player, stackInSlot);
+        return ret;
     }
 
     @Override
@@ -131,10 +173,6 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         return data.get(2) == 1;
     }
 
-    // ENTFERNTE METHODEN:
-    // public boolean isCreatingOffer()
-    // public void setCreatingOffer(boolean creatingOffer)
-
     public static class PaymentSlot extends SlotItemHandler {
         public PaymentSlot(IItemHandler handler, int slot, int x, int y) {
             super(handler, slot, x, y);
@@ -156,30 +194,39 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            // Owner kann immer Items platzieren (für Angebotserstellung)
-            // Nicht-Owner können keine Items platzieren
+            // Bei aktivem Angebot: niemals platzieren
+            if (menu.hasOffer()) return false;
+            // Angebotserstellung: nur Owner
             return menu.isOwner();
         }
 
         @Override
         public boolean mayPickup(Player player) {
-            // Owner kann immer Items nehmen
-            if (menu.isOwner()) {
-                return true;
-            }
-
-            // Nicht-Owner können nur kaufen wenn Angebot verfügbar ist
+            if (menu.isOwner()) return true;
             return menu.hasOffer() && menu.isOfferAvailable();
         }
 
         @Override
         public ItemStack remove(int amount) {
-            // Standard-Verhalten für Owner oder Käufe
             if (menu.isOwner() || (menu.hasOffer() && menu.isOfferAvailable())) {
                 return super.remove(amount);
             }
-
             return ItemStack.EMPTY;
+        }
+
+        @Override
+        public void set(ItemStack stack) {
+            if (menu.hasOffer() && !stack.isEmpty()) {
+                return; // blockieren wie ein reiner Result-Slot
+            }
+            super.set(stack);
+        }
+
+        @Override
+        public void onTake(Player player, ItemStack stack) {
+            super.onTake(player, stack);
+            // UI frisch halten
+            menu.blockEntity.updateOfferSlot();
         }
     }
 }

@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
@@ -69,11 +70,47 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        boolean isOwner = blockEntity.isOwner(player);
-        return QuickMoveHelper.quickMoveStack(this, player, index,
-                PLAYER_INVENTORY_START, HOTBAR_START,
-                isOwner, 0, INPUT_SLOTS,
-                this::moveItemStackTo);
+        if (index < 0 || index >= this.slots.size()) return ItemStack.EMPTY;
+
+        ItemStack ret;
+        Slot slot = this.slots.get(index);
+        if (!slot.hasItem()) return ItemStack.EMPTY;
+
+        ItemStack stack = slot.getItem();
+        ret = stack.copy();
+
+        // Container-Slots: 0..INPUT_SLOTS-1 (Input), INPUT_SLOTS..INPUT_SLOTS+OUTPUT_SLOTS-1 (Output)
+        int inputStart  = 0;
+
+        if (index < PLAYER_INVENTORY_START) {
+            // Vom Container -> Spielerinventar
+            if (!this.moveItemStackTo(stack, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                return ItemStack.EMPTY;
+            }
+        } else {
+            // Vom Spieler -> wenn Owner: versuche Input
+            boolean moved = false;
+            if (isOwner()) {
+                moved = this.moveItemStackTo(stack, inputStart, INPUT_SLOTS, false);
+            }
+            if (!moved) {
+                // Andernfalls normales Inventar/Hotbar Shiften (Vanilla-Verhalten)
+                if (index < HOTBAR_START) {
+                    if (!this.moveItemStackTo(stack, HOTBAR_START, HOTBAR_START + 9, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (!this.moveItemStackTo(stack, PLAYER_INVENTORY_START, HOTBAR_START, false)) {
+                    return ItemStack.EMPTY;
+                }
+            }
+        }
+
+        if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+        else slot.setChanged();
+
+        if (stack.getCount() == ret.getCount()) return ItemStack.EMPTY;
+        slot.onTake(player, stack);
+        return ret;
     }
 
     @Override

@@ -19,7 +19,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 
 import java.util.Map;
 import java.util.UUID;
@@ -91,8 +90,34 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             "OfferSlot", offerHandler
     );
 
-    private final CombinedInvWrapper combinedHandler =
-            new CombinedInvWrapper(inputHandler, outputHandler, paymentHandler, offerHandler);
+    private final IItemHandler inputOnly  = new SidedWrapper(inputHandler, false);
+    private final IItemHandler outputOnly = new SidedWrapper(outputHandler, true);
+
+    record SidedWrapper(IItemHandler backing, boolean extractOnly) implements IItemHandler {
+        public int getSlots() {
+            return backing.getSlots();
+        }
+
+        public ItemStack getStackInSlot(int slot) {
+            return backing.getStackInSlot(slot);
+        }
+
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+                return extractOnly ? stack : backing.insertItem(slot, stack, simulate);
+            }
+
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+                return extractOnly ? backing.extractItem(slot, amount, simulate) : ItemStack.EMPTY;
+            }
+
+        public int getSlotLimit(int slot) {
+            return backing.getSlotLimit(slot);
+        }
+
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return !extractOnly && backing.isItemValid(slot, stack);
+        }
+    }
 
     @Override
     public Component getDisplayName() {
@@ -120,9 +145,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return offerHandler;
     }
 
-    public IItemHandler getCombinedHandler() {
-        return combinedHandler;
-    }
+    public IItemHandler getInputOnly()  { return inputOnly; }
+    public IItemHandler getOutputOnly() { return outputOnly; }
 
     private void markDirty() {
         setChanged();
@@ -383,6 +407,79 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         });
     }
+
+    public int calculateMaxPurchasable(ItemStack resultTemplate) {
+        if (resultTemplate.isEmpty() || !hasOffer()) return 0;
+
+        // Wie viele volle Result-Batches sind im Input vorhanden?
+        int batchesFromInput = countResultBatchesInInput(resultTemplate);
+
+        // Wie viele Batches kann man sich leisten (auf Basis beider Payment-Slots, inkl. Slottausch & same-item-Case)?
+        int batchesFromPayment = countAffordableBatches();
+
+        return Math.min(batchesFromInput, batchesFromPayment);
+    }
+
+    /** Zählt, wie viele volle resultTemplate-Batches im Input liegen. */
+    private int countResultBatchesInInput(ItemStack template) {
+        int total = 0;
+        for (int i = 0; i < inputHandler.getSlots(); i++) {
+            ItemStack s = inputHandler.getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(s, template)) {
+                total += s.getCount();
+            }
+        }
+        int perBatch = Math.max(1, template.getCount());
+        return total / perBatch;
+    }
+
+    /** Ermittelt, wie viele “Angebots-Sets” vollständig bezahlt werden können. */
+    private int countAffordableBatches() {
+        // Keine Payments → theoretisch unendlich; real limitiert dann nur durch Input
+        boolean p1Empty = offerPayment1.isEmpty();
+        boolean p2Empty = offerPayment2.isEmpty();
+        if (p1Empty && p2Empty) return Integer.MAX_VALUE;
+
+        // Hole Inhalte beider Payment-Slots
+        ItemStack slot0 = paymentHandler.getStackInSlot(0);
+        ItemStack slot1 = paymentHandler.getStackInSlot(1);
+
+        // Helper: zähle, wie viele Items eines Typs in beiden Slots liegen
+        java.util.function.Function<ItemStack, Integer> totalOf = (tmpl) -> {
+            int n = 0;
+            if (!tmpl.isEmpty()) {
+                if (ItemStack.isSameItemSameComponents(slot0, tmpl)) n += slot0.getCount();
+                if (ItemStack.isSameItemSameComponents(slot1, tmpl)) n += slot1.getCount();
+            }
+            return n;
+        };
+
+        if (!p1Empty && !p2Empty) {
+            // Zwei Payments vorhanden
+            boolean sameItem = ItemStack.isSameItemSameComponents(offerPayment1, offerPayment2);
+            if (sameItem) {
+                // beide Payments sind dasselbe Item → Summiere beide Slot-Bestände und teile durch Summe der Anforderungen
+                int totalAvailable = totalOf.apply(offerPayment1);
+                int need = offerPayment1.getCount() + offerPayment2.getCount();
+                if (need <= 0) return 0;
+                return totalAvailable / need;
+            } else {
+                // zwei verschiedene Items → min(availableA/needA, availableB/needB)
+                int haveA = totalOf.apply(offerPayment1);
+                int haveB = totalOf.apply(offerPayment2);
+                int needA = Math.max(1, offerPayment1.getCount());
+                int needB = Math.max(1, offerPayment2.getCount());
+                return Math.min(haveA / needA, haveB / needB);
+            }
+        }
+
+        // Nur ein Payment-Item
+        ItemStack required = p1Empty ? offerPayment2 : offerPayment1;
+        int need = Math.max(1, required.getCount());
+        int have = totalOf.apply(required);
+        return have / need;
+    }
+
 
     // NBT Speicherung
     @Override

@@ -7,6 +7,7 @@ import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopInventoryScreen;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopOffersScreen;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
@@ -81,7 +82,12 @@ public class RegistriesInit {
             event.registerBlockEntity(
                     Capabilities.ItemHandler.BLOCK,
                     RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(),
-                    (be, side) -> be.getCombinedHandler()
+                    (be, side) -> {
+                        if (side == null) return null; // kein allgemeiner Zugriff ohne Seite
+                        if (side == Direction.DOWN)  return be.getOutputOnly(); // nur raus
+                        if (side == Direction.UP)    return be.getInputOnly();  // nur rein
+                        return null; // Seiten gesperrt oder feiner je Seite
+                    }
             );
         }
     }
