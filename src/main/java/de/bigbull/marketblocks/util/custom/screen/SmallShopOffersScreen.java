@@ -339,35 +339,24 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             return;
         }
 
-        // Mehrere Durchläufe um genug Items zu sammeln
-        for (int iteration = 0; iteration < 64; iteration++) {
-            Slot target = menu.slots.get(slotIndex);
-            ItemStack current = target.getItem();
-            int max = Math.min(target.getMaxStackSize(), required.getMaxStackSize());
+        Slot target = menu.slots.get(slotIndex);
+        int max = Math.min(target.getMaxStackSize(), required.getMaxStackSize());
 
-            // Prüfe ob Slot voll ist oder falsches Item enthält
-            if (!current.isEmpty() &&
-                    (!ItemStack.isSameItemSameComponents(current, required) || current.getCount() >= max)) {
-                break;
+        // Gehe alle Inventarslots durch und verschiebe passende Stacks explizit in den Ziel-Slot
+        for (int i = 3; i < menu.slots.size() && target.getItem().getCount() < max; i++) {
+            Slot invSlot = menu.slots.get(i);
+            ItemStack invStack = invSlot.getItem();
+
+            if (!ItemStack.isSameItemSameComponents(invStack, required)) {
+                continue;
             }
 
-            boolean moved = false;
-            // Suche passendes Item im Spieler-Inventar
-            for (int i = 3; i < menu.slots.size(); i++) {
-                Slot invSlot = menu.slots.get(i);
-                ItemStack invStack = invSlot.getItem();
-                if (ItemStack.isSameItemSameComponents(invStack, required)) {
-                    // Shift-Click simulieren
-                    minecraft.gameMode.handleInventoryMouseClick(
-                            menu.containerId, i, 0, ClickType.QUICK_MOVE, minecraft.player);
-                    moved = true;
-                    break;
-                }
-            }
-
-            if (!moved) {
-                break; // Keine passenden Items mehr gefunden
-            }
+            // kompletten Stack aufnehmen
+            minecraft.gameMode.handleInventoryMouseClick(menu.containerId, i, 0, ClickType.PICKUP, minecraft.player);
+            // in den Payment-Slot legen
+            minecraft.gameMode.handleInventoryMouseClick(menu.containerId, slotIndex, 0, ClickType.PICKUP, minecraft.player);
+            // verbleibende Items zurücklegen
+            minecraft.gameMode.handleInventoryMouseClick(menu.containerId, i, 0, ClickType.PICKUP, minecraft.player);
         }
     }
 
