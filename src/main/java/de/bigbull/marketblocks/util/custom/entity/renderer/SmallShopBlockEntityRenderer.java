@@ -33,9 +33,9 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         ItemStack result = blockEntity.getOfferResult();
         if (!result.isEmpty()) {
             poseStack.pushPose();
-            poseStack.translate(0.5D, 1.1D, 0.5D);
-            float time = (blockEntity.getLevel().getGameTime() + partialTick) % 360;
-            poseStack.mulPose(Axis.YP.rotationDegrees(time));
+            poseStack.translate(0.5D, 1.3D, 0.5D); // Höher positioniert
+            float time = (blockEntity.getLevel().getGameTime() + partialTick) * 2.0f; // Langsamere Rotation
+            poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
             poseStack.scale(0.8F, 0.8F, 0.8F);
             itemRenderer.renderStatic(result, ItemDisplayContext.GROUND, packedLight, packedOverlay, poseStack, bufferSource,
                     blockEntity.getLevel(), 0);
@@ -44,11 +44,20 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
 
         // Bezahl-Items vor dem Block rendern
         Direction dir = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
-        renderPaymentItem(itemRenderer, font, poseStack, bufferSource, packedLight, packedOverlay,
-                blockEntity.getOfferPayment1(), dir, 0);
-        if (!blockEntity.getOfferPayment2().isEmpty()) {
+
+        // Sammle alle Bezahl-Items die nicht leer sind
+        ItemStack payment1 = blockEntity.getOfferPayment1();
+        ItemStack payment2 = blockEntity.getOfferPayment2();
+
+        int itemIndex = 0;
+        if (!payment1.isEmpty()) {
             renderPaymentItem(itemRenderer, font, poseStack, bufferSource, packedLight, packedOverlay,
-                    blockEntity.getOfferPayment2(), dir, 1);
+                    payment1, dir, itemIndex);
+            itemIndex++;
+        }
+        if (!payment2.isEmpty()) {
+            renderPaymentItem(itemRenderer, font, poseStack, bufferSource, packedLight, packedOverlay,
+                    payment2, dir, itemIndex);
         }
     }
 
@@ -58,26 +67,33 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
             return;
         }
 
-        // Position vor dem Block berechnen
-        float y = 0.7F - index * 0.5F; // Items untereinander
-        double xOff = 0.5D + dir.getStepX() * 0.6D;
-        double zOff = 0.5D + dir.getStepZ() * 0.6D;
+        // Position vor dem Block berechnen - Items untereinander
+        float y = 0.8F - index * 0.4F; // Items untereinander mit mehr Abstand
+        double xOff = 0.5D + dir.getStepX() * 0.7D; // Etwas weiter weg vom Block
+        double zOff = 0.5D + dir.getStepZ() * 0.7D;
 
+        // Item rendern
         poseStack.pushPose();
         poseStack.translate(xOff, y, zOff);
         poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
-        poseStack.scale(0.5F, 0.5F, 0.5F);
+        poseStack.scale(0.6F, 0.6F, 0.6F); // Etwas größer
         itemRenderer.renderStatic(stack, ItemDisplayContext.GUI, packedLight, packedOverlay, poseStack, bufferSource, null, 0);
         poseStack.popPose();
 
-        // Menge anzeigen
-        poseStack.pushPose();
-        poseStack.translate(xOff, y, zOff + 0.01D); // etwas nach vorne, um Z-Fighting zu vermeiden
-        poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
-        poseStack.scale(0.01F, 0.01F, 0.01F);
-        String count = Integer.toString(stack.getCount());
-        font.drawInBatch(count, -font.width(count) / 2f, 0, 0xFFFFFF, false,
-                poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
-        poseStack.popPose();
+        // Menge als Text rendern - größer und besser sichtbar
+        if (stack.getCount() > 1) {
+            poseStack.pushPose();
+            poseStack.translate(xOff + dir.getStepX() * 0.15D, y - 0.15D, zOff + dir.getStepZ() * 0.15D);
+            poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
+            poseStack.scale(0.015F, -0.015F, 0.015F); // Größere Schrift
+
+            String count = Integer.toString(stack.getCount());
+            int width = font.width(count);
+
+            // Schwarzer Hintergrund für bessere Lesbarkeit
+            font.drawInBatch(count, -width / 2f, 0, 0xFFFFFF, true,
+                    poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0x80000000, packedLight);
+            poseStack.popPose();
+        }
     }
 }

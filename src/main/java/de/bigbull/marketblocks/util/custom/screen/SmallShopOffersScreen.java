@@ -19,7 +19,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -316,48 +315,100 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             return; // Kein Angebot vorhanden
         }
 
-        ItemStack first = blockEntity.getOfferPayment1();
-        ItemStack second = blockEntity.getOfferPayment2();
-
-        // Normalisierung wie im CreateOffer
-        if (first.isEmpty() && !second.isEmpty()) {
-            first = second;
-            second = ItemStack.EMPTY;
-        }
-
-        // Fülle Payment-Slots automatisch
-        fillPaymentSlot(first, 0);
-        if (!second.isEmpty()) {
-            fillPaymentSlot(second, 1);
-        }
-
+        // Auto-Fill Logic für Nicht-Owner
+        autoFillPaymentSlots(blockEntity);
         playClickSound();
     }
 
-    private void fillPaymentSlot(ItemStack required, int slotIndex) {
-        if (required.isEmpty()) {
+    /**
+     * Automatisches Befüllen der Payment-Slots basierend auf dem aktuellen Angebot
+     */
+    private void autoFillPaymentSlots(SmallShopBlockEntity blockEntity) {
+        ItemStack required1 = blockEntity.getOfferPayment1();
+        ItemStack required2 = blockEntity.getOfferPayment2();
+
+        // Normalisierung wie beim Angebot erstellen
+        if (required1.isEmpty() && !required2.isEmpty()) {
+            required1 = required2;
+            required2 = ItemStack.EMPTY;
+        }
+
+        // Fülle erste Payment-Slot
+        if (!required1.isEmpty()) {
+            fillPaymentSlotOptimized(required1, 0);
+        }
+
+        // Fülle zweite Payment-Slot
+        if (!required2.isEmpty()) {
+            fillPaymentSlotOptimized(required2, 1);
+        }
+    }
+
+    /**
+     * Optimierte Methode zum Befüllen eines Payment-Slots
+     */
+    private void fillPaymentSlotOptimized(ItemStack required, int slotIndex) {
+        if (required.isEmpty()) return;
+
+        Slot targetSlot = menu.slots.get(slotIndex);
+        int neededAmount = required.getCount();
+        int currentAmount = 0;
+
+        // Prüfe aktuellen Inhalt des Ziel-Slots
+        ItemStack currentStack = targetSlot.getItem();
+        if (!currentStack.isEmpty() && ItemStack.isSameItemSameComponents(currentStack, required)) {
+            currentAmount = currentStack.getCount();
+        }
+
+        // Bereits genug im Slot?
+        if (currentAmount >= neededAmount) {
             return;
         }
 
-        Slot target = menu.slots.get(slotIndex);
-        int max = Math.min(target.getMaxStackSize(), required.getMaxStackSize());
+        int stillNeeded = neededAmount - currentAmount;
 
-        // Gehe alle Inventarslots durch und verschiebe passende Stacks explizit in den Ziel-Slot
-        for (int i = 3; i < menu.slots.size() && target.getItem().getCount() < max; i++) {
-            Slot invSlot = menu.slots.get(i);
-            ItemStack invStack = invSlot.getItem();
+        // Durchsuche Spielerinventar nach passenden Items
+        for (int i = 3; i < menu.slots.size() && stillNeeded > 0; i++) {
+            Slot sourceSlot = menu.slots.get(i);
+            ItemStack sourceStack = sourceSlot.getItem();
 
-            if (!ItemStack.isSameItemSameComponents(invStack, required)) {
+            if (sourceStack.isEmpty() || !ItemStack.isSameItemSameComponents(sourceStack, required)) {
                 continue;
             }
 
-            // kompletten Stack aufnehmen
-            minecraft.gameMode.handleInventoryMouseClick(menu.containerId, i, 0, ClickType.PICKUP, minecraft.player);
-            // in den Payment-Slot legen
-            minecraft.gameMode.handleInventoryMouseClick(menu.containerId, slotIndex, 0, ClickType.PICKUP, minecraft.player);
-            // verbleibende Items zurücklegen
-            minecraft.gameMode.handleInventoryMouseClick(menu.containerId, i, 0, ClickType.PICKUP, minecraft.player);
+            // Berechne wie viele Items wir von diesem Stack nehmen können
+            int availableInStack = sourceStack.getCount();
+            int toTake = Math.min(stillNeeded, availableInStack);
+            int maxInSlot = Math.min(targetSlot.getMaxStackSize(), required.getMaxStackSize());
+            int canFitInTarget = maxInSlot - currentAmount;
+
+            toTake = Math.min(toTake, canFitInTarget);
+
+            if (toTake > 0) {
+                // Erstelle den Stack der transferiert werden soll
+                ItemStack transferStack = sourceStack.copy();
+                transferStack.setCount(toTake);
+
+                // Entferne aus Source
+                sourceStack.shrink(toTake);
+                sourceSlot.set(sourceStack.isEmpty() ? ItemStack.EMPTY : sourceStack);
+
+                // Füge zu Target hinzu
+                if (currentStack.isEmpty()) {
+                    targetSlot.set(transferStack);
+                    currentStack = transferStack;
+                } else {
+                    currentStack.grow(toTake);
+                    targetSlot.set(currentStack);
+                }
+
+                currentAmount += toTake;
+                stillNeeded -= toTake;
+            }
         }
+
+        // Markiere Slots als geändert
+        targetSlot.setChanged();
     }
 
     // Sound-Hilfsmethoden
