@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallShopBlockEntity> {
     public SmallShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
@@ -45,15 +46,16 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         // Bezahl-Items vor dem Block rendern
         Direction dir = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
         renderPaymentItem(itemRenderer, font, poseStack, bufferSource, packedLight, packedOverlay,
-                blockEntity.getOfferPayment1(), dir, 0);
+                blockEntity.getOfferPayment1(), dir, 0, blockEntity.getLevel());
         if (!blockEntity.getOfferPayment2().isEmpty()) {
             renderPaymentItem(itemRenderer, font, poseStack, bufferSource, packedLight, packedOverlay,
-                    blockEntity.getOfferPayment2(), dir, 1);
+                    blockEntity.getOfferPayment2(), dir, 1, blockEntity.getLevel());
         }
     }
 
     private void renderPaymentItem(ItemRenderer itemRenderer, Font font, PoseStack poseStack, MultiBufferSource bufferSource,
-                                   int packedLight, int packedOverlay, ItemStack stack, Direction dir, int index) {
+                                   int packedLight, int packedOverlay, ItemStack stack, Direction dir, int index,
+                                   Level level) {
         if (stack.isEmpty()) {
             return;
         }
@@ -67,8 +69,8 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         poseStack.translate(xOff, y, zOff);
         poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
         poseStack.scale(0.5F, 0.5F, 0.5F);
-        itemRenderer.renderStatic(stack, ItemDisplayContext.GUI, packedLight, packedOverlay, poseStack, bufferSource, null, 0);
-        poseStack.popPose();
+        itemRenderer.renderStatic(stack, ItemDisplayContext.GROUND, packedLight, packedOverlay, poseStack, bufferSource,
+                level, 0);
 
         // Menge anzeigen
         poseStack.pushPose();
