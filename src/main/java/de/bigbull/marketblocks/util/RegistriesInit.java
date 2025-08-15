@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.util;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.entity.renderer.SmallShopBlockEntityRenderer;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopInventoryScreen;
@@ -22,6 +23,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -67,16 +69,20 @@ public class RegistriesInit {
      */
     @EventBusSubscriber(modid = MarketBlocks.MODID, value = Dist.CLIENT)
     public static class ClientRegistry {
-
         @SubscribeEvent
         public static void registerScreens(RegisterMenuScreensEvent event) {
             event.register(SMALL_SHOP_OFFERS_MENU.get(), SmallShopOffersScreen::new);
             event.register(SMALL_SHOP_INVENTORY_MENU.get(), SmallShopInventoryScreen::new);
         }
+
+        @SubscribeEvent
+        public static void registerBlockEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+            event.registerBlockEntityRenderer(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), SmallShopBlockEntityRenderer::new);
+        }
     }
 
     @EventBusSubscriber(modid = MarketBlocks.MODID)
-    public static class CapabilityInit {
+    public static class GameRegistry {
         @SubscribeEvent
         public static void registerCapabilities(RegisterCapabilitiesEvent event) {
             event.registerBlockEntity(

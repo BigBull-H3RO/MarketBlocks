@@ -24,11 +24,6 @@ import java.util.Map;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
-    private static final int INPUT_SLOTS = 12;
-    private static final int OUTPUT_SLOTS = 12;
-    private static final int PAYMENT_SLOTS = 2;
-    private static final int OFFER_SLOT = 1;
-
     // Angebots-System
     private ItemStack offerPayment1 = ItemStack.EMPTY;
     private ItemStack offerPayment2 = ItemStack.EMPTY;
@@ -44,7 +39,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     // Inventare
-    private final ItemStackHandler inputHandler = new ItemStackHandler(INPUT_SLOTS) {
+    private final ItemStackHandler inputHandler = new ItemStackHandler(12) {
         @Override
         protected void onContentsChanged(int slot) {
             markDirty();
@@ -52,14 +47,14 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
-    private final ItemStackHandler outputHandler = new ItemStackHandler(OUTPUT_SLOTS) {
+    private final ItemStackHandler outputHandler = new ItemStackHandler(12) {
         @Override
         protected void onContentsChanged(int slot) {
             markDirty();
         }
     };
 
-    private final ItemStackHandler paymentHandler = new ItemStackHandler(PAYMENT_SLOTS) {
+    private final ItemStackHandler paymentHandler = new ItemStackHandler(2) {
         @Override
         protected void onContentsChanged(int slot) {
             markDirty();
@@ -67,7 +62,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
-    private final ItemStackHandler offerHandler = new ItemStackHandler(OFFER_SLOT) {
+    private final ItemStackHandler offerHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
             markDirty();
@@ -350,7 +345,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    // Korrigierte removePayment Methode
     private void removePayment(ItemStack required, int amount) {
         if (required.isEmpty() || amount <= 0) {
             return;
@@ -359,7 +353,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         int remaining = amount;
 
         // Durchlaufe beide Payment-Slots und entferne die erforderliche Menge
-        for (int i = 0; i < PAYMENT_SLOTS && remaining > 0; i++) {
+        for (int i = 0; i < 2 && remaining > 0; i++) {
             ItemStack stack = paymentHandler.getStackInSlot(i);
             if (ItemStack.isSameItemSameComponents(stack, required)) {
                 int toTake = Math.min(remaining, stack.getCount());
@@ -494,12 +488,18 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         if (tag.contains("OfferPayment1")) {
             offerPayment1 = ItemStack.parseOptional(registries, tag.getCompound("OfferPayment1"));
+        } else {
+            offerPayment1 = ItemStack.EMPTY;
         }
         if (tag.contains("OfferPayment2")) {
             offerPayment2 = ItemStack.parseOptional(registries, tag.getCompound("OfferPayment2"));
+        } else {
+            offerPayment2 = ItemStack.EMPTY;
         }
         if (tag.contains("OfferResult")) {
             offerResult = ItemStack.parseOptional(registries, tag.getCompound("OfferResult"));
+        } else {
+            offerResult = ItemStack.EMPTY;
         }
 
         hasOffer = tag.getBoolean("HasOffer");
