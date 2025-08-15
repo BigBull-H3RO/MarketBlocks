@@ -13,9 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Menü für den Angebots-Modus des SmallShop
  */
@@ -68,7 +65,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         if (index < 0 || index >= this.slots.size()) return ItemStack.EMPTY;
 
         final Slot slot = this.slots.get(index);
-        if (slot == null || !slot.hasItem()) return ItemStack.EMPTY;
+        if (!slot.hasItem()) return ItemStack.EMPTY;
 
         final ItemStack stackInSlot = slot.getItem();
         ItemStack ret = stackInSlot.copy();
@@ -87,7 +84,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
             }
 
             // Nicht-Owner: Bulk-Kauf
-            return performBulkPurchase(player, slot);
+            return performBulkPurchase(player);
         }
 
         // === ALLE ANDEREN SLOTS ===
@@ -121,57 +118,29 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
     /**
      * Führt einen Bulk-Kauf durch (Shift+Click auf Result-Slot)
      */
-    private ItemStack performBulkPurchase(Player player, Slot offerSlot) {
+    private ItemStack performBulkPurchase(Player player) {
         if (!hasOffer() || !isOfferAvailable()) {
             return ItemStack.EMPTY;
         }
 
-        final ItemStack resultTemplate = blockEntity.getOfferResult();
+        ItemStack resultTemplate = blockEntity.getOfferResult();
         if (resultTemplate.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        // Berechne maximale Anzahl möglicher Käufe
-        final int maxBatches = blockEntity.calculateMaxPurchasable(resultTemplate);
-        if (maxBatches <= 0) {
-            return ItemStack.EMPTY;
-        }
-
-        // Simuliere, wie viele Items ins Spielerinventar passen
-        final int batchSize = Math.max(1, resultTemplate.getCount());
-        final int maxItemsFromInventorySpace = calculateMaxItemsFromInventorySpace(player, resultTemplate);
-        final int maxPossibleBatches = Math.min(maxBatches, maxItemsFromInventorySpace / batchSize);
-
-        if (maxPossibleBatches <= 0) {
-            return ItemStack.EMPTY;
-        }
-
-        // Führe den Kauf durch - OHNE über den OfferSlot zu gehen
         int totalItemsBought = 0;
-        for (int batch = 0; batch < maxPossibleBatches; batch++) {
-            if (!blockEntity.canAfford() || !blockEntity.hasResultItemInInput()) {
-                break; // Nicht mehr genug Ressourcen
-            }
 
-            // Einzelkauf mit Kapazitätsprüfung des Output-Inventars
-            if (performSinglePurchase()) {
-                totalItemsBought += batchSize;
-
-                // Gib gekaufte Items an Spieler
-                ItemStack purchasedItem = resultTemplate.copy();
-                purchasedItem.setCount(batchSize);
-
-                if (!this.moveItemStackTo(purchasedItem, PLAYER_INVENTORY_START, this.slots.size(), true)) {
-                    // Kein Platz mehr beim Spieler
-                    break;
-                }
-            } else {
-                // Kauf nicht möglich (z.\,B. Output voll)
+        while (blockEntity.canAfford() && blockEntity.hasResultItemInInput()) {
+            ItemStack toTransfer = resultTemplate.copy();
+            boolean moved = this.moveItemStackTo(toTransfer, PLAYER_INVENTORY_START, this.slots.size(), true);
+            if (!moved || !toTransfer.isEmpty()) {
                 break;
             }
+
+            blockEntity.performPurchase();
+            totalItemsBought += resultTemplate.getCount();
         }
 
-        // Update den Offer-Slot nach allen Käufen
         blockEntity.updateOfferSlot();
 
         if (totalItemsBought > 0) {
@@ -181,181 +150,6 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         }
 
         return ItemStack.EMPTY;
-    }
-
-    /**
-     * Führt einen einzelnen Kauf durch, mit Vorabprüfung der Output-Kapazität.
-     */
-    private boolean performSinglePurchase() {
-        if (!blockEntity.canAfford() || !blockEntity.hasResultItemInInput()) {
-            return false;
-        }
-
-        // Angebots-Items
-        ItemStack offerPayment1 = blockEntity.getOfferPayment1();
-        ItemStack offerPayment2 = blockEntity.getOfferPayment2();
-        ItemStack offerResult = blockEntity.getOfferResult();
-
-        // Vorab prüfen, ob das Output-Inventar die Bezahlung vollständig aufnehmen kann
-        ItemStack toAdd1 = offerPayment1.isEmpty() ? ItemStack.EMPTY : offerPayment1.copy();
-        ItemStack toAdd2 = offerPayment2.isEmpty() ? ItemStack.EMPTY : offerPayment2.copy();
-        if (!canOutputAccept(toAdd1, toAdd2)) {
-            return false; // Output voll → kein Kauf
-        }
-
-        // Entferne Bezahlung aus Payment-Slots
-        if (!offerPayment1.isEmpty() && !removePaymentFromSlots(offerPayment1, offerPayment1.getCount())) {
-            return false;
-        }
-        if (!offerPayment2.isEmpty() && !removePaymentFromSlots(offerPayment2, offerPayment2.getCount())) {
-            return false;
-        }
-
-        // Entferne Result-Item aus Input-Inventar
-        if (!removeFromInputInventory(offerResult)) {
-            return false;
-        }
-
-        // Füge Bezahlung zu Output-Inventar hinzu (jetzt garantiert passend)
-        if (!addToOutputInventory(toAdd1)) return false;
-        if (!addToOutputInventory(toAdd2)) return false;
-
-        blockEntity.setChanged();
-        return true;
-    }
-
-    /**
-     * Entfernt Payment-Items aus den Payment-Slots
-     */
-    private boolean removePaymentFromSlots(ItemStack required, int amount) {
-        int remaining = amount;
-
-        for (int i = 0; i < PAYMENT_SLOTS && remaining > 0; i++) {
-            ItemStack stack = paymentHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, required)) {
-                int toTake = Math.min(remaining, stack.getCount());
-                ItemStack extracted = paymentHandler.extractItem(i, toTake, false);
-                remaining -= extracted.getCount();
-            }
-        }
-
-        return remaining == 0;
-    }
-
-    /**
-     * Entfernt Items aus dem Input-Inventar
-     */
-    private boolean removeFromInputInventory(ItemStack toRemove) {
-        int remaining = toRemove.getCount();
-        IItemHandler inputHandler = blockEntity.getInputHandler();
-
-        for (int i = 0; i < inputHandler.getSlots() && remaining > 0; i++) {
-            ItemStack stack = inputHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
-                int toTake = Math.min(remaining, stack.getCount());
-                ItemStack extracted = inputHandler.extractItem(i, toTake, false);
-                remaining -= extracted.getCount();
-            }
-        }
-
-        return remaining == 0;
-    }
-
-    /**
-     * Fügt Items zum Output-Inventar hinzu. Liefert false, wenn nicht alles passt.
-     */
-    private boolean addToOutputInventory(ItemStack toAdd) {
-        if (toAdd.isEmpty()) return true;
-
-        IItemHandler outputHandler = blockEntity.getOutputHandler();
-        ItemStack remaining = toAdd.copy();
-
-        for (int i = 0; i < outputHandler.getSlots(); i++) {
-            remaining = outputHandler.insertItem(i, remaining, false);
-            if (remaining.isEmpty()) {
-                return true;
-            }
-        }
-        // Nichts droppen, stattdessen Kauf fehlschlagen lassen
-        return false;
-    }
-
-    /**
-     * Prüft, ob das Output-Inventar beide Payment-Stacks vollständig aufnehmen kann (ohne Änderung am Inventar).
-     */
-    private boolean canOutputAccept(ItemStack itemA, ItemStack itemB) {
-        IItemHandler out = blockEntity.getOutputHandler();
-        int slots = out.getSlots();
-
-        // Liste der zu prüfenden Stacks zusammenfassen (max. 2 Typen)
-        List<ItemStack> toInsert = new ArrayList<>();
-        if (itemA != null && !itemA.isEmpty()) toInsert.add(itemA.copy());
-        if (itemB != null && !itemB.isEmpty()) toInsert.add(itemB.copy());
-
-        if (toInsert.isEmpty()) return true;
-
-        // Gleiche Typen zusammenfassen
-        if (toInsert.size() == 2 && ItemStack.isSameItemSameComponents(toInsert.get(0), toInsert.get(1))) {
-            toInsert.get(0).grow(toInsert.get(1).getCount());
-            toInsert.remove(1);
-        }
-
-        // Zuerst Merge-Kapazität in bestehenden Stacks abziehen
-        int[] remaining = new int[toInsert.size()];
-        for (int t = 0; t < toInsert.size(); t++) {
-            ItemStack tmpl = toInsert.get(t);
-            int need = tmpl.getCount();
-            for (int i = 0; i < slots && need > 0; i++) {
-                ItemStack curr = out.getStackInSlot(i);
-                if (ItemStack.isSameItemSameComponents(curr, tmpl) && !curr.isEmpty()) {
-                    int cap = Math.min(curr.getMaxStackSize(), out.getSlotLimit(i)) - curr.getCount();
-                    if (cap > 0) {
-                        int used = Math.min(need, cap);
-                        need -= used;
-                    }
-                }
-            }
-            remaining[t] = need;
-        }
-
-        // Zähle leere Slots
-        int emptySlots = 0;
-        for (int i = 0; i < slots; i++) {
-            if (out.getStackInSlot(i).isEmpty()) emptySlots++;
-        }
-
-        // Erforderliche leere Slots berechnen
-        int requiredEmpty = 0;
-        for (int t = 0; t < toInsert.size(); t++) {
-            int need = remaining[t];
-            if (need > 0) {
-                int maxStack = Math.min(toInsert.get(t).getMaxStackSize(), 64);
-                requiredEmpty += (need + maxStack - 1) / maxStack;
-            }
-        }
-
-        return requiredEmpty <= emptySlots;
-    }
-
-    /**
-     * Berechnet, wie viele Items ins Spielerinventar passen
-     */
-    private int calculateMaxItemsFromInventorySpace(Player player, ItemStack template) {
-        int totalSpace = 0;
-
-        // Prüfe alle Spielerinventar-Slots
-        for (int i = PLAYER_INVENTORY_START; i < this.slots.size(); i++) {
-            Slot invSlot = this.slots.get(i);
-            ItemStack currentStack = invSlot.getItem();
-
-            if (currentStack.isEmpty()) {
-                totalSpace += template.getMaxStackSize();
-            } else if (ItemStack.isSameItemSameComponents(currentStack, template)) {
-                totalSpace += template.getMaxStackSize() - currentStack.getCount();
-            }
-        }
-
-        return totalSpace;
     }
 
     @Override

@@ -334,6 +334,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         updateOfferSlot();
     }
 
+    public void performPurchase() {
+        processPurchase();
+    }
+
     private void removeFromInput(ItemStack toRemove) {
         int remaining = toRemove.getCount();
         for (int i = 0; i < inputHandler.getSlots() && remaining > 0; i++) {
