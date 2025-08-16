@@ -89,6 +89,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private final IItemHandler inputOnly  = new SidedWrapper(inputHandler, false);
     private final IItemHandler outputOnly = new SidedWrapper(outputHandler, true);
 
+    private final OfferManager offerManager = new OfferManager(this);
+
     record SidedWrapper(IItemHandler backing, boolean extractOnly) implements IItemHandler {
         public int getSlots() {
             return backing.getSlots();
@@ -139,6 +141,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public ItemStackHandler getOfferHandler() {
         return offerHandler;
+    }
+
+    public OfferManager getOfferManager() {
+        return offerManager;
     }
 
     public IItemHandler getInputOnly()  { return inputOnly; }

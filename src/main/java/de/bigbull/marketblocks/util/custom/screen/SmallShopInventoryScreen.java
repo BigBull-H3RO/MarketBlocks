@@ -9,10 +9,8 @@ import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 
 public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopInventoryMenu> {
@@ -32,21 +30,17 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
     protected void init() {
         super.init();
         restoreMousePosition();
+        clearWidgets();
 
         boolean isOwner = menu.isOwner();
         this.lastIsOwner = isOwner;
 
-        // Clear existing buttons
-        clearWidgets();
-
-        // Tab-Buttons (nur für Owner sichtbar)
         if (isOwner) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, false, this::switchToOffers, () -> {});
         }
     }
 
     private void switchToOffers() {
-        // Sende nur ein Paket an den Server, der anschließend das Menü öffnet
         if (menu.isOwner()) {
             Minecraft mc = Minecraft.getInstance();
             savedMouseX = mc.mouseHandler.xpos();
@@ -118,10 +112,6 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
         }
     }
 
-    private boolean isMouseOver(int mouseX, int mouseY, int x, int y, int width, int height) {
-        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
-    }
-
     @Override
     public void containerTick() {
         super.containerTick();
@@ -131,10 +121,5 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
             lastIsOwner = isOwner;
             init();
         }
-    }
-
-    // Sound-Hilfsmethoden
-    private void playClickSound() {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 }

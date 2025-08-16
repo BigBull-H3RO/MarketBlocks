@@ -15,10 +15,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
@@ -28,7 +26,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
     private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
 
-    // Button Sprites
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
@@ -36,7 +33,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
     );
 
-    // Icons
     private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
 
@@ -54,8 +50,8 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     protected void init() {
         super.init();
         restoreMousePosition();
+        clearWidgets();
 
-        // Listener registrieren
         menu.removeSlotListener(this);
         menu.addSlotListener(this);
 
@@ -63,29 +59,21 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         boolean isOwner = menu.isOwner();
         this.lastIsOwner = isOwner;
 
-        // Clear existing buttons
-        clearWidgets();
-
-        // OfferTemplateButton - immer sichtbar
         this.offerButton = addRenderableWidget(new OfferTemplateButton(
                 leftPos + 44, topPos + 17,
                 button -> onOfferClicked()
         ));
 
-        // Buttonzustand abhängig vom Angebot
         this.offerButton.active = blockEntity.hasOffer();
         this.offerButton.visible = true;
 
-        // Tab-Buttons (nur für Owner sichtbar)
         if (isOwner) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, true, () -> {}, this::switchToInventory);
         }
 
-        // Einfache Angebots-Buttons für Owner
         if (isOwner) {
             if (!blockEntity.hasOffer()) {
-                // Erstellen Button wenn kein Angebot existiert
-                IconButton createOfferButton = addRenderableWidget(new IconButton(
+                addRenderableWidget(new IconButton(
                         leftPos + 148, topPos + 17, 20, 20,
                         BUTTON_SPRITES, CREATE_ICON,
                         button -> createOffer(),
@@ -93,8 +81,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                         () -> false
                 ));
             } else {
-                // Löschen Button wenn Angebot existiert
-                IconButton deleteOfferButton = addRenderableWidget(new IconButton(
+                addRenderableWidget(new IconButton(
                         leftPos + 148, topPos + 17, 20, 20,
                         BUTTON_SPRITES, DELETE_ICON,
                         button -> deleteOffer(),
@@ -272,16 +259,12 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
     @Override
     public void slotChanged(AbstractContainerMenu containerToSend, int dataSlotIndex, ItemStack stack) {
-        // Live-Update wird automatisch durch renderBg() gemacht
+
     }
 
     @Override
     public void dataChanged(AbstractContainerMenu containerMenu, int dataSlotIndex, int value) {
-        // Keine zusätzlichen Aktionen nötig
-    }
 
-    private boolean isMouseOver(int mouseX, int mouseY, int x, int y, int width, int height) {
-        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
     }
 
     @Override
@@ -305,32 +288,17 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
         if (blockEntity.hasOffer()) {
-            // Auto-Fill über den Server
             NetworkHandler.sendToServer(new AutoFillPaymentPacket(blockEntity.getBlockPos()));
             playClickSound();
             return;
         }
 
         if (menu.isOwner()) {
-            // Owner kann auf Preview klicken um Slots zu leeren (Reset-Funktion)
             for (int i = 0; i < 3; i++) {
                 menu.slots.get(i).set(ItemStack.EMPTY);
             }
 
             playClickSound();
         }
-    }
-
-    // Sound-Hilfsmethoden
-    private void playClickSound() {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-    }
-
-    private void playSuccessSound() {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F));
-    }
-
-    private void playErrorSound() {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ITEM_BREAK, 1.0F));
     }
 }

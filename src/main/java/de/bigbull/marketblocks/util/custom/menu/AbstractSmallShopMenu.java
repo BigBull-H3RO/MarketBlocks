@@ -5,9 +5,11 @@ import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,5 +40,46 @@ public abstract class AbstractSmallShopMenu extends AbstractContainerMenu {
         for (int col = 0; col < 9; col++) {
             addSlot(new Slot(playerInventory, col, 8 + col * 18, hotbarY));
         }
+    }
+
+    protected ItemStack transferStack(Player player, int index, int containerEnd, int hotbarStart) {
+        if (index < 0 || index >= this.slots.size()) {
+            return ItemStack.EMPTY;
+        }
+
+        Slot slot = this.slots.get(index);
+        if (!slot.hasItem()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack stack = slot.getItem();
+        ItemStack ret = stack.copy();
+
+        if (index < containerEnd) {
+            if (!this.moveItemStackTo(stack, containerEnd, this.slots.size(), true)) {
+                return ItemStack.EMPTY;
+            }
+        } else {
+            if (index < hotbarStart) {
+                if (!this.moveItemStackTo(stack, hotbarStart, hotbarStart + 9, false)) {
+                    return ItemStack.EMPTY;
+                }
+            } else if (!this.moveItemStackTo(stack, containerEnd, hotbarStart, false)) {
+                return ItemStack.EMPTY;
+            }
+        }
+
+        if (stack.isEmpty()) {
+            slot.setByPlayer(ItemStack.EMPTY);
+        } else {
+            slot.setChanged();
+        }
+
+        if (stack.getCount() == ret.getCount()) {
+            return ItemStack.EMPTY;
+        }
+
+        slot.onTake(player, stack);
+        return ret;
     }
 }

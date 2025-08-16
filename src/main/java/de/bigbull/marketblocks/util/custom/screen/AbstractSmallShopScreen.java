@@ -6,8 +6,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.lwjgl.glfw.GLFW;
@@ -33,24 +35,21 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
     }
 
     protected void createTabButtons(int x, int y, boolean offersSelected, Runnable onOffers, Runnable onInventory) {
-        IconButton offersButton = new IconButton(
+        addRenderableWidget(new IconButton(
                 x, y, 24, 24,
                 BUTTON_SPRITES, OFFERS_ICON,
                 b -> { if (!offersSelected) onOffers.run(); },
                 Component.translatable("gui.marketblocks.offers_tab"),
                 () -> offersSelected
-        );
+        ));
 
-        IconButton inventoryButton = new IconButton(
+        addRenderableWidget(new IconButton(
                 x, y + 28, 24, 24,
                 BUTTON_SPRITES, INVENTORY_ICON,
                 b -> { if (offersSelected) onInventory.run(); },
                 Component.translatable("gui.marketblocks.inventory_tab"),
                 () -> !offersSelected
-        );
-
-        addRenderableWidget(offersButton);
-        addRenderableWidget(inventoryButton);
+        ));
     }
 
     protected void restoreMousePosition() {
@@ -77,5 +76,21 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
             savedMouseX = -1;
             savedMouseY = -1;
         }
+    }
+
+    protected boolean isMouseOver(int mouseX, int mouseY, int x, int y, int width, int height) {
+        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+    }
+
+    protected void playClickSound() {
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+    }
+
+    protected void playSuccessSound() {
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F));
+    }
+
+    protected void playErrorSound() {
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ITEM_BREAK, 1.0F));
     }
 }

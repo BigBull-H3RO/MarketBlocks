@@ -61,15 +61,13 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= this.slots.size()) return ItemStack.EMPTY;
-
-        final Slot slot = this.slots.get(index);
-        if (!slot.hasItem()) return ItemStack.EMPTY;
-
-        final ItemStack stackInSlot = slot.getItem();
-        ItemStack ret = stackInSlot.copy();
-
         if (index == 2) {
+            Slot slot = this.slots.get(index);
+            if (!slot.hasItem()) {
+                return ItemStack.EMPTY;
+            }
+
+            ItemStack stackInSlot = slot.getItem();
             ItemStack result = stackInSlot.copy();
             if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
@@ -82,39 +80,33 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
             return result;
         }
 
-        if (index < PLAYER_INVENTORY_START) {
-            if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
-                return ItemStack.EMPTY;
-            }
-        } else {
-            if (!this.moveItemStackTo(stackInSlot, 0, PAYMENT_SLOTS, false)) {
-                if (index < HOTBAR_START) {
-                    if (!this.moveItemStackTo(stackInSlot, HOTBAR_START, HOTBAR_START + 9, false)) {
+        if (index >= PLAYER_INVENTORY_START && index < this.slots.size()) {
+            Slot slot = this.slots.get(index);
+            if (slot.hasItem()) {
+                ItemStack stackInSlot = slot.getItem();
+                ItemStack ret = stackInSlot.copy();
+                if (this.moveItemStackTo(stackInSlot, 0, PAYMENT_SLOTS, false)) {
+                    if (stackInSlot.isEmpty()) {
+                        slot.setByPlayer(ItemStack.EMPTY);
+                    } else {
+                        slot.setChanged();
+                    }
+                    if (stackInSlot.getCount() == ret.getCount()) {
                         return ItemStack.EMPTY;
                     }
-                } else if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, HOTBAR_START, false)) {
-                    return ItemStack.EMPTY;
+
+                    slot.onTake(player, stackInSlot);
+                    return ret;
                 }
             }
         }
 
-        if (stackInSlot.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
-        else slot.setChanged();
-
-        if (stackInSlot.getCount() == ret.getCount()) return ItemStack.EMPTY;
-        slot.onTake(player, stackInSlot);
-        return ret;
+        return transferStack(player, index, PLAYER_INVENTORY_START, HOTBAR_START);
     }
 
-    /**
-     * Automatisches Befüllen der Payment-Slots basierend auf einem Angebot
-     * (Implementierung basierend auf Vanilla MerchantMenu.tryMoveItems())
-     */
     public void autoFillPaymentSlots(ItemStack required1, ItemStack required2) {
-        // Leere zuerst die Payment-Slots (wie in Vanilla MerchantMenu)
         clearPaymentSlots();
 
-        // Fülle Payment-Slots basierend auf dem Angebot
         if (!required1.isEmpty()) {
             moveFromInventoryToPaymentSlot(0, required1);
         }
@@ -123,12 +115,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
         }
     }
 
-    /**
-     * Leert die Payment-Slots und gibt Items zurück ins Spielerinventar
-     * (Basiert auf Vanilla MerchantMenu.tryMoveItems())
-     */
     private void clearPaymentSlots() {
-        // Payment Slot 0 leeren
         ItemStack stack0 = this.slots.get(0).getItem();
         if (!stack0.isEmpty()) {
             if (this.moveItemStackTo(stack0, PLAYER_INVENTORY_START, this.slots.size(), true)) {
@@ -136,7 +123,6 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
             }
         }
 
-        // Payment Slot 1 leeren
         ItemStack stack1 = this.slots.get(1).getItem();
         if (!stack1.isEmpty()) {
             if (this.moveItemStackTo(stack1, PLAYER_INVENTORY_START, this.slots.size(), true)) {
@@ -145,10 +131,6 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
         }
     }
 
-    /**
-     * Bewegt Items vom Spielerinventar in einen Payment-Slot
-     * (Direkt adaptiert von Vanilla MerchantMenu.moveFromInventoryToPaymentSlot())
-     */
     private void moveFromInventoryToPaymentSlot(int paymentSlotIndex, ItemStack required) {
         for (int i = PLAYER_INVENTORY_START; i < this.slots.size(); i++) {
             ItemStack inventoryStack = this.slots.get(i).getItem();
@@ -166,7 +148,6 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
                         this.slots.get(i).set(inventoryStack.isEmpty() ? ItemStack.EMPTY : inventoryStack);
                         this.slots.get(paymentSlotIndex).set(newPaymentStack);
 
-                        // Beende die Schleife nur, wenn der Slot seine maximale Kapazität erreicht hat
                         if (newPaymentStack.getCount() >= maxStackSize) {
                             break;
                         }
@@ -218,9 +199,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            // Bei aktivem Angebot: niemals platzieren
             if (menu.hasOffer()) return false;
-            // Angebotserstellung: nur Owner
             return menu.isOwner();
         }
 
@@ -241,7 +220,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
         @Override
         public void set(ItemStack stack) {
             if (menu.hasOffer() && !stack.isEmpty()) {
-                return; // blockieren wie ein reiner Result-Slot
+                return;
             }
             super.set(stack);
         }
@@ -249,7 +228,6 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
         @Override
         public void onTake(Player player, ItemStack stack) {
             super.onTake(player, stack);
-            // UI frisch halten
             menu.blockEntity.updateOfferSlot();
         }
     }
