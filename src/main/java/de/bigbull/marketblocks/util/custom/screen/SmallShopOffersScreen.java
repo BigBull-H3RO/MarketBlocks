@@ -12,6 +12,7 @@ import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -52,6 +53,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     @Override
     protected void init() {
         super.init();
+        restoreMousePosition();
 
         // Listener registrieren
         menu.removeSlotListener(this);
@@ -105,6 +107,10 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
     private void switchToInventory() {
         if (menu.isOwner()) {
+            Minecraft mc = Minecraft.getInstance();
+            savedMouseX = mc.mouseHandler.xpos();
+            savedMouseY = mc.mouseHandler.ypos();
+
             SmallShopBlockEntity blockEntity = menu.getBlockEntity();
             NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), false));
             playClickSound();

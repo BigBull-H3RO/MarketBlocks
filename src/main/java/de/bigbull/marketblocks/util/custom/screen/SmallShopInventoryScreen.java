@@ -7,6 +7,7 @@ import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -30,6 +31,7 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
     @Override
     protected void init() {
         super.init();
+        restoreMousePosition();
 
         boolean isOwner = menu.isOwner();
         this.lastIsOwner = isOwner;
@@ -46,6 +48,10 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
     private void switchToOffers() {
         // Sende nur ein Paket an den Server, der anschließend das Menü öffnet
         if (menu.isOwner()) {
+            Minecraft mc = Minecraft.getInstance();
+            savedMouseX = mc.mouseHandler.xpos();
+            savedMouseY = mc.mouseHandler.ypos();
+
             SmallShopBlockEntity blockEntity = menu.getBlockEntity();
             NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), true));
             playClickSound();
