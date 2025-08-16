@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.util.custom.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.GenericMenuProvider;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -10,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -68,9 +68,9 @@ public class SmallShopBlock extends BaseEntityBlock {
             if (shopEntity.hasOffer() || shopEntity.isOwner(player)) {
                 // Besitzer sehen standardmäßig ebenfalls das Offers-Menü
                 serverPlayer.openMenu(
-                        new GenericMenuProvider(
-                                Component.translatable("container.marketblocks.small_shop_offers"),
-                                (id, inv, p) -> new SmallShopOffersMenu(id, inv, shopEntity)
+                        new SimpleMenuProvider(
+                                (id, inv, p) -> new SmallShopOffersMenu(id, inv, shopEntity),
+                                Component.translatable("container.marketblocks.small_shop_offers")
                         ),
                         pos
                 );
@@ -87,9 +87,9 @@ public class SmallShopBlock extends BaseEntityBlock {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
             // Standardmäßig Offers-Menu zurückgeben
-            return new GenericMenuProvider(
-                    Component.translatable("container.marketblocks.small_shop_offers"),
-                    (id, inv, player) -> new SmallShopOffersMenu(id, inv, shopEntity)
+            return new SimpleMenuProvider(
+                    (id, inv, player) -> new SmallShopOffersMenu(id, inv, shopEntity),
+                    Component.translatable("container.marketblocks.small_shop_offers")
             );
         }
         return null;

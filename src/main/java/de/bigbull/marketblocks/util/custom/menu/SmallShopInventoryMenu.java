@@ -6,7 +6,6 @@ import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +15,7 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 /**
  * Menü für den Inventar-Modus des SmallShop
  */
-public class SmallShopInventoryMenu extends AbstractContainerMenu {
+public class SmallShopInventoryMenu extends AbstractSmallShopMenu  {
     private final SmallShopBlockEntity blockEntity;
     private final IItemHandler inputHandler;
     private final IItemHandler outputHandler;
@@ -34,7 +33,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
         this.blockEntity = blockEntity;
         this.inputHandler = blockEntity.getInputHandler();
         this.outputHandler = blockEntity.getOutputHandler();
-        this.data = SmallShopMenuData.create(blockEntity, playerInventory.player);
+        this.data = blockEntity.createMenuFlags(playerInventory.player);
 
         addDataSlots(this.data);
         setupSlots(playerInventory);
@@ -46,7 +45,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
 
     // Constructor für Client
     public SmallShopInventoryMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        this(containerId, playerInventory, MenuUtils.readBlockEntity(playerInventory, buf));
+        this(containerId, playerInventory, readBlockEntity(playerInventory, buf));
     }
 
     private void setupSlots(Inventory playerInventory) {
@@ -65,7 +64,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
             }
         }
 
-        MenuUtils.addPlayerInventory(this::addSlot, playerInventory, GuiConstants.PLAYER_INV_Y_START);
+        super.addPlayerInventory(playerInventory, GuiConstants.PLAYER_INV_Y_START);
     }
 
     @Override
@@ -123,7 +122,7 @@ public class SmallShopInventoryMenu extends AbstractContainerMenu {
     }
 
     public boolean isOwner() {
-        return data.get(2) == 1;
+        return (data.get(0) & 4) != 0;
     }
 
     public static class InputSlot extends SlotItemHandler {

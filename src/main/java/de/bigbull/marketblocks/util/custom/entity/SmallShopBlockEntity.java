@@ -13,6 +13,7 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -381,6 +382,32 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return hasOffer && hasResultItemInInput();
     }
 
+    public ContainerData createMenuFlags(Player player) {
+        return new ContainerData() {
+            @Override
+            public int get(int index) {
+                if (index == 0) {
+                    int flags = 0;
+                    if (hasOffer()) flags |= 1;
+                    if (isOfferAvailable()) flags |= 2;
+                    if (isOwner(player)) flags |= 4;
+                    return flags;
+                }
+                return 0;
+            }
+
+            @Override
+            public void set(int index, int value) {
+                // nicht benötigt
+            }
+
+            @Override
+            public int getCount() {
+                return 1;
+            }
+        };
+    }
+
     private void dropItems(Level level, BlockPos pos, ItemStackHandler handler) {
         for (int i = 0; i < handler.getSlots(); i++) {
             ItemStack stack = handler.getStackInSlot(i);
@@ -405,79 +432,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         });
     }
-
-    public int calculateMaxPurchasable(ItemStack resultTemplate) {
-        if (resultTemplate.isEmpty() || !hasOffer()) return 0;
-
-        // Wie viele volle Result-Batches sind im Input vorhanden?
-        int batchesFromInput = countResultBatchesInInput(resultTemplate);
-
-        // Wie viele Batches kann man sich leisten (auf Basis beider Payment-Slots, inkl. Slottausch & same-item-Case)?
-        int batchesFromPayment = countAffordableBatches();
-
-        return Math.min(batchesFromInput, batchesFromPayment);
-    }
-
-    /** Zählt, wie viele volle resultTemplate-Batches im Input liegen. */
-    private int countResultBatchesInInput(ItemStack template) {
-        int total = 0;
-        for (int i = 0; i < inputHandler.getSlots(); i++) {
-            ItemStack s = inputHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(s, template)) {
-                total += s.getCount();
-            }
-        }
-        int perBatch = Math.max(1, template.getCount());
-        return total / perBatch;
-    }
-
-    /** Ermittelt, wie viele “Angebots-Sets” vollständig bezahlt werden können. */
-    private int countAffordableBatches() {
-        // Keine Payments → theoretisch unendlich; real limitiert dann nur durch Input
-        boolean p1Empty = offerPayment1.isEmpty();
-        boolean p2Empty = offerPayment2.isEmpty();
-        if (p1Empty && p2Empty) return Integer.MAX_VALUE;
-
-        // Hole Inhalte beider Payment-Slots
-        ItemStack slot0 = paymentHandler.getStackInSlot(0);
-        ItemStack slot1 = paymentHandler.getStackInSlot(1);
-
-        // Helper: zähle, wie viele Items eines Typs in beiden Slots liegen
-        java.util.function.Function<ItemStack, Integer> totalOf = (tmpl) -> {
-            int n = 0;
-            if (!tmpl.isEmpty()) {
-                if (ItemStack.isSameItemSameComponents(slot0, tmpl)) n += slot0.getCount();
-                if (ItemStack.isSameItemSameComponents(slot1, tmpl)) n += slot1.getCount();
-            }
-            return n;
-        };
-
-        if (!p1Empty && !p2Empty) {
-            // Zwei Payments vorhanden
-            boolean sameItem = ItemStack.isSameItemSameComponents(offerPayment1, offerPayment2);
-            if (sameItem) {
-                // beide Payments sind dasselbe Item → Summiere beide Slot-Bestände und teile durch Summe der Anforderungen
-                int totalAvailable = totalOf.apply(offerPayment1);
-                int need = offerPayment1.getCount() + offerPayment2.getCount();
-                if (need <= 0) return 0;
-                return totalAvailable / need;
-            } else {
-                // zwei verschiedene Items → min(availableA/needA, availableB/needB)
-                int haveA = totalOf.apply(offerPayment1);
-                int haveB = totalOf.apply(offerPayment2);
-                int needA = Math.max(1, offerPayment1.getCount());
-                int needB = Math.max(1, offerPayment2.getCount());
-                return Math.min(haveA / needA, haveB / needB);
-            }
-        }
-
-        // Nur ein Payment-Item
-        ItemStack required = p1Empty ? offerPayment2 : offerPayment1;
-        int need = Math.max(1, required.getCount());
-        int have = totalOf.apply(required);
-        return have / need;
-    }
-
 
     // NBT Speicherung
     @Override

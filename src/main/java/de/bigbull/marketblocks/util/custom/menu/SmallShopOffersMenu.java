@@ -6,7 +6,6 @@ import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +15,7 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 /**
  * Menü für den Angebots-Modus des SmallShop
  */
-public class SmallShopOffersMenu extends AbstractContainerMenu {
+public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
     private final SmallShopBlockEntity blockEntity;
     private final IItemHandler paymentHandler;
     private final IItemHandler offerHandler;
@@ -34,7 +33,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         this.blockEntity = blockEntity;
         this.paymentHandler = blockEntity.getPaymentHandler();
         this.offerHandler = blockEntity.getOfferHandler();
-        this.data = SmallShopMenuData.create(blockEntity, playerInventory.player);
+        this.data = blockEntity.createMenuFlags(playerInventory.player);
 
         addDataSlots(this.data);
         setupSlots(playerInventory);
@@ -46,7 +45,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
 
     // Constructor für Client
     public SmallShopOffersMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        this(containerId, playerInventory, MenuUtils.readBlockEntity(playerInventory, buf));
+        this(containerId, playerInventory, readBlockEntity(playerInventory, buf));
     }
 
     private void setupSlots(Inventory playerInventory) {
@@ -57,7 +56,7 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
         // Offer Result Slot
         addSlot(new OfferSlot(offerHandler, 0, 120, 52, this));
 
-        MenuUtils.addPlayerInventory(this::addSlot, playerInventory, GuiConstants.PLAYER_INV_Y_START);
+        super.addPlayerInventory(playerInventory, GuiConstants.PLAYER_INV_Y_START);
     }
 
     @Override
@@ -187,15 +186,15 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
     }
 
     public boolean hasOffer() {
-        return data.get(0) == 1;
+        return (data.get(0) & 1) != 0;
     }
 
     public boolean isOfferAvailable() {
-        return data.get(1) == 1;
+        return (data.get(0) & 2) != 0;
     }
 
     public boolean isOwner() {
-        return data.get(2) == 1;
+        return (data.get(0) & 4) != 0;
     }
 
     public static class PaymentSlot extends SlotItemHandler {
