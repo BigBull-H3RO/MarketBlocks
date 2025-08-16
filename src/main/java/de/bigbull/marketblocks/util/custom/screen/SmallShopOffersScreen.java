@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
+import de.bigbull.marketblocks.network.packets.AutoFillPaymentPacket;
 import de.bigbull.marketblocks.network.packets.CreateOfferPacket;
 import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
 import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
@@ -24,8 +25,7 @@ import net.minecraft.world.item.ItemStack;
 
 public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffersMenu> implements ContainerListener {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
-    private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
-    private static final ResourceLocation TRADE_ARROW_DISABLED = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow_disabled.png");
+    private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
 
     // Button Sprites
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
@@ -207,10 +207,10 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             );
         }
 
-        // Render Handels-Pfeil
-        boolean arrowActive = blockEntity.hasOffer() && blockEntity.isOfferAvailable();
-        ResourceLocation arrowTexture = arrowActive ? TRADE_ARROW : TRADE_ARROW_DISABLED;
-        graphics.blit(arrowTexture, leftPos + 88, topPos + 35, 0, 0, 24, 16);
+        // Render "Out of Stock"-Symbol, falls Angebot nicht verfügbar
+        if (!blockEntity.isOfferAvailable()) {
+            graphics.blit(OUT_OF_STOCK_ICON, leftPos + 82, topPos + 50, 0, 0, 28, 21, 28, 21);
+        }
     }
 
     @Override
@@ -299,8 +299,8 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
         if (blockEntity.hasOffer()) {
-            // Auto-Fill für Besitzer und Nicht-Besitzer
-            autoFillPaymentSlots(blockEntity);
+            // Auto-Fill über den Server
+            NetworkHandler.sendToServer(new AutoFillPaymentPacket(blockEntity.getBlockPos()));
             playClickSound();
             return;
         }
@@ -313,23 +313,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
             playClickSound();
         }
-    }
-
-    /**
-     * Automatisches Befüllen der Payment-Slots basierend auf dem aktuellen Angebot
-     */
-    private void autoFillPaymentSlots(SmallShopBlockEntity blockEntity) {
-        ItemStack required1 = blockEntity.getOfferPayment1();
-        ItemStack required2 = blockEntity.getOfferPayment2();
-
-        // Normalisierung wie beim Angebot erstellen
-        if (required1.isEmpty() && !required2.isEmpty()) {
-            required1 = required2;
-            required2 = ItemStack.EMPTY;
-        }
-
-        // Rufe die Auto-Fill Methode des Menus auf
-        menu.autoFillPaymentSlots(required1, required2);
     }
 
     // Sound-Hilfsmethoden

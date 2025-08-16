@@ -36,6 +36,12 @@ public class NetworkHandler {
                 SwitchTabPacket::handle
         );
 
+        registrar.playToServer(
+                AutoFillPaymentPacket.TYPE,
+                AutoFillPaymentPacket.CODEC,
+                AutoFillPaymentPacket::handle
+        );
+
         registrar.playToClient(
                 OfferStatusPacket.TYPE,
                 OfferStatusPacket.CODEC,
