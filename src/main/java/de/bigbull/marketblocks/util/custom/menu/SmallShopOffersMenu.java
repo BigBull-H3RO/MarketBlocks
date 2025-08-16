@@ -167,8 +167,8 @@ public class SmallShopOffersMenu extends AbstractContainerMenu {
                         this.slots.get(i).set(inventoryStack.isEmpty() ? ItemStack.EMPTY : inventoryStack);
                         this.slots.get(paymentSlotIndex).set(newPaymentStack);
 
-                        // Prüfe ob wir genug haben für das Angebot
-                        if (newPaymentStack.getCount() >= required.getCount()) {
+                        // Beende die Schleife nur, wenn der Slot seine maximale Kapazität erreicht hat
+                        if (newPaymentStack.getCount() >= maxStackSize) {
                             break;
                         }
                     }

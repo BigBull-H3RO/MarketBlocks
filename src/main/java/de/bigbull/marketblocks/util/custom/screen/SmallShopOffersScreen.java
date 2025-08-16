@@ -66,7 +66,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
         // OfferTemplateButton - immer sichtbar
         this.offerButton = addRenderableWidget(new OfferTemplateButton(
-                leftPos + 46, topPos + 20,
+                leftPos + 44, topPos + 17,
                 button -> onOfferClicked()
         ));
 
@@ -298,25 +298,21 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     private void onOfferClicked() {
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
-        if (menu.isOwner()) {
-            // Owner kann auf Preview klicken um Slots zu leeren (Reset-Funktion)
-            if (!blockEntity.hasOffer()) {
-                // Leere alle Slots
-                for (int i = 0; i < 3; i++) {
-                    menu.slots.get(i).set(ItemStack.EMPTY);
-                }
-                playClickSound();
-            }
+        if (blockEntity.hasOffer()) {
+            // Auto-Fill für Besitzer und Nicht-Besitzer
+            autoFillPaymentSlots(blockEntity);
+            playClickSound();
             return;
         }
 
-        if (!blockEntity.hasOffer()) {
-            return; // Kein Angebot vorhanden
-        }
+        if (menu.isOwner()) {
+            // Owner kann auf Preview klicken um Slots zu leeren (Reset-Funktion)
+            for (int i = 0; i < 3; i++) {
+                menu.slots.get(i).set(ItemStack.EMPTY);
+            }
 
-        // Auto-Fill Logic für Nicht-Owner
-        autoFillPaymentSlots(blockEntity);
-        playClickSound();
+            playClickSound();
+        }
     }
 
     /**

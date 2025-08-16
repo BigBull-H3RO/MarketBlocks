@@ -20,7 +20,7 @@ public class OfferTemplateButton extends Button {
     private boolean arrowActive;
 
     public OfferTemplateButton(int x, int y, OnPress onPress) {
-        super(x, y, 86, 20, Component.empty(), onPress, DEFAULT_NARRATION);
+        super(x, y, 88, 20, Component.empty(), onPress, DEFAULT_NARRATION);
     }
 
     public void update(ItemStack payment1, ItemStack payment2, ItemStack result, boolean arrowActive) {
@@ -51,7 +51,7 @@ public class OfferTemplateButton extends Button {
 
         // Render Pfeil
         ResourceLocation arrowTexture = arrowActive ? TRADE_ARROW : TRADE_ARROW_DISABLED;
-        graphics.blit(arrowTexture, getX() + 40, getY() + 2, 0, 0, 12, 8, 24, 16);
+        graphics.blit(arrowTexture, getX() + 50, getY() + 5, 0, 0, 10, 9, 10, 9);
 
         // Render Result
         if (!result.isEmpty()) {
