@@ -37,10 +37,7 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu  {
 
         addDataSlots(this.data);
         setupSlots(playerInventory);
-
-        if (!playerInventory.player.level().isClientSide() && blockEntity.getOwnerId() == null) {
-            blockEntity.setOwner(playerInventory.player);
-        }
+        blockEntity.ensureOwner(playerInventory.player);
     }
 
     // Constructor für Client

@@ -1,6 +1,11 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.network.NetworkHandler;
+import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
+import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -17,7 +22,7 @@ import org.lwjgl.glfw.GLFW;
 import java.lang.reflect.Field;
 
 public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
-    private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
+    protected static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
@@ -50,6 +55,28 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
                 Component.translatable("gui.marketblocks.inventory_tab"),
                 () -> !offersSelected
         ));
+    }
+
+    protected void switchTab(boolean showOffers) {
+        SmallShopBlockEntity blockEntity = null;
+        boolean isOwner = false;
+
+        if (menu instanceof SmallShopOffersMenu offersMenu) {
+            blockEntity = offersMenu.getBlockEntity();
+            isOwner = offersMenu.isOwner();
+        } else if (menu instanceof SmallShopInventoryMenu inventoryMenu) {
+            blockEntity = inventoryMenu.getBlockEntity();
+            isOwner = inventoryMenu.isOwner();
+        }
+
+        if (blockEntity != null && isOwner) {
+            Minecraft mc = Minecraft.getInstance();
+            savedMouseX = mc.mouseHandler.xpos();
+            savedMouseY = mc.mouseHandler.ypos();
+
+            NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), showOffers));
+            playClickSound();
+        }
     }
 
     protected void restoreMousePosition() {

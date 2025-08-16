@@ -59,10 +59,4 @@ public class OfferTemplateButton extends Button {
             graphics.renderItemDecorations(Minecraft.getInstance().font, result, getX() + 66, itemY);
         }
     }
-
-    @Override
-    protected boolean clicked(double mouseX, double mouseY) {
-        return this.active && this.visible && mouseX >= this.getX() && mouseY >= this.getY() &&
-                mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
-    }
 }

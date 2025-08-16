@@ -37,10 +37,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
 
         addDataSlots(this.data);
         setupSlots(playerInventory);
-
-        if (!playerInventory.player.level().isClientSide() && blockEntity.getOwnerId() == null) {
-            blockEntity.setOwner(playerInventory.player);
-        }
+        blockEntity.ensureOwner(playerInventory.player);
     }
 
     // Constructor für Client
@@ -116,17 +113,12 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
     }
 
     private void clearPaymentSlots() {
-        ItemStack stack0 = this.slots.get(0).getItem();
-        if (!stack0.isEmpty()) {
-            if (this.moveItemStackTo(stack0, PLAYER_INVENTORY_START, this.slots.size(), true)) {
-                this.slots.get(0).set(stack0.isEmpty() ? ItemStack.EMPTY : stack0);
-            }
-        }
-
-        ItemStack stack1 = this.slots.get(1).getItem();
-        if (!stack1.isEmpty()) {
-            if (this.moveItemStackTo(stack1, PLAYER_INVENTORY_START, this.slots.size(), true)) {
-                this.slots.get(1).set(stack1.isEmpty() ? ItemStack.EMPTY : stack1);
+        for (int slotIndex = 0; slotIndex <= 1; slotIndex++) {
+            ItemStack stack = this.slots.get(slotIndex).getItem();
+            if (!stack.isEmpty()) {
+                if (this.moveItemStackTo(stack, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                    this.slots.get(slotIndex).set(stack.isEmpty() ? ItemStack.EMPTY : stack);
+                }
             }
         }
     }

@@ -2,12 +2,9 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -15,7 +12,6 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopInventoryMenu> {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_inventory.png");
-    private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
 
     private boolean lastIsOwner;
 
@@ -36,19 +32,7 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
         this.lastIsOwner = isOwner;
 
         if (isOwner) {
-            createTabButtons(leftPos + imageWidth + 4, topPos + 8, false, this::switchToOffers, () -> {});
-        }
-    }
-
-    private void switchToOffers() {
-        if (menu.isOwner()) {
-            Minecraft mc = Minecraft.getInstance();
-            savedMouseX = mc.mouseHandler.xpos();
-            savedMouseY = mc.mouseHandler.ypos();
-
-            SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-            NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), true));
-            playClickSound();
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, false, () -> switchTab(true), () -> {});
         }
     }
 
@@ -70,9 +54,6 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
         int outputWidth = font.width(outputLabel);
         graphics.fill(leftPos + 96, topPos + 4, leftPos + 98 + outputWidth, topPos + 14, 0x80000000);
         graphics.drawString(font, outputLabel, leftPos + 98, topPos + 6, 0xFFFFFF, false);
-
-        // Render Transfer-Pfeil zwischen Input und Output
-        graphics.blit(TRADE_ARROW, leftPos + 58, topPos + 50, 0, 0, 24, 16);
     }
 
     @Override

@@ -1,20 +1,18 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
+import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.AutoFillPaymentPacket;
 import de.bigbull.marketblocks.network.packets.CreateOfferPacket;
 import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
-import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -25,13 +23,6 @@ import net.minecraft.world.item.ItemStack;
 public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffersMenu> implements ContainerListener {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
     private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
-
-    private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
-    );
 
     private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
@@ -68,7 +59,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         this.offerButton.visible = true;
 
         if (isOwner) {
-            createTabButtons(leftPos + imageWidth + 4, topPos + 8, true, () -> {}, this::switchToInventory);
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, true, () -> {}, () -> switchTab(false));
         }
 
         if (isOwner) {
@@ -92,18 +83,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         }
     }
 
-    private void switchToInventory() {
-        if (menu.isOwner()) {
-            Minecraft mc = Minecraft.getInstance();
-            savedMouseX = mc.mouseHandler.xpos();
-            savedMouseY = mc.mouseHandler.ypos();
-
-            SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-            NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), false));
-            playClickSound();
-        }
-    }
-
     private void createOffer() {
         try {
             // Hole Items aus Payment Slots
@@ -111,11 +90,9 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             ItemStack payment2 = menu.slots.get(1).getItem().copy();
             ItemStack result = menu.slots.get(2).getItem().copy();
 
-            // Normalisierung: leerer payment1 und payment2 mit Inhalt tauschen
-            if (payment1.isEmpty() && !payment2.isEmpty()) {
-                payment1 = payment2;
-                payment2 = ItemStack.EMPTY;
-            }
+            Pair<ItemStack, ItemStack> normalized = normalizePayments(payment1, payment2);
+            payment1 = normalized.getFirst();
+            payment2 = normalized.getSecond();
 
             // Validation
             if (result.isEmpty()) {
@@ -154,6 +131,13 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         }
     }
 
+    private Pair<ItemStack, ItemStack> normalizePayments(ItemStack p1, ItemStack p2) {
+        if (p1.isEmpty() && !p2.isEmpty()) {
+            return Pair.of(p2, ItemStack.EMPTY);
+        }
+        return Pair.of(p1, p2);
+    }
+
     private void deleteOffer() {
         NetworkHandler.sendToServer(new DeleteOfferPacket(menu.getBlockEntity().getBlockPos()));
         playClickSound();
@@ -161,7 +145,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
     public void onOfferDeleted() {
         menu.getBlockEntity().setHasOfferClient(false);
-        init(); // UI neu initialisieren
+        init();
     }
 
     @Override
@@ -188,13 +172,10 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             // Zeige Live-Preview der aktuellen Slots
             ItemStack p1 = menu.slots.get(0).getItem();
             ItemStack p2 = menu.slots.get(1).getItem();
-            if (p1.isEmpty() && !p2.isEmpty()) {
-                p1 = p2;
-                p2 = ItemStack.EMPTY;
-            }
+            Pair<ItemStack, ItemStack> normalized = normalizePayments(p1, p2);
             offerButton.update(
-                    p1,
-                    p2,
+                    normalized.getFirst(),
+                    normalized.getSecond(),
                     menu.slots.get(2).getItem(),
                     true // Preview ist immer "verfügbar"
             );

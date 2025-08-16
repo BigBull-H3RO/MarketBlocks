@@ -178,6 +178,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return ownerId != null && ownerId.equals(player.getUUID());
     }
 
+    public void ensureOwner(Player player) {
+        if (!player.level().isClientSide() && ownerId == null) {
+            setOwner(player);
+        }
+    }
+
     public UUID getOwnerId() {
         return ownerId;
     }
