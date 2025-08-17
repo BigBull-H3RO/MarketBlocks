@@ -286,14 +286,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public boolean hasResultItemInInput() {
-            ItemStack result = getOfferResult();
-            if (result.isEmpty()) return false;
+        ItemStack result = getOfferResult();
+        if (result.isEmpty()) return false;
 
+        int total = 0;
         for (int i = 0; i < inputHandler.getSlots(); i++) {
             ItemStack stack = inputHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, result) &&
-                    stack.getCount() >= result.getCount()) {
-                return true;
+            if (ItemStack.isSameItemSameComponents(stack, result)) {
+                total += stack.getCount();
+                if (total >= result.getCount()) {
+                    return true;
+                }
             }
         }
         return false;

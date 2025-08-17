@@ -77,7 +77,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
     private void createOffer() {
         try {
-            // Hole Items aus Payment Slots
             ItemStack payment1 = menu.slots.get(0).getItem().copy();
             ItemStack payment2 = menu.slots.get(1).getItem().copy();
             ItemStack result = menu.slots.get(2).getItem().copy();
@@ -86,7 +85,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             payment1 = normalized.getFirst();
             payment2 = normalized.getSecond();
 
-            // Validation
             if (result.isEmpty()) {
                 minecraft.gui.getChat().addMessage(
                         Component.translatable("gui.marketblocks.error.no_result_item")
@@ -105,7 +103,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                 return;
             }
 
-            // Sende Netzwerk-Paket
             NetworkHandler.sendToServer(new CreateOfferPacket(
                     menu.getBlockEntity().getBlockPos(),
                     payment1,
@@ -178,13 +175,11 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
-        // Titel
         Component title = Component.translatable("gui.marketblocks.shop_title");
         graphics.drawString(font, title, 8, 6, 4210752, false);
 
         renderOwnerInfo(graphics, blockEntity, menu.isOwner(), imageWidth);
 
-        // Spieler Inventar Label
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
 
