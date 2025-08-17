@@ -7,7 +7,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
@@ -22,8 +21,6 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu  {
 
     private static final int INPUT_SLOTS = 12;
     private static final int OUTPUT_SLOTS = 12;
-    private static final int PLAYER_INVENTORY_START = INPUT_SLOTS + OUTPUT_SLOTS;
-    private static final int HOTBAR_START = PLAYER_INVENTORY_START + 27;
 
     private final ContainerData data;
 
@@ -66,28 +63,8 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu  {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (index >= PLAYER_INVENTORY_START && index < this.slots.size() && isOwner()) {
-            Slot slot = this.slots.get(index);
-            if (slot.hasItem()) {
-                ItemStack stack = slot.getItem();
-                ItemStack ret = stack.copy();
-                if (this.moveItemStackTo(stack, 0, INPUT_SLOTS, false)) {
-                    if (stack.isEmpty()) {
-                        slot.setByPlayer(ItemStack.EMPTY);
-                    } else {
-                        slot.setChanged();
-                    }
-                    if (stack.getCount() == ret.getCount()) {
-                        return ItemStack.EMPTY;
-                    }
-
-                    slot.onTake(player, stack);
-                    return ret;
-                }
-            }
-        }
-
-        return transferStack(player, index, PLAYER_INVENTORY_START, HOTBAR_START);
+        int containerSlots = INPUT_SLOTS + OUTPUT_SLOTS;
+        return super.quickMoveStack(player, index, containerSlots, isOwner() ? INPUT_SLOTS : 0);
     }
 
     @Override

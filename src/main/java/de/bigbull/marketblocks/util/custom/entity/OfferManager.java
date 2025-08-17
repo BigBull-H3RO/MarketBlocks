@@ -6,18 +6,19 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public record OfferManager(SmallShopBlockEntity shopEntity) {
     public boolean applyOffer(ServerPlayer player, ItemStack payment1, ItemStack payment2, ItemStack result) {
-        SlotData data = copySlots();
-        ItemStack[] slotCopies = data.slots();
+        ItemStack[] slotCopies = copySlots();
+        ItemStack[] expected = new ItemStack[]{payment1, payment2, result};
 
-        if (!slotsAreValid(new ItemStack[]{payment1, payment2, result}, slotCopies)) {
+        if (!slotsAreValid(expected, slotCopies)) {
             return false;
         }
 
-        ItemStack[] extracted = extractItems(data);
+        ItemStack[] extracted = extractItems(slotCopies);
 
         shopEntity.createOffer(slotCopies[0], slotCopies[1], slotCopies[2]);
 
@@ -37,25 +38,54 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
         return true;
     }
 
-    private record SlotData(ItemStack[] slots, boolean swapped) {
+    private ItemStack[] copySlots() {
+        ItemStack[] slots = new ItemStack[3];
+        copyRange(shopEntity.getPaymentHandler(), slots, 0, 0, 2);
+        copyRange(shopEntity.getOfferHandler(), slots, 2, 0, 1);
+        return slots;
     }
 
-    private SlotData copySlots() {
-        ItemStack slot0 = shopEntity.getPaymentHandler().getStackInSlot(0).copy();
-        ItemStack slot1 = shopEntity.getPaymentHandler().getStackInSlot(1).copy();
-        boolean swapped = false;
-        if (slot0.isEmpty() && !slot1.isEmpty()) {
-            slot0 = slot1;
-            slot1 = ItemStack.EMPTY;
-            swapped = true;
+    private void copyRange(IItemHandler handler, ItemStack[] dest, int destIndex, int start, int end) {
+        for (int i = start; i < end; i++) {
+            dest[destIndex++] = handler.getStackInSlot(i).copy();
         }
-
-        ItemStack result = shopEntity.getOfferHandler().getStackInSlot(0).copy();
-        return new SlotData(new ItemStack[]{slot0, slot1, result}, swapped);
     }
 
     private boolean slotsAreValid(ItemStack[] expected, ItemStack[] slots) {
-        for (int i = 0; i < expected.length; i++) {
+        if (!validateRange(expected, slots, 2, 3)) {
+            return false;
+        }
+
+        boolean[] matched = new boolean[2];
+        for (int i = 0; i < 2; i++) {
+            ItemStack exp = expected[i];
+            if (exp.isEmpty()) {
+                continue;
+            }
+            boolean found = false;
+            for (int j = 0; j < 2; j++) {
+                if (!matched[j] && validatePaymentSlot(exp, slots[j])) {
+                    matched[j] = true;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+
+        for (int j = 0; j < 2; j++) {
+            if (!matched[j] && !slots[j].isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean validateRange(ItemStack[] expected, ItemStack[] slots, int start, int end) {
+        for (int i = start; i < end; i++) {
             if (!validatePaymentSlot(expected[i], slots[i])) {
                 return false;
             }
@@ -63,18 +93,18 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
         return true;
     }
 
-    private ItemStack[] extractItems(SlotData data) {
-        ItemStack[] slots = data.slots();
-        ItemStack[] extracted = new ItemStack[3];
-        if (data.swapped()) {
-            extracted[0] = shopEntity.getPaymentHandler().extractItem(1, slots[0].getCount(), false);
-            extracted[1] = ItemStack.EMPTY;
-        } else {
-            extracted[0] = shopEntity.getPaymentHandler().extractItem(0, slots[0].getCount(), false);
-            extracted[1] = shopEntity.getPaymentHandler().extractItem(1, slots[1].getCount(), false);
-        }
-        extracted[2] = shopEntity.getOfferHandler().extractItem(0, slots[2].getCount(), false);
+    private ItemStack[] extractItems(ItemStack[] slots) {
+        ItemStack[] extracted = new ItemStack[slots.length];
+        extractRange(shopEntity.getPaymentHandler(), slots, extracted, 0, 0, 2);
+        extractRange(shopEntity.getOfferHandler(), slots, extracted, 0, 2, 1);
         return extracted;
+    }
+
+    private void extractRange(IItemHandler handler, ItemStack[] slots, ItemStack[] dest, int handlerStart, int destStart, int length) {
+        for (int i = 0; i < length; i++) {
+            ItemStack stack = slots[destStart + i];
+            dest[destStart + i] = stack.isEmpty() ? ItemStack.EMPTY : handler.extractItem(handlerStart + i, stack.getCount(), false);
+        }
     }
 
     private boolean validatePaymentSlot(ItemStack expected, ItemStack actual) {

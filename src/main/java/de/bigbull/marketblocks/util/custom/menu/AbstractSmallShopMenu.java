@@ -14,6 +14,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractSmallShopMenu extends AbstractContainerMenu {
+    protected static final int PLAYER_INV_SLOTS = 27;
+    protected static final int HOTBAR_SLOTS = 9;
+
     protected AbstractSmallShopMenu(@Nullable MenuType<?> menuType, int containerId) {
         super(menuType, containerId);
     }
@@ -40,6 +43,35 @@ public abstract class AbstractSmallShopMenu extends AbstractContainerMenu {
         for (int col = 0; col < 9; col++) {
             addSlot(new Slot(playerInventory, col, 8 + col * 18, hotbarY));
         }
+    }
+
+    protected ItemStack quickMoveStack(Player player, int index, int containerSlots, int insertSlots) {
+        int playerInvStart = containerSlots;
+        int hotbarStart = playerInvStart + PLAYER_INV_SLOTS;
+
+        if (index >= playerInvStart && index < this.slots.size()) {
+            Slot slot = this.slots.get(index);
+            if (slot.hasItem()) {
+                ItemStack stack = slot.getItem();
+                ItemStack ret = stack.copy();
+                if (this.moveItemStackTo(stack, 0, insertSlots, false)) {
+                    if (stack.isEmpty()) {
+                        slot.setByPlayer(ItemStack.EMPTY);
+                    } else {
+                        slot.setChanged();
+                    }
+
+                    if (stack.getCount() != ret.getCount()) {
+                        slot.onTake(player, stack);
+                        return ret;
+                    }
+
+                    return ItemStack.EMPTY;
+                }
+            }
+        }
+
+        return transferStack(player, index, playerInvStart, hotbarStart);
     }
 
     protected ItemStack transferStack(Player player, int index, int containerEnd, int hotbarStart) {

@@ -21,9 +21,9 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
     private final IItemHandler offerHandler;
 
     private static final int PAYMENT_SLOTS = 2;
-    private static final int OFFER_SLOT = 1;
-    private static final int PLAYER_INVENTORY_START = PAYMENT_SLOTS + OFFER_SLOT;
-    private static final int HOTBAR_START = PLAYER_INVENTORY_START + 27;
+    private static final int OFFER_SLOTS = 1;
+    private static final int TOTAL_SLOTS = PAYMENT_SLOTS + OFFER_SLOTS;
+    private static final int OFFER_SLOT_INDEX = PAYMENT_SLOTS;
 
     private final ContainerData data;
 
@@ -58,7 +58,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (index == 2) {
+        if (index == OFFER_SLOT_INDEX) {
             Slot slot = this.slots.get(index);
             if (!slot.hasItem()) {
                 return ItemStack.EMPTY;
@@ -66,7 +66,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
 
             ItemStack stackInSlot = slot.getItem();
             ItemStack result = stackInSlot.copy();
-            if (!this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+            if (!this.moveItemStackTo(stackInSlot, TOTAL_SLOTS, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
 
@@ -77,35 +77,16 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
             return result;
         }
 
-        if (index >= PLAYER_INVENTORY_START && index < this.slots.size()) {
-            Slot slot = this.slots.get(index);
-            if (slot.hasItem()) {
-                ItemStack stackInSlot = slot.getItem();
-                ItemStack ret = stackInSlot.copy();
-                if (this.moveItemStackTo(stackInSlot, 0, PAYMENT_SLOTS, false)) {
-                    if (stackInSlot.isEmpty()) {
-                        slot.setByPlayer(ItemStack.EMPTY);
-                    } else {
-                        slot.setChanged();
-                    }
-                    if (stackInSlot.getCount() == ret.getCount()) {
-                        return ItemStack.EMPTY;
-                    }
-
-                    slot.onTake(player, stackInSlot);
-                    return ret;
-                }
-            }
-        }
-
-        return transferStack(player, index, PLAYER_INVENTORY_START, HOTBAR_START);
+        return super.quickMoveStack(player, index, TOTAL_SLOTS, PAYMENT_SLOTS);
     }
 
     public void fillPaymentSlots(ItemStack... required) {
+        int playerInventoryStart = TOTAL_SLOTS;
+
         for (int paymentSlotIndex = 0; paymentSlotIndex < PAYMENT_SLOTS; paymentSlotIndex++) {
             ItemStack stackInSlot = this.slots.get(paymentSlotIndex).getItem();
             if (!stackInSlot.isEmpty()) {
-                if (this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                if (this.moveItemStackTo(stackInSlot, playerInventoryStart, this.slots.size(), true)) {
                     this.slots.get(paymentSlotIndex).set(stackInSlot.isEmpty() ? ItemStack.EMPTY : stackInSlot);
                 }
             }
@@ -119,7 +100,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
                 continue;
             }
 
-            for (int i = PLAYER_INVENTORY_START; i < this.slots.size(); i++) {
+            for (int i = playerInventoryStart; i < this.slots.size(); i++) {
                 ItemStack inventoryStack = this.slots.get(i).getItem();
                 if (!inventoryStack.isEmpty() && ItemStack.isSameItemSameComponents(inventoryStack, requiredStack)) {
                     ItemStack currentPaymentStack = this.slots.get(paymentSlotIndex).getItem();

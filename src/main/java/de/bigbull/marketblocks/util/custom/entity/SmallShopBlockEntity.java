@@ -21,14 +21,20 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     // Angebots-System
-    private ItemStack offerPayment1 = ItemStack.EMPTY;
-    private ItemStack offerPayment2 = ItemStack.EMPTY;
-    private ItemStack offerResult = ItemStack.EMPTY;
+    private static final String KEY_PAYMENT1 = "OfferPayment1";
+    private static final String KEY_PAYMENT2 = "OfferPayment2";
+    private static final String KEY_RESULT = "OfferResult";
+    private final Map<String, ItemStack> offerItems = new LinkedHashMap<>(Map.of(
+            KEY_PAYMENT1, ItemStack.EMPTY,
+            KEY_PAYMENT2, ItemStack.EMPTY,
+            KEY_RESULT, ItemStack.EMPTY
+    ));
     private boolean hasOffer = false;
 
     // Owner System
@@ -201,18 +207,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     // Angebots-System
     public void createOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
-        this.offerPayment1 = payment1.copy();
-        this.offerPayment2 = payment2.copy();
-        this.offerResult = result.copy();
+        offerItems.put(KEY_PAYMENT1, payment1.copy());
+        offerItems.put(KEY_PAYMENT2, payment2.copy());
+        offerItems.put(KEY_RESULT, result.copy());
         this.hasOffer = true;
         sync();
         updateOfferSlot();
     }
 
     public void clearOffer() {
-        this.offerPayment1 = ItemStack.EMPTY;
-        this.offerPayment2 = ItemStack.EMPTY;
-        this.offerResult = ItemStack.EMPTY;
+        offerItems.replaceAll((k, v) -> ItemStack.EMPTY);
         this.hasOffer = false;
         this.offerHandler.setStackInSlot(0, ItemStack.EMPTY);
         sync();
@@ -227,15 +231,15 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public ItemStack getOfferPayment1() {
-        return offerPayment1;
+        return offerItems.get(KEY_PAYMENT1);
     }
 
     public ItemStack getOfferPayment2() {
-        return offerPayment2;
+        return offerItems.get(KEY_PAYMENT2);
     }
 
     public ItemStack getOfferResult() {
-        return offerResult;
+        return offerItems.get(KEY_RESULT);
     }
 
     private int countMatching(ItemStack target) {
@@ -260,7 +264,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         if (canAfford() && hasResultItemInInput()) {
             if (offerHandler.getStackInSlot(0).isEmpty()) {
-                offerHandler.setStackInSlot(0, offerResult.copy());
+                offerHandler.setStackInSlot(0, getOfferResult().copy());
             }
         } else {
             offerHandler.setStackInSlot(0, ItemStack.EMPTY);
@@ -268,25 +272,28 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public boolean canAfford() {
-        if (offerPayment1.isEmpty() && offerPayment2.isEmpty()) {
+        ItemStack p1 = getOfferPayment1();
+        ItemStack p2 = getOfferPayment2();
+        if (p1.isEmpty() && p2.isEmpty()) {
             return true;
         }
 
-        if (!offerPayment1.isEmpty() && ItemStack.isSameItemSameComponents(offerPayment1, offerPayment2)) {
-            int required = offerPayment1.getCount() + offerPayment2.getCount();
-            return countMatching(offerPayment1) >= required;
+        if (!p1.isEmpty() && ItemStack.isSameItemSameComponents(p1, p2)) {
+            int required = p1.getCount() + p2.getCount();
+            return countMatching(p1) >= required;
         }
 
-        return hasEnough(offerPayment1) && hasEnough(offerPayment2);
+        return hasEnough(p1) && hasEnough(p2);
     }
 
     public boolean hasResultItemInInput() {
-        if (offerResult.isEmpty()) return false;
+            ItemStack result = getOfferResult();
+            if (result.isEmpty()) return false;
 
         for (int i = 0; i < inputHandler.getSlots(); i++) {
             ItemStack stack = inputHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, offerResult) &&
-                    stack.getCount() >= offerResult.getCount()) {
+            if (ItemStack.isSameItemSameComponents(stack, result) &&
+                    stack.getCount() >= result.getCount()) {
                 return true;
             }
         }
@@ -298,23 +305,23 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
-        // Entferne Bezahlung aus Payment-Slots
-        if (!offerPayment1.isEmpty()) {
-            removePayment(offerPayment1, offerPayment1.getCount());
+        ItemStack p1 = getOfferPayment1();
+        ItemStack p2 = getOfferPayment2();
+        ItemStack result = getOfferResult();
+        if (!p1.isEmpty()) {
+            removePayment(p1, p1.getCount());
         }
-        if (!offerPayment2.isEmpty()) {
-            removePayment(offerPayment2, offerPayment2.getCount());
+        if (!p2.isEmpty()) {
+                removePayment(p2, p2.getCount());
         }
 
-        // Entferne Result-Item aus Input-Inventar
-        removeFromInput(offerResult);
+        removeFromInput(result);
 
-        // Füge Bezahlung zu Output-Inventar hinzu
-        if (!offerPayment1.isEmpty()) {
-            addToOutput(offerPayment1.copy());
+        if (!p1.isEmpty()) {
+            addToOutput(p1.copy());
         }
-        if (!offerPayment2.isEmpty()) {
-            addToOutput(offerPayment2.copy());
+        if (!p2.isEmpty()) {
+            addToOutput(p2.copy());
         }
 
         setChanged();
@@ -427,6 +434,18 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         });
     }
 
+    private void loadOwner(CompoundTag tag) {
+        ownerId = tag.hasUUID("OwnerId") ? tag.getUUID("OwnerId") : null;
+        ownerName = tag.contains("OwnerName") ? tag.getString("OwnerName") : "";
+    }
+
+    private void saveOwner(CompoundTag tag) {
+        if (ownerId != null) {
+            tag.putUUID("OwnerId", ownerId);
+        }
+        tag.putString("OwnerName", ownerName);
+    }
+
     // NBT Speicherung
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
@@ -434,30 +453,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         loadHandlers(tag, registries);
 
-        if (tag.contains("OfferPayment1")) {
-            offerPayment1 = ItemStack.parseOptional(registries, tag.getCompound("OfferPayment1"));
-        } else {
-            offerPayment1 = ItemStack.EMPTY;
-        }
-        if (tag.contains("OfferPayment2")) {
-            offerPayment2 = ItemStack.parseOptional(registries, tag.getCompound("OfferPayment2"));
-        } else {
-            offerPayment2 = ItemStack.EMPTY;
-        }
-        if (tag.contains("OfferResult")) {
-            offerResult = ItemStack.parseOptional(registries, tag.getCompound("OfferResult"));
-        } else {
-            offerResult = ItemStack.EMPTY;
-        }
+        offerItems.replaceAll((k, v) -> tag.contains(k)
+                ? ItemStack.parseOptional(registries, tag.getCompound(k))
+                : ItemStack.EMPTY);
 
         hasOffer = tag.getBoolean("HasOffer");
-
-        if (tag.hasUUID("OwnerId")) {
-            ownerId = tag.getUUID("OwnerId");
-        }
-        if (tag.contains("OwnerName")) {
-            ownerName = tag.getString("OwnerName");
-        }
+        loadOwner(tag);
     }
 
     @Override
@@ -466,22 +467,14 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         saveHandlers(tag, registries);
 
-        if (!offerPayment1.isEmpty()) {
-            tag.put("OfferPayment1", offerPayment1.save(registries));
-        }
-        if (!offerPayment2.isEmpty()) {
-            tag.put("OfferPayment2", offerPayment2.save(registries));
-        }
-        if (!offerResult.isEmpty()) {
-            tag.put("OfferResult", offerResult.save(registries));
-        }
+        offerItems.forEach((k, v) -> {
+            if (!v.isEmpty()) {
+                tag.put(k, v.save(registries));
+            }
+        });
 
         tag.putBoolean("HasOffer", hasOffer);
-
-        if (ownerId != null) {
-            tag.putUUID("OwnerId", ownerId);
-        }
-        tag.putString("OwnerName", ownerName);
+        saveOwner(tag);
     }
 
     @Override
