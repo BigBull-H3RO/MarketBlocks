@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopInventoryMenu> {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_inventory.png");
+    private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/input_output.png");
 
     public SmallShopInventoryScreen(SmallShopInventoryMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -34,6 +35,7 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         graphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+        graphics.blit(INPUT_OUTPUT_ICON, leftPos + 77, topPos + 33, 0, 0, 22, 22, 22, 22);
     }
 
     @Override
@@ -55,17 +57,6 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
 
         // Spieler Inventar Label
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
-    }
-
-    @Override
-    protected void renderTooltip(GuiGraphics graphics, int x, int y) {
-        super.renderTooltip(graphics, x, y);
-
-        // Tooltip für Transfer-Pfeil
-        if (isMouseOver(x, y, leftPos + 58, topPos + 50, 24, 16)) {
-            Component tooltip = Component.translatable("gui.marketblocks.inventory_flow_hint");
-            graphics.renderTooltip(font, tooltip, x, y);
-        }
     }
 
     protected boolean isOwner() {

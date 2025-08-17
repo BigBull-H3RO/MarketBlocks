@@ -194,23 +194,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     }
 
     @Override
-    protected void renderTooltip(GuiGraphics graphics, int x, int y) {
-        super.renderTooltip(graphics, x, y);
-
-        SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-
-        // Tooltip für Handels-Pfeil
-        if (isMouseOver(x, y, leftPos + 88, topPos + 35, 24, 16)) {
-            if (blockEntity.hasOffer()) {
-                Component tooltip = blockEntity.isOfferAvailable()
-                        ? Component.translatable("gui.marketblocks.trade_available")
-                        : Component.translatable("gui.marketblocks.trade_unavailable");
-                graphics.renderTooltip(font, tooltip, x, y);
-            }
-        }
-    }
-
-    @Override
     public void slotChanged(AbstractContainerMenu containerToSend, int dataSlotIndex, ItemStack stack) {
 
     }
