@@ -94,11 +94,11 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
         }
     }
 
-    protected void renderOwnerInfo(GuiGraphics g, SmallShopBlockEntity be, boolean isOwner, int imageWidth) {
-        if (!isOwner && be.getOwnerName() != null) {
-            Component ownerText = Component.translatable("gui.marketblocks.owner", be.getOwnerName());
+    protected void renderOwnerInfo(GuiGraphics guiGraphics, SmallShopBlockEntity blockEntity, boolean isOwner, int imageWidth) {
+        if (!isOwner && blockEntity.getOwnerName() != null) {
+            Component ownerText = Component.translatable("gui.marketblocks.owner", blockEntity.getOwnerName());
             int ownerWidth = font.width(ownerText);
-            g.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0x404040, false);
+            guiGraphics.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0x404040, false);
         }
     }
 

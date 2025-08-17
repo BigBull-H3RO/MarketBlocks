@@ -189,24 +189,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
         renderOwnerInfo(graphics, blockEntity, menu.isOwner(), imageWidth);
 
-        // Status-Meldungen
-        if (blockEntity.hasOffer()) {
-            if (!blockEntity.isOfferAvailable()) {
-                Component noStockText = Component.translatable("gui.marketblocks.out_of_stock");
-                graphics.drawString(font, noStockText, 8, 84, 0xFF0000, false);
-            } else if (!menu.isOwner()) {
-                Component availableText = Component.translatable("gui.marketblocks.available");
-                graphics.drawString(font, availableText, 8, 84, 0x00FF00, false);
-            }
-        } else if (!menu.isOwner()) {
-            Component noOfferText = Component.translatable("gui.marketblocks.no_offers");
-            graphics.drawString(font, noOfferText, 8, 84, 0x808080, false);
-        } else {
-            // Hinweis für Owner beim Erstellen
-            Component createHint = Component.translatable("gui.marketblocks.create_hint");
-            graphics.drawString(font, createHint, 8, 84, 0x808080, false);
-        }
-
         // Spieler Inventar Label
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
