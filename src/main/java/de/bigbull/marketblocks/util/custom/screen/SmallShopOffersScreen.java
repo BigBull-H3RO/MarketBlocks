@@ -17,11 +17,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;
 
-public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffersMenu> implements ContainerListener {
+public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffersMenu> {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
     private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
 
@@ -40,9 +38,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     @Override
     protected void init() {
         super.init();
-
-        menu.removeSlotListener(this);
-        menu.addSlotListener(this);
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         boolean isOwner = menu.isOwner();
@@ -193,24 +188,8 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
 
-    @Override
-    public void slotChanged(AbstractContainerMenu containerToSend, int dataSlotIndex, ItemStack stack) {
-
-    }
-
-    @Override
-    public void dataChanged(AbstractContainerMenu containerMenu, int dataSlotIndex, int value) {
-
-    }
-
     protected boolean isOwner() {
         return menu.isOwner();
-    }
-
-    @Override
-    public void removed() {
-        super.removed();
-        menu.removeSlotListener(this);
     }
 
     private void onOfferClicked() {
