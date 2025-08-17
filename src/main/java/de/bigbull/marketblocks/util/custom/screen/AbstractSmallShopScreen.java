@@ -128,10 +128,6 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
         }
     }
 
-    protected boolean isMouseOver(int mouseX, int mouseY, int x, int y, int width, int height) {
-        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
-    }
-
     @Override
     public void containerTick() {
         super.containerTick();
