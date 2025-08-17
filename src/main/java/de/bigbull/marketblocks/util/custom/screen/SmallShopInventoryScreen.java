@@ -64,12 +64,7 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
         Component title = Component.translatable("gui.marketblocks.inventory_title");
         graphics.drawString(font, title, 8, 6, 4210752, false);
 
-        // Owner Info für Nicht-Owner
-        if (!menu.isOwner() && blockEntity.getOwnerName() != null) {
-            Component ownerText = Component.translatable("gui.marketblocks.owner", blockEntity.getOwnerName());
-            int ownerWidth = font.width(ownerText);
-            graphics.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0x404040, false);
-        }
+        renderOwnerInfo(graphics, blockEntity, menu.isOwner(), imageWidth);
 
         // Info für Nicht-Owner
         if (!menu.isOwner()) {

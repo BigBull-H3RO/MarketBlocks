@@ -9,18 +9,12 @@ import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public record OfferManager(SmallShopBlockEntity shopEntity) {
-    public boolean validateOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
-        SlotData data = copySlots();
-        return slotsAreValid(new ItemStack[]{payment1, payment2, result}, data.slots());
-    }
-
-    public void applyOffer(ServerPlayer player, ItemStack payment1, ItemStack payment2, ItemStack result) {
+    public boolean applyOffer(ServerPlayer player, ItemStack payment1, ItemStack payment2, ItemStack result) {
         SlotData data = copySlots();
         ItemStack[] slotCopies = data.slots();
 
         if (!slotsAreValid(new ItemStack[]{payment1, payment2, result}, slotCopies)) {
-            MarketBlocks.LOGGER.warn("Invalid offer creation attempt by player {}", player.getName().getString());
-            return;
+            return false;
         }
 
         ItemStack[] extracted = extractItems(data);
@@ -39,6 +33,8 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
         returnStacksToPlayer(player, extracted);
 
         MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), shopEntity.getBlockPos());
+
+        return true;
     }
 
     private record SlotData(ItemStack[] slots, boolean swapped) {

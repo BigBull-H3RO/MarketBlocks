@@ -42,7 +42,7 @@ public record AutoFillPaymentPacket(BlockPos pos) implements CustomPacketPayload
                         required2 = ItemStack.EMPTY;
                     }
 
-                    menu.autoFillPaymentSlots(required1, required2);
+                    menu.fillPaymentSlots(required1, required2);
                 }
             }
         });

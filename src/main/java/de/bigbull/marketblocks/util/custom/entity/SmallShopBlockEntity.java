@@ -157,6 +157,13 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    private void sync() {
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
     public boolean stillValid(Player player) {
         if (level == null || level.getBlockEntity(worldPosition) != this) {
             return false;
@@ -198,10 +205,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         this.offerPayment2 = payment2.copy();
         this.offerResult = result.copy();
         this.hasOffer = true;
-        setChanged();
-        if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-        }
+        sync();
         updateOfferSlot();
     }
 
@@ -211,10 +215,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         this.offerResult = ItemStack.EMPTY;
         this.hasOffer = false;
         this.offerHandler.setStackInSlot(0, ItemStack.EMPTY);
-        setChanged();
-        if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-        }
+        sync();
     }
 
     public boolean hasOffer() {
@@ -237,7 +238,21 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return offerResult;
     }
 
-    // Angebots-Logik
+    private int countMatching(ItemStack target) {
+        int total = 0;
+        for (int i = 0; i < paymentHandler.getSlots(); i++) {
+            ItemStack stack = paymentHandler.getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(stack, target)) {
+                total += stack.getCount();
+            }
+        }
+        return total;
+    }
+
+    private boolean hasEnough(ItemStack required) {
+        return required.isEmpty() || countMatching(required) >= required.getCount();
+    }
+
     public void updateOfferSlot() {
         if (!hasOffer) {
             return;
@@ -253,49 +268,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public boolean canAfford() {
-        ItemStack payment1 = paymentHandler.getStackInSlot(0);
-        ItemStack payment2 = paymentHandler.getStackInSlot(1);
-
-        // Fall 1: Beide Payments sind das gleiche Item (stackable)
-        if (!offerPayment1.isEmpty() && !offerPayment2.isEmpty() &&
-                ItemStack.isSameItemSameComponents(offerPayment1, offerPayment2)) {
-
-            int total = 0;
-            if (ItemStack.isSameItemSameComponents(payment1, offerPayment1)) {
-                total += payment1.getCount();
-            }
-            if (ItemStack.isSameItemSameComponents(payment2, offerPayment1)) {
-                total += payment2.getCount();
-            }
-            return total >= offerPayment1.getCount() + offerPayment2.getCount();
+        if (offerPayment1.isEmpty() && offerPayment2.isEmpty()) {
+            return true;
         }
 
-        // Fall 2: Zwei verschiedene Payment-Items
-        if (!offerPayment1.isEmpty() && !offerPayment2.isEmpty()) {
-            // Prüfe beide möglichen Slot-Kombinationen
-            boolean case1 = ItemStack.isSameItemSameComponents(payment1, offerPayment1) &&
-                    payment1.getCount() >= offerPayment1.getCount() &&
-                    ItemStack.isSameItemSameComponents(payment2, offerPayment2) &&
-                    payment2.getCount() >= offerPayment2.getCount();
-
-            boolean case2 = ItemStack.isSameItemSameComponents(payment1, offerPayment2) &&
-                    payment1.getCount() >= offerPayment2.getCount() &&
-                    ItemStack.isSameItemSameComponents(payment2, offerPayment1) &&
-                    payment2.getCount() >= offerPayment1.getCount();
-
-            return case1 || case2;
+        if (!offerPayment1.isEmpty() && ItemStack.isSameItemSameComponents(offerPayment1, offerPayment2)) {
+            int required = offerPayment1.getCount() + offerPayment2.getCount();
+            return countMatching(offerPayment1) >= required;
         }
 
-        // Fall 3: Nur ein Payment-Item (offerPayment2 ist leer)
-        if (!offerPayment1.isEmpty() && offerPayment2.isEmpty()) {
-            return (ItemStack.isSameItemSameComponents(payment1, offerPayment1) &&
-                    payment1.getCount() >= offerPayment1.getCount()) ||
-                    (ItemStack.isSameItemSameComponents(payment2, offerPayment1) &&
-                            payment2.getCount() >= offerPayment1.getCount());
-        }
-
-        // Fall 4: Kein Payment erforderlich (sollte nicht vorkommen, aber sicherheitshalber)
-        return offerPayment1.isEmpty() && offerPayment2.isEmpty();
+        return hasEnough(offerPayment1) && hasEnough(offerPayment2);
     }
 
     public boolean hasResultItemInInput() {

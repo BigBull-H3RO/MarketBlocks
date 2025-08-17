@@ -9,6 +9,7 @@ import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -76,6 +77,14 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
 
             NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), showOffers));
             playClickSound();
+        }
+    }
+
+    protected void renderOwnerInfo(GuiGraphics g, SmallShopBlockEntity be, boolean isOwner, int imageWidth) {
+        if (!isOwner && be.getOwnerName() != null) {
+            Component ownerText = Component.translatable("gui.marketblocks.owner", be.getOwnerName());
+            int ownerWidth = font.width(ownerText);
+            g.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0x404040, false);
         }
     }
 

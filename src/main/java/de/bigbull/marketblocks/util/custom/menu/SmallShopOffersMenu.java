@@ -101,47 +101,43 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
         return transferStack(player, index, PLAYER_INVENTORY_START, HOTBAR_START);
     }
 
-    public void autoFillPaymentSlots(ItemStack required1, ItemStack required2) {
-        clearPaymentSlots();
-
-        if (!required1.isEmpty()) {
-            moveFromInventoryToPaymentSlot(0, required1);
-        }
-        if (!required2.isEmpty()) {
-            moveFromInventoryToPaymentSlot(1, required2);
-        }
-    }
-
-    private void clearPaymentSlots() {
-        for (int slotIndex = 0; slotIndex <= 1; slotIndex++) {
-            ItemStack stack = this.slots.get(slotIndex).getItem();
-            if (!stack.isEmpty()) {
-                if (this.moveItemStackTo(stack, PLAYER_INVENTORY_START, this.slots.size(), true)) {
-                    this.slots.get(slotIndex).set(stack.isEmpty() ? ItemStack.EMPTY : stack);
+    public void fillPaymentSlots(ItemStack... required) {
+        for (int paymentSlotIndex = 0; paymentSlotIndex < PAYMENT_SLOTS; paymentSlotIndex++) {
+            ItemStack stackInSlot = this.slots.get(paymentSlotIndex).getItem();
+            if (!stackInSlot.isEmpty()) {
+                if (this.moveItemStackTo(stackInSlot, PLAYER_INVENTORY_START, this.slots.size(), true)) {
+                    this.slots.get(paymentSlotIndex).set(stackInSlot.isEmpty() ? ItemStack.EMPTY : stackInSlot);
                 }
             }
-        }
-    }
 
-    private void moveFromInventoryToPaymentSlot(int paymentSlotIndex, ItemStack required) {
-        for (int i = PLAYER_INVENTORY_START; i < this.slots.size(); i++) {
-            ItemStack inventoryStack = this.slots.get(i).getItem();
-            if (!inventoryStack.isEmpty() && ItemStack.isSameItemSameComponents(inventoryStack, required)) {
-                ItemStack currentPaymentStack = this.slots.get(paymentSlotIndex).getItem();
+            if (paymentSlotIndex >= required.length) {
+                continue;
+            }
 
-                if (currentPaymentStack.isEmpty() || ItemStack.isSameItemSameComponents(inventoryStack, currentPaymentStack)) {
-                    int maxStackSize = Math.min(inventoryStack.getMaxStackSize(), this.slots.get(paymentSlotIndex).getMaxStackSize());
-                    int spaceInPaymentSlot = maxStackSize - currentPaymentStack.getCount();
-                    int amountToTransfer = Math.min(spaceInPaymentSlot, inventoryStack.getCount());
+            ItemStack requiredStack = required[paymentSlotIndex];
+            if (requiredStack.isEmpty()) {
+                continue;
+            }
 
-                    if (amountToTransfer > 0) {
-                        ItemStack newPaymentStack = inventoryStack.copyWithCount(currentPaymentStack.getCount() + amountToTransfer);
-                        inventoryStack.shrink(amountToTransfer);
-                        this.slots.get(i).set(inventoryStack.isEmpty() ? ItemStack.EMPTY : inventoryStack);
-                        this.slots.get(paymentSlotIndex).set(newPaymentStack);
+            for (int i = PLAYER_INVENTORY_START; i < this.slots.size(); i++) {
+                ItemStack inventoryStack = this.slots.get(i).getItem();
+                if (!inventoryStack.isEmpty() && ItemStack.isSameItemSameComponents(inventoryStack, requiredStack)) {
+                    ItemStack currentPaymentStack = this.slots.get(paymentSlotIndex).getItem();
 
-                        if (newPaymentStack.getCount() >= maxStackSize) {
-                            break;
+                    if (currentPaymentStack.isEmpty() || ItemStack.isSameItemSameComponents(inventoryStack, currentPaymentStack)) {
+                        int maxStackSize = Math.min(inventoryStack.getMaxStackSize(), this.slots.get(paymentSlotIndex).getMaxStackSize());
+                        int spaceInPaymentSlot = maxStackSize - currentPaymentStack.getCount();
+                        int amountToTransfer = Math.min(spaceInPaymentSlot, inventoryStack.getCount());
+
+                        if (amountToTransfer > 0) {
+                            ItemStack newPaymentStack = inventoryStack.copyWithCount(currentPaymentStack.getCount() + amountToTransfer);
+                            inventoryStack.shrink(amountToTransfer);
+                            this.slots.get(i).set(inventoryStack.isEmpty() ? ItemStack.EMPTY : inventoryStack);
+                            this.slots.get(paymentSlotIndex).set(newPaymentStack);
+
+                            if (newPaymentStack.getCount() >= maxStackSize) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -206,7 +202,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
             if (menu.isOwner() || (menu.hasOffer() && menu.isOfferAvailable())) {
                 return super.remove(amount);
             }
-            return ItemStack.EMPTY;
+            return net.minecraft.world.item.ItemStack.EMPTY;
         }
 
         @Override

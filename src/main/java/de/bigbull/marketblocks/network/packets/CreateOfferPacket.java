@@ -43,9 +43,7 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
 
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity && shopEntity.isOwner(player)) {
                 OfferManager manager = shopEntity.getOfferManager();
-                if (manager.validateOffer(packet.payment1(), packet.payment2(), packet.result())) {
-                    manager.applyOffer(player, packet.payment1(), packet.payment2(), packet.result());
-                } else {
+                if (!manager.applyOffer(player, packet.payment1(), packet.payment2(), packet.result())) {
                     MarketBlocks.LOGGER.warn("Invalid offer creation attempt by player {}", player.getName().getString());
                 }
             }
