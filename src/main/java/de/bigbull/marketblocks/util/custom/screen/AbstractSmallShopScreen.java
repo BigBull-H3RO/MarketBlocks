@@ -13,8 +13,10 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -35,6 +37,18 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
 
     protected static double savedMouseX = -1;
     protected static double savedMouseY = -1;
+
+    private boolean lastIsOwner;
+
+    protected abstract boolean isOwner();
+
+    @Override
+    protected void init() {
+        super.init();
+        restoreMousePosition();
+        clearWidgets();
+        lastIsOwner = isOwner();
+    }
 
     protected AbstractSmallShopScreen(T menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -76,7 +90,7 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
             savedMouseY = mc.mouseHandler.ypos();
 
             NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), showOffers));
-            playClickSound();
+            playSound(SoundEvents.UI_BUTTON_CLICK);
         }
     }
 
@@ -118,15 +132,20 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
         return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
     }
 
-    protected void playClickSound() {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+    @Override
+    public void containerTick() {
+        super.containerTick();
+        boolean owner = isOwner();
+        if (owner != lastIsOwner) {
+            init();
+        }
     }
 
-    protected void playSuccessSound() {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F));
+    protected void playSound(SoundEvent sound) {
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
     }
 
-    protected void playErrorSound() {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ITEM_BREAK, 1.0F));
+    protected void playSound(Holder<SoundEvent> sound) {
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
     }
 }

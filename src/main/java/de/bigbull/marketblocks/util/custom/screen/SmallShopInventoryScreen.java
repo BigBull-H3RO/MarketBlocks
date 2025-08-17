@@ -13,8 +13,6 @@ import net.minecraft.world.entity.player.Inventory;
 public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopInventoryMenu> {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_inventory.png");
 
-    private boolean lastIsOwner;
-
     public SmallShopInventoryScreen(SmallShopInventoryMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = GuiConstants.IMAGE_WIDTH;
@@ -25,11 +23,7 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
     @Override
     protected void init() {
         super.init();
-        restoreMousePosition();
-        clearWidgets();
-
         boolean isOwner = menu.isOwner();
-        this.lastIsOwner = isOwner;
 
         if (isOwner) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, false, () -> switchTab(true), () -> {});
@@ -40,20 +34,6 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         graphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight);
-
-        // Render Inventar-Labels mit Hintergrund
-        Component inputLabel = Component.translatable("gui.marketblocks.input_inventory");
-        Component outputLabel = Component.translatable("gui.marketblocks.output_inventory");
-
-        // Input Label
-        int inputWidth = font.width(inputLabel);
-        graphics.fill(leftPos + 6, topPos + 4, leftPos + 8 + inputWidth, topPos + 14, 0x80000000);
-        graphics.drawString(font, inputLabel, leftPos + 8, topPos + 6, 0xFFFFFF, false);
-
-        // Output Label
-        int outputWidth = font.width(outputLabel);
-        graphics.fill(leftPos + 96, topPos + 4, leftPos + 98 + outputWidth, topPos + 14, 0x80000000);
-        graphics.drawString(font, outputLabel, leftPos + 98, topPos + 6, 0xFFFFFF, false);
     }
 
     @Override
@@ -88,14 +68,7 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
         }
     }
 
-    @Override
-    public void containerTick() {
-        super.containerTick();
-
-        boolean isOwner = menu.isOwner();
-        if (isOwner != lastIsOwner) {
-            lastIsOwner = isOwner;
-            init();
-        }
+    protected boolean isOwner() {
+        return menu.isOwner();
     }
 }

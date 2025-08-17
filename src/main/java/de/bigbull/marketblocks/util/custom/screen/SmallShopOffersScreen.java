@@ -15,6 +15,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
@@ -27,7 +28,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
 
-    private boolean lastIsOwner;
     private OfferTemplateButton offerButton;
 
     public SmallShopOffersScreen(SmallShopOffersMenu menu, Inventory inv, Component title) {
@@ -40,15 +40,12 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     @Override
     protected void init() {
         super.init();
-        restoreMousePosition();
-        clearWidgets();
 
         menu.removeSlotListener(this);
         menu.addSlotListener(this);
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         boolean isOwner = menu.isOwner();
-        this.lastIsOwner = isOwner;
 
         this.offerButton = addRenderableWidget(new OfferTemplateButton(
                 leftPos + 44, topPos + 17,
@@ -100,7 +97,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                         Component.translatable("gui.marketblocks.error.no_result_item")
                                 .withStyle(ChatFormatting.RED)
                 );
-                playErrorSound();
+                playSound(SoundEvents.ITEM_BREAK);
                 return;
             }
 
@@ -109,7 +106,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                         Component.translatable("gui.marketblocks.error.no_payment_items")
                                 .withStyle(ChatFormatting.RED)
                 );
-                playErrorSound();
+                playSound(SoundEvents.ITEM_BREAK);
                 return;
             }
 
@@ -122,12 +119,12 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             ));
 
             menu.getBlockEntity().setHasOfferClient(true);
-            playSuccessSound();
-            init(); // UI neu initialisieren
+            playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
+            init();
 
         } catch (Exception e) {
             MarketBlocks.LOGGER.error("Error creating offer", e);
-            playErrorSound();
+            playSound(SoundEvents.ITEM_BREAK);
         }
     }
 
@@ -140,7 +137,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
     private void deleteOffer() {
         NetworkHandler.sendToServer(new DeleteOfferPacket(menu.getBlockEntity().getBlockPos()));
-        playClickSound();
+        playSound(SoundEvents.UI_BUTTON_CLICK);
     }
 
     public void onOfferDeleted() {
@@ -156,12 +153,9 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
-        // Buttonzustand aktualisieren
         offerButton.active = blockEntity.hasOffer();
 
-        // Update OfferTemplateButton basierend auf aktuellem Zustand
         if (blockEntity.hasOffer()) {
-            // Zeige bestehendes Angebot
             offerButton.update(
                     blockEntity.getOfferPayment1(),
                     blockEntity.getOfferPayment2(),
@@ -169,7 +163,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                     blockEntity.isOfferAvailable()
             );
         } else {
-            // Zeige Live-Preview der aktuellen Slots
             ItemStack p1 = menu.slots.get(0).getItem();
             ItemStack p2 = menu.slots.get(1).getItem();
             Pair<ItemStack, ItemStack> normalized = normalizePayments(p1, p2);
@@ -177,11 +170,10 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                     normalized.getFirst(),
                     normalized.getSecond(),
                     menu.slots.get(2).getItem(),
-                    true // Preview ist immer "verfügbar"
+                    true
             );
         }
 
-        // Render "Out of Stock"-Symbol, falls Angebot nicht verfügbar
         if (!blockEntity.isOfferAvailable()) {
             graphics.blit(OUT_OF_STOCK_ICON, leftPos + 82, topPos + 50, 0, 0, 28, 21, 28, 21);
         }
@@ -214,6 +206,9 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             Component createHint = Component.translatable("gui.marketblocks.create_hint");
             graphics.drawString(font, createHint, 8, 84, 0x808080, false);
         }
+
+        // Spieler Inventar Label
+        graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
 
     @Override
@@ -243,15 +238,8 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
     }
 
-    @Override
-    public void containerTick() {
-        super.containerTick();
-
-        boolean isOwner = menu.isOwner();
-        if (isOwner != lastIsOwner) {
-            lastIsOwner = isOwner;
-            init();
-        }
+    protected boolean isOwner() {
+        return menu.isOwner();
     }
 
     @Override
@@ -265,7 +253,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
         if (blockEntity.hasOffer()) {
             NetworkHandler.sendToServer(new AutoFillPaymentPacket(blockEntity.getBlockPos()));
-            playClickSound();
+            playSound(SoundEvents.UI_BUTTON_CLICK);
             return;
         }
 
@@ -274,7 +262,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                 menu.slots.get(i).set(ItemStack.EMPTY);
             }
 
-            playClickSound();
+            playSound(SoundEvents.UI_BUTTON_CLICK);
         }
     }
 }

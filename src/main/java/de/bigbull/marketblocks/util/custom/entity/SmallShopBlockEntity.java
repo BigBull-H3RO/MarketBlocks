@@ -21,7 +21,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,11 +29,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private static final String KEY_PAYMENT1 = "OfferPayment1";
     private static final String KEY_PAYMENT2 = "OfferPayment2";
     private static final String KEY_RESULT = "OfferResult";
-    private final Map<String, ItemStack> offerItems = new LinkedHashMap<>(Map.of(
-            KEY_PAYMENT1, ItemStack.EMPTY,
-            KEY_PAYMENT2, ItemStack.EMPTY,
-            KEY_RESULT, ItemStack.EMPTY
-    ));
+    private ItemStack offerPayment1 = ItemStack.EMPTY;
+    private ItemStack offerPayment2 = ItemStack.EMPTY;
+    private ItemStack offerResult   = ItemStack.EMPTY;
     private boolean hasOffer = false;
 
     // Owner System
@@ -207,16 +204,18 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     // Angebots-System
     public void createOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
-        offerItems.put(KEY_PAYMENT1, payment1.copy());
-        offerItems.put(KEY_PAYMENT2, payment2.copy());
-        offerItems.put(KEY_RESULT, result.copy());
+        this.offerPayment1 = payment1.copy();
+        this.offerPayment2 = payment2.copy();
+        this.offerResult = result.copy();
         this.hasOffer = true;
         sync();
         updateOfferSlot();
     }
 
     public void clearOffer() {
-        offerItems.replaceAll((k, v) -> ItemStack.EMPTY);
+        offerPayment1 = ItemStack.EMPTY;
+        offerPayment2 = ItemStack.EMPTY;
+        offerResult = ItemStack.EMPTY;
         this.hasOffer = false;
         this.offerHandler.setStackInSlot(0, ItemStack.EMPTY);
         sync();
@@ -231,15 +230,15 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public ItemStack getOfferPayment1() {
-        return offerItems.get(KEY_PAYMENT1);
+        return offerPayment1;
     }
 
     public ItemStack getOfferPayment2() {
-        return offerItems.get(KEY_PAYMENT2);
+        return offerPayment2;
     }
 
     public ItemStack getOfferResult() {
-        return offerItems.get(KEY_RESULT);
+        return offerResult;
     }
 
     private int countMatching(ItemStack target) {
@@ -450,12 +449,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-
         loadHandlers(tag, registries);
 
-        offerItems.replaceAll((k, v) -> tag.contains(k)
-                ? ItemStack.parseOptional(registries, tag.getCompound(k))
-                : ItemStack.EMPTY);
+        offerPayment1 = tag.contains(KEY_PAYMENT1)
+                ? ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT1))
+                : ItemStack.EMPTY;
+        offerPayment2 = tag.contains(KEY_PAYMENT2)
+                ? ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT2))
+                : ItemStack.EMPTY;
+        offerResult = tag.contains(KEY_RESULT)
+                ? ItemStack.parseOptional(registries, tag.getCompound(KEY_RESULT))
+                : ItemStack.EMPTY;
 
         hasOffer = tag.getBoolean("HasOffer");
         loadOwner(tag);
@@ -464,14 +468,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-
         saveHandlers(tag, registries);
 
-        offerItems.forEach((k, v) -> {
-            if (!v.isEmpty()) {
-                tag.put(k, v.save(registries));
-            }
-        });
+        if (!offerPayment1.isEmpty()) {
+            tag.put(KEY_PAYMENT1, offerPayment1.save(registries));
+        }
+        if (!offerPayment2.isEmpty()) {
+            tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
+        }
+        if (!offerResult.isEmpty()) {
+            tag.put(KEY_RESULT, offerResult.save(registries));
+        }
 
         tag.putBoolean("HasOffer", hasOffer);
         saveOwner(tag);
