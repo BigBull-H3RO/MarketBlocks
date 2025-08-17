@@ -174,7 +174,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             );
         }
 
-        if (!blockEntity.isOfferAvailable()) {
+        if (blockEntity.hasOffer() && !blockEntity.isOfferAvailable()) {
             graphics.blit(OUT_OF_STOCK_ICON, leftPos + 82, topPos + 50, 0, 0, 28, 21, 28, 21);
         }
     }
