@@ -33,11 +33,11 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu  {
         this.blockEntity = blockEntity;
         this.paymentHandler = blockEntity.getPaymentHandler();
         this.offerHandler = blockEntity.getOfferHandler();
+        blockEntity.ensureOwner(playerInventory.player);
         this.data = blockEntity.createMenuFlags(playerInventory.player);
 
         addDataSlots(this.data);
         setupSlots(playerInventory);
-        blockEntity.ensureOwner(playerInventory.player);
     }
 
     // Constructor für Client

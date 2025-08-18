@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=north": {
+      "model": "marketblocks:block/small_shop",
+      "y": 180
+    },
+    "facing=south": {
       "model": "marketblocks:block/small_shop"
+    },
+    "facing=east": {
+      "model": "marketblocks:block/small_shop",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "marketblocks:block/small_shop",
+      "y": 270
     }
   }
 }

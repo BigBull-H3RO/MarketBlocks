@@ -12,7 +12,7 @@ public class ModDeLangProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
-        add("itemGroup.marketblocks", "Kleiner Laden");
+        add("itemGroup.marketblocks", "Market Blocks");
         add("gui.marketblocks.shop_title", "Laden");
         add("gui.marketblocks.inventory_title", "Laden Inventar");
         add("gui.marketblocks.trade_available", "Handel verfügbar");

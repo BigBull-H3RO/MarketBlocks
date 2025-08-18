@@ -13,7 +13,7 @@ public class ModEnLangProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         // Creative Tab
-        add("itemGroup.marketblocks", "Small Shop");
+        add("itemGroup.marketblocks", "Market Blocks");
 
         // Container Titles
         add("container.marketblocks.small_shop", "Shop");
