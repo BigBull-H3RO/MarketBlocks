@@ -14,10 +14,10 @@ public class CreativeTabInit {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MARKETBLOCKS_TAB =
             CREATIVE_MODE_TABS.register("marketblocks_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.marketblocks"))
-                    .icon(() -> new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK_ITEM.get()))
+                    .icon(() -> new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK.get()))
                     .displayItems((parameters, output) -> {
                         // Füge alle Items des Mods hinzu
-                        output.accept(RegistriesInit.SMALL_SHOP_BLOCK_ITEM.get());
+                        output.accept(RegistriesInit.SMALL_SHOP_BLOCK.get());
                     })
                     .build());
 }

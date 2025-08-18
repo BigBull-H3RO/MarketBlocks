@@ -3,35 +3,25 @@ package de.bigbull.marketblocks.util;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.entity.renderer.SmallShopBlockEntityRenderer;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
-import de.bigbull.marketblocks.util.custom.screen.SmallShopInventoryScreen;
-import de.bigbull.marketblocks.util.custom.screen.SmallShopOffersScreen;
-import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.function.Supplier;
+
 public class RegistriesInit {
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MarketBlocks.MODID);
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, MarketBlocks.MODID);
+    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MarketBlocks.MODID);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MarketBlocks.MODID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MarketBlocks.MODID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MarketBlocks.MODID);
 
@@ -43,58 +33,28 @@ public class RegistriesInit {
     }
 
     // Block Registrierung
-    public static final DeferredHolder<Block, SmallShopBlock> SMALL_SHOP_BLOCK =
-            BLOCKS.register("small_shop", () -> new SmallShopBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
-                    .strength(2.0f, 3.0f)
-                    .noOcclusion()));
-
-    // Item Registrierung
-    public static final DeferredHolder<Item, BlockItem> SMALL_SHOP_BLOCK_ITEM =
-            ITEMS.register("small_shop", () -> new BlockItem(SMALL_SHOP_BLOCK.get(), new Item.Properties()));
+    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK = registerBlock("small_shop",
+            () -> new SmallShopBlock(BlockBehaviour.Properties.of().noOcclusion()));
 
     // BlockEntity Registrierung
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =
+    public static final Supplier<BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(
                     SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get()).build(null));
 
-    // Menu Registrierungen - FIXED VERSION mit IMenuTypeExtension
-    public static final DeferredHolder<MenuType<?>, MenuType<SmallShopOffersMenu>> SMALL_SHOP_OFFERS_MENU =
+    // Menu Registrierungen
+    public static final Supplier<MenuType<SmallShopOffersMenu>> SMALL_SHOP_OFFERS_MENU =
             MENU_TYPES.register("small_shop_offers_menu", () -> IMenuTypeExtension.create(SmallShopOffersMenu::new));
 
-    public static final DeferredHolder<MenuType<?>, MenuType<SmallShopInventoryMenu>> SMALL_SHOP_INVENTORY_MENU =
+    public static final Supplier<MenuType<SmallShopInventoryMenu>> SMALL_SHOP_INVENTORY_MENU =
             MENU_TYPES.register("small_shop_inventory_menu", () -> IMenuTypeExtension.create(SmallShopInventoryMenu::new));
 
-    /**
-     * Clientseitige Registrierung der Bildschirmklassen.
-     */
-    @EventBusSubscriber(modid = MarketBlocks.MODID, value = Dist.CLIENT)
-    public static class ClientRegistry {
-        @SubscribeEvent
-        public static void registerScreens(RegisterMenuScreensEvent event) {
-            event.register(SMALL_SHOP_OFFERS_MENU.get(), SmallShopOffersScreen::new);
-            event.register(SMALL_SHOP_INVENTORY_MENU.get(), SmallShopInventoryScreen::new);
-        }
-
-        @SubscribeEvent
-        public static void registerBlockEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-            event.registerBlockEntityRenderer(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), SmallShopBlockEntityRenderer::new);
-        }
+    public static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
+        DeferredBlock<T> toReturn = BLOCKS.register(name, block);
+        registerBlockItem(name, toReturn);
+        return toReturn;
     }
 
-    @EventBusSubscriber(modid = MarketBlocks.MODID)
-    public static class GameRegistry {
-        @SubscribeEvent
-        public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-            event.registerBlockEntity(
-                    Capabilities.ItemHandler.BLOCK,
-                    RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(),
-                    (be, side) -> {
-                        if (side == null) return null; // kein allgemeiner Zugriff ohne Seite
-                        if (side == Direction.DOWN)  return be.getOutputOnly(); // nur raus
-                        if (side == Direction.UP)    return be.getInputOnly();  // nur rein
-                        return null; // Seiten gesperrt oder feiner je Seite
-                    }
-            );
-        }
+    public static <T extends Block> void registerBlockItem(String name, DeferredBlock<T> block) {
+        ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
     }
 }

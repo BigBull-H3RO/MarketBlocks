@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.data.lang;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.util.RegistriesInit;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 
@@ -64,5 +65,8 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.creating_offer", "Creating Offer...");
         add("gui.marketblocks.offer_ready", "Offer Ready");
         add("gui.marketblocks.insufficient_stock", "Insufficient Stock");
+
+        // Blocks
+        addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Small Shop");
     }
 }

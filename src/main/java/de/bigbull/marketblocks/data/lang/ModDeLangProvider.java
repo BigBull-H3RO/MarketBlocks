@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.data.lang;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.util.RegistriesInit;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 
@@ -32,5 +33,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.delete_offer", "Angebot löschen");
         add("gui.marketblocks.owner", "Besitzer: %s");
         add("gui.marketblocks.out_of_stock", "Nicht auf Lager");
+
+        // Blocks
+        addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Kleiner Laden");
     }
 }
