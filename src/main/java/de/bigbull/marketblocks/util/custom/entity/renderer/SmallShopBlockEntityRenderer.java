@@ -76,7 +76,7 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         poseStack.pushPose();
         poseStack.translate(xOff, y, zOff);
         poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
-        poseStack.scale(0.6F, 0.6F, 0.6F); // Etwas größer
+        poseStack.scale(0.4F, 0.4F, 0.4F);
         itemRenderer.renderStatic(stack, ItemDisplayContext.GUI, packedLight, packedOverlay, poseStack, bufferSource, null, 0);
         poseStack.popPose();
 

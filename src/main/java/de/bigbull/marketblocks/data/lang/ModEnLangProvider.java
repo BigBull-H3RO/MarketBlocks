@@ -57,6 +57,8 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop Settings");
         add("gui.marketblocks.save", "Save");
         add("gui.marketblocks.shop_name", "Shop Name");
+        add("gui.marketblocks.emit_redstone", "Emit Redstone");
+        add("gui.marketblocks.emit_redstone.tooltip", "Emit a short redstone pulse after a purchase");
 
         // Error Messages
         add("gui.marketblocks.error.no_result_item", "Please place an item in the result slot");

@@ -39,6 +39,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");
         add("gui.marketblocks.save", "Speichern");
         add("gui.marketblocks.shop_name", "Shopname");
+        add("gui.marketblocks.emit_redstone", "Redstone-Signal ausgeben");
+        add("gui.marketblocks.emit_redstone.tooltip", "Gibt nach einem Kauf kurz ein Redstone-Signal aus");
 
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Kleiner Laden");

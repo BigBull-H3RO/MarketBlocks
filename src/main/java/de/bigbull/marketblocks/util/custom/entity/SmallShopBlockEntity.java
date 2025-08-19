@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.util.custom.entity;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -40,6 +41,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     // Shop Name
     private String shopName = "";
+
+    // Redstone
+    private boolean emitRedstone = false;
 
     public SmallShopBlockEntity(BlockPos pos, BlockState state) {
         super(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), pos, state);
@@ -218,6 +222,19 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         this.shopName = name;
     }
 
+    public boolean isEmitRedstone() {
+        return emitRedstone;
+    }
+
+    public void setEmitRedstone(boolean emitRedstone) {
+        this.emitRedstone = emitRedstone;
+        sync();
+    }
+
+    public void setEmitRedstoneClient(boolean emitRedstone) {
+        this.emitRedstone = emitRedstone;
+    }
+
     // Angebots-System
     public void createOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
         this.offerPayment1 = payment1.copy();
@@ -345,6 +362,14 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            if (emitRedstone) {
+                BlockState state = level.getBlockState(worldPosition);
+                if (state.getBlock() instanceof SmallShopBlock block) {
+                    level.setBlock(worldPosition, state.setValue(SmallShopBlock.POWERED, true), 3);
+                    level.updateNeighborsAt(worldPosition, block);
+                    level.scheduleTick(worldPosition, block, 2);
+                }
+            }
         }
         updateOfferSlot();
     }
@@ -483,6 +508,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         hasOffer = tag.getBoolean("HasOffer");
         loadOwner(tag);
         shopName = tag.contains("ShopName") ? tag.getString("ShopName") : "";
+        emitRedstone = tag.getBoolean("EmitRedstone");
     }
 
     @Override
@@ -503,6 +529,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         tag.putBoolean("HasOffer", hasOffer);
         saveOwner(tag);
         tag.putString("ShopName", shopName);
+        tag.putBoolean("EmitRedstone", emitRedstone);
     }
 
     @Override
