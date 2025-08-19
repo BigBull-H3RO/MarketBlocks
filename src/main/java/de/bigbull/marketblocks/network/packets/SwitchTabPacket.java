@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import io.netty.buffer.ByteBuf;
@@ -16,7 +17,7 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record SwitchTabPacket(BlockPos pos, boolean showOffers) implements CustomPacketPayload {
+public record SwitchTabPacket(BlockPos pos, int tab) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<SwitchTabPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "switch_tab"));
@@ -24,8 +25,8 @@ public record SwitchTabPacket(BlockPos pos, boolean showOffers) implements Custo
     public static final StreamCodec<ByteBuf, SwitchTabPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             SwitchTabPacket::pos,
-            ByteBufCodecs.BOOL,
-            SwitchTabPacket::showOffers,
+            ByteBufCodecs.VAR_INT,
+            SwitchTabPacket::tab,
             SwitchTabPacket::new
     );
 
@@ -39,9 +40,10 @@ public record SwitchTabPacket(BlockPos pos, boolean showOffers) implements Custo
             ServerPlayer player = (ServerPlayer) context.player();
             Level level = player.level();
             BlockPos pos = packet.pos();
+            int tab = packet.tab();
 
             if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity blockEntity) {
-                if (packet.showOffers()) {
+                if (tab == 0) {
                     player.openMenu(
                             new SimpleMenuProvider(
                                     (id, inv, p) -> new SmallShopOffersMenu(id, inv, blockEntity),
@@ -49,11 +51,19 @@ public record SwitchTabPacket(BlockPos pos, boolean showOffers) implements Custo
                             ),
                             pos
                     );
-                } else if (blockEntity.isOwner(player)) {
+                } else if (tab == 1 && blockEntity.isOwner(player)) {
                     player.openMenu(
                             new SimpleMenuProvider(
                                     (id, inv, p) -> new SmallShopInventoryMenu(id, inv, blockEntity),
                                     Component.translatable("container.marketblocks.small_shop_inventory")
+                            ),
+                            pos
+                    );
+                } else if (tab == 2 && blockEntity.isOwner(player)) {
+                    player.openMenu(
+                            new SimpleMenuProvider(
+                                    (id, inv, p) -> new SmallShopSettingsMenu(id, inv, blockEntity),
+                                    Component.translatable("container.marketblocks.small_shop")
                             ),
                             pos
                     );

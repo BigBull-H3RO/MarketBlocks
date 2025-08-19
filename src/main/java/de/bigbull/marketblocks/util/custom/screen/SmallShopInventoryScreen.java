@@ -27,7 +27,7 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
         boolean isOwner = menu.isOwner();
 
         if (isOwner) {
-            createTabButtons(leftPos + imageWidth + 4, topPos + 8, false, () -> switchTab(true), () -> {});
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, 1, () -> switchTab(0), () -> {}, () -> switchTab(2));
         }
     }
 

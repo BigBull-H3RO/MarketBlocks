@@ -4,6 +4,7 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
@@ -34,6 +35,7 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
 
     private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/offers.png");
     private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/inventory.png");
+    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
 
     protected static double savedMouseX = -1;
     protected static double savedMouseY = -1;
@@ -54,25 +56,33 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
         super(menu, inv, title);
     }
 
-    protected void createTabButtons(int x, int y, boolean offersSelected, Runnable onOffers, Runnable onInventory) {
+    protected void createTabButtons(int x, int y, int selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings) {
         addRenderableWidget(new IconButton(
-                x, y, 24, 24,
+                x - 2, y - 4, 22, 22,
                 BUTTON_SPRITES, OFFERS_ICON,
-                b -> { if (!offersSelected) onOffers.run(); },
+                b -> { if (selectedTab != 0) onOffers.run(); },
                 Component.translatable("gui.marketblocks.offers_tab"),
-                () -> offersSelected
+                () -> selectedTab == 0
         ));
 
         addRenderableWidget(new IconButton(
-                x, y + 28, 24, 24,
+                x - 2, y + 22, 22, 22,
                 BUTTON_SPRITES, INVENTORY_ICON,
-                b -> { if (offersSelected) onInventory.run(); },
+                b -> { if (selectedTab != 1) onInventory.run(); },
                 Component.translatable("gui.marketblocks.inventory_tab"),
-                () -> !offersSelected
+                () -> selectedTab == 1
+        ));
+
+        addRenderableWidget(new IconButton(
+                x - 2, y + 48, 22, 22,
+                BUTTON_SPRITES, SETTINGS_ICON,
+                b -> { if (selectedTab != 2) onSettings.run(); },
+                Component.translatable("gui.marketblocks.settings_tab"),
+                () -> selectedTab == 2
         ));
     }
 
-    protected void switchTab(boolean showOffers) {
+    protected void switchTab(int tab) {
         SmallShopBlockEntity blockEntity = null;
         boolean isOwner = false;
 
@@ -82,6 +92,9 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
         } else if (menu instanceof SmallShopInventoryMenu inventoryMenu) {
             blockEntity = inventoryMenu.getBlockEntity();
             isOwner = inventoryMenu.isOwner();
+        } else if (menu instanceof SmallShopSettingsMenu configMenu) {
+            blockEntity = configMenu.getBlockEntity();
+            isOwner = true;
         }
 
         if (blockEntity != null && isOwner) {
@@ -89,7 +102,7 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
             savedMouseX = mc.mouseHandler.xpos();
             savedMouseY = mc.mouseHandler.ypos();
 
-            NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), showOffers));
+            NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), tab));
             playSound(SoundEvents.UI_BUTTON_CLICK);
         }
     }

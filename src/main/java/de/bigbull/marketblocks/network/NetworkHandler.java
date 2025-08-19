@@ -42,6 +42,12 @@ public class NetworkHandler {
                 AutoFillPaymentPacket::handle
         );
 
+        registrar.playToServer(
+                UpdateShopNamePacket.TYPE,
+                UpdateShopNamePacket.CODEC,
+                UpdateShopNamePacket::handle
+        );
+
         registrar.playToClient(
                 OfferStatusPacket.TYPE,
                 OfferStatusPacket.CODEC,

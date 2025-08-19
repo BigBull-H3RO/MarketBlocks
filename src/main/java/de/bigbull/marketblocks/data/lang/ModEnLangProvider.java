@@ -43,6 +43,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.offers", "Offers");
         add("gui.marketblocks.offers_tab", "Show Offers");
         add("gui.marketblocks.inventory_tab", "Show Inventory");
+        add("gui.marketblocks.settings_tab", "Show Settings");
 
         // Inventory Labels
         add("gui.marketblocks.input_inventory", "Input");
@@ -51,6 +52,11 @@ public class ModEnLangProvider extends LanguageProvider {
         // Inventory Info
         add("gui.marketblocks.inventory_owner_only", "Only the owner can manage inventory");
         add("gui.marketblocks.inventory_flow_hint", "Items flow from Input to Output inventory");
+
+        // Settings
+        add("gui.marketblocks.settings_title", "Shop Settings");
+        add("gui.marketblocks.save", "Save");
+        add("gui.marketblocks.shop_name", "Shop Name");
 
         // Error Messages
         add("gui.marketblocks.error.no_result_item", "Please place an item in the result slot");

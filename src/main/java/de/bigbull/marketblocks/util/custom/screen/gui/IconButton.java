@@ -46,8 +46,8 @@ public class IconButton extends Button {
         RenderSystem.setShaderTexture(0, background);
         graphics.blit(background, getX(), getY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight());
         RenderSystem.setShaderTexture(0, icon);
-        int iconX = getX() + (getWidth() - 16) / 2;
-        int iconY = getY() + (getHeight() - 16) / 2;
-        graphics.blit(icon, iconX, iconY, 0, 0, 0, 16, 16, 16, 16);
+        int iconX = getX() + (getWidth() - 18) / 2;
+        int iconY = getY() + (getHeight() - 18) / 2;
+        graphics.blit(icon, iconX, iconY, 0, 0, 0, 18, 18, 18, 18);
     }
 }

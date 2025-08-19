@@ -38,6 +38,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private UUID ownerId = null;
     private String ownerName = "";
 
+    // Shop Name
+    private String shopName = "";
+
     public SmallShopBlockEntity(BlockPos pos, BlockState state) {
         super(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), pos, state);
     }
@@ -200,6 +203,19 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public String getOwnerName() {
         return ownerName;
+    }
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String name) {
+        this.shopName = name;
+        sync();
+    }
+
+    public void setShopNameClient(String name) {
+        this.shopName = name;
     }
 
     // Angebots-System
@@ -466,6 +482,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         hasOffer = tag.getBoolean("HasOffer");
         loadOwner(tag);
+        shopName = tag.contains("ShopName") ? tag.getString("ShopName") : "";
     }
 
     @Override
@@ -485,6 +502,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         tag.putBoolean("HasOffer", hasOffer);
         saveOwner(tag);
+        tag.putString("ShopName", shopName);
     }
 
     @Override

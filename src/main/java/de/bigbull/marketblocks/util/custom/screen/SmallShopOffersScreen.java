@@ -51,7 +51,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         this.offerButton.visible = true;
 
         if (isOwner) {
-            createTabButtons(leftPos + imageWidth + 4, topPos + 8, true, () -> {}, () -> switchTab(false));
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, 0, () -> {}, () -> switchTab(1), () -> switchTab(2));
         }
 
         if (isOwner) {
@@ -174,7 +174,13 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
-        Component title = Component.translatable("gui.marketblocks.shop_title");
+        Component title;
+        String name = blockEntity.getShopName();
+        if (name != null && !name.isEmpty()) {
+            title = Component.literal(name);
+        } else {
+            title = Component.translatable("gui.marketblocks.shop_title");
+        }
         graphics.drawString(font, title, 8, 6, 4210752, false);
 
         renderOwnerInfo(graphics, blockEntity, menu.isOwner(), imageWidth);

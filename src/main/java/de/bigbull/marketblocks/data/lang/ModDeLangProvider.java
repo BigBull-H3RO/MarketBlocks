@@ -25,6 +25,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.offers", "Angebote");
         add("gui.marketblocks.offers_tab", "Angebote anzeigen");
         add("gui.marketblocks.inventory_tab", "Inventar anzeigen");
+        add("gui.marketblocks.settings_tab", "Einstellungen anzeigen");
         add("gui.marketblocks.input_inventory", "Eingabe");
         add("gui.marketblocks.output_inventory", "Ausgabe");
         add("gui.marketblocks.inventory_owner_only", "Nur der Besitzer kann das Inventar verwalten");
@@ -33,6 +34,11 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.delete_offer", "Angebot löschen");
         add("gui.marketblocks.owner", "Besitzer: %s");
         add("gui.marketblocks.out_of_stock", "Nicht auf Lager");
+
+        // Einstellungen
+        add("gui.marketblocks.settings_title", "Shop-Einstellungen");
+        add("gui.marketblocks.save", "Speichern");
+        add("gui.marketblocks.shop_name", "Shopname");
 
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Kleiner Laden");
