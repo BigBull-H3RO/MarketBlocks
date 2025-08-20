@@ -13,20 +13,31 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record UpdateSideSettingsPacket(BlockPos pos, SideMode left, SideMode right, SideMode bottom, SideMode back) implements CustomPacketPayload {
+public record UpdateSideSettingsPacket(BlockPos pos, SideMode left, SideMode right, SideMode bottom, SideMode back, String name, boolean redstone) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<UpdateSideSettingsPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_side_config"));
 
-    public static final StreamCodec<ByteBuf, UpdateSideSettingsPacket> CODEC = StreamCodec.composite(
-            BlockPos.STREAM_CODEC, UpdateSideSettingsPacket::pos,
-            ByteBufCodecs.INT, p -> p.left().ordinal(),
-            ByteBufCodecs.INT, p -> p.right().ordinal(),
-            ByteBufCodecs.INT, p -> p.bottom().ordinal(),
-            ByteBufCodecs.INT, p -> p.back().ordinal(),
-            (pos, l, r, b, ba) -> new UpdateSideSettingsPacket(pos,
-                    SideMode.values()[l], SideMode.values()[r], SideMode.values()[b], SideMode.values()[ba])
+    public static final StreamCodec<ByteBuf, UpdateSideSettingsPacket> CODEC = StreamCodec.of(
+            (buf, packet) -> {
+                BlockPos.STREAM_CODEC.encode(buf, packet.pos());
+                ByteBufCodecs.INT.encode(buf, packet.left().ordinal());
+                ByteBufCodecs.INT.encode(buf, packet.right().ordinal());
+                ByteBufCodecs.INT.encode(buf, packet.bottom().ordinal());
+                ByteBufCodecs.INT.encode(buf, packet.back().ordinal());
+                ByteBufCodecs.STRING_UTF8.encode(buf, packet.name());
+                ByteBufCodecs.BOOL.encode(buf, packet.redstone());
+            },
+            buf -> {
+                BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
+                SideMode left = SideMode.values()[ByteBufCodecs.INT.decode(buf)];
+                SideMode right = SideMode.values()[ByteBufCodecs.INT.decode(buf)];
+                SideMode bottom = SideMode.values()[ByteBufCodecs.INT.decode(buf)];
+                SideMode back = SideMode.values()[ByteBufCodecs.INT.decode(buf)];
+                String name = ByteBufCodecs.STRING_UTF8.decode(buf);
+                boolean redstone = ByteBufCodecs.BOOL.decode(buf);
+                return new UpdateSideSettingsPacket(pos, left, right, bottom, back, name, redstone);
+            }
     );
-
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
@@ -41,6 +52,8 @@ public record UpdateSideSettingsPacket(BlockPos pos, SideMode left, SideMode rig
                 blockEntity.setRightMode(packet.right());
                 blockEntity.setBottomMode(packet.bottom());
                 blockEntity.setBackMode(packet.back());
+                blockEntity.setShopName(packet.name());
+                blockEntity.setEmitRedstone(packet.redstone());
             }
         });
     }

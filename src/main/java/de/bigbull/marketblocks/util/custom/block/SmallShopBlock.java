@@ -92,6 +92,7 @@ public class SmallShopBlock extends BaseEntityBlock {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
                 shopEntity.setOwner(player);
+                shopEntity.lockAdjacentChests();
             }
         }
     }

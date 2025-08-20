@@ -1,7 +1,5 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
-import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.UpdateSideSettingsPacket;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
@@ -12,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 
 public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
     private final SmallShopBlockEntity blockEntity;
+    private final SideMode initialLeft, initialRight, initialBottom, initialBack;
     private SideMode left, right, bottom, back;
     private final net.minecraft.world.inventory.ContainerData data;
 
@@ -23,6 +22,10 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
         this.right = blockEntity.getRightMode();
         this.bottom = blockEntity.getBottomMode();
         this.back = blockEntity.getBackMode();
+        this.initialLeft = this.left;
+        this.initialRight = this.right;
+        this.initialBottom = this.bottom;
+        this.initialBack = this.back;
         this.data = blockEntity.createMenuFlags(playerInventory.player);
         addDataSlots(this.data);
     }
@@ -51,15 +54,16 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
     public SideMode getBottom() { return bottom; }
     public SideMode getBack() { return back; }
 
-    public void setLeft(SideMode mode) { left = mode; blockEntity.setLeftMode(mode); sendUpdate(); }
-    public void setRight(SideMode mode){ right = mode; blockEntity.setRightMode(mode); sendUpdate(); }
-    public void setBottom(SideMode mode){ bottom = mode; blockEntity.setBottomMode(mode); sendUpdate(); }
-    public void setBack(SideMode mode){ back = mode; blockEntity.setBackMode(mode); sendUpdate(); }
+    public void setLeft(SideMode mode) { left = mode; }
+    public void setRight(SideMode mode){ right = mode; }
+    public void setBottom(SideMode mode){ bottom = mode; }
+    public void setBack(SideMode mode){ back = mode; }
 
-    private void sendUpdate() {
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide()) {
-            NetworkHandler.sendToServer(new UpdateSideSettingsPacket(blockEntity.getBlockPos(), left, right, bottom, back));
-        }
+    public void resetModes() {
+        left = initialLeft;
+        right = initialRight;
+        bottom = initialBottom;
+        back = initialBack;
     }
 
     public boolean isOwner() {

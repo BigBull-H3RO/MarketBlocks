@@ -2,8 +2,7 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.UpdateRedstoneSettingPacket;
-import de.bigbull.marketblocks.network.packets.UpdateShopNamePacket;
+import de.bigbull.marketblocks.network.packets.UpdateSideSettingsPacket;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
@@ -21,6 +20,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
     private EditBox nameField;
     private Checkbox emitRedstoneCheckbox;
     private CycleButton<SideMode> leftButton, rightButton, bottomButton, backButton;
+    private boolean saved;
 
     public SmallShopSettingsScreen(SmallShopSettingsMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -56,8 +56,12 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                 boolean emit = emitRedstoneCheckbox.selected();
                 blockEntity.setShopNameClient(name);
                 blockEntity.setEmitRedstoneClient(emit);
-                NetworkHandler.sendToServer(new UpdateShopNamePacket(blockEntity.getBlockPos(), name));
-                NetworkHandler.sendToServer(new UpdateRedstoneSettingPacket(blockEntity.getBlockPos(), emit));
+                blockEntity.setLeftMode(menu.getLeft());
+                blockEntity.setRightMode(menu.getRight());
+                blockEntity.setBottomMode(menu.getBottom());
+                blockEntity.setBackMode(menu.getBack());
+                NetworkHandler.sendToServer(new UpdateSideSettingsPacket(blockEntity.getBlockPos(), menu.getLeft(), menu.getRight(), menu.getBottom(), menu.getBack(), name, emit));
+                saved = true;
             }).bounds(leftPos + imageWidth - 60 - 8, topPos + imageHeight - 20 - 8, 60, 20).build());
 
             int y = topPos + 80;
@@ -97,5 +101,13 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                 .create(leftPos + 8, y, 120, 20,
                         Component.translatable("gui.marketblocks.side." + sideKey),
                         (btn, value) -> setter.accept(value));
+    }
+
+    @Override
+    public void onClose() {
+        if (!saved) {
+            menu.resetModes();
+        }
+        super.onClose();
     }
 }

@@ -252,24 +252,56 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     public SideMode getBackMode() { return backMode; }
 
     public void setLeftMode(SideMode mode)  {
+        SideMode old = this.leftMode;
         this.leftMode = mode;
+        markDirty();
         sync();
-        invalidateNeighbor(getBlockState().getValue(SmallShopBlock.FACING).getCounterClockWise());
+        Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getCounterClockWise();
+        invalidateNeighbor(dir);
+        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
+            lockAdjacentChest(dir);
+        } else if (old != SideMode.DISABLED) {
+            unlockAdjacentChests();
+        }
     }
     public void setRightMode(SideMode mode) {
+        SideMode old = this.rightMode;
         this.rightMode = mode;
+        markDirty();
         sync();
-        invalidateNeighbor(getBlockState().getValue(SmallShopBlock.FACING).getClockWise());
+        Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getClockWise();
+        invalidateNeighbor(dir);
+        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
+            lockAdjacentChest(dir);
+        } else if (old != SideMode.DISABLED) {
+            unlockAdjacentChests();
+        }
     }
     public void setBottomMode(SideMode mode){
+        SideMode old = this.bottomMode;
         this.bottomMode = mode;
+        markDirty();
         sync();
-        invalidateNeighbor(Direction.DOWN);
+        Direction dir = Direction.DOWN;
+        invalidateNeighbor(dir);
+        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
+            lockAdjacentChest(dir);
+        } else if (old != SideMode.DISABLED) {
+            unlockAdjacentChests();
+        }
     }
     public void setBackMode(SideMode mode)  {
+        SideMode old = this.backMode;
         this.backMode = mode;
+        markDirty();
         sync();
-        invalidateNeighbor(getBlockState().getValue(SmallShopBlock.FACING).getOpposite());
+        Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getOpposite();
+        invalidateNeighbor(dir);
+        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
+            lockAdjacentChest(dir);
+        } else if (old != SideMode.DISABLED) {
+            unlockAdjacentChests();
+        }
     }
 
     public SideMode getModeForSide(Direction side) {
@@ -526,6 +558,21 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    private void lockAdjacentChest(Direction dir) {
+        if (level == null) return;
+        BlockPos neighbour = worldPosition.relative(dir);
+        level.invalidateCapabilities(neighbour);
+    }
+
+    public void lockAdjacentChests() {
+        if (level == null) return;
+        for (Direction dir : Direction.values()) {
+            if (getModeForSide(dir) == SideMode.INPUT || getModeForSide(dir) == SideMode.OUTPUT) {
+                lockAdjacentChest(dir);
+            }
+        }
+    }
+
     public static void tick(Level level, BlockPos pos, BlockState state, SmallShopBlockEntity be) {
         if (!level.isClientSide) {
             be.pullFromInputChest();
@@ -537,14 +584,24 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (level == null || level.isClientSide) return;
         for (Direction dir : Direction.values()) {
             if (getModeForSide(dir) == SideMode.INPUT) {
-                IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, worldPosition.relative(dir), dir.getOpposite());
+                BlockPos neighbourPos = worldPosition.relative(dir);
+                IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
+                if (neighbour == null) {
+                    neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
+                }
+                if (neighbour instanceof LockedChestWrapper locked) {
+                    if (ownerId != null && ownerId.equals(locked.owner())) {
+                        neighbour = locked.unwrap();
+                    } else {
+                        continue;
+                    }
+                }
                 if (neighbour != null) {
                     for (int i = 0; i < neighbour.getSlots(); i++) {
                         ItemStack stackInSlot = neighbour.getStackInSlot(i);
                         if (stackInSlot.isEmpty()) continue;
-                        ItemStack toMove = stackInSlot.copy();
-                        ItemStack remainderSim = ItemHandlerHelper.insertItem(inputHandler, toMove, true);
-                        int transferable = toMove.getCount() - remainderSim.getCount();
+                        ItemStack remainderSim = ItemHandlerHelper.insertItem(inputHandler, stackInSlot.copy(), true);
+                        int transferable = stackInSlot.getCount() - remainderSim.getCount();
                         if (transferable > 0) {
                             ItemStack extracted = neighbour.extractItem(i, transferable, false);
                             ItemStack leftover = ItemHandlerHelper.insertItem(inputHandler, extracted, false);
@@ -562,14 +619,24 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (level == null || level.isClientSide) return;
         for (Direction dir : Direction.values()) {
             if (getModeForSide(dir) == SideMode.OUTPUT) {
-                IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, worldPosition.relative(dir), dir.getOpposite());
+                BlockPos neighbourPos = worldPosition.relative(dir);
+                IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
+                if (neighbour == null) {
+                    neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
+                }
+                if (neighbour instanceof LockedChestWrapper locked) {
+                    if (ownerId != null && ownerId.equals(locked.owner())) {
+                        neighbour = locked.unwrap();
+                    } else {
+                        continue;
+                    }
+                }
                 if (neighbour != null) {
                     for (int i = 0; i < outputHandler.getSlots(); i++) {
                         ItemStack stackInSlot = outputHandler.getStackInSlot(i);
                         if (stackInSlot.isEmpty()) continue;
-                        ItemStack toMove = stackInSlot.copy();
-                        ItemStack remainderSim = ItemHandlerHelper.insertItem(neighbour, toMove, true);
-                        int transferable = toMove.getCount() - remainderSim.getCount();
+                        ItemStack remainderSim = ItemHandlerHelper.insertItem(neighbour, stackInSlot.copy(), true);
+                        int transferable = stackInSlot.getCount() - remainderSim.getCount();
                         if (transferable > 0) {
                             ItemStack extracted = outputHandler.extractItem(i, transferable, false);
                             ItemStack leftover = ItemHandlerHelper.insertItem(neighbour, extracted, false);
@@ -631,6 +698,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (tag.contains("SideRight"))  rightMode  = SideMode.valueOf(tag.getString("SideRight"));
         if (tag.contains("SideBottom")) bottomMode = SideMode.valueOf(tag.getString("SideBottom"));
         if (tag.contains("SideBack"))   backMode   = SideMode.valueOf(tag.getString("SideBack"));
+        lockAdjacentChests();
     }
 
     @Override
