@@ -417,10 +417,42 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
                 }
             }
         }
+
+        if (level != null && total < result.getCount()) {
+            for (Direction dir : Direction.values()) {
+                if (getModeForSide(dir) == SideMode.INPUT) {
+                    BlockPos neighbourPos = worldPosition.relative(dir);
+                    IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
+                    if (neighbour == null) {
+                        neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
+                    }
+                    if (neighbour instanceof LockedChestWrapper locked) {
+                        if (ownerId != null && ownerId.equals(locked.owner())) {
+                            neighbour = locked.unwrap();
+                        } else {
+                            continue;
+                        }
+                    }
+                    if (neighbour != null) {
+                        for (int i = 0; i < neighbour.getSlots(); i++) {
+                            ItemStack stack = neighbour.getStackInSlot(i);
+                            if (ItemStack.isSameItemSameComponents(stack, result)) {
+                                total += stack.getCount();
+                                if (total >= result.getCount()) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return false;
     }
 
     private void processPurchase() {
+        pullFromInputChest();
         if (!hasOffer || !canAfford() || !hasResultItemInInput()) {
             return;
         }
@@ -471,6 +503,38 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
                 int toTake = Math.min(remaining, stack.getCount());
                 inputHandler.extractItem(i, toTake, false);
                 remaining -= toTake;
+            }
+        }
+
+        if (remaining > 0 && level != null && !level.isClientSide) {
+            for (Direction dir : Direction.values()) {
+                if (getModeForSide(dir) == SideMode.INPUT) {
+                    BlockPos neighbourPos = worldPosition.relative(dir);
+                    IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
+                    if (neighbour == null) {
+                        neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
+                    }
+                    if (neighbour instanceof LockedChestWrapper locked) {
+                        if (ownerId != null && ownerId.equals(locked.owner())) {
+                            neighbour = locked.unwrap();
+                        } else {
+                            continue;
+                        }
+                    }
+                    if (neighbour != null) {
+                        for (int i = 0; i < neighbour.getSlots() && remaining > 0; i++) {
+                            ItemStack stack = neighbour.getStackInSlot(i);
+                            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
+                                int toTake = Math.min(remaining, stack.getCount());
+                                neighbour.extractItem(i, toTake, false);
+                                remaining -= toTake;
+                            }
+                        }
+                    }
+                    if (remaining <= 0) {
+                        break;
+                    }
+                }
             }
         }
     }

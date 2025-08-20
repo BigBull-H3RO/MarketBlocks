@@ -94,7 +94,10 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
             isOwner = inventoryMenu.isOwner();
         } else if (menu instanceof SmallShopSettingsMenu configMenu) {
             blockEntity = configMenu.getBlockEntity();
-            isOwner = true;
+            isOwner = configMenu.isOwner();
+            if (!isOwner) {
+                MarketBlocks.LOGGER.warn("Non-owner attempted to switch tab via settings menu");
+            }
         }
 
         if (blockEntity != null && isOwner) {

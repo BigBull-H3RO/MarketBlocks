@@ -46,12 +46,14 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
             nameField.setMaxLength(32);
             originalName = blockEntity.getShopName();
             nameField.setValue(originalName);
+            nameField.setResponder(s -> saved = false);
 
             emitRedstoneCheckbox = addRenderableWidget(Checkbox.builder(
                             Component.translatable("gui.marketblocks.emit_redstone"), font)
                     .pos(leftPos + 8, topPos + 50)
                     .selected(blockEntity.isEmitRedstone())
                     .tooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")))
+                    .onValueChange((btn, value) -> saved = false)
                     .build());
 
             addRenderableWidget(Button.builder(Component.translatable("gui.marketblocks.save"), b -> {
@@ -103,7 +105,10 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                 .withInitialValue(initial)
                 .create(leftPos + 8, y, 120, 20,
                         Component.translatable("gui.marketblocks.side." + sideKey),
-                        (btn, value) -> setter.accept(value));
+                        (btn, value) -> {
+                            setter.accept(value);
+                            saved = false;
+                        });
     }
 
     @Override
