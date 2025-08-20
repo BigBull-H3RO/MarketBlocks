@@ -21,7 +21,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
 import java.util.Map;
@@ -521,6 +523,63 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         for (Direction dir : Direction.values()) {
             BlockPos neighbour = worldPosition.relative(dir);
             level.invalidateCapabilities(neighbour);
+        }
+    }
+
+    public static void tick(Level level, BlockPos pos, BlockState state, SmallShopBlockEntity be) {
+        if (!level.isClientSide) {
+            be.pullFromInputChest();
+            be.pushToOutputChest();
+        }
+    }
+
+    private void pullFromInputChest() {
+        if (level == null || level.isClientSide) return;
+        for (Direction dir : Direction.values()) {
+            if (getModeForSide(dir) == SideMode.INPUT) {
+                IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, worldPosition.relative(dir), dir.getOpposite());
+                if (neighbour != null) {
+                    for (int i = 0; i < neighbour.getSlots(); i++) {
+                        ItemStack stackInSlot = neighbour.getStackInSlot(i);
+                        if (stackInSlot.isEmpty()) continue;
+                        ItemStack toMove = stackInSlot.copy();
+                        ItemStack remainderSim = ItemHandlerHelper.insertItem(inputHandler, toMove, true);
+                        int transferable = toMove.getCount() - remainderSim.getCount();
+                        if (transferable > 0) {
+                            ItemStack extracted = neighbour.extractItem(i, transferable, false);
+                            ItemStack leftover = ItemHandlerHelper.insertItem(inputHandler, extracted, false);
+                            if (!leftover.isEmpty()) {
+                                neighbour.insertItem(i, leftover, false);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void pushToOutputChest() {
+        if (level == null || level.isClientSide) return;
+        for (Direction dir : Direction.values()) {
+            if (getModeForSide(dir) == SideMode.OUTPUT) {
+                IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, worldPosition.relative(dir), dir.getOpposite());
+                if (neighbour != null) {
+                    for (int i = 0; i < outputHandler.getSlots(); i++) {
+                        ItemStack stackInSlot = outputHandler.getStackInSlot(i);
+                        if (stackInSlot.isEmpty()) continue;
+                        ItemStack toMove = stackInSlot.copy();
+                        ItemStack remainderSim = ItemHandlerHelper.insertItem(neighbour, toMove, true);
+                        int transferable = toMove.getCount() - remainderSim.getCount();
+                        if (transferable > 0) {
+                            ItemStack extracted = outputHandler.extractItem(i, transferable, false);
+                            ItemStack leftover = ItemHandlerHelper.insertItem(neighbour, extracted, false);
+                            if (!leftover.isEmpty()) {
+                                outputHandler.insertItem(i, leftover, false);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
