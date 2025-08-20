@@ -251,57 +251,35 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     public SideMode getBottomMode() { return bottomMode; }
     public SideMode getBackMode() { return backMode; }
 
-    public void setLeftMode(SideMode mode)  {
-        SideMode old = this.leftMode;
-        this.leftMode = mode;
+    private SideMode setSideMode(Direction dir, SideMode newMode, SideMode oldMode) {
         markDirty();
         sync();
+        invalidateNeighbor(dir);
+        if (newMode == SideMode.INPUT || newMode == SideMode.OUTPUT) {
+            lockAdjacentChest(dir);
+        } else if (oldMode != SideMode.DISABLED) {
+            unlockAdjacentChests();
+        }
+        return newMode;
+    }
+
+    public void setLeftMode(SideMode mode) {
         Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getCounterClockWise();
-        invalidateNeighbor(dir);
-        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
-            lockAdjacentChest(dir);
-        } else if (old != SideMode.DISABLED) {
-            unlockAdjacentChests();
-        }
+        this.leftMode = setSideMode(dir, mode, this.leftMode);
     }
+
     public void setRightMode(SideMode mode) {
-        SideMode old = this.rightMode;
-        this.rightMode = mode;
-        markDirty();
-        sync();
         Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getClockWise();
-        invalidateNeighbor(dir);
-        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
-            lockAdjacentChest(dir);
-        } else if (old != SideMode.DISABLED) {
-            unlockAdjacentChests();
-        }
+        this.rightMode = setSideMode(dir, mode, this.rightMode);
     }
-    public void setBottomMode(SideMode mode){
-        SideMode old = this.bottomMode;
-        this.bottomMode = mode;
-        markDirty();
-        sync();
+
+    public void setBottomMode(SideMode mode) {
         Direction dir = Direction.DOWN;
-        invalidateNeighbor(dir);
-        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
-            lockAdjacentChest(dir);
-        } else if (old != SideMode.DISABLED) {
-            unlockAdjacentChests();
-        }
+        this.bottomMode = setSideMode(dir, mode, this.bottomMode);
     }
-    public void setBackMode(SideMode mode)  {
-        SideMode old = this.backMode;
-        this.backMode = mode;
-        markDirty();
-        sync();
+    public void setBackMode(SideMode mode) {
         Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getOpposite();
-        invalidateNeighbor(dir);
-        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
-            lockAdjacentChest(dir);
-        } else if (old != SideMode.DISABLED) {
-            unlockAdjacentChests();
-        }
+        this.backMode = setSideMode(dir, mode, this.backMode);
     }
 
     public SideMode getModeForSide(Direction side) {
