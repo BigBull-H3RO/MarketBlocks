@@ -32,36 +32,40 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
     protected void init() {
         super.init();
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-        createTabButtons(leftPos + imageWidth + 4, topPos + 8, 2,
-                () -> switchTab(0),
-                () -> switchTab(1),
-                () -> {});
+        boolean isOwner = menu.isOwner();
 
-        nameField = addRenderableWidget(new EditBox(font, leftPos + 8, topPos + 20, 120, 20,
-                Component.translatable("gui.marketblocks.shop_name")));
-        nameField.setValue(blockEntity.getShopName());
+        if (isOwner) {
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, 2,
+                    () -> switchTab(0),
+                    () -> switchTab(1),
+                    () -> {});
 
-        emitRedstoneCheckbox = addRenderableWidget(Checkbox.builder(
-                        Component.translatable("gui.marketblocks.emit_redstone"), font)
-                .pos(leftPos + 8, topPos + 50)
-                .selected(blockEntity.isEmitRedstone())
-                .tooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")))
-                .build());
+            nameField = addRenderableWidget(new EditBox(font, leftPos + 8, topPos + 20, 120, 20,
+                    Component.translatable("gui.marketblocks.shop_name")));
+            nameField.setValue(blockEntity.getShopName());
 
-        addRenderableWidget(Button.builder(Component.translatable("gui.marketblocks.save"), b -> {
-            String name = nameField.getValue();
-            boolean emit = emitRedstoneCheckbox.selected();
-            blockEntity.setShopNameClient(name);
-            blockEntity.setEmitRedstoneClient(emit);
-            NetworkHandler.sendToServer(new UpdateShopNamePacket(blockEntity.getBlockPos(), name));
-            NetworkHandler.sendToServer(new UpdateRedstoneSettingPacket(blockEntity.getBlockPos(), emit));
-        }).bounds(leftPos + imageWidth - 60 - 8, topPos + imageHeight - 20 - 8, 60, 20).build());
+            emitRedstoneCheckbox = addRenderableWidget(Checkbox.builder(
+                            Component.translatable("gui.marketblocks.emit_redstone"), font)
+                    .pos(leftPos + 8, topPos + 50)
+                    .selected(blockEntity.isEmitRedstone())
+                    .tooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")))
+                    .build());
 
-        int y = topPos + 80;
-        leftButton = addRenderableWidget(createSideButton("left", menu.getLeft(), y, menu::setLeft));
-        rightButton = addRenderableWidget(createSideButton("right", menu.getRight(), y + 22, menu::setRight));
-        bottomButton = addRenderableWidget(createSideButton("bottom", menu.getBottom(), y + 44, menu::setBottom));
-        backButton = addRenderableWidget(createSideButton("back", menu.getBack(), y + 66, menu::setBack));
+            addRenderableWidget(Button.builder(Component.translatable("gui.marketblocks.save"), b -> {
+                String name = nameField.getValue();
+                boolean emit = emitRedstoneCheckbox.selected();
+                blockEntity.setShopNameClient(name);
+                blockEntity.setEmitRedstoneClient(emit);
+                NetworkHandler.sendToServer(new UpdateShopNamePacket(blockEntity.getBlockPos(), name));
+                NetworkHandler.sendToServer(new UpdateRedstoneSettingPacket(blockEntity.getBlockPos(), emit));
+            }).bounds(leftPos + imageWidth - 60 - 8, topPos + imageHeight - 20 - 8, 60, 20).build());
+
+            int y = topPos + 80;
+            leftButton = addRenderableWidget(createSideButton("left", menu.getLeft(), y, menu::setLeft));
+            rightButton = addRenderableWidget(createSideButton("right", menu.getRight(), y + 22, menu::setRight));
+            bottomButton = addRenderableWidget(createSideButton("bottom", menu.getBottom(), y + 44, menu::setBottom));
+            backButton = addRenderableWidget(createSideButton("back", menu.getBack(), y + 66, menu::setBack));
+        }
     }
 
     @Override
@@ -71,7 +75,14 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+        SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         graphics.drawString(font, Component.translatable("gui.marketblocks.settings_title"), 8, 6, 4210752, false);
+        renderOwnerInfo(graphics, blockEntity, menu.isOwner(), imageWidth);
+        if (!menu.isOwner()) {
+            Component info = Component.translatable("gui.marketblocks.settings_owner_only");
+            int width = font.width(info);
+            graphics.drawString(font, info, (imageWidth - width) / 2, 84, 0x808080, false);
+        }
     }
 
     @Override
