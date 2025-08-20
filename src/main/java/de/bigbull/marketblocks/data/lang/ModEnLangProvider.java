@@ -60,6 +60,14 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.emit_redstone", "Emit Redstone");
         add("gui.marketblocks.emit_redstone.tooltip", "Emit a short redstone pulse after a purchase");
 
+        add("gui.marketblocks.side.left", "Left");
+        add("gui.marketblocks.side.right", "Right");
+        add("gui.marketblocks.side.bottom", "Bottom");
+        add("gui.marketblocks.side.back", "Back");
+        add("gui.marketblocks.input", "Input");
+        add("gui.marketblocks.output", "Output");
+        add("gui.marketblocks.disabled", "Disabled");
+
         // Error Messages
         add("gui.marketblocks.error.no_result_item", "Please place an item in the result slot");
         add("gui.marketblocks.error.no_payment_items", "Please place at least one payment item");

@@ -4,14 +4,12 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.UpdateRedstoneSettingPacket;
 import de.bigbull.marketblocks.network.packets.UpdateShopNamePacket;
+import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Checkbox;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -22,6 +20,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
 
     private EditBox nameField;
     private Checkbox emitRedstoneCheckbox;
+    private CycleButton<SideMode> leftButton, rightButton, bottomButton, backButton;
 
     public SmallShopSettingsScreen(SmallShopSettingsMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -57,6 +56,12 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
             NetworkHandler.sendToServer(new UpdateShopNamePacket(blockEntity.getBlockPos(), name));
             NetworkHandler.sendToServer(new UpdateRedstoneSettingPacket(blockEntity.getBlockPos(), emit));
         }).bounds(leftPos + imageWidth - 60 - 8, topPos + imageHeight - 20 - 8, 60, 20).build());
+
+        int y = topPos + 80;
+        leftButton = addRenderableWidget(createSideButton("left", menu.getLeft(), y, menu::setLeft));
+        rightButton = addRenderableWidget(createSideButton("right", menu.getRight(), y + 22, menu::setRight));
+        bottomButton = addRenderableWidget(createSideButton("bottom", menu.getBottom(), y + 44, menu::setBottom));
+        backButton = addRenderableWidget(createSideButton("back", menu.getBack(), y + 66, menu::setBack));
     }
 
     @Override
@@ -71,6 +76,15 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
 
     @Override
     protected boolean isOwner() {
-        return true;
+        return menu.isOwner();
+    }
+
+    private CycleButton<SideMode> createSideButton(String sideKey, SideMode initial, int y, java.util.function.Consumer<SideMode> setter) {
+        return CycleButton.builder(SideMode::getDisplayName)
+                .withValues(SideMode.values())
+                .withInitialValue(initial)
+                .create(leftPos + 8, y, 120, 20,
+                        Component.translatable("gui.marketblocks.side." + sideKey),
+                        (btn, value) -> setter.accept(value));
     }
 }

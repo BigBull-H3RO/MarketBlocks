@@ -1,9 +1,11 @@
 package de.bigbull.marketblocks.util.custom.entity;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -44,6 +46,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     // Redstone
     private boolean emitRedstone = false;
+
+    // Seitenkonfiguration
+    private SideMode leftMode   = SideMode.DISABLED;
+    private SideMode rightMode  = SideMode.DISABLED;
+    private SideMode bottomMode = SideMode.DISABLED;
+    private SideMode backMode   = SideMode.DISABLED;
 
     public SmallShopBlockEntity(BlockPos pos, BlockState state) {
         super(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), pos, state);
@@ -233,6 +241,49 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public void setEmitRedstoneClient(boolean emitRedstone) {
         this.emitRedstone = emitRedstone;
+    }
+
+    // Seitenkonfiguration
+    public SideMode getLeftMode() { return leftMode; }
+    public SideMode getRightMode() { return rightMode; }
+    public SideMode getBottomMode() { return bottomMode; }
+    public SideMode getBackMode() { return backMode; }
+
+    public void setLeftMode(SideMode mode)  {
+        this.leftMode = mode;
+        sync();
+        invalidateNeighbor(getBlockState().getValue(SmallShopBlock.FACING).getCounterClockWise());
+    }
+    public void setRightMode(SideMode mode) {
+        this.rightMode = mode;
+        sync();
+        invalidateNeighbor(getBlockState().getValue(SmallShopBlock.FACING).getClockWise());
+    }
+    public void setBottomMode(SideMode mode){
+        this.bottomMode = mode;
+        sync();
+        invalidateNeighbor(Direction.DOWN);
+    }
+    public void setBackMode(SideMode mode)  {
+        this.backMode = mode;
+        sync();
+        invalidateNeighbor(getBlockState().getValue(SmallShopBlock.FACING).getOpposite());
+    }
+
+    public SideMode getModeForSide(Direction side) {
+        Direction facing = getBlockState().getValue(SmallShopBlock.FACING);
+        if (side == Direction.DOWN) return bottomMode;
+        if (side == facing.getOpposite()) return backMode;
+        if (side == facing.getClockWise()) return rightMode;
+        if (side == facing.getCounterClockWise()) return leftMode;
+        return SideMode.DISABLED;
+    }
+
+    private void invalidateNeighbor(Direction dir) {
+        if (level != null) {
+            BlockPos neighbour = worldPosition.relative(dir);
+            level.invalidateCapabilities(neighbour);
+        }
     }
 
     // Angebots-System
@@ -465,6 +516,14 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         handlerMap.values().forEach(handler -> dropItems(level, pos, handler));
     }
 
+    public void unlockAdjacentChests() {
+        if (level == null) return;
+        for (Direction dir : Direction.values()) {
+            BlockPos neighbour = worldPosition.relative(dir);
+            level.invalidateCapabilities(neighbour);
+        }
+    }
+
     private void saveHandlers(CompoundTag tag, HolderLookup.Provider registries) {
         handlerMap.forEach((name, handler) -> tag.put(name, handler.serializeNBT(registries)));
     }
@@ -509,6 +568,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         loadOwner(tag);
         shopName = tag.contains("ShopName") ? tag.getString("ShopName") : "";
         emitRedstone = tag.getBoolean("EmitRedstone");
+        if (tag.contains("SideLeft"))   leftMode   = SideMode.valueOf(tag.getString("SideLeft"));
+        if (tag.contains("SideRight"))  rightMode  = SideMode.valueOf(tag.getString("SideRight"));
+        if (tag.contains("SideBottom")) bottomMode = SideMode.valueOf(tag.getString("SideBottom"));
+        if (tag.contains("SideBack"))   backMode   = SideMode.valueOf(tag.getString("SideBack"));
     }
 
     @Override
@@ -530,6 +593,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         saveOwner(tag);
         tag.putString("ShopName", shopName);
         tag.putBoolean("EmitRedstone", emitRedstone);
+        tag.putString("SideLeft", leftMode.name());
+        tag.putString("SideRight", rightMode.name());
+        tag.putString("SideBottom", bottomMode.name());
+        tag.putString("SideBack", backMode.name());
     }
 
     @Override

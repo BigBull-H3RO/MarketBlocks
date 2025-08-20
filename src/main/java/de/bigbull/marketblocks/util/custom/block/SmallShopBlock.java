@@ -151,6 +151,7 @@ public class SmallShopBlock extends BaseEntityBlock {
             if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
                 // Droppe alle Items beim Abbauen
                 shopEntity.dropContents(level, pos);
+                shopEntity.unlockAdjacentChests();
             }
         }
         super.onRemove(state, level, pos, newState, movedByPiston);

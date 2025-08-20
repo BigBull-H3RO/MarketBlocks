@@ -42,6 +42,14 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.emit_redstone", "Redstone-Signal ausgeben");
         add("gui.marketblocks.emit_redstone.tooltip", "Gibt nach einem Kauf kurz ein Redstone-Signal aus");
 
+        add("gui.marketblocks.side.left", "Links");
+        add("gui.marketblocks.side.right", "Rechts");
+        add("gui.marketblocks.side.bottom", "Unten");
+        add("gui.marketblocks.side.back", "Hinten");
+        add("gui.marketblocks.input", "Eingang");
+        add("gui.marketblocks.output", "Ausgang");
+        add("gui.marketblocks.disabled", "Deaktiviert");
+
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Kleiner Laden");
     }
