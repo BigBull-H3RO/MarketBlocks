@@ -21,6 +21,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
     private Checkbox emitRedstoneCheckbox;
     private CycleButton<SideMode> leftButton, rightButton, bottomButton, backButton;
     private boolean saved;
+    private String originalName;
 
     public SmallShopSettingsScreen(SmallShopSettingsMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -42,7 +43,9 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
 
             nameField = addRenderableWidget(new EditBox(font, leftPos + 8, topPos + 20, 120, 20,
                     Component.translatable("gui.marketblocks.shop_name")));
-            nameField.setValue(blockEntity.getShopName());
+            nameField.setMaxLength(32);
+            originalName = blockEntity.getShopName();
+            nameField.setValue(originalName);
 
             emitRedstoneCheckbox = addRenderableWidget(Checkbox.builder(
                             Component.translatable("gui.marketblocks.emit_redstone"), font)
@@ -107,6 +110,9 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
     public void onClose() {
         if (!saved) {
             menu.resetModes();
+        }
+        if (nameField != null && nameField.getValue().trim().isEmpty()) {
+            menu.getBlockEntity().setShopNameClient(originalName);
         }
         super.onClose();
     }

@@ -13,6 +13,8 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
     private final SideMode initialLeft, initialRight, initialBottom, initialBack;
     private SideMode left, right, bottom, back;
     private final net.minecraft.world.inventory.ContainerData data;
+    /** Flag that indicates the player is the owner of the shop. */
+    private static final int OWNER_FLAG = 0b100;
 
     // Server constructor
     public SmallShopSettingsMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
@@ -37,7 +39,7 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        return null;
+        return ItemStack.EMPTY;
     }
 
     @Override
@@ -67,6 +69,6 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
     }
 
     public boolean isOwner() {
-        return (data.get(0) & 4) != 0;
+        return (data.get(0) & OWNER_FLAG) != 0;
     }
 }

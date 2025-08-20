@@ -29,13 +29,14 @@ public record UpdateSideSettingsPacket(BlockPos pos, SideMode left, SideMode rig
             },
             buf -> {
                 BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
-                SideMode left = SideMode.values()[ByteBufCodecs.INT.decode(buf)];
-                SideMode right = SideMode.values()[ByteBufCodecs.INT.decode(buf)];
-                SideMode bottom = SideMode.values()[ByteBufCodecs.INT.decode(buf)];
-                SideMode back = SideMode.values()[ByteBufCodecs.INT.decode(buf)];
-                String name = ByteBufCodecs.STRING_UTF8.decode(buf);
+                int leftIdx = ByteBufCodecs.INT.decode(buf);
+                int rightIdx = ByteBufCodecs.INT.decode(buf);
+                int bottomIdx = ByteBufCodecs.INT.decode(buf);
+                int backIdx = ByteBufCodecs.INT.decode(buf);
+                String decodedName = ByteBufCodecs.STRING_UTF8.decode(buf);
                 boolean redstone = ByteBufCodecs.BOOL.decode(buf);
-                return new UpdateSideSettingsPacket(pos, left, right, bottom, back, name, redstone);
+                String name = decodedName.substring(0, Math.min(decodedName.length(), 32));
+                return new UpdateSideSettingsPacket(pos, safeMode(leftIdx), safeMode(rightIdx), safeMode(bottomIdx), safeMode(backIdx), name, redstone);
             }
     );
     @Override
@@ -52,9 +53,15 @@ public record UpdateSideSettingsPacket(BlockPos pos, SideMode left, SideMode rig
                 blockEntity.setRightMode(packet.right());
                 blockEntity.setBottomMode(packet.bottom());
                 blockEntity.setBackMode(packet.back());
-                blockEntity.setShopName(packet.name());
+                String name = packet.name().strip().replaceAll("[^A-Za-z0-9 _-]", "");
+                blockEntity.setShopName(name);
                 blockEntity.setEmitRedstone(packet.redstone());
             }
         });
+    }
+
+    private static SideMode safeMode(int index) {
+        SideMode[] values = SideMode.values();
+        return index >= 0 && index < values.length ? values[index] : SideMode.DISABLED;
     }
 }

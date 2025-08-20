@@ -42,6 +42,11 @@ public record SwitchTabPacket(BlockPos pos, int tab) implements CustomPacketPayl
             BlockPos pos = packet.pos();
             int tab = packet.tab();
 
+            if (tab < 0 || tab > 2) {
+                MarketBlocks.LOGGER.warn("Received invalid tab {} from player {}", tab, player.getName().getString());
+                return;
+            }
+
             if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity blockEntity) {
                 if (tab == 0) {
                     player.openMenu(

@@ -22,7 +22,6 @@ public class NetworkHandler {
         registrar.playToServer(DeleteOfferPacket.TYPE, DeleteOfferPacket.CODEC, DeleteOfferPacket::handle);
         registrar.playToServer(SwitchTabPacket.TYPE, SwitchTabPacket.CODEC, SwitchTabPacket::handle);
         registrar.playToServer(AutoFillPaymentPacket.TYPE, AutoFillPaymentPacket.CODEC, AutoFillPaymentPacket::handle);
-        registrar.playToServer(UpdateShopNamePacket.TYPE, UpdateShopNamePacket.CODEC, UpdateShopNamePacket::handle);
         registrar.playToServer(UpdateRedstoneSettingPacket.TYPE, UpdateRedstoneSettingPacket.CODEC, UpdateRedstoneSettingPacket::handle);
         registrar.playToServer(UpdateSideSettingsPacket.TYPE, UpdateSideSettingsPacket.CODEC, UpdateSideSettingsPacket::handle);
 
