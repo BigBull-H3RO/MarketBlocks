@@ -2,20 +2,25 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.LockedChestWrapper;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.wrapper.InvWrapper;
 
@@ -38,6 +43,26 @@ public class ChestSecurityHandler {
     }
 
     @SubscribeEvent
+    public static void onChestPlaced(BlockEvent.EntityPlaceEvent event) {
+        Level level = (Level) event.getLevel();
+        if (level.isClientSide()) return;
+
+        BlockState state = event.getPlacedBlock();
+        if (!(state.getBlock() instanceof ChestBlock)) return;
+
+        if (state.getValue(ChestBlock.TYPE) == ChestType.SINGLE) return;
+
+        Direction direction = ChestBlock.getConnectedDirection(state);
+        BlockPos otherPos = event.getPos().relative(direction);
+        BlockState otherState = level.getBlockState(otherPos);
+
+        if (isAdjacentToShop(level, event.getPos()) || isAdjacentToShop(level, otherPos)) {
+            level.setBlock(event.getPos(), state.setValue(ChestBlock.TYPE, ChestType.SINGLE), 3);
+            level.setBlock(otherPos, otherState.setValue(ChestBlock.TYPE, ChestType.SINGLE), 3);
+        }
+    }
+
+    @SubscribeEvent
     public static void onRightClick(PlayerInteractEvent.RightClickBlock event) {
         Level level = event.getLevel();
         BlockPos pos = event.getPos();
@@ -48,6 +73,16 @@ public class ChestSecurityHandler {
                 event.setCanceled(true);
             }
         }
+    }
+
+    private static boolean isAdjacentToShop(Level level, BlockPos pos) {
+        for (Direction dir : Direction.values()) {
+            BlockPos neighbor = pos.relative(dir);
+            if (level.getBlockState(neighbor).getBlock() instanceof SmallShopBlock) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static SmallShopBlockEntity findShop(Level level, BlockPos pos) {
