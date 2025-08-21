@@ -97,7 +97,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
             int playerY = y + 88;
             ownerCheckboxes.clear();
             if (Minecraft.getInstance().getConnection() != null) {
-                List<PlayerInfo> players = (List<PlayerInfo>) Minecraft.getInstance().getConnection().getOnlinePlayers();
+                Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();
                 Map<UUID, String> current = menu.getAdditionalOwners();
                 for (PlayerInfo info : players) {
                     UUID id = info.getProfile().getId();
