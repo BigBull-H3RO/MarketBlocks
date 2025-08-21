@@ -22,6 +22,6 @@ public class MarketBlocks {
         RegistriesInit.register(modEventBus);
         CreativeTabInit.CREATIVE_MODE_TABS.register(modEventBus);
 
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC, "marketblocks-common.toml");
     }
 }
