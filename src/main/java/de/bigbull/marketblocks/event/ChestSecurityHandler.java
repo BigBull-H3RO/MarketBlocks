@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.LockedChestWrapper;
@@ -22,6 +23,7 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 import net.neoforged.neoforge.items.wrapper.InvWrapper;
 
 @EventBusSubscriber(modid = MarketBlocks.MODID)
@@ -34,7 +36,22 @@ public class ChestSecurityHandler {
                 (chest, side) -> {
                     SmallShopBlockEntity shop = findShop(chest.getLevel(), chest.getBlockPos());
                     if (shop != null) {
-                        IItemHandler handler = new InvWrapper(chest);
+                        IItemHandler handler;
+                        BlockState state = chest.getBlockState();
+                        if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get() &&
+                                state.getBlock() instanceof ChestBlock &&
+                                state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                            Direction dir = ChestBlock.getConnectedDirection(state);
+                            BlockPos otherPos = chest.getBlockPos().relative(dir);
+                            BlockEntity otherBe = chest.getLevel().getBlockEntity(otherPos);
+                            if (otherBe instanceof ChestBlockEntity otherChest) {
+                                handler = new CombinedInvWrapper(new InvWrapper(chest), new InvWrapper(otherChest));
+                            } else {
+                                handler = new InvWrapper(chest);
+                            }
+                        } else {
+                            handler = new InvWrapper(chest);
+                        }
                         return new LockedChestWrapper(handler, shop.getOwnerId());
                     }
                     return null;
@@ -49,6 +66,18 @@ public class ChestSecurityHandler {
 
         BlockState state = event.getPlacedBlock();
         if (!(state.getBlock() instanceof ChestBlock)) return;
+
+        if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get()) {
+            if (state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                Direction dir = ChestBlock.getConnectedDirection(state);
+                BlockPos otherPos = event.getPos().relative(dir);
+                if (isAdjacentToShop(level, event.getPos()) || isAdjacentToShop(level, otherPos)) {
+                    level.invalidateCapabilities(event.getPos());
+                    level.invalidateCapabilities(otherPos);
+                }
+            }
+            return;
+        }
 
         if (state.getValue(ChestBlock.TYPE) == ChestType.SINGLE) return;
 
@@ -86,6 +115,24 @@ public class ChestSecurityHandler {
     }
 
     private static SmallShopBlockEntity findShop(Level level, BlockPos pos) {
+        SmallShopBlockEntity shop = findShopSingle(level, pos);
+        if (shop != null) {
+            return shop;
+        }
+
+        if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get()) {
+            BlockState state = level.getBlockState(pos);
+            if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                Direction direction = ChestBlock.getConnectedDirection(state);
+                BlockPos otherPos = pos.relative(direction);
+                return findShopSingle(level, otherPos);
+            }
+        }
+
+        return null;
+    }
+
+    private static SmallShopBlockEntity findShopSingle(Level level, BlockPos pos) {
         for (Direction dir : Direction.values()) {
             BlockPos neighbor = pos.relative(dir);
             BlockEntity be = level.getBlockEntity(neighbor);
