@@ -8,6 +8,9 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.Map;
+import java.util.UUID;
+
 public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
     private final SmallShopBlockEntity blockEntity;
     private final SideMode initialLeft, initialRight, initialBottom, initialBack;
@@ -70,5 +73,9 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
 
     public boolean isOwner() {
         return (data.get(0) & OWNER_FLAG) != 0;
+    }
+
+    public Map<UUID, String> getAdditionalOwners() {
+        return blockEntity.getAdditionalOwners();
     }
 }

@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -26,8 +27,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     // Angebots-System
@@ -42,6 +42,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     // Owner System
     private UUID ownerId = null;
     private String ownerName = "";
+    private final Map<UUID, String> additionalOwners = new HashMap<>();
 
     // Shop Name
     private String shopName = "";
@@ -177,7 +178,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private void sync() {
+    public  void sync() {
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
@@ -201,8 +202,38 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         setChanged();
     }
 
+    public void addOwner(UUID id, String name) {
+        additionalOwners.put(id, name);
+        sync();
+    }
+
+    public void removeOwner(UUID id) {
+        if (additionalOwners.remove(id) != null) {
+            sync();
+        }
+    }
+
+    public Set<UUID> getOwners() {
+        Set<UUID> owners = new HashSet<>(additionalOwners.keySet());
+        if (ownerId != null) {
+            owners.add(ownerId);
+        }
+        return owners;
+    }
+
+    public Map<UUID, String> getAdditionalOwners() {
+        return additionalOwners;
+    }
+
+    public void setAdditionalOwners(Map<UUID, String> owners) {
+        additionalOwners.clear();
+        additionalOwners.putAll(owners);
+        sync();
+    }
+
     public boolean isOwner(Player player) {
-        return ownerId != null && ownerId.equals(player.getUUID());
+        UUID id = player.getUUID();
+        return (ownerId != null && ownerId.equals(id)) || additionalOwners.containsKey(id);
     }
 
     public void ensureOwner(Player player) {
@@ -309,7 +340,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
         }
         if (neighbour instanceof LockedChestWrapper locked) {
-            if (ownerId != null && ownerId.equals(locked.owner())) {
+            if (locked.owner() != null && getOwners().contains(locked.owner())) {
                 return locked.unwrap();
             } else {
                 return null;
@@ -632,7 +663,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
                     neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
                 }
                 if (neighbour instanceof LockedChestWrapper locked) {
-                    if (ownerId != null && ownerId.equals(locked.owner())) {
+                    if (locked.owner() != null && getOwners().contains(locked.owner())) {
                         neighbour = locked.unwrap();
                     } else {
                         continue;
@@ -697,6 +728,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private void loadOwner(CompoundTag tag) {
         ownerId = tag.hasUUID("OwnerId") ? tag.getUUID("OwnerId") : null;
         ownerName = tag.contains("OwnerName") ? tag.getString("OwnerName") : "";
+        additionalOwners.clear();
+        if (tag.contains("AdditionalOwners")) {
+            ListTag list = tag.getList("AdditionalOwners", 10);
+            for (int i = 0; i < list.size(); i++) {
+                CompoundTag entry = list.getCompound(i);
+                UUID id = entry.getUUID("Id");
+                String name = entry.getString("Name");
+                additionalOwners.put(id, name);
+            }
+        }
     }
 
     private void saveOwner(CompoundTag tag) {
@@ -704,6 +745,14 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             tag.putUUID("OwnerId", ownerId);
         }
         tag.putString("OwnerName", ownerName);
+        ListTag list = new ListTag();
+        for (Map.Entry<UUID, String> e : additionalOwners.entrySet()) {
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("Id", e.getKey());
+            entry.putString("Name", e.getValue());
+            list.add(entry);
+        }
+        tag.put("AdditionalOwners", list);
     }
 
     // NBT Speicherung
