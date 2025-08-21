@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.UpdateSideSettingsPacket;
+import de.bigbull.marketblocks.network.packets.UpdateSettingsPacket;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
@@ -65,7 +65,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                 blockEntity.setRightMode(menu.getRight());
                 blockEntity.setBottomMode(menu.getBottom());
                 blockEntity.setBackMode(menu.getBack());
-                NetworkHandler.sendToServer(new UpdateSideSettingsPacket(blockEntity.getBlockPos(), menu.getLeft(), menu.getRight(), menu.getBottom(), menu.getBack(), name, emit));
+                NetworkHandler.sendToServer(new UpdateSettingsPacket(blockEntity.getBlockPos(), menu.getLeft(), menu.getRight(), menu.getBottom(), menu.getBack(), name, emit));
                 saved = true;
             }).bounds(leftPos + imageWidth - 60 - 8, topPos + imageHeight - 20 - 8, 60, 20).build());
 

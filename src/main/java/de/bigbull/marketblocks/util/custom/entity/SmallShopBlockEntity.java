@@ -224,6 +224,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void setShopName(String name) {
+        if (name.length() > 32) {
+            name = name.substring(0, 32);
+        }
         this.shopName = name;
         sync();
     }
@@ -296,6 +299,23 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             BlockPos neighbour = worldPosition.relative(dir);
             level.invalidateCapabilities(neighbour);
         }
+    }
+
+    private IItemHandler resolveNeighborHandler(Direction dir) {
+        if (level == null) return null;
+        BlockPos neighbourPos = worldPosition.relative(dir);
+        IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
+        if (neighbour == null) {
+            neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
+        }
+        if (neighbour instanceof LockedChestWrapper locked) {
+            if (ownerId != null && ownerId.equals(locked.owner())) {
+                return locked.unwrap();
+            } else {
+                return null;
+            }
+        }
+        return neighbour;
     }
 
     // Angebots-System
@@ -399,26 +419,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (level != null && total < result.getCount()) {
             for (Direction dir : Direction.values()) {
                 if (getModeForSide(dir) == SideMode.INPUT) {
-                    BlockPos neighbourPos = worldPosition.relative(dir);
-                    IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
+                    IItemHandler neighbour = resolveNeighborHandler(dir);
                     if (neighbour == null) {
-                        neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
+                        continue;
                     }
-                    if (neighbour instanceof LockedChestWrapper locked) {
-                        if (ownerId != null && ownerId.equals(locked.owner())) {
-                            neighbour = locked.unwrap();
-                        } else {
-                            continue;
-                        }
-                    }
-                    if (neighbour != null) {
-                        for (int i = 0; i < neighbour.getSlots(); i++) {
-                            ItemStack stack = neighbour.getStackInSlot(i);
-                            if (ItemStack.isSameItemSameComponents(stack, result)) {
-                                total += stack.getCount();
-                                if (total >= result.getCount()) {
-                                    return true;
-                                }
+                    for (int i = 0; i < neighbour.getSlots(); i++) {
+                        ItemStack stack = neighbour.getStackInSlot(i);
+                        if (ItemStack.isSameItemSameComponents(stack, result)) {
+                            total += stack.getCount();
+                            if (total >= result.getCount()) {
+                                return true;
                             }
                         }
                     }
@@ -487,26 +497,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (remaining > 0 && level != null && !level.isClientSide) {
             for (Direction dir : Direction.values()) {
                 if (getModeForSide(dir) == SideMode.INPUT) {
-                    BlockPos neighbourPos = worldPosition.relative(dir);
-                    IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
+                    IItemHandler neighbour = resolveNeighborHandler(dir);
                     if (neighbour == null) {
-                        neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
+                        continue;
                     }
-                    if (neighbour instanceof LockedChestWrapper locked) {
-                        if (ownerId != null && ownerId.equals(locked.owner())) {
-                            neighbour = locked.unwrap();
-                        } else {
-                            continue;
-                        }
-                    }
-                    if (neighbour != null) {
-                        for (int i = 0; i < neighbour.getSlots() && remaining > 0; i++) {
-                            ItemStack stack = neighbour.getStackInSlot(i);
-                            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
-                                int toTake = Math.min(remaining, stack.getCount());
-                                neighbour.extractItem(i, toTake, false);
-                                remaining -= toTake;
-                            }
+                    for (int i = 0; i < neighbour.getSlots() && remaining > 0; i++) {
+                        ItemStack stack = neighbour.getStackInSlot(i);
+                        if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
+                            int toTake = Math.min(remaining, stack.getCount());
+                            neighbour.extractItem(i, toTake, false);
+                            remaining -= toTake;
                         }
                     }
                     if (remaining <= 0) {
@@ -661,30 +661,20 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (level == null || level.isClientSide) return;
         for (Direction dir : Direction.values()) {
             if (getModeForSide(dir) == SideMode.OUTPUT) {
-                BlockPos neighbourPos = worldPosition.relative(dir);
-                IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
+                IItemHandler neighbour = resolveNeighborHandler(dir);
                 if (neighbour == null) {
-                    neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
+                    continue;
                 }
-                if (neighbour instanceof LockedChestWrapper locked) {
-                    if (ownerId != null && ownerId.equals(locked.owner())) {
-                        neighbour = locked.unwrap();
-                    } else {
-                        continue;
-                    }
-                }
-                if (neighbour != null) {
-                    for (int i = 0; i < outputHandler.getSlots(); i++) {
-                        ItemStack stackInSlot = outputHandler.getStackInSlot(i);
-                        if (stackInSlot.isEmpty()) continue;
-                        ItemStack remainderSim = ItemHandlerHelper.insertItem(neighbour, stackInSlot.copy(), true);
-                        int transferable = stackInSlot.getCount() - remainderSim.getCount();
-                        if (transferable > 0) {
-                            ItemStack extracted = outputHandler.extractItem(i, transferable, false);
-                            ItemStack leftover = ItemHandlerHelper.insertItem(neighbour, extracted, false);
-                            if (!leftover.isEmpty()) {
-                                outputHandler.insertItem(i, leftover, false);
-                            }
+                for (int i = 0; i < outputHandler.getSlots(); i++) {
+                    ItemStack stackInSlot = outputHandler.getStackInSlot(i);
+                    if (stackInSlot.isEmpty()) continue;
+                    ItemStack remainderSim = ItemHandlerHelper.insertItem(neighbour, stackInSlot.copy(), true);
+                    int transferable = stackInSlot.getCount() - remainderSim.getCount();
+                    if (transferable > 0) {
+                        ItemStack extracted = outputHandler.extractItem(i, transferable, false);
+                        ItemStack leftover = ItemHandlerHelper.insertItem(neighbour, extracted, false);
+                        if (!leftover.isEmpty()) {
+                            outputHandler.insertItem(i, leftover, false);
                         }
                     }
                 }

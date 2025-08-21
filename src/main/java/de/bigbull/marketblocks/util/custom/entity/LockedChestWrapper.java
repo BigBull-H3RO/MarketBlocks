@@ -27,7 +27,7 @@ public class LockedChestWrapper implements IItemHandler {
 
     @Override
     public ItemStack getStackInSlot(int slot) {
-        return ItemStack.EMPTY;
+        return delegate.getStackInSlot(slot);
     }
 
     @Override
@@ -47,6 +47,6 @@ public class LockedChestWrapper implements IItemHandler {
 
     @Override
     public boolean isItemValid(int slot, ItemStack stack) {
-        return false;
+        return delegate.isItemValid(slot, stack);
     }
 }

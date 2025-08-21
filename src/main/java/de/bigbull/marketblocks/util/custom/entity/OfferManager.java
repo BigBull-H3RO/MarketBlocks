@@ -9,6 +9,9 @@ import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.function.BiConsumer;
+import java.util.function.IntFunction;
+
 public record OfferManager(SmallShopBlockEntity shopEntity) {
     public boolean applyOffer(ServerPlayer player, ItemStack payment1, ItemStack payment2, ItemStack result) {
         ItemStack[] slotCopies = copySlots();
@@ -45,10 +48,16 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
         return slots;
     }
 
-    private void copyRange(IItemHandler handler, ItemStack[] dest, int destIndex, int start, int end) {
-        for (int i = start; i < end; i++) {
-            dest[destIndex++] = handler.getStackInSlot(i).copy();
+    private void forRange(int start, int length, IntFunction<ItemStack> supplier, BiConsumer<Integer, ItemStack> consumer) {
+        for (int i = 0; i < length; i++) {
+            int index = start + i;
+            consumer.accept(i, supplier.apply(index));
         }
+    }
+
+    private void copyRange(IItemHandler handler, ItemStack[] dest, int destStart, int handlerStart, int length) {
+        forRange(handlerStart, length, handler::getStackInSlot,
+                (i, stack) -> dest[destStart + i] = stack.copy());
     }
 
     private boolean slotsAreValid(ItemStack[] expected, ItemStack[] slots) {
@@ -101,10 +110,9 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
     }
 
     private void extractRange(IItemHandler handler, ItemStack[] slots, ItemStack[] dest, int handlerStart, int destStart, int length) {
-        for (int i = 0; i < length; i++) {
-            ItemStack stack = slots[destStart + i];
-            dest[destStart + i] = stack.isEmpty() ? ItemStack.EMPTY : handler.extractItem(handlerStart + i, stack.getCount(), false);
-        }
+        forRange(destStart, length, idx -> slots[idx], (i, stack) ->
+                dest[destStart + i] = stack.isEmpty() ? ItemStack.EMPTY
+                        : handler.extractItem(handlerStart + i, stack.getCount(), false));
     }
 
     private boolean validatePaymentSlot(ItemStack expected, ItemStack actual) {
