@@ -26,6 +26,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
     private Checkbox emitRedstoneCheckbox;
     private CycleButton<SideMode> leftButton, rightButton, bottomButton, backButton;
     private boolean saved;
+    private boolean noPlayers;
     private String originalName;
     private final Map<UUID, Checkbox> ownerCheckboxes = new HashMap<>();
 
@@ -74,11 +75,14 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
 
                 List<UUID> selectedOwners = new ArrayList<>();
                 blockEntity.getAdditionalOwners().clear();
+                Map<UUID, String> storedOwners = menu.getAdditionalOwners();
                 ownerCheckboxes.forEach((id, box) -> {
                     if (box.selected()) {
                         selectedOwners.add(id);
-                        PlayerInfo info = Minecraft.getInstance().getConnection().getPlayerInfo(id);
-                        String playerName = info != null ? info.getProfile().getName() : "";
+                        PlayerInfo info = Minecraft.getInstance().getConnection() != null
+                                ? Minecraft.getInstance().getConnection().getPlayerInfo(id)
+                                : null;
+                        String playerName = info != null ? info.getProfile().getName() : storedOwners.getOrDefault(id, "");
                         blockEntity.addOwner(id, playerName);
                     }
                 });
@@ -96,9 +100,9 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
 
             int playerY = y + 88;
             ownerCheckboxes.clear();
+            Map<UUID, String> current = new HashMap<>(menu.getAdditionalOwners());
             if (Minecraft.getInstance().getConnection() != null) {
                 Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();
-                Map<UUID, String> current = menu.getAdditionalOwners();
                 for (PlayerInfo info : players) {
                     UUID id = info.getProfile().getId();
                     if (id.equals(blockEntity.getOwnerId())) continue;
@@ -110,8 +114,22 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                             .build());
                     ownerCheckboxes.put(id, cb);
                     playerY += 20;
+                    current.remove(id);
                 }
             }
+            for (Map.Entry<UUID, String> entry : current.entrySet()) {
+                UUID id = entry.getKey();
+                String pname = entry.getValue();
+                Checkbox cb = addRenderableWidget(Checkbox.builder(Component.literal(pname), font)
+                        .pos(leftPos + 8, playerY)
+                        .selected(true)
+                        .onValueChange((btn, val) -> saved = false)
+                        .build());
+                ownerCheckboxes.put(id, cb);
+                playerY += 20;
+            }
+
+            noPlayers = ownerCheckboxes.isEmpty();
         }
     }
 
@@ -127,6 +145,10 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
         renderOwnerInfo(graphics, blockEntity, menu.isOwner(), imageWidth);
         if (!menu.isOwner()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
+            int width = font.width(info);
+            graphics.drawString(font, info, (imageWidth - width) / 2, 84, 0x808080, false);
+        } else if (noPlayers) {
+            Component info = Component.translatable("gui.marketblocks.no_players_available");
             int width = font.width(info);
             graphics.drawString(font, info, (imageWidth - width) / 2, 84, 0x808080, false);
         }

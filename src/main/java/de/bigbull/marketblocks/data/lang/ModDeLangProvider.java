@@ -19,6 +19,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.trade_unavailable", "Handel nicht verfügbar");
         add("gui.marketblocks.available", "Verfügbar");
         add("gui.marketblocks.no_offers", "Keine Angebote verfügbar");
+        add("gui.marketblocks.no_players_available", "Es sind aktuell keine Spieler verfügbar");
         add("gui.marketblocks.create_hint", "Platziere Items in den unteren Slots");
         add("gui.marketblocks.confirm_offer", "Angebot bestätigen");
         add("gui.marketblocks.cancel_offer", "Abbrechen");
@@ -41,6 +42,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.shop_name", "Shopname");
         add("gui.marketblocks.emit_redstone", "Redstone-Signal ausgeben");
         add("gui.marketblocks.emit_redstone.tooltip", "Gibt nach einem Kauf kurz ein Redstone-Signal aus");
+        add("gui.marketblocks.settings_owner_only", "Nur der Besitzer kann Einstellungen ändern");
 
         add("gui.marketblocks.side.left", "Links");
         add("gui.marketblocks.side.right", "Rechts");

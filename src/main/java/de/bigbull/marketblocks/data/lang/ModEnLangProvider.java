@@ -29,6 +29,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.trade_unavailable", "Trade Unavailable");
         add("gui.marketblocks.available", "Available");
         add("gui.marketblocks.no_offers", "No Offers Available");
+        add("gui.marketblocks.no_players_available", "No players available");
         add("gui.marketblocks.out_of_stock", "Out of Stock");
         add("gui.marketblocks.owner", "Owner: %s");
 
@@ -59,6 +60,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.shop_name", "Shop Name");
         add("gui.marketblocks.emit_redstone", "Emit Redstone");
         add("gui.marketblocks.emit_redstone.tooltip", "Emit a short redstone pulse after a purchase");
+        add("gui.marketblocks.settings_owner_only", "Only the owner can change settings");
 
         add("gui.marketblocks.side.left", "Left");
         add("gui.marketblocks.side.right", "Right");
