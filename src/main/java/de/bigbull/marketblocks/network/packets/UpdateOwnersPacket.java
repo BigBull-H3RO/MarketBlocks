@@ -13,7 +13,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record UpdateOwnersPacket(BlockPos pos, List<UUID> owners) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<UpdateOwnersPacket> TYPE =

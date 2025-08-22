@@ -61,7 +61,7 @@ public class ChestSecurityHandler {
 
     @SubscribeEvent
     public static void onChestPlaced(BlockEvent.EntityPlaceEvent event) {
-        Level level = (Level) event.getLevel();
+        if (!(event.getLevel() instanceof Level level)) return;
         if (level.isClientSide()) return;
 
         BlockState state = event.getPlacedBlock();
