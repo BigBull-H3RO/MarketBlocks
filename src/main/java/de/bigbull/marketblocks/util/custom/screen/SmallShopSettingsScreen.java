@@ -4,13 +4,16 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.UpdateOwnersPacket;
 import de.bigbull.marketblocks.network.packets.UpdateSettingsPacket;
-import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
+import de.bigbull.marketblocks.util.custom.screen.gui.SideModeButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.*;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -24,7 +27,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
 
     private EditBox nameField;
     private Checkbox emitRedstoneCheckbox;
-    private CycleButton<SideMode> leftButton, rightButton, bottomButton, backButton;
+    private SideModeButton leftButton, rightButton, bottomButton, backButton;
     private boolean saved;
     private boolean noPlayers;
     private String originalName;
@@ -93,10 +96,33 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
             }).bounds(leftPos + imageWidth - 60 - 8, topPos + imageHeight - 20 - 8, 60, 20).build());
 
             int y = topPos + 80;
-            leftButton = addRenderableWidget(createSideButton("left", menu.getLeft(), y, menu::setLeft));
-            rightButton = addRenderableWidget(createSideButton("right", menu.getRight(), y + 22, menu::setRight));
-            bottomButton = addRenderableWidget(createSideButton("bottom", menu.getBottom(), y + 44, menu::setBottom));
-            backButton = addRenderableWidget(createSideButton("back", menu.getBack(), y + 66, menu::setBack));
+            leftButton = addRenderableWidget(new SideModeButton(leftPos + 8, y, 16, 16, menu.getLeft(), m -> {
+                menu.setLeft(m);
+                saved = false;
+            }));
+            leftButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.left")));
+            leftButton.setMessage(Component.translatable("gui.marketblocks.side.left"));
+
+            rightButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 22, 16, 16, menu.getRight(), m -> {
+                menu.setRight(m);
+                saved = false;
+            }));
+            rightButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.right")));
+            rightButton.setMessage(Component.translatable("gui.marketblocks.side.right"));
+
+            bottomButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 44, 16, 16, menu.getBottom(), m -> {
+                menu.setBottom(m);
+                saved = false;
+            }));
+            bottomButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.bottom")));
+            bottomButton.setMessage(Component.translatable("gui.marketblocks.side.bottom"));
+
+            backButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 66, 16, 16, menu.getBack(), m -> {
+                menu.setBack(m);
+                saved = false;
+            }));
+            backButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.back")));
+            backButton.setMessage(Component.translatable("gui.marketblocks.side.back"));
 
             int playerY = y + 88;
             ownerCheckboxes.clear();
@@ -157,18 +183,6 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
     @Override
     protected boolean isOwner() {
         return menu.isOwner();
-    }
-
-    private CycleButton<SideMode> createSideButton(String sideKey, SideMode initial, int y, java.util.function.Consumer<SideMode> setter) {
-        return CycleButton.builder(SideMode::getDisplayName)
-                .withValues(SideMode.values())
-                .withInitialValue(initial)
-                .create(leftPos + 8, y, 120, 20,
-                        Component.translatable("gui.marketblocks.side." + sideKey),
-                        (btn, value) -> {
-                            setter.accept(value);
-                            saved = false;
-                        });
     }
 
     @Override
