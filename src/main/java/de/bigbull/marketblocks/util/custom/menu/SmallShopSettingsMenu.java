@@ -3,18 +3,20 @@ package de.bigbull.marketblocks.util.custom.menu;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
+public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements ShopMenu {
     private final SmallShopBlockEntity blockEntity;
-    private final SideMode initialLeft, initialRight, initialBottom, initialBack;
-    private SideMode left, right, bottom, back;
+    private final EnumMap<Direction, SideMode> sideModes;
+    private final EnumMap<Direction, SideMode> initialModes;
     private final net.minecraft.world.inventory.ContainerData data;
     /** Flag that indicates the player is the owner of the shop. */
     private static final int OWNER_FLAG = 0b100;
@@ -23,14 +25,13 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
     public SmallShopSettingsMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
         super(RegistriesInit.SMALL_SHOP_CONFIG_MENU.get(), containerId);
         this.blockEntity = blockEntity;
-        this.left = blockEntity.getLeftMode();
-        this.right = blockEntity.getRightMode();
-        this.bottom = blockEntity.getBottomMode();
-        this.back = blockEntity.getBackMode();
-        this.initialLeft = this.left;
-        this.initialRight = this.right;
-        this.initialBottom = this.bottom;
-        this.initialBack = this.back;
+        this.sideModes = new EnumMap<>(Direction.class);
+        this.initialModes = new EnumMap<>(Direction.class);
+        for (Direction dir : Direction.values()) {
+            SideMode mode = blockEntity.getMode(dir);
+            sideModes.put(dir, mode);
+            initialModes.put(dir, mode);
+        }
         this.data = blockEntity.createMenuFlags(playerInventory.player);
         addDataSlots(this.data);
     }
@@ -50,27 +51,25 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu {
         return blockEntity.stillValid(player);
     }
 
+    @Override
     public SmallShopBlockEntity getBlockEntity() {
         return blockEntity;
     }
 
-    public SideMode getLeft() { return left; }
-    public SideMode getRight() { return right; }
-    public SideMode getBottom() { return bottom; }
-    public SideMode getBack() { return back; }
-
-    public void setLeft(SideMode mode) { left = mode; }
-    public void setRight(SideMode mode){ right = mode; }
-    public void setBottom(SideMode mode){ bottom = mode; }
-    public void setBack(SideMode mode){ back = mode; }
-
-    public void resetModes() {
-        left = initialLeft;
-        right = initialRight;
-        bottom = initialBottom;
-        back = initialBack;
+    public SideMode getMode(Direction dir) {
+        return sideModes.getOrDefault(dir, SideMode.DISABLED);
     }
 
+    public void setMode(Direction dir, SideMode mode) {
+        sideModes.put(dir, mode);
+    }
+
+    public void resetModes() {
+        sideModes.clear();
+        sideModes.putAll(initialModes);
+    }
+
+    @Override
     public boolean isOwner() {
         return (data.get(0) & OWNER_FLAG) != 0;
     }

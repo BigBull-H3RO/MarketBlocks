@@ -2,9 +2,11 @@ package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -48,10 +50,11 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
             ServerPlayer player = (ServerPlayer) context.player();
             Level level = player.level();
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
-                blockEntity.setLeftMode(packet.left());
-                blockEntity.setRightMode(packet.right());
-                blockEntity.setBottomMode(packet.bottom());
-                blockEntity.setBackMode(packet.back());
+                Direction facing = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
+                blockEntity.setMode(facing.getCounterClockWise(), packet.left());
+                blockEntity.setMode(facing.getClockWise(), packet.right());
+                blockEntity.setMode(Direction.DOWN, packet.bottom());
+                blockEntity.setMode(facing.getOpposite(), packet.back());
                 String name = packet.name().strip().replaceAll("[^A-Za-z0-9 _-]", "");
                 blockEntity.setShopName(name);
                 blockEntity.setEmitRedstone(packet.redstone());

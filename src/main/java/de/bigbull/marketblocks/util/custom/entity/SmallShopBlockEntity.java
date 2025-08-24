@@ -51,13 +51,13 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private boolean emitRedstone = false;
 
     // Seitenkonfiguration
-    private SideMode leftMode   = SideMode.DISABLED;
-    private SideMode rightMode  = SideMode.DISABLED;
-    private SideMode bottomMode = SideMode.DISABLED;
-    private SideMode backMode   = SideMode.DISABLED;
+    private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
 
     public SmallShopBlockEntity(BlockPos pos, BlockState state) {
         super(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), pos, state);
+        for (Direction dir : Direction.values()) {
+            sideModes.put(dir, SideMode.DISABLED);
+        }
     }
 
     // Inventare
@@ -280,49 +280,25 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     // Seitenkonfiguration
-    public SideMode getLeftMode() { return leftMode; }
-    public SideMode getRightMode() { return rightMode; }
-    public SideMode getBottomMode() { return bottomMode; }
-    public SideMode getBackMode() { return backMode; }
+    public SideMode getMode(Direction dir) {
+        return sideModes.getOrDefault(dir, SideMode.DISABLED);
+    }
 
-    private SideMode setSideMode(Direction dir, SideMode newMode, SideMode oldMode) {
+    public void setMode(Direction dir, SideMode mode) {
+        SideMode oldMode = getMode(dir);
+        sideModes.put(dir, mode);
         markDirty();
         sync();
         invalidateNeighbor(dir);
-        if (newMode == SideMode.INPUT || newMode == SideMode.OUTPUT) {
+        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
             lockAdjacentChest(dir);
         } else if (oldMode != SideMode.DISABLED) {
             unlockAdjacentChests();
         }
-        return newMode;
-    }
-
-    public void setLeftMode(SideMode mode) {
-        Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getCounterClockWise();
-        this.leftMode = setSideMode(dir, mode, this.leftMode);
-    }
-
-    public void setRightMode(SideMode mode) {
-        Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getClockWise();
-        this.rightMode = setSideMode(dir, mode, this.rightMode);
-    }
-
-    public void setBottomMode(SideMode mode) {
-        Direction dir = Direction.DOWN;
-        this.bottomMode = setSideMode(dir, mode, this.bottomMode);
-    }
-    public void setBackMode(SideMode mode) {
-        Direction dir = getBlockState().getValue(SmallShopBlock.FACING).getOpposite();
-        this.backMode = setSideMode(dir, mode, this.backMode);
     }
 
     public SideMode getModeForSide(Direction side) {
-        Direction facing = getBlockState().getValue(SmallShopBlock.FACING);
-        if (side == Direction.DOWN) return bottomMode;
-        if (side == facing.getOpposite()) return backMode;
-        if (side == facing.getClockWise()) return rightMode;
-        if (side == facing.getCounterClockWise()) return leftMode;
-        return SideMode.DISABLED;
+        return getMode(side);
     }
 
     private void invalidateNeighbor(Direction dir) {
@@ -775,10 +751,18 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         loadOwner(tag);
         shopName = tag.contains("ShopName") ? tag.getString("ShopName") : "";
         emitRedstone = tag.getBoolean("EmitRedstone");
-        if (tag.contains("SideLeft"))   leftMode   = SideMode.valueOf(tag.getString("SideLeft"));
-        if (tag.contains("SideRight"))  rightMode  = SideMode.valueOf(tag.getString("SideRight"));
-        if (tag.contains("SideBottom")) bottomMode = SideMode.valueOf(tag.getString("SideBottom"));
-        if (tag.contains("SideBack"))   backMode   = SideMode.valueOf(tag.getString("SideBack"));
+
+        ListTag sideList = tag.getList("SideModes", 10);
+        sideModes.clear();
+        for (Direction dir : Direction.values()) {
+            sideModes.put(dir, SideMode.DISABLED);
+        }
+        for (int i = 0; i < sideList.size(); i++) {
+            CompoundTag sideTag = sideList.getCompound(i);
+            Direction dir = Direction.valueOf(sideTag.getString("Direction"));
+            SideMode mode = SideMode.valueOf(sideTag.getString("Mode"));
+            sideModes.put(dir, mode);
+        }
         lockAdjacentChests();
     }
 
@@ -801,10 +785,15 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         saveOwner(tag);
         tag.putString("ShopName", shopName);
         tag.putBoolean("EmitRedstone", emitRedstone);
-        tag.putString("SideLeft", leftMode.name());
-        tag.putString("SideRight", rightMode.name());
-        tag.putString("SideBottom", bottomMode.name());
-        tag.putString("SideBack", backMode.name());
+
+        ListTag sideList = new ListTag();
+        for (Map.Entry<Direction, SideMode> entry : sideModes.entrySet()) {
+            CompoundTag sideTag = new CompoundTag();
+            sideTag.putString("Direction", entry.getKey().name());
+            sideTag.putString("Mode", entry.getValue().name());
+            sideList.add(sideTag);
+        }
+        tag.put("SideModes", sideList);
     }
 
     @Override

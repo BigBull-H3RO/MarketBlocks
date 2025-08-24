@@ -14,7 +14,7 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 /**
  * Menü für den Inventar-Modus des SmallShop
  */
-public class SmallShopInventoryMenu extends AbstractSmallShopMenu  {
+public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements ShopMenu  {
     private final SmallShopBlockEntity blockEntity;
     private final IItemHandler inputHandler;
     private final IItemHandler outputHandler;
@@ -72,10 +72,12 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu  {
         return this.blockEntity.stillValid(player);
     }
 
+    @Override
     public SmallShopBlockEntity getBlockEntity() {
         return blockEntity;
     }
 
+    @Override
     public boolean isOwner() {
         return (data.get(0) & 4) != 0;
     }

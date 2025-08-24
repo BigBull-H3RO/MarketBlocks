@@ -4,9 +4,7 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.menu.ShopMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -83,24 +81,8 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
     }
 
     protected void switchTab(int tab) {
-        SmallShopBlockEntity blockEntity = null;
-        boolean isOwner = false;
-
-        if (menu instanceof SmallShopOffersMenu offersMenu) {
-            blockEntity = offersMenu.getBlockEntity();
-            isOwner = offersMenu.isOwner();
-        } else if (menu instanceof SmallShopInventoryMenu inventoryMenu) {
-            blockEntity = inventoryMenu.getBlockEntity();
-            isOwner = inventoryMenu.isOwner();
-        } else if (menu instanceof SmallShopSettingsMenu configMenu) {
-            blockEntity = configMenu.getBlockEntity();
-            isOwner = configMenu.isOwner();
-            if (!isOwner) {
-                MarketBlocks.LOGGER.warn("Non-owner attempted to switch tab via settings menu");
-            }
-        }
-
-        if (blockEntity != null && isOwner) {
+        if (menu instanceof ShopMenu shopMenu && shopMenu.isOwner()) {
+            SmallShopBlockEntity blockEntity = shopMenu.getBlockEntity();
             Minecraft mc = Minecraft.getInstance();
             savedMouseX = mc.mouseHandler.xpos();
             savedMouseY = mc.mouseHandler.ypos();

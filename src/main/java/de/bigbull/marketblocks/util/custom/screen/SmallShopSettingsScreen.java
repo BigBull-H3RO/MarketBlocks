@@ -4,6 +4,7 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.UpdateOwnersPacket;
 import de.bigbull.marketblocks.network.packets.UpdateSettingsPacket;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
@@ -15,6 +16,7 @@ import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -28,6 +30,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
     private EditBox nameField;
     private Checkbox emitRedstoneCheckbox;
     private SideModeButton leftButton, rightButton, bottomButton, backButton;
+    private Direction leftDir, rightDir, bottomDir, backDir;
     private boolean saved;
     private boolean noPlayers;
     private String originalName;
@@ -44,6 +47,11 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
         super.init();
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
         boolean isOwner = menu.isOwner();
+        Direction facing = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
+        leftDir = facing.getCounterClockWise();
+        rightDir = facing.getClockWise();
+        bottomDir = Direction.DOWN;
+        backDir = facing.getOpposite();
 
         if (isOwner) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, 2,
@@ -71,10 +79,10 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                 boolean emit = emitRedstoneCheckbox.selected();
                 blockEntity.setShopNameClient(name);
                 blockEntity.setEmitRedstoneClient(emit);
-                blockEntity.setLeftMode(menu.getLeft());
-                blockEntity.setRightMode(menu.getRight());
-                blockEntity.setBottomMode(menu.getBottom());
-                blockEntity.setBackMode(menu.getBack());
+                blockEntity.setMode(leftDir, menu.getMode(leftDir));
+                blockEntity.setMode(rightDir, menu.getMode(rightDir));
+                blockEntity.setMode(bottomDir, menu.getMode(bottomDir));
+                blockEntity.setMode(backDir, menu.getMode(backDir));
 
                 List<UUID> selectedOwners = new ArrayList<>();
                 blockEntity.getAdditionalOwners().clear();
@@ -90,35 +98,35 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                     }
                 });
 
-                NetworkHandler.sendToServer(new UpdateSettingsPacket(blockEntity.getBlockPos(), menu.getLeft(), menu.getRight(), menu.getBottom(), menu.getBack(), name, emit));
+                NetworkHandler.sendToServer(new UpdateSettingsPacket(blockEntity.getBlockPos(), menu.getMode(leftDir), menu.getMode(rightDir), menu.getMode(bottomDir), menu.getMode(backDir), name, emit));
                 NetworkHandler.sendToServer(new UpdateOwnersPacket(blockEntity.getBlockPos(), selectedOwners));
                 saved = true;
             }).bounds(leftPos + imageWidth - 60 - 8, topPos + imageHeight - 20 - 8, 60, 20).build());
 
             int y = topPos + 80;
-            leftButton = addRenderableWidget(new SideModeButton(leftPos + 8, y, 16, 16, menu.getLeft(), m -> {
-                menu.setLeft(m);
+            leftButton = addRenderableWidget(new SideModeButton(leftPos + 8, y, 16, 16, menu.getMode(leftDir), m -> {
+                menu.setMode(leftDir, m);
                 saved = false;
             }));
             leftButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.left")));
             leftButton.setMessage(Component.translatable("gui.marketblocks.side.left"));
 
-            rightButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 22, 16, 16, menu.getRight(), m -> {
-                menu.setRight(m);
+            rightButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 22, 16, 16, menu.getMode(rightDir), m -> {
+                menu.setMode(rightDir, m);
                 saved = false;
             }));
             rightButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.right")));
             rightButton.setMessage(Component.translatable("gui.marketblocks.side.right"));
 
-            bottomButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 44, 16, 16, menu.getBottom(), m -> {
-                menu.setBottom(m);
+            bottomButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 44, 16, 16, menu.getMode(bottomDir), m -> {
+                menu.setMode(bottomDir, m);
                 saved = false;
             }));
             bottomButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.bottom")));
             bottomButton.setMessage(Component.translatable("gui.marketblocks.side.bottom"));
 
-            backButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 66, 16, 16, menu.getBack(), m -> {
-                menu.setBack(m);
+            backButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 66, 16, 16, menu.getMode(backDir), m -> {
+                menu.setMode(backDir, m);
                 saved = false;
             }));
             backButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.back")));
