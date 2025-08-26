@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.util.custom.menu;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -33,7 +32,7 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements Sho
         this.data = blockEntity.createMenuFlags(playerInventory.player);
 
         addDataSlots(this.data);
-        setupSlots(playerInventory);
+        initSlots(playerInventory);
         blockEntity.ensureOwner(playerInventory.player);
     }
 
@@ -42,7 +41,8 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements Sho
         this(containerId, playerInventory, readBlockEntity(playerInventory, buf));
     }
 
-    private void setupSlots(Inventory playerInventory) {
+    @Override
+    protected void addCustomSlots(Inventory playerInventory) {
         // Input Inventar
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
@@ -57,8 +57,6 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements Sho
                         98 + col * 18, 18 + row * 18));
             }
         }
-
-        super.addPlayerInventory(playerInventory, GuiConstants.PLAYER_INV_Y_START);
     }
 
     @Override

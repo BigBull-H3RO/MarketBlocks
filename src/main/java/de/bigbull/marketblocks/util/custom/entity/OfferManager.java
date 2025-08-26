@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.custom.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.packets.OfferStatusPacket;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
@@ -13,14 +14,16 @@ import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
 public record OfferManager(SmallShopBlockEntity shopEntity) {
-    public boolean applyOffer(ServerPlayer player, ItemStack payment1, ItemStack payment2, ItemStack result) {
-        ItemStack[] slotCopies = copySlots();
-        ItemStack[] expected = new ItemStack[]{payment1, payment2, result};
+    public record OfferValidation(boolean valid, String errorKey) {}
 
-        if (!slotsAreValid(expected, slotCopies)) {
+    public boolean applyOffer(ServerPlayer player, ItemStack payment1, ItemStack payment2, ItemStack result) {
+        OfferValidation validation = validateOffer(payment1, payment2, result);
+        if (!validation.valid()) {
+            player.sendSystemMessage(Component.translatable(validation.errorKey()));
             return false;
         }
 
+        ItemStack[] slotCopies = copySlots();
         ItemStack[] extracted = extractItems(slotCopies);
 
         shopEntity.createOffer(slotCopies[0], slotCopies[1], slotCopies[2]);
@@ -39,6 +42,23 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
         MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), shopEntity.getBlockPos());
 
         return true;
+    }
+
+    private OfferValidation validateOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
+        if (result.isEmpty()) {
+            return new OfferValidation(false, "gui.marketblocks.error.no_result_item");
+        }
+        if (payment1.isEmpty() && payment2.isEmpty()) {
+            return new OfferValidation(false, "gui.marketblocks.error.no_payment_items");
+        }
+
+        ItemStack[] slotCopies = copySlots();
+        ItemStack[] expected = new ItemStack[]{payment1, payment2, result};
+        if (!slotsAreValid(expected, slotCopies)) {
+            return new OfferValidation(false, "gui.marketblocks.error.invalid_offer");
+        }
+
+        return new OfferValidation(true, null);
     }
 
     private ItemStack[] copySlots() {

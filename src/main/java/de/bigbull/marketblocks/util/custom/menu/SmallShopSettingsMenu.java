@@ -34,6 +34,7 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
         }
         this.data = blockEntity.createMenuFlags(playerInventory.player);
         addDataSlots(this.data);
+        initSlots(playerInventory);
     }
 
     // Client constructor
@@ -76,5 +77,13 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
 
     public Map<UUID, String> getAdditionalOwners() {
         return blockEntity.getAdditionalOwners();
+    }
+
+    @Override
+    protected void addCustomSlots(Inventory playerInventory) {}
+
+    @Override
+    protected boolean showPlayerInventory() {
+        return false;
     }
 }

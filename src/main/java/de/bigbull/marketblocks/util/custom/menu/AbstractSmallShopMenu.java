@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.custom.menu;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -44,6 +45,19 @@ public abstract class AbstractSmallShopMenu extends AbstractContainerMenu {
             addSlot(new Slot(playerInventory, col, 8 + col * 18, hotbarY));
         }
     }
+
+    protected final void initSlots(Inventory playerInventory) {
+        addCustomSlots(playerInventory);
+        if (showPlayerInventory()) {
+            addPlayerInventory(playerInventory, GuiConstants.PLAYER_INV_Y_START);
+        }
+    }
+
+    protected boolean showPlayerInventory() {
+        return true;
+    }
+
+    protected abstract void addCustomSlots(Inventory playerInventory);
 
     protected ItemStack quickMoveStack(Player player, int index, int containerSlots, int insertSlots) {
         int playerInvStart = containerSlots;

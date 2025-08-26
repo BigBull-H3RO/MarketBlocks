@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.util.custom.menu;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -37,7 +36,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         this.data = blockEntity.createMenuFlags(playerInventory.player);
 
         addDataSlots(this.data);
-        setupSlots(playerInventory);
+        initSlots(playerInventory);
     }
 
     // Constructor für Client
@@ -45,12 +44,11 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         this(containerId, playerInventory, readBlockEntity(playerInventory, buf));
     }
 
-    private void setupSlots(Inventory playerInventory) {
+    @Override
+    protected void addCustomSlots(Inventory playerInventory) {
         addSlot(new PaymentSlot(paymentHandler, 0, 36, 52));
         addSlot(new PaymentSlot(paymentHandler, 1, 62, 52));
         addSlot(new OfferSlot(offerHandler, 0, 120, 52, this));
-
-        super.addPlayerInventory(playerInventory, GuiConstants.PLAYER_INV_Y_START);
     }
 
     @Override

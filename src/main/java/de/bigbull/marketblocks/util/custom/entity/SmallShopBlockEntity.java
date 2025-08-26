@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util.custom.entity;
 
+import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
@@ -30,6 +31,25 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import java.util.*;
 
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
+    // NBT-Keys
+    private static final String NBT_OWNER_ID = "OwnerId";
+    private static final String NBT_OWNER_NAME = "OwnerName";
+    private static final String NBT_ADDITIONAL_OWNERS = "AdditionalOwners";
+    private static final String NBT_ADDITIONAL_OWNER_ID = "Id";
+    private static final String NBT_ADDITIONAL_OWNER_NAME = "Name";
+    private static final String NBT_HAS_OFFER = "HasOffer";
+    private static final String NBT_SHOP_NAME = "ShopName";
+    private static final String NBT_EMIT_REDSTONE = "EmitRedstone";
+    private static final String NBT_SIDE_MODES = "SideModes";
+    private static final String NBT_DIRECTION = "Direction";
+    private static final String NBT_MODE = "Mode";
+
+    // Inventarhandler-Namen
+    private static final String HANDLER_INPUT = "InputInventory";
+    private static final String HANDLER_OUTPUT = "OutputInventory";
+    private static final String HANDLER_PAYMENT = "PaymentSlots";
+    private static final String HANDLER_OFFER = "OfferSlot";
+
     // Angebots-System
     private static final String KEY_PAYMENT1 = "OfferPayment1";
     private static final String KEY_PAYMENT2 = "OfferPayment2";
@@ -101,16 +121,18 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     };
 
     private final Map<String, ItemStackHandler> handlerMap = Map.of(
-            "InputInventory", inputHandler,
-            "OutputInventory", outputHandler,
-            "PaymentSlots", paymentHandler,
-            "OfferSlot", offerHandler
+            HANDLER_INPUT, inputHandler,
+            HANDLER_OUTPUT, outputHandler,
+            HANDLER_PAYMENT, paymentHandler,
+            HANDLER_OFFER, offerHandler
     );
 
     private final IItemHandler inputOnly  = new SidedWrapper(inputHandler, false);
     private final IItemHandler outputOnly = new SidedWrapper(outputHandler, true);
 
     private final OfferManager offerManager = new OfferManager(this);
+
+    private int tickCounter = 0;
 
     record SidedWrapper(IItemHandler backing, boolean extractOnly) implements IItemHandler {
         public int getSlots() {
@@ -308,7 +330,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private IItemHandler resolveNeighborHandler(Direction dir) {
+    private IItemHandler getValidNeighborHandler(Direction dir) {
         if (level == null) return null;
         BlockPos neighbourPos = worldPosition.relative(dir);
         IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
@@ -323,6 +345,22 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
         return neighbour;
+    }
+
+    private void transferItems(IItemHandler from, IItemHandler to) {
+        for (int i = 0; i < from.getSlots(); i++) {
+            ItemStack stackInSlot = from.getStackInSlot(i);
+            if (stackInSlot.isEmpty()) continue;
+            ItemStack remainderSim = ItemHandlerHelper.insertItem(to, stackInSlot.copy(), true);
+            int transferable = stackInSlot.getCount() - remainderSim.getCount();
+            if (transferable > 0) {
+                ItemStack extracted = from.extractItem(i, transferable, false);
+                ItemStack leftover = ItemHandlerHelper.insertItem(to, extracted, false);
+                if (!leftover.isEmpty()) {
+                    from.insertItem(i, leftover, false);
+                }
+            }
+        }
     }
 
     // Angebots-System
@@ -426,7 +464,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (level != null && total < result.getCount()) {
             for (Direction dir : Direction.values()) {
                 if (getModeForSide(dir) == SideMode.INPUT) {
-                    IItemHandler neighbour = resolveNeighborHandler(dir);
+                    IItemHandler neighbour = getValidNeighborHandler(dir);
                     if (neighbour == null) {
                         continue;
                     }
@@ -504,7 +542,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (remaining > 0 && level != null && !level.isClientSide) {
             for (Direction dir : Direction.values()) {
                 if (getModeForSide(dir) == SideMode.INPUT) {
-                    IItemHandler neighbour = resolveNeighborHandler(dir);
+                    IItemHandler neighbour = getValidNeighborHandler(dir);
                     if (neighbour == null) {
                         continue;
                     }
@@ -624,8 +662,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public static void tick(Level level, BlockPos pos, BlockState state, SmallShopBlockEntity be) {
         if (!level.isClientSide) {
-            be.pullFromInputChest();
-            be.pushToOutputChest();
+            be.tickCounter++;
+            int offerInterval = Config.OFFER_UPDATE_INTERVAL.get();
+            if (offerInterval > 0 && be.tickCounter % offerInterval == 0) {
+                be.updateOfferSlot();
+            }
+            int chestInterval = Config.CHEST_IO_INTERVAL.get();
+            if (chestInterval > 0 && be.tickCounter % chestInterval == 0) {
+                be.pullFromInputChest();
+                be.pushToOutputChest();
+            }
         }
     }
 
@@ -633,32 +679,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (level == null || level.isClientSide) return;
         for (Direction dir : Direction.values()) {
             if (getModeForSide(dir) == SideMode.INPUT) {
-                BlockPos neighbourPos = worldPosition.relative(dir);
-                IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
-                if (neighbour == null) {
-                    neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
-                }
-                if (neighbour instanceof LockedChestWrapper locked) {
-                    if (locked.owner() != null && getOwners().contains(locked.owner())) {
-                        neighbour = locked.unwrap();
-                    } else {
-                        continue;
-                    }
-                }
+                IItemHandler neighbour = getValidNeighborHandler(dir);
                 if (neighbour != null) {
-                    for (int i = 0; i < neighbour.getSlots(); i++) {
-                        ItemStack stackInSlot = neighbour.getStackInSlot(i);
-                        if (stackInSlot.isEmpty()) continue;
-                        ItemStack remainderSim = ItemHandlerHelper.insertItem(inputHandler, stackInSlot.copy(), true);
-                        int transferable = stackInSlot.getCount() - remainderSim.getCount();
-                        if (transferable > 0) {
-                            ItemStack extracted = neighbour.extractItem(i, transferable, false);
-                            ItemStack leftover = ItemHandlerHelper.insertItem(inputHandler, extracted, false);
-                            if (!leftover.isEmpty()) {
-                                neighbour.insertItem(i, leftover, false);
-                            }
-                        }
-                    }
+                    transferItems(neighbour, inputHandler);
                 }
             }
         }
@@ -668,22 +691,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (level == null || level.isClientSide) return;
         for (Direction dir : Direction.values()) {
             if (getModeForSide(dir) == SideMode.OUTPUT) {
-                IItemHandler neighbour = resolveNeighborHandler(dir);
-                if (neighbour == null) {
-                    continue;
-                }
-                for (int i = 0; i < outputHandler.getSlots(); i++) {
-                    ItemStack stackInSlot = outputHandler.getStackInSlot(i);
-                    if (stackInSlot.isEmpty()) continue;
-                    ItemStack remainderSim = ItemHandlerHelper.insertItem(neighbour, stackInSlot.copy(), true);
-                    int transferable = stackInSlot.getCount() - remainderSim.getCount();
-                    if (transferable > 0) {
-                        ItemStack extracted = outputHandler.extractItem(i, transferable, false);
-                        ItemStack leftover = ItemHandlerHelper.insertItem(neighbour, extracted, false);
-                        if (!leftover.isEmpty()) {
-                            outputHandler.insertItem(i, leftover, false);
-                        }
-                    }
+                IItemHandler neighbour = getValidNeighborHandler(dir);
+                if (neighbour != null) {
+                    transferItems(outputHandler, neighbour);
                 }
             }
         }
@@ -702,15 +712,15 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private void loadOwner(CompoundTag tag) {
-        ownerId = tag.hasUUID("OwnerId") ? tag.getUUID("OwnerId") : null;
-        ownerName = tag.contains("OwnerName") ? tag.getString("OwnerName") : "";
+        ownerId = tag.hasUUID(NBT_OWNER_ID) ? tag.getUUID(NBT_OWNER_ID) : null;
+        ownerName = tag.contains(NBT_OWNER_NAME) ? tag.getString(NBT_OWNER_NAME) : "";
         additionalOwners.clear();
-        if (tag.contains("AdditionalOwners")) {
-            ListTag list = tag.getList("AdditionalOwners", 10);
+        if (tag.contains(NBT_ADDITIONAL_OWNERS)) {
+            ListTag list = tag.getList(NBT_ADDITIONAL_OWNERS, 10);
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag entry = list.getCompound(i);
-                UUID id = entry.getUUID("Id");
-                String name = entry.getString("Name");
+                UUID id = entry.getUUID(NBT_ADDITIONAL_OWNER_ID);
+                String name = entry.getString(NBT_ADDITIONAL_OWNER_NAME);
                 additionalOwners.put(id, name);
             }
         }
@@ -718,17 +728,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     private void saveOwner(CompoundTag tag) {
         if (ownerId != null) {
-            tag.putUUID("OwnerId", ownerId);
+            tag.putUUID(NBT_OWNER_ID, ownerId);
         }
-        tag.putString("OwnerName", ownerName);
+        tag.putString(NBT_OWNER_NAME, ownerName);
         ListTag list = new ListTag();
         for (Map.Entry<UUID, String> e : additionalOwners.entrySet()) {
             CompoundTag entry = new CompoundTag();
-            entry.putUUID("Id", e.getKey());
-            entry.putString("Name", e.getValue());
+            entry.putUUID(NBT_ADDITIONAL_OWNER_ID, e.getKey());
+            entry.putString(NBT_ADDITIONAL_OWNER_NAME, e.getValue());
             list.add(entry);
         }
-        tag.put("AdditionalOwners", list);
+        tag.put(NBT_ADDITIONAL_OWNERS, list);
     }
 
     // NBT Speicherung
@@ -747,23 +757,24 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
                 ? ItemStack.parseOptional(registries, tag.getCompound(KEY_RESULT))
                 : ItemStack.EMPTY;
 
-        hasOffer = tag.getBoolean("HasOffer");
+        hasOffer = tag.getBoolean(NBT_HAS_OFFER);
         loadOwner(tag);
-        shopName = tag.contains("ShopName") ? tag.getString("ShopName") : "";
-        emitRedstone = tag.getBoolean("EmitRedstone");
+        shopName = tag.contains(NBT_SHOP_NAME) ? tag.getString(NBT_SHOP_NAME) : "";
+        emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
 
-        ListTag sideList = tag.getList("SideModes", 10);
+        ListTag sideList = tag.getList(NBT_SIDE_MODES, 10);
         sideModes.clear();
         for (Direction dir : Direction.values()) {
             sideModes.put(dir, SideMode.DISABLED);
         }
         for (int i = 0; i < sideList.size(); i++) {
             CompoundTag sideTag = sideList.getCompound(i);
-            Direction dir = Direction.valueOf(sideTag.getString("Direction"));
-            SideMode mode = SideMode.valueOf(sideTag.getString("Mode"));
+            Direction dir = Direction.valueOf(sideTag.getString(NBT_DIRECTION));
+            SideMode mode = SideMode.valueOf(sideTag.getString(NBT_MODE));
             sideModes.put(dir, mode);
         }
         lockAdjacentChests();
+        tickCounter = 0;
     }
 
     @Override
@@ -781,19 +792,19 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             tag.put(KEY_RESULT, offerResult.save(registries));
         }
 
-        tag.putBoolean("HasOffer", hasOffer);
+        tag.putBoolean(NBT_HAS_OFFER, hasOffer);
         saveOwner(tag);
-        tag.putString("ShopName", shopName);
-        tag.putBoolean("EmitRedstone", emitRedstone);
+        tag.putString(NBT_SHOP_NAME, shopName);
+        tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
 
         ListTag sideList = new ListTag();
         for (Map.Entry<Direction, SideMode> entry : sideModes.entrySet()) {
             CompoundTag sideTag = new CompoundTag();
-            sideTag.putString("Direction", entry.getKey().name());
-            sideTag.putString("Mode", entry.getValue().name());
+            sideTag.putString(NBT_DIRECTION, entry.getKey().name());
+            sideTag.putString(NBT_MODE, entry.getValue().name());
             sideList.add(sideTag);
         }
-        tag.put("SideModes", sideList);
+        tag.put(NBT_SIDE_MODES, sideList);
     }
 
     @Override
