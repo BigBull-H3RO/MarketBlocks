@@ -137,16 +137,16 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
     }
 
     public boolean hasOffer() {
-        return (data.get(0) & 1) != 0;
+        return (data.get(0) & SmallShopBlockEntity.HAS_OFFER) != 0;
     }
 
     public boolean isOfferAvailable() {
-        return (data.get(0) & 2) != 0;
+        return (data.get(0) & SmallShopBlockEntity.OFFER_AVAILABLE) != 0;
     }
 
     @Override
     public boolean isOwner() {
-        return (data.get(0) & 4) != 0;
+        return (data.get(0) & SmallShopBlockEntity.OWNER_FLAG) != 0;
     }
 
     public static class PaymentSlot extends SlotItemHandler {

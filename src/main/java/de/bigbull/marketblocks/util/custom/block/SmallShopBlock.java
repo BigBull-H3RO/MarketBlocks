@@ -132,7 +132,7 @@ public class SmallShopBlock extends BaseEntityBlock {
             }
         }
 
-        return InteractionResult.SUCCESS;
+        return InteractionResult.CONSUME;
     }
 
     @Override

@@ -77,7 +77,7 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements Sho
 
     @Override
     public boolean isOwner() {
-        return (data.get(0) & 4) != 0;
+        return (data.get(0) & SmallShopBlockEntity.OWNER_FLAG) != 0;
     }
 
     public static class InputSlot extends SlotItemHandler {

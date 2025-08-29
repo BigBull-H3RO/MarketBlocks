@@ -12,11 +12,11 @@ public class LockedChestWrapper implements IItemHandler {
         this.owner = owner;
     }
 
-    public java.util.UUID owner() {
+    public java.util.UUID getOwnerId() {
         return owner;
     }
 
-    public IItemHandler unwrap() {
+    public IItemHandler getDelegate() {
         return delegate;
     }
 

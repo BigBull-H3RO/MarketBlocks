@@ -18,8 +18,6 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
     private final EnumMap<Direction, SideMode> sideModes;
     private final EnumMap<Direction, SideMode> initialModes;
     private final net.minecraft.world.inventory.ContainerData data;
-    /** Flag that indicates the player is the owner of the shop. */
-    private static final int OWNER_FLAG = 0b100;
 
     // Server constructor
     public SmallShopSettingsMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
@@ -72,7 +70,7 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
 
     @Override
     public boolean isOwner() {
-        return (data.get(0) & OWNER_FLAG) != 0;
+        return (data.get(0) & SmallShopBlockEntity.OWNER_FLAG) != 0;
     }
 
     public Map<UUID, String> getAdditionalOwners() {

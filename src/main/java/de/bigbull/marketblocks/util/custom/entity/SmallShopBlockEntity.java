@@ -50,6 +50,11 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private static final String HANDLER_PAYMENT = "PaymentSlots";
     private static final String HANDLER_OFFER = "OfferSlot";
 
+    // Menü-Flags
+    public static final int HAS_OFFER = 1;
+    public static final int OFFER_AVAILABLE = 2;
+    public static final int OWNER_FLAG = 4;
+
     // Angebots-System
     private static final String KEY_PAYMENT1 = "OfferPayment1";
     private static final String KEY_PAYMENT2 = "OfferPayment2";
@@ -339,8 +344,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
         }
         if (neighbour instanceof LockedChestWrapper locked) {
-            if (locked.owner() != null && getOwners().contains(locked.owner())) {
-                return locked.unwrap();
+            if (locked.getOwnerId() != null && getOwners().contains(locked.getOwnerId())) {
+                return locked.getDelegate();
             } else {
                 return null;
             }
@@ -610,9 +615,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             public int get(int index) {
                 if (index == 0) {
                     int flags = 0;
-                    if (hasOffer()) flags |= 1;
-                    if (isOfferAvailable()) flags |= 2;
-                    if (isOwner(player)) flags |= 4;
+                    if (hasOffer()) flags |= HAS_OFFER;
+                    if (isOfferAvailable()) flags |= OFFER_AVAILABLE;
+                    if (isOwner(player)) flags |= OWNER_FLAG;
                     return flags;
                 }
                 return 0;
