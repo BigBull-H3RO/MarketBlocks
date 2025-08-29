@@ -1,6 +1,5 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
-import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
@@ -22,7 +21,7 @@ public abstract class AbstractSmallShopMenu extends AbstractContainerMenu {
         super(menuType, containerId);
     }
 
-    protected static SmallShopBlockEntity readBlockEntity(Inventory playerInventory, RegistryFriendlyByteBuf buf) {
+    protected static @Nullable SmallShopBlockEntity readBlockEntity(Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         BlockPos pos = buf.readBlockPos();
         BlockEntity be = playerInventory.player.level().getBlockEntity(pos);
 
@@ -30,7 +29,7 @@ public abstract class AbstractSmallShopMenu extends AbstractContainerMenu {
             return shopEntity;
         }
 
-        return new SmallShopBlockEntity(pos, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
+        return null;
     }
 
     protected void addPlayerInventory(Inventory playerInventory, int startY) {

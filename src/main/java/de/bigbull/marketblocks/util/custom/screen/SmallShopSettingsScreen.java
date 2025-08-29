@@ -80,10 +80,10 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                 boolean emit = emitRedstoneCheckbox.selected();
                 blockEntity.setShopNameClient(name);
                 blockEntity.setEmitRedstoneClient(emit);
-                blockEntity.setMode(leftDir, menu.getMode(leftDir));
-                blockEntity.setMode(rightDir, menu.getMode(rightDir));
-                blockEntity.setMode(bottomDir, menu.getMode(bottomDir));
-                blockEntity.setMode(backDir, menu.getMode(backDir));
+                blockEntity.setModeClient(leftDir, menu.getMode(leftDir));
+                blockEntity.setModeClient(rightDir, menu.getMode(rightDir));
+                blockEntity.setModeClient(bottomDir, menu.getMode(bottomDir));
+                blockEntity.setModeClient(backDir, menu.getMode(backDir));
 
                 List<UUID> selectedOwners = new ArrayList<>();
                 blockEntity.getAdditionalOwners().clear();
@@ -95,7 +95,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
                                 ? Minecraft.getInstance().getConnection().getPlayerInfo(id)
                                 : null;
                         String playerName = info != null ? info.getProfile().getName() : storedOwners.getOrDefault(id, "");
-                        blockEntity.addOwner(id, playerName);
+                        blockEntity.addOwnerClient(id, playerName);
                     }
                 });
 

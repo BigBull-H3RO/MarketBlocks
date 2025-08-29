@@ -6,8 +6,10 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 /**
@@ -38,7 +40,21 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements Sho
 
     // Constructor für Client
     public SmallShopInventoryMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        this(containerId, playerInventory, readBlockEntity(playerInventory, buf));
+        super(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), containerId);
+        SmallShopBlockEntity be = readBlockEntity(playerInventory, buf);
+        if (be == null) {
+            playerInventory.player.closeContainer();
+        }
+        this.blockEntity = be;
+        this.inputHandler = be != null ? be.getInputHandler() : new ItemStackHandler(INPUT_SLOTS);
+        this.outputHandler = be != null ? be.getOutputHandler() : new ItemStackHandler(OUTPUT_SLOTS);
+        this.data = be != null ? be.createMenuFlags(playerInventory.player) : new SimpleContainerData(1);
+
+        addDataSlots(this.data);
+        if (be != null) {
+            initSlots(playerInventory);
+            be.ensureOwner(playerInventory.player);
+        }
     }
 
     @Override
@@ -76,8 +92,8 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements Sho
     }
 
     @Override
-    public boolean isOwner() {
-        return (data.get(0) & SmallShopBlockEntity.OWNER_FLAG) != 0;
+    public int getFlags() {
+        return data.get(0);
     }
 
     public static class InputSlot extends SlotItemHandler {
@@ -92,12 +108,12 @@ public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements Sho
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return blockEntity.isOwner(player);
+            return blockEntity != null && blockEntity.isOwner(player);
         }
 
         @Override
         public boolean mayPickup(Player player) {
-            return blockEntity.isOwner(player);
+            return blockEntity != null && blockEntity.isOwner(player);
         }
     }
 

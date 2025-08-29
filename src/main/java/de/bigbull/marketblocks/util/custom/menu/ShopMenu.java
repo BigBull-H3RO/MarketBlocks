@@ -12,7 +12,21 @@ public interface ShopMenu {
     SmallShopBlockEntity getBlockEntity();
 
     /**
+     * Liefert die Bitmaske der Flags dieses Menüs.
+     */
+    int getFlags();
+
+    /**
+     * Prüft, ob ein bestimmtes Flag gesetzt ist.
+     */
+    default boolean hasFlag(int flag) {
+        return (getFlags() & flag) != 0;
+    }
+
+    /**
      * @return {@code true}, wenn der aktuelle Spieler Eigentümer des Shops ist.
      */
-    boolean isOwner();
+    default boolean isOwner() {
+        return hasFlag(SmallShopBlockEntity.OWNER_FLAG);
+    }
 }

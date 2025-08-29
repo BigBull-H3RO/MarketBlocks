@@ -6,9 +6,11 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 /**
@@ -41,7 +43,21 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
     // Constructor für Client
     public SmallShopOffersMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        this(containerId, playerInventory, readBlockEntity(playerInventory, buf));
+        super(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), containerId);
+        SmallShopBlockEntity be = readBlockEntity(playerInventory, buf);
+        if (be == null) {
+            playerInventory.player.closeContainer();
+        }
+        this.blockEntity = be;
+        this.paymentHandler = be != null ? be.getPaymentHandler() : new ItemStackHandler(PAYMENT_SLOTS);
+        this.offerHandler = be != null ? be.getOfferHandler() : new ItemStackHandler(OFFER_SLOTS);
+        this.data = be != null ? be.createMenuFlags(playerInventory.player) : new SimpleContainerData(1);
+
+        addDataSlots(this.data);
+        initSlots(playerInventory);
+        if (be != null) {
+            be.ensureOwner(playerInventory.player);
+        }
     }
 
     @Override
@@ -59,12 +75,14 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
                 return ItemStack.EMPTY;
             }
 
-            ItemStack stackInSlot = slot.remove(slot.getItem().getCount());
+            ItemStack stackInSlot = slot.getItem();
             ItemStack result = stackInSlot.copy();
             if (!this.moveItemStackTo(stackInSlot, TOTAL_SLOTS, this.slots.size(), true)) {
-                slot.set(stackInSlot);
                 return ItemStack.EMPTY;
             }
+
+            blockEntity.performPurchase();
+            blockEntity.updateOfferSlot();
 
             slot.onTake(player, stackInSlot);
             return result;
@@ -137,16 +155,16 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
     }
 
     public boolean hasOffer() {
-        return (data.get(0) & SmallShopBlockEntity.HAS_OFFER) != 0;
+        return hasFlag(SmallShopBlockEntity.HAS_OFFER);
     }
 
     public boolean isOfferAvailable() {
-        return (data.get(0) & SmallShopBlockEntity.OFFER_AVAILABLE) != 0;
+        return hasFlag(SmallShopBlockEntity.OFFER_AVAILABLE);
     }
 
     @Override
-    public boolean isOwner() {
-        return (data.get(0) & SmallShopBlockEntity.OWNER_FLAG) != 0;
+    public int getFlags() {
+        return data.get(0);
     }
 
     public static class PaymentSlot extends SlotItemHandler {
@@ -199,6 +217,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         @Override
         public void onTake(Player player, ItemStack stack) {
             super.onTake(player, stack);
+            menu.blockEntity.updateOfferSlot();
         }
     }
 }

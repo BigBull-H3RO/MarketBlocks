@@ -7,6 +7,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.EnumMap;
@@ -17,7 +19,7 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
     private final SmallShopBlockEntity blockEntity;
     private final EnumMap<Direction, SideMode> sideModes;
     private final EnumMap<Direction, SideMode> initialModes;
-    private final net.minecraft.world.inventory.ContainerData data;
+    private final ContainerData data;
 
     // Server constructor
     public SmallShopSettingsMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
@@ -37,7 +39,26 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
 
     // Client constructor
     public SmallShopSettingsMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        this(containerId, playerInventory, readBlockEntity(playerInventory, buf));
+        super(RegistriesInit.SMALL_SHOP_CONFIG_MENU.get(), containerId);
+        SmallShopBlockEntity be = readBlockEntity(playerInventory, buf);
+        if (be == null) {
+            playerInventory.player.closeContainer();
+        }
+        this.blockEntity = be;
+        this.sideModes = new EnumMap<>(Direction.class);
+        this.initialModes = new EnumMap<>(Direction.class);
+        if (be != null) {
+            for (Direction dir : Direction.values()) {
+                SideMode mode = be.getMode(dir);
+                sideModes.put(dir, mode);
+                initialModes.put(dir, mode);
+            }
+        }
+        this.data = be != null ? be.createMenuFlags(playerInventory.player) : new SimpleContainerData(1);
+        addDataSlots(this.data);
+        if (be != null) {
+            initSlots(playerInventory);
+        }
     }
 
     @Override
@@ -69,8 +90,8 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
     }
 
     @Override
-    public boolean isOwner() {
-        return (data.get(0) & SmallShopBlockEntity.OWNER_FLAG) != 0;
+    public int getFlags() {
+        return data.get(0);
     }
 
     public Map<UUID, String> getAdditionalOwners() {

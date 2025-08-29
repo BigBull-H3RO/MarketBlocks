@@ -89,7 +89,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private final ItemStackHandler inputHandler = new ItemStackHandler(12) {
         @Override
         protected void onContentsChanged(int slot) {
-            markDirty();
+            setChanged();
             needsOfferRefresh = true;
         }
     };
@@ -97,14 +97,14 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private final ItemStackHandler outputHandler = new ItemStackHandler(12) {
         @Override
         protected void onContentsChanged(int slot) {
-            markDirty();
+            setChanged();
         }
     };
 
     private final ItemStackHandler paymentHandler = new ItemStackHandler(2) {
         @Override
         protected void onContentsChanged(int slot) {
-            markDirty();
+            setChanged();
             needsOfferRefresh = true;
         }
     };
@@ -201,6 +201,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     private void markDirty() {
         setChanged();
+    }
+
+    public void invalidateCaps() {
         if (level != null) {
             level.invalidateCapabilities(worldPosition);
         }
@@ -233,6 +236,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     public void addOwner(UUID id, String name) {
         additionalOwners.put(id, name);
         sync();
+    }
+
+    public void addOwnerClient(UUID id, String name) {
+        additionalOwners.put(id, name);
     }
 
     public void removeOwner(UUID id) {
@@ -316,6 +323,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         SideMode oldMode = getMode(dir);
         sideModes.put(dir, mode);
         markDirty();
+        invalidateCaps();
         sync();
         invalidateNeighbor(dir);
         if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
@@ -323,6 +331,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         } else if (oldMode != SideMode.DISABLED) {
             unlockAdjacentChests();
         }
+    }
+
+    public void setModeClient(Direction dir, SideMode mode) {
+        sideModes.put(dir, mode);
     }
 
     public SideMode getModeForSide(Direction side) {
@@ -789,6 +801,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             sideModes.put(dir, mode);
         }
         lockAdjacentChests();
+        invalidateCaps();
         tickCounter = 0;
     }
 

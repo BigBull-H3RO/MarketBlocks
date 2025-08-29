@@ -90,7 +90,7 @@ public class SmallShopBlock extends BaseEntityBlock {
         super.setPlacedBy(level, pos, state, placer, stack);
         if (placer instanceof Player player) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
+            if (!level.isClientSide && blockEntity instanceof SmallShopBlockEntity shopEntity) {
                 shopEntity.setOwner(player);
                 shopEntity.lockAdjacentChests();
             }
