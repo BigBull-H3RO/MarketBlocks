@@ -60,10 +60,9 @@ public abstract class AbstractSmallShopMenu extends AbstractContainerMenu {
     protected abstract void addCustomSlots(Inventory playerInventory);
 
     protected ItemStack quickMoveStack(Player player, int index, int containerSlots, int insertSlots) {
-        int playerInvStart = containerSlots;
-        int hotbarStart = playerInvStart + PLAYER_INV_SLOTS;
+        int hotbarStart = containerSlots + PLAYER_INV_SLOTS;
 
-        if (index >= playerInvStart && index < this.slots.size()) {
+        if (index >= containerSlots && index < this.slots.size()) {
             Slot slot = this.slots.get(index);
             if (slot.hasItem()) {
                 ItemStack stack = slot.getItem();
@@ -85,7 +84,7 @@ public abstract class AbstractSmallShopMenu extends AbstractContainerMenu {
             }
         }
 
-        return transferStack(player, index, playerInvStart, hotbarStart);
+        return transferStack(player, index, containerSlots, hotbarStart);
     }
 
     protected ItemStack transferStack(Player player, int index, int containerEnd, int hotbarStart) {

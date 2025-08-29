@@ -59,14 +59,12 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
                 return ItemStack.EMPTY;
             }
 
-            ItemStack stackInSlot = slot.getItem();
+            ItemStack stackInSlot = slot.remove(slot.getItem().getCount());
             ItemStack result = stackInSlot.copy();
             if (!this.moveItemStackTo(stackInSlot, TOTAL_SLOTS, this.slots.size(), true)) {
+                slot.set(stackInSlot);
                 return ItemStack.EMPTY;
             }
-
-            blockEntity.performPurchase();
-            blockEntity.updateOfferSlot();
 
             slot.onTake(player, stackInSlot);
             return result;
@@ -201,7 +199,6 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         @Override
         public void onTake(Player player, ItemStack stack) {
             super.onTake(player, stack);
-            menu.blockEntity.updateOfferSlot();
         }
     }
 }

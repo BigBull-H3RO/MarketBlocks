@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.util.custom.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.ShopTab;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.client.gui.GuiGraphics;
@@ -27,7 +28,10 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
         boolean isOwner = menu.isOwner();
 
         if (isOwner) {
-            createTabButtons(leftPos + imageWidth + 4, topPos + 8, 1, () -> switchTab(0), () -> {}, () -> switchTab(2));
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, ShopTab.INVENTORY,
+                    () -> switchTab(ShopTab.OFFERS),
+                    () -> {},
+                    () -> switchTab(ShopTab.SETTINGS));
         }
     }
 

@@ -85,7 +85,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         @Override
         protected void onContentsChanged(int slot) {
             markDirty();
-            updateOfferSlot();
+            needsOfferRefresh = true;
         }
     };
 
@@ -100,7 +100,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         @Override
         protected void onContentsChanged(int slot) {
             markDirty();
-            updateOfferSlot();
+            needsOfferRefresh = true;
         }
     };
 
@@ -133,6 +133,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private final OfferManager offerManager = new OfferManager(this);
 
     private int tickCounter = 0;
+    private boolean needsOfferRefresh = false;
 
     record SidedWrapper(IItemHandler backing, boolean extractOnly) implements IItemHandler {
         public int getSlots() {
@@ -370,7 +371,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         this.offerResult = result.copy();
         this.hasOffer = true;
         sync();
-        updateOfferSlot();
+        needsOfferRefresh = true;
     }
 
     public void clearOffer() {
@@ -380,6 +381,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         this.hasOffer = false;
         this.offerHandler.setStackInSlot(0, ItemStack.EMPTY);
         sync();
+        needsOfferRefresh = true;
     }
 
     public boolean hasOffer() {
@@ -422,7 +424,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
-        if (canAfford() && hasResultItemInInput()) {
+        if (canAfford() && hasResultItemInInput(false)) {
             if (offerHandler.getStackInSlot(0).isEmpty()) {
                 offerHandler.setStackInSlot(0, getOfferResult().copy());
             }
@@ -447,6 +449,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public boolean hasResultItemInInput() {
+        return hasResultItemInInput(false);
+    }
+
+    public boolean hasResultItemInInput(boolean checkNeighbors) {
         ItemStack result = getOfferResult();
         if (result.isEmpty()) return false;
 
@@ -461,7 +467,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
 
-        if (level != null && total < result.getCount()) {
+        if (checkNeighbors && level != null && total < result.getCount()) {
             for (Direction dir : Direction.values()) {
                 if (getModeForSide(dir) == SideMode.INPUT) {
                     IItemHandler neighbour = getValidNeighborHandler(dir);
@@ -481,12 +487,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
 
-        return false;
+        return total >= result.getCount();
     }
 
     private void processPurchase() {
         pullFromInputChest();
-        if (!hasOffer || !canAfford() || !hasResultItemInInput()) {
+        if (!hasOffer || !canAfford() || !hasResultItemInInput(false)) {
             return;
         }
 
@@ -521,7 +527,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
                 }
             }
         }
-        updateOfferSlot();
+        needsOfferRefresh = true;
     }
 
     public void performPurchase() {
@@ -595,7 +601,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public boolean isOfferAvailable() {
-        return hasOffer && hasResultItemInInput();
+        return hasOffer && hasResultItemInInput(false);
     }
 
     public ContainerData createMenuFlags(Player player) {
@@ -665,7 +671,11 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             be.tickCounter++;
             int offerInterval = Config.OFFER_UPDATE_INTERVAL.get();
             if (offerInterval > 0 && be.tickCounter % offerInterval == 0) {
-                be.updateOfferSlot();
+                if (be.needsOfferRefresh) {
+                    be.updateOfferSlot();
+                    be.hasResultItemInInput(true);
+                    be.needsOfferRefresh = false;
+                }
             }
             int chestInterval = Config.CHEST_IO_INTERVAL.get();
             if (chestInterval > 0 && be.tickCounter % chestInterval == 0) {

@@ -6,6 +6,7 @@ import de.bigbull.marketblocks.network.packets.UpdateOwnersPacket;
 import de.bigbull.marketblocks.network.packets.UpdateSettingsPacket;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.ShopTab;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.SideModeButton;
@@ -54,9 +55,9 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
         backDir = facing.getOpposite();
 
         if (isOwner) {
-            createTabButtons(leftPos + imageWidth + 4, topPos + 8, 2,
-                    () -> switchTab(0),
-                    () -> switchTab(1),
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, ShopTab.SETTINGS,
+                    () -> switchTab(ShopTab.OFFERS),
+                    () -> switchTab(ShopTab.INVENTORY),
                     () -> {});
 
             nameField = addRenderableWidget(new EditBox(font, leftPos + 8, topPos + 20, 120, 20,

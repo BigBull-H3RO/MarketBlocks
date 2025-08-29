@@ -5,6 +5,7 @@ import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.ShopMenu;
+import de.bigbull.marketblocks.util.custom.menu.ShopTab;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -54,33 +55,33 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> e
         super(menu, inv, title);
     }
 
-    protected void createTabButtons(int x, int y, int selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings) {
+    protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings) {
         addRenderableWidget(new IconButton(
                 x - 2, y - 4, 22, 22,
                 BUTTON_SPRITES, OFFERS_ICON,
-                b -> { if (selectedTab != 0) onOffers.run(); },
+                b -> { if (selectedTab != ShopTab.OFFERS) onOffers.run(); },
                 Component.translatable("gui.marketblocks.offers_tab"),
-                () -> selectedTab == 0
+                () -> selectedTab == ShopTab.OFFERS
         ));
 
         addRenderableWidget(new IconButton(
                 x - 2, y + 22, 22, 22,
                 BUTTON_SPRITES, INVENTORY_ICON,
-                b -> { if (selectedTab != 1) onInventory.run(); },
+                b -> { if (selectedTab != ShopTab.INVENTORY) onInventory.run(); },
                 Component.translatable("gui.marketblocks.inventory_tab"),
-                () -> selectedTab == 1
+                () -> selectedTab == ShopTab.INVENTORY
         ));
 
         addRenderableWidget(new IconButton(
                 x - 2, y + 48, 22, 22,
                 BUTTON_SPRITES, SETTINGS_ICON,
-                b -> { if (selectedTab != 2) onSettings.run(); },
+                b -> { if (selectedTab != ShopTab.SETTINGS) onSettings.run(); },
                 Component.translatable("gui.marketblocks.settings_tab"),
-                () -> selectedTab == 2
+                () -> selectedTab == ShopTab.SETTINGS
         ));
     }
 
-    protected void switchTab(int tab) {
+    protected void switchTab(ShopTab tab) {
         if (menu instanceof ShopMenu shopMenu && shopMenu.isOwner()) {
             SmallShopBlockEntity blockEntity = shopMenu.getBlockEntity();
             Minecraft mc = Minecraft.getInstance();

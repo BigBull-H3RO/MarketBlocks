@@ -7,6 +7,7 @@ import de.bigbull.marketblocks.network.packets.AutoFillPaymentPacket;
 import de.bigbull.marketblocks.network.packets.CreateOfferPacket;
 import de.bigbull.marketblocks.network.packets.DeleteOfferPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.ShopTab;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
@@ -51,7 +52,10 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         this.offerButton.visible = true;
 
         if (isOwner) {
-            createTabButtons(leftPos + imageWidth + 4, topPos + 8, 0, () -> {}, () -> switchTab(1), () -> switchTab(2));
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, ShopTab.OFFERS,
+                    () -> {},
+                    () -> switchTab(ShopTab.INVENTORY),
+                    () -> switchTab(ShopTab.SETTINGS));
         }
 
         if (isOwner) {

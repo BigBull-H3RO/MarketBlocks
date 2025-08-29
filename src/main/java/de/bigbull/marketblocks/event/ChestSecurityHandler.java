@@ -79,15 +79,12 @@ public class ChestSecurityHandler {
             return;
         }
 
-        if (state.getValue(ChestBlock.TYPE) == ChestType.SINGLE) return;
-
-        Direction direction = ChestBlock.getConnectedDirection(state);
-        BlockPos otherPos = event.getPos().relative(direction);
-        BlockState otherState = level.getBlockState(otherPos);
-
-        if (isAdjacentToShop(level, event.getPos()) || isAdjacentToShop(level, otherPos)) {
-            level.setBlock(event.getPos(), state.setValue(ChestBlock.TYPE, ChestType.SINGLE), 3);
-            level.setBlock(otherPos, otherState.setValue(ChestBlock.TYPE, ChestType.SINGLE), 3);
+        if (state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+            Direction direction = ChestBlock.getConnectedDirection(state);
+            BlockPos otherPos = event.getPos().relative(direction);
+            if (isAdjacentToShop(level, event.getPos()) || isAdjacentToShop(level, otherPos)) {
+                event.setCanceled(true);
+            }
         }
     }
 

@@ -2,9 +2,10 @@ package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
+import de.bigbull.marketblocks.util.custom.menu.ShopTab;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -17,15 +18,20 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record SwitchTabPacket(BlockPos pos, int tab) implements CustomPacketPayload {
+public record SwitchTabPacket(BlockPos pos, ShopTab tab) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<SwitchTabPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "switch_tab"));
 
+    private static final StreamCodec<ByteBuf, ShopTab> TAB_CODEC = ByteBufCodecs.VAR_INT.map(
+            ShopTab::fromId,
+            ShopTab::ordinal
+    );
+
     public static final StreamCodec<ByteBuf, SwitchTabPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             SwitchTabPacket::pos,
-            ByteBufCodecs.VAR_INT,
+            TAB_CODEC,
             SwitchTabPacket::tab,
             SwitchTabPacket::new
     );
@@ -40,15 +46,14 @@ public record SwitchTabPacket(BlockPos pos, int tab) implements CustomPacketPayl
             ServerPlayer player = (ServerPlayer) context.player();
             Level level = player.level();
             BlockPos pos = packet.pos();
-            int tab = packet.tab();
-
-            if (tab < 0 || tab > 2) {
-                MarketBlocks.LOGGER.warn("Received invalid tab {} from player {}", tab, player.getName().getString());
+            ShopTab tab = packet.tab();
+            if (tab == null) {
+                MarketBlocks.LOGGER.warn("Received invalid tab from player {}", player.getName().getString());
                 return;
             }
 
             if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity blockEntity) {
-                if (tab == 0) {
+                if (tab == ShopTab.OFFERS) {
                     player.openMenu(
                             new SimpleMenuProvider(
                                     (id, inv, p) -> new SmallShopOffersMenu(id, inv, blockEntity),
@@ -56,7 +61,7 @@ public record SwitchTabPacket(BlockPos pos, int tab) implements CustomPacketPayl
                             ),
                             pos
                     );
-                } else if (tab == 1 && blockEntity.isOwner(player)) {
+                } else if (tab == ShopTab.INVENTORY && blockEntity.isOwner(player)) {
                     player.openMenu(
                             new SimpleMenuProvider(
                                     (id, inv, p) -> new SmallShopInventoryMenu(id, inv, blockEntity),
@@ -64,7 +69,7 @@ public record SwitchTabPacket(BlockPos pos, int tab) implements CustomPacketPayl
                             ),
                             pos
                     );
-                } else if (tab == 2 && blockEntity.isOwner(player)) {
+                } else if (tab == ShopTab.SETTINGS && blockEntity.isOwner(player)) {
                     player.openMenu(
                             new SimpleMenuProvider(
                                     (id, inv, p) -> new SmallShopSettingsMenu(id, inv, blockEntity),
