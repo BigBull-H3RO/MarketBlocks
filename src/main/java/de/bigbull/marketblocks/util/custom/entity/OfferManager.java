@@ -13,9 +13,37 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
+/**
+ * Manages the logic for creating and validating trade offers within a {@link SmallShopBlockEntity}.
+ * This class performs server-side validation of the items used to create an offer,
+ * extracts them from the shop's temporary slots, and returns any leftovers to the player.
+ *
+ * @param shopEntity The block entity this manager belongs to.
+ */
 public record OfferManager(SmallShopBlockEntity shopEntity) {
-    public record OfferValidation(boolean valid, String errorKey) {}
+    private static final int PAYMENT_SLOT_COUNT = 2;
+    private static final int RESULT_SLOT_INDEX = 2;
+    private static final int TOTAL_OFFER_SLOTS = 3;
 
+    /**
+     * A record to hold the result of an offer validation check.
+     * @param valid    True if the offer is valid, false otherwise.
+     * @param errorKey A translation key for the error message if the offer is invalid.
+     */
+    public record OfferValidation(boolean valid, String errorKey) {
+        public static final OfferValidation VALID = new OfferValidation(true, null);
+    }
+
+    /**
+     * The main entry point for creating an offer. It validates the proposed offer,
+     * extracts the items, creates the offer in the shop, and returns any remaining items to the player.
+     *
+     * @param player   The player creating the offer.
+     * @param payment1 The first payment item from the client.
+     * @param payment2 The second payment item from the client.
+     * @param result   The result item from the client.
+     * @return True if the offer was successfully created, false otherwise.
+     */
     public boolean applyOffer(ServerPlayer player, ItemStack payment1, ItemStack payment2, ItemStack result) {
         OfferValidation validation = validateOffer(payment1, payment2, result);
         if (!validation.valid()) {
@@ -23,27 +51,27 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
             return false;
         }
 
-        ItemStack[] slotCopies = copySlots();
-        ItemStack[] extracted = extractItems(slotCopies);
+        ItemStack[] slotCopies = copyOfferSlotsFromShop();
+        ItemStack[] extractedItems = extractItemsFromOfferSlots(slotCopies);
 
-        shopEntity.createOffer(slotCopies[0], slotCopies[1], slotCopies[2]);
+        shopEntity.createOffer(slotCopies[0], slotCopies[1], slotCopies[RESULT_SLOT_INDEX]);
 
+        // Notify clients that the offer has changed
         PacketDistributor.sendToPlayersTrackingChunk(player.serverLevel(), new ChunkPos(shopEntity.getBlockPos()),
                 new OfferStatusPacket(shopEntity.getBlockPos(), true));
 
-        if (shopEntity.getLevel() != null) {
-            shopEntity.getLevel().sendBlockUpdated(shopEntity.getBlockPos(),
-                    shopEntity.getLevel().getBlockState(shopEntity.getBlockPos()),
-                    shopEntity.getLevel().getBlockState(shopEntity.getBlockPos()), 3);
-        }
+        shopEntity.sync(); // Sync block entity data
 
-        returnStacksToPlayer(player, extracted);
+        returnStacksToPlayer(player, extractedItems);
 
         MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), shopEntity.getBlockPos());
 
         return true;
     }
 
+    /**
+     * Validates the proposed offer against the items currently in the shop's offer slots.
+     */
     private OfferValidation validateOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
         if (result.isEmpty()) {
             return new OfferValidation(false, "gui.marketblocks.error.no_result_item");
@@ -52,60 +80,72 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
             return new OfferValidation(false, "gui.marketblocks.error.no_payment_items");
         }
 
-        ItemStack[] slotCopies = copySlots();
-        ItemStack[] expected = new ItemStack[]{payment1, payment2, result};
-        if (!slotsAreValid(expected, slotCopies)) {
+        ItemStack[] itemsInSlots = copyOfferSlotsFromShop();
+        ItemStack[] expectedItems = new ItemStack[]{payment1, payment2, result};
+        if (!areOfferSlotsConsistent(expectedItems, itemsInSlots)) {
             return new OfferValidation(false, "gui.marketblocks.error.invalid_offer");
         }
 
-        return new OfferValidation(true, null);
+        return OfferValidation.VALID;
     }
 
-    private ItemStack[] copySlots() {
-        ItemStack[] slots = new ItemStack[3];
-        copyRange(shopEntity.getPaymentHandler(), slots, 0, 0, 2);
-        copyRange(shopEntity.getOfferHandler(), slots, 2, 0, 1);
+    /**
+     * Copies the items from the shop's payment and result slots into a new array.
+     */
+    private ItemStack[] copyOfferSlotsFromShop() {
+        ItemStack[] slots = new ItemStack[TOTAL_OFFER_SLOTS];
+        copyRange(shopEntity.getPaymentHandler(), slots, 0, 0, PAYMENT_SLOT_COUNT);
+        copyRange(shopEntity.getOfferHandler(), slots, RESULT_SLOT_INDEX, 0, 1);
         return slots;
     }
 
+    /**
+     * A generic helper to iterate over a range of slots.
+     */
     private void forRange(int start, int length, IntFunction<ItemStack> supplier, BiConsumer<Integer, ItemStack> consumer) {
         for (int i = 0; i < length; i++) {
-            int index = start + i;
-            consumer.accept(i, supplier.apply(index));
+            consumer.accept(i, supplier.apply(start + i));
         }
     }
 
+    /**
+     * Copies items from an item handler to a destination array.
+     */
     private void copyRange(IItemHandler handler, ItemStack[] dest, int destStart, int handlerStart, int length) {
         forRange(handlerStart, length, handler::getStackInSlot,
                 (i, stack) -> dest[destStart + i] = stack.copy());
     }
 
-    private boolean slotsAreValid(ItemStack[] expected, ItemStack[] slots) {
-        if (!validateRange(expected, slots, 2, 3)) {
+    /**
+     * Checks if the items expected from the client match the items actually in the server-side slots.
+     * This is a security check to prevent data mismatch.
+     */
+    private boolean areOfferSlotsConsistent(ItemStack[] expected, ItemStack[] actual) {
+        // Check the result slot
+        if (!isItemBasicallyEqual(expected[RESULT_SLOT_INDEX], actual[RESULT_SLOT_INDEX])) {
             return false;
         }
 
-        boolean[] matched = new boolean[2];
-        for (int i = 0; i < 2; i++) {
+        // Check the payment slots (order-agnostic)
+        boolean[] matched = new boolean[PAYMENT_SLOT_COUNT];
+        for (int i = 0; i < PAYMENT_SLOT_COUNT; i++) {
             ItemStack exp = expected[i];
-            if (exp.isEmpty()) {
-                continue;
-            }
-            boolean found = false;
-            for (int j = 0; j < 2; j++) {
-                if (!matched[j] && validatePaymentSlot(exp, slots[j])) {
+            if (exp.isEmpty()) continue;
+
+            boolean foundMatch = false;
+            for (int j = 0; j < PAYMENT_SLOT_COUNT; j++) {
+                if (!matched[j] && isItemBasicallyEqual(exp, actual[j])) {
                     matched[j] = true;
-                    found = true;
+                    foundMatch = true;
                     break;
                 }
             }
-            if (!found) {
-                return false;
-            }
+            if (!foundMatch) return false;
         }
 
-        for (int j = 0; j < 2; j++) {
-            if (!matched[j] && !slots[j].isEmpty()) {
+        // Ensure no extra items are in the payment slots
+        for (int j = 0; j < PAYMENT_SLOT_COUNT; j++) {
+            if (!matched[j] && !actual[j].isEmpty()) {
                 return false;
             }
         }
@@ -113,29 +153,29 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
         return true;
     }
 
-    private boolean validateRange(ItemStack[] expected, ItemStack[] slots, int start, int end) {
-        for (int i = start; i < end; i++) {
-            if (!validatePaymentSlot(expected[i], slots[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private ItemStack[] extractItems(ItemStack[] slots) {
-        ItemStack[] extracted = new ItemStack[slots.length];
-        extractRange(shopEntity.getPaymentHandler(), slots, extracted, 0, 0, 2);
-        extractRange(shopEntity.getOfferHandler(), slots, extracted, 0, 2, 1);
+    /**
+     * Extracts all items from the offer slots based on a copy of their contents.
+     */
+    private ItemStack[] extractItemsFromOfferSlots(ItemStack[] slotContents) {
+        ItemStack[] extracted = new ItemStack[slotContents.length];
+        extractRange(shopEntity.getPaymentHandler(), slotContents, extracted, 0, 0, PAYMENT_SLOT_COUNT);
+        extractRange(shopEntity.getOfferHandler(), slotContents, extracted, RESULT_SLOT_INDEX, RESULT_SLOT_INDEX, 1);
         return extracted;
     }
 
+    /**
+     * Extracts items from an item handler.
+     */
     private void extractRange(IItemHandler handler, ItemStack[] slots, ItemStack[] dest, int handlerStart, int destStart, int length) {
         forRange(destStart, length, idx -> slots[idx], (i, stack) ->
-                dest[destStart + i] = stack.isEmpty() ? ItemStack.EMPTY
-                        : handler.extractItem(handlerStart + i, stack.getCount(), false));
+                dest[i] = stack.isEmpty() ? ItemStack.EMPTY
+                        : handler.extractItem(handlerStart + (i - destStart), stack.getCount(), false));
     }
 
-    private boolean validatePaymentSlot(ItemStack expected, ItemStack actual) {
+    /**
+     * Compares two ItemStacks to see if they are the same item with the same components and count.
+     */
+    private boolean isItemBasicallyEqual(ItemStack expected, ItemStack actual) {
         if (expected.isEmpty()) {
             return actual.isEmpty();
         }
@@ -144,6 +184,9 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
                 && actual.getCount() == expected.getCount();
     }
 
+    /**
+     * Gives a list of item stacks back to the player, dropping any that don't fit in their inventory.
+     */
     private void returnStacksToPlayer(ServerPlayer player, ItemStack... stacks) {
         for (ItemStack stack : stacks) {
             if (!stack.isEmpty()) {

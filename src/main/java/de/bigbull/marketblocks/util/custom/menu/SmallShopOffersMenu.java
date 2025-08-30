@@ -14,9 +14,10 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 /**
- * Menü für den Angebots-Modus des SmallShop
+ * The menu for the "Offers" mode of the Small Shop.
+ * This UI is used for creating and viewing trade offers.
  */
-public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMenu  {
+public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMenu {
     private final SmallShopBlockEntity blockEntity;
     private final IItemHandler paymentHandler;
     private final IItemHandler offerHandler;
@@ -28,7 +29,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
     private final ContainerData data;
 
-    // Constructor für Server
+    // Server-side constructor
     public SmallShopOffersMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
         super(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), containerId);
         this.blockEntity = blockEntity;
@@ -41,11 +42,13 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         initSlots(playerInventory);
     }
 
-    // Constructor für Client
+    // Client-side constructor
     public SmallShopOffersMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         super(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), containerId);
         SmallShopBlockEntity be = readBlockEntity(playerInventory, buf);
         if (be == null) {
+            // If the block entity doesn't exist on the client, close the container.
+            // This can happen with lag or if the block is broken while the menu is open.
             playerInventory.player.closeContainer();
         }
         this.blockEntity = be;
@@ -69,6 +72,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
+        // Handle quick-moving the result of a trade
         if (index == OFFER_SLOT_INDEX) {
             Slot slot = this.slots.get(index);
             if (!slot.hasItem()) {
@@ -77,20 +81,29 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
             ItemStack stackInSlot = slot.getItem();
             ItemStack result = stackInSlot.copy();
+            // Try to move the item to the player's inventory
             if (!this.moveItemStackTo(stackInSlot, TOTAL_SLOTS, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
 
+            // This logic seems to be for when a player takes an item from the offer slot
+            // It should trigger the purchase logic in the block entity
             blockEntity.performPurchase();
-            blockEntity.updateOfferSlot();
+            blockEntity.updateOfferSlot(); // Refresh the offer slot state
 
             slot.onTake(player, stackInSlot);
             return result;
         }
 
+        // Standard quick-move logic for other slots
         return super.quickMoveStack(player, index, TOTAL_SLOTS, PAYMENT_SLOTS);
     }
 
+    /**
+     * Fills the payment slots with the required items from the player's inventory.
+     * This is a client-side helper for the "auto-fill" button.
+     * @param required The item stacks required for the payment.
+     */
     public void fillPaymentSlots(ItemStack... required) {
         clearPaymentSlots();
 
@@ -108,17 +121,27 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         }
     }
 
+    /**
+     * Clears all items from the payment slots, returning them to the player's inventory.
+     */
     private void clearPaymentSlots() {
         for (int paymentSlotIndex = 0; paymentSlotIndex < PAYMENT_SLOTS; paymentSlotIndex++) {
             ItemStack stackInSlot = this.slots.get(paymentSlotIndex).getItem();
+            // Move the item back to the player inventory
             if (!stackInSlot.isEmpty() && this.moveItemStackTo(stackInSlot, TOTAL_SLOTS, this.slots.size(), true)) {
+                // If the stack was fully moved, the slot will be empty. If not, it will have the remainder.
                 this.slots.get(paymentSlotIndex).set(stackInSlot.isEmpty() ? ItemStack.EMPTY : stackInSlot);
             }
         }
     }
 
+    /**
+     * Transfers a single required item stack from the player's inventory into a specified payment slot.
+     * @param required The item stack to transfer.
+     * @param slotIndex The index of the payment slot to fill.
+     */
     private void transferRequiredItems(ItemStack required, int slotIndex) {
-        for (int i = TOTAL_SLOTS; i < this.slots.size(); i++) {
+        for (int i = TOTAL_SLOTS; i < this.slots.size(); i++) { // Iterate player inventory
             ItemStack inventoryStack = this.slots.get(i).getItem();
             if (!inventoryStack.isEmpty() && ItemStack.isSameItemSameComponents(inventoryStack, required)) {
                 ItemStack currentPaymentStack = this.slots.get(slotIndex).getItem();
@@ -135,6 +158,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
                         this.slots.get(i).set(inventoryStack.isEmpty() ? ItemStack.EMPTY : inventoryStack);
                         this.slots.get(slotIndex).set(newPaymentStack);
 
+                        // If the payment slot is full, we can stop looking for this item.
                         if (newPaymentStack.getCount() >= maxStackSize) {
                             break;
                         }
@@ -155,11 +179,11 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
     }
 
     public boolean hasOffer() {
-        return hasFlag(SmallShopBlockEntity.HAS_OFFER);
+        return hasFlag(SmallShopBlockEntity.HAS_OFFER_FLAG);
     }
 
     public boolean isOfferAvailable() {
-        return hasFlag(SmallShopBlockEntity.OFFER_AVAILABLE);
+        return hasFlag(SmallShopBlockEntity.OFFER_AVAILABLE_FLAG);
     }
 
     @Override
@@ -167,6 +191,9 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         return data.get(0);
     }
 
+    /**
+     * A custom slot for the payment items.
+     */
     public static class PaymentSlot extends SlotItemHandler {
         public PaymentSlot(IItemHandler handler, int slot, int x, int y) {
             super(handler, slot, x, y);
@@ -174,10 +201,15 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
         @Override
         public boolean mayPlace(ItemStack stack) {
+            // Players can place any item in the payment slots.
             return true;
         }
     }
 
+    /**
+     * A custom slot for the offer's result item.
+     * This slot has special logic to handle offer creation and execution.
+     */
     public static class OfferSlot extends SlotItemHandler {
         private final SmallShopOffersMenu menu;
 
@@ -188,13 +220,16 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
         @Override
         public boolean mayPlace(ItemStack stack) {
+            // An item can only be placed by the owner if no offer is currently set.
             if (menu.hasOffer()) return false;
             return menu.isOwner();
         }
 
         @Override
         public boolean mayPickup(Player player) {
+            // The owner can always pick up the item.
             if (menu.isOwner()) return true;
+            // Other players can only pick it up if an offer is set and available for purchase.
             return menu.hasOffer() && menu.isOfferAvailable();
         }
 
@@ -203,11 +238,12 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
             if (menu.isOwner() || (menu.hasOffer() && menu.isOfferAvailable())) {
                 return super.remove(amount);
             }
-            return net.minecraft.world.item.ItemStack.EMPTY;
+            return ItemStack.EMPTY;
         }
 
         @Override
         public void set(ItemStack stack) {
+            // Prevent setting the slot if an offer already exists, to avoid visual glitches.
             if (menu.hasOffer() && !stack.isEmpty()) {
                 return;
             }
@@ -217,6 +253,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         @Override
         public void onTake(Player player, ItemStack stack) {
             super.onTake(player, stack);
+            // After taking the item, the offer slot needs to be refreshed on the server.
             menu.blockEntity.updateOfferSlot();
         }
     }
