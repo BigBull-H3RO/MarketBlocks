@@ -13,11 +13,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.NotNull;
@@ -114,7 +112,6 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu & 
             }
 
             NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), tab));
-            playSound(SoundEvents.UI_BUTTON_CLICK);
         }
     }
 
@@ -164,7 +161,7 @@ public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu & 
         }
     }
 
-    protected void playSound(Holder<SoundEvent> sound) {
+    protected void playSound(SoundEvent sound) {
         if (this.minecraft != null && this.minecraft.getSoundManager() != null) {
             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
         }

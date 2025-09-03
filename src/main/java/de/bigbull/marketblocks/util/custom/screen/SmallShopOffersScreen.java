@@ -59,11 +59,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         this.offerButton.visible = true;
 
         if (isOwner) {
-            createTabButtons(leftPos + imageWidth + 4, topPos + 8, ShopTab.OFFERS,
-                    () -> {
-                    },
-                    () -> switchTab(ShopTab.INVENTORY),
-                    () -> switchTab(ShopTab.SETTINGS));
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, ShopTab.OFFERS);
 
             if (!blockEntity.hasOffer()) {
                 addRenderableWidget(new IconButton(
@@ -120,7 +116,6 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
     private void deleteOffer() {
         NetworkHandler.sendToServer(new DeleteOfferPacket(menu.getBlockEntity().getBlockPos()));
-        playSound(SoundEvents.UI_BUTTON_CLICK);
     }
 
     /**
@@ -187,7 +182,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             title = Component.translatable(ModLang.GUI_SHOP_TITLE);
         }
         graphics.drawString(font, title, 8, 6, 4210752, false);
-        renderOwnerInfo(graphics, blockEntity, menu.isOwner(), imageWidth);
+        renderOwnerInfo(graphics, blockEntity);
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
 
@@ -197,13 +192,11 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         if (blockEntity.hasOffer()) {
             // If an offer exists, clicking the button tries to auto-fill payment
             NetworkHandler.sendToServer(new AutoFillPaymentPacket(blockEntity.getBlockPos()));
-            playSound(SoundEvents.UI_BUTTON_CLICK);
         } else if (menu.isOwner()) {
             // If no offer exists and the player is the owner, clear the template slots
             for (int i = 0; i < 3; i++) {
                 menu.slots.get(i).set(ItemStack.EMPTY);
             }
-            playSound(SoundEvents.UI_BUTTON_CLICK);
         }
     }
 

@@ -40,16 +40,30 @@ public record UpdateSettingsPacket(
 
     private static final StreamCodec<ByteBuf, SideMode> SIDE_MODE_CODEC = ByteBufCodecs.idMapper(SideMode::fromId, SideMode::ordinal);
 
-    public static final StreamCodec<ByteBuf, UpdateSettingsPacket> CODEC = StreamCodec.composite(
-            BlockPos.STREAM_CODEC, UpdateSettingsPacket::pos,
-            SIDE_MODE_CODEC, UpdateSettingsPacket::left,
-            SIDE_MODE_CODEC, UpdateSettingsPacket::right,
-            SIDE_MODE_CODEC, UpdateSettingsPacket::bottom,
-            SIDE_MODE_CODEC, UpdateSettingsPacket::back,
-            ByteBufCodecs.STRING_UTF8, UpdateSettingsPacket::name,
-            ByteBufCodecs.BOOL, UpdateSettingsPacket::redstone,
-            UpdateSettingsPacket::new
-    );
+    public static final StreamCodec<ByteBuf, UpdateSettingsPacket> CODEC = new StreamCodec<>() {
+        @Override
+        public UpdateSettingsPacket decode(ByteBuf buf) {
+            BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
+            SideMode left = SIDE_MODE_CODEC.decode(buf);
+            SideMode right = SIDE_MODE_CODEC.decode(buf);
+            SideMode bottom = SIDE_MODE_CODEC.decode(buf);
+            SideMode back = SIDE_MODE_CODEC.decode(buf);
+            String name = ByteBufCodecs.STRING_UTF8.decode(buf);
+            boolean redstone = ByteBufCodecs.BOOL.decode(buf);
+            return new UpdateSettingsPacket(pos, left, right, bottom, back, name, redstone);
+        }
+
+        @Override
+        public void encode(ByteBuf buf, UpdateSettingsPacket packet) {
+            BlockPos.STREAM_CODEC.encode(buf, packet.pos());
+            SIDE_MODE_CODEC.encode(buf, packet.left());
+            SIDE_MODE_CODEC.encode(buf, packet.right());
+            SIDE_MODE_CODEC.encode(buf, packet.bottom());
+            SIDE_MODE_CODEC.encode(buf, packet.back());
+            ByteBufCodecs.STRING_UTF8.encode(buf, packet.name());
+            ByteBufCodecs.BOOL.encode(buf, packet.redstone());
+        }
+    };
 
     @Override
     public @NotNull Type<UpdateSettingsPacket> type() {

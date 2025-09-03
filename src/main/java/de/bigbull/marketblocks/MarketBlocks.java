@@ -2,6 +2,7 @@ package de.bigbull.marketblocks;
 
 import com.mojang.logging.LogUtils;
 import de.bigbull.marketblocks.config.Config;
+import de.bigbull.marketblocks.data.DataGenerators;
 import de.bigbull.marketblocks.util.CreativeTabInit;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import net.minecraft.resources.ResourceLocation;
@@ -27,6 +28,8 @@ public class MarketBlocks {
      * @param modContainer The container for this mod.
      */
     public MarketBlocks(IEventBus modEventBus, ModContainer modContainer) {
+        modEventBus.addListener(DataGenerators::gatherData);
+
         // Register all initializers
         RegistriesInit.register(modEventBus);
         CreativeTabInit.CREATIVE_MODE_TABS.register(modEventBus);

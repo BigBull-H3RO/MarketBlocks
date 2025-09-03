@@ -7,7 +7,6 @@ import de.bigbull.marketblocks.data.recipe.ModRecipeProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +15,6 @@ import java.util.concurrent.CompletableFuture;
  * Main class for data generation. It registers all data providers for the mod.
  * This class is registered on the mod's event bus to listen for the GatherDataEvent.
  */
-@EventBusSubscriber(modid = MarketBlocks.MODID)
 public class DataGenerators {
 
     /**

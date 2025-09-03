@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMenu {
     private final SmallShopBlockEntity blockEntity;
     private final ContainerData data;
+    private final Player player;
 
     private static final int PAYMENT_SLOTS = 2;
     private static final int OFFER_SLOTS = 1;
@@ -31,9 +32,10 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
     public SmallShopOffersMenu(int containerId, @NotNull Inventory playerInventory, @NotNull SmallShopBlockEntity blockEntity) {
         super(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), containerId);
         this.blockEntity = blockEntity;
-        this.data = blockEntity.createMenuFlags(playerInventory.player);
+        this.player = playerInventory.player;
+        this.data = blockEntity.createMenuFlags(this.player);
 
-        this.blockEntity.ensureOwner(playerInventory.player);
+        this.blockEntity.ensureOwner(this.player);
         this.addDataSlots(this.data);
         this.initSlots(playerInventory);
     }
@@ -44,9 +46,10 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
     public SmallShopOffersMenu(int containerId, @NotNull Inventory playerInventory, @NotNull RegistryFriendlyByteBuf buf) {
         super(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), containerId);
         this.blockEntity = readBlockEntity(playerInventory, buf); // Throws if BE is null
+        this.player = playerInventory.player;
         this.data = new SimpleContainerData(1); // Client doesn't need the real data, just a placeholder
 
-        this.blockEntity.ensureOwner(playerInventory.player);
+        this.blockEntity.ensureOwner(this.player);
         this.addDataSlots(this.data);
         this.initSlots(playerInventory);
     }
@@ -82,7 +85,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         // --- Move from Player to Container ---
         else {
             // Only owners can shift-click items into the payment slots when creating an offer.
-            if (isOwner() && !hasOffer()) {
+            if (isOwner() && !hasFlag(SmallShopBlockEntity.HAS_OFFER_FLAG)) {
                 if (!this.moveItemStackTo(sourceStack, 0, PAYMENT_SLOTS, false)) {
                     return ItemStack.EMPTY; // Failed to move to payment slots
                 }
@@ -118,6 +121,43 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
     @Override
     public int getFlags() {
         return data.get(0);
+    }
+
+    public void fillPaymentSlots(ItemStack required1, ItemStack required2) {
+        // Clear current payment slots to ensure a clean state
+        this.slots.get(0).set(ItemStack.EMPTY);
+        this.slots.get(1).set(ItemStack.EMPTY);
+
+        // Fulfill the required items from the player's inventory
+        fulfillRequirement(required1, this.slots.get(0));
+        fulfillRequirement(required2, this.slots.get(1));
+
+        // Tell the client that the container has changed.
+        this.broadcastChanges();
+    }
+
+    private void fulfillRequirement(ItemStack required, Slot targetSlot) {
+        if (required.isEmpty()) {
+            return;
+        }
+
+        Inventory playerInventory = this.player.getInventory();
+        int countNeeded = required.getCount();
+        ItemStack collected = required.copyWithCount(0);
+
+        // Find and remove the required items from player's inventory
+        for (int i = 0; i < playerInventory.getContainerSize(); i++) {
+            ItemStack stackInPlayerInv = playerInventory.getItem(i);
+            if (ItemStack.isSameItemSameComponents(required, stackInPlayerInv)) {
+                int canTake = Math.min(stackInPlayerInv.getCount(), countNeeded);
+                stackInPlayerInv.shrink(canTake);
+                collected.grow(canTake);
+                countNeeded -= canTake;
+                if (countNeeded <= 0) break;
+            }
+        }
+        // Place collected items into the payment slot
+        targetSlot.set(collected);
     }
 
     /**
@@ -160,7 +200,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
         @Override
         public @NotNull ItemStack remove(int amount) {
-            if (mayPickup(menu.blockEntity.getLevel().getPlayerByUUID(menu.player.getUUID()))) { // a bit of a hack
+            if (mayPickup(menu.player)) {
                 return super.remove(amount);
             }
             return ItemStack.EMPTY;

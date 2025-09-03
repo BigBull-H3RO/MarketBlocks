@@ -10,7 +10,6 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,9 +38,7 @@ public record OfferStatusPacket(@NotNull BlockPos pos, boolean hasOffer) impleme
      * Handles the packet on the client side.
      */
     public static void handle(final OfferStatusPacket packet, final IPayloadContext context) {
-        context.enqueueWork(() ->
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> handleClient(packet))
-        );
+        context.enqueueWork(() -> handleClient(packet));
     }
 
     /**
