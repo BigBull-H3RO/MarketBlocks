@@ -31,7 +31,7 @@ public class SmallShopInventoryScreen extends AbstractSmallShopScreen<SmallShopI
     protected void init() {
         super.init();
         if (this.isOwner()) {
-            createTabButtons(this.leftPos + this.imageWidth, this.topPos, ShopTab.INVENTORY);
+            createTabButtons(leftPos + imageWidth + 4, topPos + 8, ShopTab.INVENTORY);
         }
     }
 

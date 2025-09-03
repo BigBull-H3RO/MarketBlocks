@@ -124,11 +124,9 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
     }
 
     public void fillPaymentSlots(ItemStack required1, ItemStack required2) {
-        // Clear current payment slots to ensure a clean state
-        this.slots.get(0).set(ItemStack.EMPTY);
-        this.slots.get(1).set(ItemStack.EMPTY);
-
-        // Fulfill the required items from the player's inventory
+        // Fulfill the required items from the player's inventory.
+        // This logic is now additive and will pull all matching items from the player's inventory
+        // up to the slot's max stack size, instead of clearing the slots and pulling the exact amount.
         fulfillRequirement(required1, this.slots.get(0));
         fulfillRequirement(required2, this.slots.get(1));
 
@@ -138,26 +136,51 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
     private void fulfillRequirement(ItemStack required, Slot targetSlot) {
         if (required.isEmpty()) {
-            return;
+            return; // Nothing to fulfill.
         }
 
         Inventory playerInventory = this.player.getInventory();
-        int countNeeded = required.getCount();
-        ItemStack collected = required.copyWithCount(0);
+        ItemStack stackInSlot = targetSlot.getItem();
 
-        // Find and remove the required items from player's inventory
+        // If the slot already has items, but they don't match the requirement, do nothing.
+        // This prevents overwriting a partially filled slot with the wrong item type.
+        if (!stackInSlot.isEmpty() && !ItemStack.isSameItemSameComponents(required, stackInSlot)) {
+            return;
+        }
+
+        // Determine how many items we can still add to the slot.
+        int maxToAdd = required.getMaxStackSize() - stackInSlot.getCount();
+        if (maxToAdd <= 0) {
+            return; // Slot is already full.
+        }
+
+        // Find and move all matching items from the player's inventory.
         for (int i = 0; i < playerInventory.getContainerSize(); i++) {
             ItemStack stackInPlayerInv = playerInventory.getItem(i);
             if (ItemStack.isSameItemSameComponents(required, stackInPlayerInv)) {
-                int canTake = Math.min(stackInPlayerInv.getCount(), countNeeded);
+                // Determine the actual number of items to take in this iteration.
+                int canTake = Math.min(stackInPlayerInv.getCount(), maxToAdd);
+
+                // If the target slot is empty, create a new stack. Otherwise, grow the existing one.
+                if (stackInSlot.isEmpty()) {
+                    stackInSlot = required.copyWithCount(canTake);
+                } else {
+                    stackInSlot.grow(canTake);
+                }
+
+                // Take from player's inventory.
                 stackInPlayerInv.shrink(canTake);
-                collected.grow(canTake);
-                countNeeded -= canTake;
-                if (countNeeded <= 0) break;
+
+                // Update the slot with the new stack.
+                targetSlot.set(stackInSlot);
+
+                // Update the amount we can still add.
+                maxToAdd -= canTake;
+                if (maxToAdd <= 0) {
+                    break; // Slot is now full.
+                }
             }
         }
-        // Place collected items into the payment slot
-        targetSlot.set(collected);
     }
 
     /**

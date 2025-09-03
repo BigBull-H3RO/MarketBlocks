@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util.custom.screen.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -15,8 +16,6 @@ import java.util.function.BooleanSupplier;
  * It supports being in a "selected" state, controlled by a BooleanSupplier.
  */
 public class IconButton extends Button {
-    private static final int ICON_SIZE = 18;
-
     private final WidgetSprites sprites;
     private final ResourceLocation icon;
     private final BooleanSupplier selectedSupplier;
@@ -48,13 +47,23 @@ public class IconButton extends Button {
      */
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        final boolean isSelected = this.selectedSupplier.getAsBoolean();
-        final ResourceLocation background = this.sprites.get(this.active, isSelected || this.isHovered());
+        boolean selected = selectedSupplier != null && selectedSupplier.getAsBoolean();
+        ResourceLocation background;
+        if (!this.active) {
+            background = sprites.get(false, false);
+        } else if (selected) {
+            background = sprites.get(false, true);
+        } else if (isHoveredOrFocused()) {
+            background = sprites.get(true, true);
+        } else {
+            background = sprites.get(true, false);
+        }
 
-        graphics.blit(background, this.getX(), this.getY(), 0, 0, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
-
-        final int iconX = this.getX() + (this.getWidth() - ICON_SIZE) / 2;
-        final int iconY = this.getY() + (this.getHeight() - ICON_SIZE) / 2;
-        graphics.blit(this.icon, iconX, iconY, 0, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+        RenderSystem.setShaderTexture(0, background);
+        graphics.blit(background, getX(), getY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight());
+        RenderSystem.setShaderTexture(0, icon);
+        int iconX = getX() + (getWidth() - 18) / 2;
+        int iconY = getY() + (getHeight() - 18) / 2;
+        graphics.blit(icon, iconX, iconY, 0, 0, 0, 18, 18, 18, 18);
     }
 }

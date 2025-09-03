@@ -58,7 +58,7 @@ public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSe
         this.hasChanges = false;
         this.originalName = this.menu.getBlockEntity().getShopName();
 
-        createTabButtons(this.leftPos + this.imageWidth, this.topPos, ShopTab.SETTINGS);
+        createTabButtons(leftPos + imageWidth + 4, topPos + 8, ShopTab.SETTINGS);
         createNameAndRedstoneWidgets();
         createSideModeButtons();
         createOwnerCheckboxes();
