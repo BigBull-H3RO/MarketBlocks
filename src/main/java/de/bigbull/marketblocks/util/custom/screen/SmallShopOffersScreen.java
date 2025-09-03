@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.data.lang.ModLang;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.AutoFillPaymentPacket;
 import de.bigbull.marketblocks.network.packets.CreateOfferPacket;
@@ -14,18 +15,24 @@ import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * The screen for the "Offers" tab of the Small Shop.
+ * It allows players to view and interact with the shop's trade offer,
+ * and allows owners to create or delete the offer.
+ */
 public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffersMenu> {
-    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_offers.png");
-    private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
-
-    private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
-    private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
+    private static final ResourceLocation BACKGROUND = MarketBlocks.id("textures/gui/small_shop_offers.png");
+    private static final ResourceLocation OUT_OF_STOCK_ICON = MarketBlocks.id("textures/gui/icon/out_of_stock.png");
+    private static final ResourceLocation CREATE_ICON = MarketBlocks.id("textures/gui/icon/create.png");
+    private static final ResourceLocation DELETE_ICON = MarketBlocks.id("textures/gui/icon/delete.png");
 
     private OfferTemplateButton offerButton;
 
@@ -53,18 +60,17 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
 
         if (isOwner) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, ShopTab.OFFERS,
-                    () -> {},
+                    () -> {
+                    },
                     () -> switchTab(ShopTab.INVENTORY),
                     () -> switchTab(ShopTab.SETTINGS));
-        }
 
-        if (isOwner) {
             if (!blockEntity.hasOffer()) {
                 addRenderableWidget(new IconButton(
                         leftPos + 148, topPos + 17, 20, 20,
                         BUTTON_SPRITES, CREATE_ICON,
                         button -> createOffer(),
-                        Component.translatable("gui.marketblocks.create_offer"),
+                        Component.translatable(ModLang.GUI_CREATE_OFFER),
                         () -> false
                 ));
             } else {
@@ -72,7 +78,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                         leftPos + 148, topPos + 17, 20, 20,
                         BUTTON_SPRITES, DELETE_ICON,
                         button -> deleteOffer(),
-                        Component.translatable("gui.marketblocks.delete_offer"),
+                        Component.translatable(ModLang.GUI_DELETE_OFFER),
                         () -> false
                 ));
             }
@@ -86,48 +92,30 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
             ItemStack result = menu.slots.get(2).getItem().copy();
 
             Pair<ItemStack, ItemStack> normalized = normalizePayments(payment1, payment2);
-            payment1 = normalized.getFirst();
-            payment2 = normalized.getSecond();
 
             if (result.isEmpty()) {
-                minecraft.gui.getChat().addMessage(
-                        Component.translatable("gui.marketblocks.error.no_result_item")
-                                .withStyle(ChatFormatting.RED)
-                );
-                playSound(SoundEvents.ITEM_BREAK);
+                displayError(ModLang.GUI_ERROR_NO_RESULT_ITEM);
                 return;
             }
 
-            if (payment1.isEmpty() && payment2.isEmpty()) {
-                minecraft.gui.getChat().addMessage(
-                        Component.translatable("gui.marketblocks.error.no_payment_items")
-                                .withStyle(ChatFormatting.RED)
-                );
-                playSound(SoundEvents.ITEM_BREAK);
+            if (normalized.getFirst().isEmpty() && normalized.getSecond().isEmpty()) {
+                displayError(ModLang.GUI_ERROR_NO_PAYMENT_ITEMS);
                 return;
             }
 
             NetworkHandler.sendToServer(new CreateOfferPacket(
                     menu.getBlockEntity().getBlockPos(),
-                    payment1,
-                    payment2,
+                    normalized.getFirst(),
+                    normalized.getSecond(),
                     result
             ));
 
             playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
-            init();
-
+            // The screen will be re-initialized upon receiving the offer update packet
         } catch (Exception e) {
             MarketBlocks.LOGGER.error("Error creating offer", e);
             playSound(SoundEvents.ITEM_BREAK);
         }
-    }
-
-    private Pair<ItemStack, ItemStack> normalizePayments(ItemStack p1, ItemStack p2) {
-        if (p1.isEmpty() && !p2.isEmpty()) {
-            return Pair.of(p2, ItemStack.EMPTY);
-        }
-        return Pair.of(p1, p2);
     }
 
     private void deleteOffer() {
@@ -135,19 +123,32 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         playSound(SoundEvents.UI_BUTTON_CLICK);
     }
 
+    /**
+     * Called by a packet handler when the server confirms the offer has been deleted.
+     */
     public void onOfferDeleted() {
-        menu.getBlockEntity().setHasOfferClient(false);
-        init();
+        if (this.minecraft != null && this.minecraft.player != null) {
+            menu.getBlockEntity().setHasOfferClient(false);
+            init(); // Re-initialize the screen to update buttons
+        }
+    }
+
+    /**
+     * Checks if this screen instance is for the shop at the given position.
+     * @param pos The BlockPos to check.
+     * @return True if this screen is for the given pos, false otherwise.
+     */
+    public boolean isFor(BlockPos pos) {
+        return this.menu.getBlockEntity().getBlockPos().equals(pos);
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
         graphics.blit(BACKGROUND, i, j, 0, 0, imageWidth, imageHeight);
 
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
-
         offerButton.active = blockEntity.hasOffer();
 
         if (blockEntity.hasOffer()) {
@@ -175,7 +176,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     }
 
     @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void renderLabels(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
         Component title;
@@ -183,34 +184,42 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
         if (name != null && !name.isEmpty()) {
             title = Component.literal(name);
         } else {
-            title = Component.translatable("gui.marketblocks.shop_title");
+            title = Component.translatable(ModLang.GUI_SHOP_TITLE);
         }
         graphics.drawString(font, title, 8, 6, 4210752, false);
-
         renderOwnerInfo(graphics, blockEntity, menu.isOwner(), imageWidth);
-
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
-    }
-
-    protected boolean isOwner() {
-        return menu.isOwner();
     }
 
     private void onOfferClicked() {
         SmallShopBlockEntity blockEntity = menu.getBlockEntity();
 
         if (blockEntity.hasOffer()) {
+            // If an offer exists, clicking the button tries to auto-fill payment
             NetworkHandler.sendToServer(new AutoFillPaymentPacket(blockEntity.getBlockPos()));
             playSound(SoundEvents.UI_BUTTON_CLICK);
-            return;
-        }
-
-        if (menu.isOwner()) {
+        } else if (menu.isOwner()) {
+            // If no offer exists and the player is the owner, clear the template slots
             for (int i = 0; i < 3; i++) {
                 menu.slots.get(i).set(ItemStack.EMPTY);
             }
-
             playSound(SoundEvents.UI_BUTTON_CLICK);
         }
+    }
+
+    private Pair<ItemStack, ItemStack> normalizePayments(ItemStack p1, ItemStack p2) {
+        if (p1.isEmpty() && !p2.isEmpty()) {
+            return Pair.of(p2, ItemStack.EMPTY);
+        }
+        return Pair.of(p1, p2);
+    }
+
+    private void displayError(String langKey) {
+        if (minecraft != null && minecraft.gui.getChat() != null) {
+            minecraft.gui.getChat().addMessage(
+                    Component.translatable(langKey).withStyle(ChatFormatting.RED)
+            );
+        }
+        playSound(SoundEvents.ITEM_BREAK);
     }
 }

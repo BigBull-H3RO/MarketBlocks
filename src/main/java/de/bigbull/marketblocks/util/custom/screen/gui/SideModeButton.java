@@ -1,105 +1,98 @@
 package de.bigbull.marketblocks.util.custom.screen.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
+/**
+ * A custom button that cycles through {@link SideMode} states when clicked.
+ * It provides visual feedback by staying in a "pressed" state for a short duration.
+ */
 public class SideModeButton extends Button {
-    private static final ResourceLocation BUTTON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/button.png");
-    private static final ResourceLocation HIGHLIGHTED =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/button_highlighted.png");
-    private static final ResourceLocation SELECTED =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/button_selected.png");
-    private static final ResourceLocation INPUT_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/input_icon.png");
-    private static final ResourceLocation OUTPUT_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/output_icon.png");
-    private static final ResourceLocation DISABLED_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/disabled_icon.png");
+    private static final ResourceLocation BUTTON_NORMAL = MarketBlocks.id("textures/gui/button/custom_1/button.png");
+    private static final ResourceLocation BUTTON_HIGHLIGHTED = MarketBlocks.id("textures/gui/button/custom_1/button_highlighted.png");
+    private static final ResourceLocation BUTTON_SELECTED = MarketBlocks.id("textures/gui/button/custom_1/button_selected.png");
+
+    private static final ResourceLocation ICON_INPUT = MarketBlocks.id("textures/gui/button/custom_1/input_icon.png");
+    private static final ResourceLocation ICON_OUTPUT = MarketBlocks.id("textures/gui/button/custom_1/output_icon.png");
+    private static final ResourceLocation ICON_DISABLED = MarketBlocks.id("textures/gui/button/custom_1/disabled_icon.png");
+
+    private static final int ICON_SIZE = 16;
+    private static final int PRESS_TICKS_DURATION = 10;
 
     private SideMode mode;
     private final Consumer<SideMode> callback;
     private int pressTicks;
-    private boolean isPressing;
 
-    public SideModeButton(int x, int y, int width, int height, SideMode initialMode, Consumer<SideMode> callback) {
+    /**
+     * Constructs a new SideModeButton.
+     * @param x The x-position of the button.
+     * @param y The y-position of the button.
+     * @param width The width of the button.
+     * @param height The height of the button.
+     * @param initialMode The starting {@link SideMode}.
+     * @param callback A consumer that is called with the new mode when the button is clicked.
+     */
+    public SideModeButton(int x, int y, int width, int height, @NotNull SideMode initialMode, @NotNull Consumer<SideMode> callback) {
         super(x, y, width, height, Component.empty(), b -> {}, DEFAULT_NARRATION);
         this.mode = initialMode;
         this.callback = callback;
         this.pressTicks = 0;
-        this.isPressing = false;
     }
 
-    public void setMode(SideMode mode) {
+    /**
+     * Sets the current mode of the button without triggering the callback.
+     * Used to reset the button's state from the screen.
+     */
+    public void setMode(@NotNull SideMode mode) {
         this.mode = mode;
         this.pressTicks = 0;
-        this.isPressing = false;
+    }
+
+    /**
+     * Called when the button is clicked. Cycles to the next {@link SideMode},
+     * triggers the visual feedback, and calls the callback.
+     */
+    @Override
+    public void onPress() {
+        this.mode = this.mode.next();
+        this.pressTicks = PRESS_TICKS_DURATION;
+        this.callback.accept(this.mode);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!this.active || !this.visible) {
-            return false;
-        }
-        if (button == 0 && this.isMouseOver(mouseX, mouseY)) {
-            this.isPressing = true;
-            this.playDownSound(Minecraft.getInstance().getSoundManager());
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.isPressing && button == 0) {
-            this.isPressing = false;
-            if (this.isMouseOver(mouseX, mouseY)) {
-                this.mode = this.mode.next();
-                this.pressTicks = 10;
-                this.callback.accept(this.mode);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         ResourceLocation background;
         if (!this.active) {
-            background = BUTTON;
-        } else if (isPressing || pressTicks > 0) {
-            background = SELECTED;
-        } else if (isMouseOver(mouseX, mouseY)) {
-            background = HIGHLIGHTED;
+            background = BUTTON_NORMAL;
+        } else if (this.pressTicks > 0) {
+            background = BUTTON_SELECTED;
+        } else if (this.isHoveredOrFocused()) {
+            background = BUTTON_HIGHLIGHTED;
         } else {
-            background = BUTTON;
+            background = BUTTON_NORMAL;
         }
 
-        if (!isPressing && pressTicks > 0) {
-            pressTicks--;
+        if (this.pressTicks > 0) {
+            this.pressTicks--;
         }
 
-        RenderSystem.setShaderTexture(0, background);
-        graphics.blit(background, getX(), getY(), 0, 0, getWidth(), getHeight(), 16, 16);
+        graphics.blit(background, getX(), getY(), 0, 0, getWidth(), getHeight(), ICON_SIZE, ICON_SIZE);
 
         ResourceLocation icon = switch (mode) {
-            case DISABLED -> DISABLED_ICON;
-            case INPUT -> INPUT_ICON;
-            case OUTPUT -> OUTPUT_ICON;
+            case DISABLED -> ICON_DISABLED;
+            case INPUT -> ICON_INPUT;
+            case OUTPUT -> ICON_OUTPUT;
         };
 
-        RenderSystem.setShaderTexture(0, icon);
-        int iconX = getX() + (getWidth() - 16) / 2;
-        int iconY = getY() + (getHeight() - 16) / 2;
-        graphics.blit(icon, iconX, iconY, 0, 0, 16, 16, 16, 16);
+        int iconX = getX() + (getWidth() - ICON_SIZE) / 2;
+        int iconY = getY() + (getHeight() - ICON_SIZE) / 2;
+        graphics.blit(icon, iconX, iconY, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
     }
 }

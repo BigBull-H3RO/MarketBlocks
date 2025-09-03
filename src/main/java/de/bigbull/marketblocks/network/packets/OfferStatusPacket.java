@@ -9,42 +9,58 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
-public record OfferStatusPacket(BlockPos pos, boolean hasOffer) implements CustomPacketPayload {
-
-    public static final CustomPacketPayload.Type<OfferStatusPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "offer_status"));
+/**
+ * S2C packet to sync the offer status (if one exists) of a shop to the client.
+ * Also triggers a screen update if the offer was deleted.
+ *
+ * @param pos      The {@link BlockPos} of the shop.
+ * @param hasOffer True if the shop has an offer, false otherwise.
+ */
+public record OfferStatusPacket(@NotNull BlockPos pos, boolean hasOffer) implements CustomPacketPayload {
+    public static final Type<OfferStatusPacket> TYPE = new Type<>(MarketBlocks.id("offer_status"));
 
     public static final StreamCodec<ByteBuf, OfferStatusPacket> CODEC = StreamCodec.composite(
-            BlockPos.STREAM_CODEC,
-            OfferStatusPacket::pos,
-            ByteBufCodecs.BOOL,
-            OfferStatusPacket::hasOffer,
+            BlockPos.STREAM_CODEC, OfferStatusPacket::pos,
+            ByteBufCodecs.BOOL, OfferStatusPacket::hasOffer,
             OfferStatusPacket::new
     );
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<OfferStatusPacket> type() {
         return TYPE;
     }
 
-    public static void handle(OfferStatusPacket packet, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            Level level = context.player().level();
-            if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
-                shopEntity.setHasOfferClient(packet.hasOffer());
-            }
+    /**
+     * Handles the packet on the client side.
+     */
+    public static void handle(final OfferStatusPacket packet, final IPayloadContext context) {
+        context.enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> handleClient(packet))
+        );
+    }
 
-            // Vereinfachte Screen-Updates ohne creatingOffer-Logic
-            if (!packet.hasOffer()) {
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.screen instanceof SmallShopOffersScreen screen) {
-                    screen.onOfferDeleted();
-                }
+    /**
+     * Client-side logic for handling the packet.
+     * Updates the block entity's client-side state and refreshes the screen if necessary.
+     */
+    private static void handleClient(final OfferStatusPacket packet) {
+        Level level = Minecraft.getInstance().level;
+        if (level == null || !(level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity)) {
+            return;
+        }
+
+        shopEntity.setHasOfferClient(packet.hasOffer());
+
+        // If the offer was deleted, and the player is viewing the correct screen, trigger a refresh.
+        if (!packet.hasOffer()) {
+            if (Minecraft.getInstance().screen instanceof SmallShopOffersScreen screen && screen.isFor(packet.pos())) {
+                screen.onOfferDeleted();
             }
-        });
+        }
     }
 }

@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.data.lang.ModLang;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
@@ -8,7 +9,6 @@ import de.bigbull.marketblocks.util.custom.menu.ShopMenu;
 import de.bigbull.marketblocks.util.custom.menu.ShopTab;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -20,131 +20,153 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-import java.lang.reflect.Field;
+import java.util.stream.Collectors;
 
-public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
+/**
+ * An abstract base class for all screens related to the Small Shop.
+ * It provides shared functionality for tab navigation, owner info rendering,
+ * and a non-standard (but safe) mouse position restoration when switching between tabs.
+ *
+ * @param <T> The type of the menu associated with this screen.
+ */
+public abstract class AbstractSmallShopScreen<T extends AbstractContainerMenu & ShopMenu> extends AbstractContainerScreen<T> {
     protected static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
+            MarketBlocks.id("gui/button/button"),
+            MarketBlocks.id("gui/button/button_disabled"),
+            MarketBlocks.id("gui/button/button_highlighted"),
+            MarketBlocks.id("gui/button/button_selected")
     );
 
-    private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/offers.png");
-    private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/inventory.png");
-    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
+    private static final ResourceLocation OFFERS_ICON = MarketBlocks.id("gui/icon/offers");
+    private static final ResourceLocation INVENTORY_ICON = MarketBlocks.id("gui/icon/inventory");
+    private static final ResourceLocation SETTINGS_ICON = MarketBlocks.id("gui/icon/settings");
 
+    private static final int OWNER_INFO_COLOR = 0x404040;
+
+    // Used to restore mouse position when switching tabs.
     protected static double savedMouseX = -1;
     protected static double savedMouseY = -1;
 
     private boolean lastIsOwner;
 
-    protected abstract boolean isOwner();
+    protected AbstractSmallShopScreen(@NotNull T menu, @NotNull Inventory inv, @NotNull Component title) {
+        super(menu, inv, title);
+    }
+
+    /**
+     * A required check for the screen to know if the player is an owner.
+     * This is used to dynamically re-render the screen if ownership status changes.
+     */
+    protected boolean isOwner() {
+        return this.menu.isOwner();
+    }
 
     @Override
     protected void init() {
         super.init();
         restoreMousePosition();
-        clearWidgets();
-        lastIsOwner = isOwner();
+        this.lastIsOwner = isOwner();
     }
 
-    protected AbstractSmallShopScreen(T menu, Inventory inv, Component title) {
-        super(menu, inv, title);
-    }
-
-    protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings) {
+    /**
+     * Creates the three navigation tab buttons on the right side of the screen.
+     */
+    protected void createTabButtons(int x, int y, @NotNull ShopTab selectedTab) {
         addRenderableWidget(new IconButton(
-                x - 2, y - 4, 22, 22,
+                x, y, 22, 22,
                 BUTTON_SPRITES, OFFERS_ICON,
-                b -> { if (selectedTab != ShopTab.OFFERS) onOffers.run(); },
-                Component.translatable("gui.marketblocks.offers_tab"),
+                b -> this.switchTab(ShopTab.OFFERS),
+                Component.translatable(ModLang.GUI_OFFERS_TAB),
                 () -> selectedTab == ShopTab.OFFERS
         ));
 
         addRenderableWidget(new IconButton(
-                x - 2, y + 22, 22, 22,
+                x, y + 26, 22, 22,
                 BUTTON_SPRITES, INVENTORY_ICON,
-                b -> { if (selectedTab != ShopTab.INVENTORY) onInventory.run(); },
-                Component.translatable("gui.marketblocks.inventory_tab"),
+                b -> this.switchTab(ShopTab.INVENTORY),
+                Component.translatable(ModLang.GUI_INVENTORY_TAB),
                 () -> selectedTab == ShopTab.INVENTORY
         ));
 
         addRenderableWidget(new IconButton(
-                x - 2, y + 48, 22, 22,
+                x, y + 52, 22, 22,
                 BUTTON_SPRITES, SETTINGS_ICON,
-                b -> { if (selectedTab != ShopTab.SETTINGS) onSettings.run(); },
-                Component.translatable("gui.marketblocks.settings_tab"),
+                b -> this.switchTab(ShopTab.SETTINGS),
+                Component.translatable(ModLang.GUI_SETTINGS_TAB),
                 () -> selectedTab == ShopTab.SETTINGS
         ));
     }
 
-    protected void switchTab(ShopTab tab) {
-        if (menu instanceof ShopMenu shopMenu && shopMenu.isOwner()) {
-            SmallShopBlockEntity blockEntity = shopMenu.getBlockEntity();
-            Minecraft mc = Minecraft.getInstance();
-            savedMouseX = mc.mouseHandler.xpos();
-            savedMouseY = mc.mouseHandler.ypos();
+    /**
+     * Sends a packet to the server to switch to a different menu/tab.
+     * Saves the current mouse position to attempt to restore it when the new screen opens.
+     */
+    protected void switchTab(final @NotNull ShopTab tab) {
+        if (this.menu.isOwner()) {
+            final SmallShopBlockEntity blockEntity = this.menu.getBlockEntity();
+            final Minecraft mc = Minecraft.getInstance();
+            if (mc != null && mc.mouseHandler != null) {
+                savedMouseX = mc.mouseHandler.xpos();
+                savedMouseY = mc.mouseHandler.ypos();
+            }
 
             NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), tab));
             playSound(SoundEvents.UI_BUTTON_CLICK);
         }
     }
 
-    protected void renderOwnerInfo(GuiGraphics guiGraphics, SmallShopBlockEntity blockEntity, boolean isOwner, int imageWidth) {
-        if (!isOwner && blockEntity.getOwnerName() != null) {
-            String names = blockEntity.getOwnerName();
-            if (!blockEntity.getAdditionalOwners().isEmpty()) {
-                names += ", " + String.join(", ", blockEntity.getAdditionalOwners().values());
+    /**
+     * Renders the "Owner: ..." text in the top right corner if the player is not an owner.
+     */
+    protected void renderOwnerInfo(@NotNull GuiGraphics guiGraphics, @NotNull SmallShopBlockEntity blockEntity) {
+        if (!isOwner() && blockEntity.getOwnerName() != null) {
+            String ownerNames = blockEntity.getOwnerName();
+            String additionalOwnerNames = blockEntity.getAdditionalOwners().values().stream()
+                    .filter(name -> name != null && !name.isEmpty())
+                    .collect(Collectors.joining(", "));
+
+            if (!additionalOwnerNames.isEmpty()) {
+                ownerNames += ", " + additionalOwnerNames;
             }
-            Component ownerText = Component.translatable("gui.marketblocks.owner", names);
-            int ownerWidth = font.width(ownerText);
-            guiGraphics.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0x404040, false);
+
+            Component ownerText = Component.translatable(ModLang.GUI_OWNER, ownerNames);
+            int ownerWidth = this.font.width(ownerText);
+            guiGraphics.drawString(this.font, ownerText, this.imageWidth - ownerWidth - 8, 6, OWNER_INFO_COLOR, false);
         }
     }
 
+    /**
+     * Attempts to restore the mouse position after a screen switch.
+     * This is a non-standard GUI feature. The use of reflection has been removed as it is
+     * unsafe and highly likely to break in future Minecraft updates. This implementation
+     * uses only GLFW, which is safer but may still have unintended side effects.
+     */
     protected void restoreMousePosition() {
-        if (savedMouseX >= 0 && savedMouseY >= 0) {
-            Minecraft mc = Minecraft.getInstance();
-            mc.mouseHandler.setIgnoreFirstMove();
-            GLFW.glfwSetCursorPos(mc.getWindow().getWindow(), savedMouseX, savedMouseY);
-
-            try {
-                MouseHandler handler = mc.mouseHandler;
-                Field xField = MouseHandler.class.getDeclaredField("xpos");
-                Field yField = MouseHandler.class.getDeclaredField("ypos");
-                xField.setAccessible(true);
-                yField.setAccessible(true);
-                xField.setDouble(handler, savedMouseX);
-                yField.setDouble(handler, savedMouseY);
-            } catch (ReflectiveOperationException ignored) {
-            }
-
-            double scaledX = savedMouseX * mc.getWindow().getGuiScaledWidth() / mc.getWindow().getScreenWidth();
-            double scaledY = savedMouseY * mc.getWindow().getGuiScaledHeight() / mc.getWindow().getScreenHeight();
-            this.mouseMoved(scaledX, scaledY);
-
+        if (savedMouseX >= 0 && savedMouseY >= 0 && this.minecraft != null) {
+            GLFW.glfwSetCursorPos(this.minecraft.getWindow().getWindow(), savedMouseX, savedMouseY);
+            this.minecraft.mouseHandler.setIgnoreFirstMove();
             savedMouseX = -1;
             savedMouseY = -1;
         }
     }
 
+    /**
+     * Re-initializes the screen if the player's ownership status changes.
+     */
     @Override
     public void containerTick() {
         super.containerTick();
-        boolean owner = isOwner();
-        if (owner != lastIsOwner) {
-            init();
+        if (isOwner() != this.lastIsOwner) {
+            this.init();
         }
     }
 
-    protected void playSound(SoundEvent sound) {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
-    }
-
     protected void playSound(Holder<SoundEvent> sound) {
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
+        if (this.minecraft != null && this.minecraft.getSoundManager() != null) {
+            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
+        }
     }
 }

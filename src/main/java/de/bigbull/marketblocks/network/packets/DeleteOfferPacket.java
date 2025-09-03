@@ -7,19 +7,22 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
-public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
-
-    public static final CustomPacketPayload.Type<DeleteOfferPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "delete_offer"));
+/**
+ * C2S packet to delete the current trade offer in a Small Shop.
+ *
+ * @param pos The {@link BlockPos} of the shop.
+ */
+public record DeleteOfferPacket(@NotNull BlockPos pos) implements CustomPacketPayload {
+    public static final Type<DeleteOfferPacket> TYPE = new Type<>(MarketBlocks.id("delete_offer"));
 
     public static final StreamCodec<ByteBuf, DeleteOfferPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
@@ -28,55 +31,67 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
     );
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<DeleteOfferPacket> type() {
         return TYPE;
     }
 
-    public static void handle(DeleteOfferPacket packet, IPayloadContext context) {
+    /**
+     * Handles the packet on the server side.
+     * It verifies ownership, clears the offer, and returns the items from the
+     * offer slots to the player's inventory or drops them in the world.
+     */
+    public static void handle(final DeleteOfferPacket packet, final IPayloadContext context) {
         context.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) context.player();
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
             Level level = player.level();
 
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
-                // Prüfe ob Spieler der Owner ist
                 if (shopEntity.isOwner(player)) {
-                    // Lösche das Angebot komplett
+                    // Clear the offer logic
                     shopEntity.clearOffer();
 
-                    // Leere auch die aktuellen Payment und Offer Slots
-                    for (int i = 0; i < 2; i++) {
-                        ItemStack stack = shopEntity.getPaymentHandler().extractItem(i, Integer.MAX_VALUE, false);
-                        if (!stack.isEmpty()) {
-                            if (!player.getInventory().add(stack)) {
-                                Containers.dropItemStack(level, packet.pos().getX() + 0.5,
-                                        packet.pos().getY() + 1,
-                                        packet.pos().getZ() + 0.5, stack);
+                    // Return items from payment and result slots to the owner
+                    returnItemsToPlayer(level, packet.pos(), player, shopEntity.getPaymentHandler());
+                    returnItemsToPlayer(level, packet.pos(), player, shopEntity.getOfferHandler());
+
+                    // Mark the block entity as changed
+                    shopEntity.updateOfferSlot();
+
+                    // Send a status update to all players viewing this shop's menu.
+                    // Note: Iterating all server players can be inefficient on large servers.
+                    // A better implementation would involve the block entity tracking its viewers.
+                    if (level.getServer() != null) {
+                        for (ServerPlayer p : level.getServer().getPlayerList().getPlayers()) {
+                            if (p.containerMenu instanceof SmallShopOffersMenu menu && menu.getBlockEntity() == shopEntity) {
+                                PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), false));
                             }
                         }
                     }
 
-                    ItemStack resultStack = shopEntity.getOfferHandler().extractItem(0, Integer.MAX_VALUE, false);
-                    if (!resultStack.isEmpty()) {
-                        if (!player.getInventory().add(resultStack)) {
-                            Containers.dropItemStack(level, packet.pos().getX() + 0.5,
-                                    packet.pos().getY() + 1,
-                                    packet.pos().getZ() + 0.5, resultStack);
-                        }
-                    }
-
-                    shopEntity.updateOfferSlot();
-
-                    // Sende Status-Update an alle Spieler mit geöffnetem Menü
-                    ServerLevel serverLevel = (ServerLevel) level;
-                    for (ServerPlayer p : serverLevel.players()) {
-                        if (p.containerMenu instanceof SmallShopOffersMenu menu && menu.getBlockEntity() == shopEntity) {
-                            PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), false));
-                        }
-                    }
-
                     MarketBlocks.LOGGER.info("Player {} deleted offer at {}", player.getName().getString(), packet.pos());
+                } else {
+                    MarketBlocks.LOGGER.warn("Player {} tried to delete an offer in a shop they don't own at {}", player.getName().getString(), packet.pos());
                 }
             }
         });
+    }
+
+
+    /**
+     * Helper method to extract all items from an item handler and give them to a player.
+     * If the player's inventory is full, items are dropped into the world.
+     */
+    private static void returnItemsToPlayer(Level level, BlockPos pos, ServerPlayer player, IItemHandler itemHandler) {
+        for (int i = 0; i < itemHandler.getSlots(); i++) {
+            ItemStack stack = itemHandler.extractItem(i, Integer.MAX_VALUE, false);
+            if (!stack.isEmpty()) {
+                if (!player.getInventory().add(stack)) {
+                    // Drop the item in the world above the shop block
+                    Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, stack);
+                }
+            }
+        }
     }
 }

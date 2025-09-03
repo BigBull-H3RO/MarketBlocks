@@ -13,86 +13,112 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Renders the items associated with a {@link SmallShopBlockEntity}.
+ * This includes the result item spinning above the block and the payment items in front.
+ */
 public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallShopBlockEntity> {
-    public SmallShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
 
+    private static final float RESULT_ITEM_Y_OFFSET = 1.3F;
+    private static final float RESULT_ITEM_SCALE = 0.8F;
+    private static final float RESULT_ITEM_ROTATION_SPEED = 2.0F;
+
+    private static final float PAYMENT_ITEM_SCALE = 0.4F;
+    private static final float PAYMENT_ITEM_Y_OFFSET = 0.8F;
+    private static final float PAYMENT_ITEM_Y_SPACING = 0.4F;
+    private static final double PAYMENT_ITEM_DISTANCE_MOD = 0.7D;
+
+    private static final float COUNT_TEXT_SCALE = 0.015F;
+    private static final double COUNT_TEXT_DISTANCE_MOD = 0.15D;
+    private static final float COUNT_TEXT_Y_OFFSET = -0.15F;
+    private static final int COUNT_TEXT_COLOR = 0xFFFFFF;
+    private static final int COUNT_TEXT_BG_COLOR = 0x80000000;
+
+    private final ItemRenderer itemRenderer;
+    private final Font font;
+
+    public SmallShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
+        this.itemRenderer = Minecraft.getInstance().getItemRenderer();
+        this.font = Minecraft.getInstance().font;
     }
 
     @Override
-    public void render(SmallShopBlockEntity blockEntity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource,
-                       int packedLight, int packedOverlay) {
+    public void render(@NotNull SmallShopBlockEntity blockEntity, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
         if (!blockEntity.hasOffer() || blockEntity.getLevel() == null) {
             return;
         }
 
-        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
-        Font font = Minecraft.getInstance().font;
-
-        // Kauf-Item schwebend über dem Block rendern
-        ItemStack result = blockEntity.getOfferResult();
-        if (!result.isEmpty()) {
-            poseStack.pushPose();
-            poseStack.translate(0.5D, 1.3D, 0.5D); // Höher positioniert
-            float time = (blockEntity.getLevel().getGameTime() + partialTick) * 2.0f; // Langsamere Rotation
-            poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
-            poseStack.scale(0.8F, 0.8F, 0.8F);
-            itemRenderer.renderStatic(result, ItemDisplayContext.GROUND, packedLight, packedOverlay, poseStack, bufferSource,
-                    blockEntity.getLevel(), 0);
-            poseStack.popPose();
-        }
-
-        // Bezahl-Items vor dem Block rendern
-        Direction dir = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
-
-        // Sammle alle Bezahl-Items die nicht leer sind
-        ItemStack payment1 = blockEntity.getOfferPayment1();
-        ItemStack payment2 = blockEntity.getOfferPayment2();
-
-        int itemIndex = 0;
-        if (!payment1.isEmpty()) {
-            renderPaymentItem(itemRenderer, font, poseStack, bufferSource, packedLight, packedOverlay,
-                    payment1, dir, itemIndex);
-            itemIndex++;
-        }
-        if (!payment2.isEmpty()) {
-            renderPaymentItem(itemRenderer, font, poseStack, bufferSource, packedLight, packedOverlay,
-                    payment2, dir, itemIndex);
-        }
+        renderResultItem(blockEntity, partialTick, poseStack, bufferSource, packedLight, packedOverlay);
+        renderPaymentItems(blockEntity, poseStack, bufferSource, packedLight, packedOverlay);
     }
 
-    private void renderPaymentItem(ItemRenderer itemRenderer, Font font, PoseStack poseStack, MultiBufferSource bufferSource,
-                                   int packedLight, int packedOverlay, ItemStack stack, Direction dir, int index) {
-        if (stack.isEmpty()) {
+    /**
+     * Renders the spinning result item above the shop block.
+     */
+    private void renderResultItem(@NotNull SmallShopBlockEntity blockEntity, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+        ItemStack resultStack = blockEntity.getOfferResult();
+        if (resultStack.isEmpty()) {
             return;
         }
 
-        // Position vor dem Block berechnen - Items untereinander
-        float y = 0.8F - index * 0.4F; // Items untereinander mit mehr Abstand
-        double xOff = 0.5D + dir.getStepX() * 0.7D; // Etwas weiter weg vom Block
-        double zOff = 0.5D + dir.getStepZ() * 0.7D;
+        poseStack.pushPose();
+        poseStack.translate(0.5D, RESULT_ITEM_Y_OFFSET, 0.5D);
+        float time = (blockEntity.getLevel().getGameTime() + partialTick) * RESULT_ITEM_ROTATION_SPEED;
+        poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
+        poseStack.scale(RESULT_ITEM_SCALE, RESULT_ITEM_SCALE, RESULT_ITEM_SCALE);
+        itemRenderer.renderStatic(resultStack, ItemDisplayContext.GROUND, packedLight, packedOverlay, poseStack, bufferSource, blockEntity.getLevel(), 0);
+        poseStack.popPose();
+    }
 
-        // Item rendern
+    /**
+     * Renders the required payment items in front of the shop block.
+     */
+    private void renderPaymentItems(@NotNull SmallShopBlockEntity blockEntity, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+        Direction facing = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
+
+        List<ItemStack> payments = new ArrayList<>();
+        if (!blockEntity.getOfferPayment1().isEmpty()) payments.add(blockEntity.getOfferPayment1());
+        if (!blockEntity.getOfferPayment2().isEmpty()) payments.add(blockEntity.getOfferPayment2());
+
+        for (int i = 0; i < payments.size(); i++) {
+            renderSinglePaymentItem(payments.get(i), facing, i, poseStack, bufferSource, packedLight, packedOverlay);
+        }
+    }
+
+    /**
+     * Renders a single payment item and its count label.
+     */
+    private void renderSinglePaymentItem(@NotNull ItemStack stack, @NotNull Direction dir, int index, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+        float y = PAYMENT_ITEM_Y_OFFSET - (index * PAYMENT_ITEM_Y_SPACING);
+        double xOff = 0.5D + dir.getStepX() * PAYMENT_ITEM_DISTANCE_MOD;
+        double zOff = 0.5D + dir.getStepZ() * PAYMENT_ITEM_DISTANCE_MOD;
+
+        // Render the item
         poseStack.pushPose();
         poseStack.translate(xOff, y, zOff);
         poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
-        poseStack.scale(0.4F, 0.4F, 0.4F);
+        poseStack.scale(PAYMENT_ITEM_SCALE, PAYMENT_ITEM_SCALE, PAYMENT_ITEM_SCALE);
         itemRenderer.renderStatic(stack, ItemDisplayContext.GUI, packedLight, packedOverlay, poseStack, bufferSource, null, 0);
         poseStack.popPose();
 
-        // Menge als Text rendern - größer und besser sichtbar
+        // Render the count label if greater than 1
         if (stack.getCount() > 1) {
             poseStack.pushPose();
-            poseStack.translate(xOff + dir.getStepX() * 0.15D, y - 0.15D, zOff + dir.getStepZ() * 0.15D);
+            poseStack.translate(xOff + dir.getStepX() * COUNT_TEXT_DISTANCE_MOD, y + COUNT_TEXT_Y_OFFSET, zOff + dir.getStepZ() * COUNT_TEXT_DISTANCE_MOD);
             poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
-            poseStack.scale(0.015F, -0.015F, 0.015F); // Größere Schrift
+            poseStack.scale(COUNT_TEXT_SCALE, -COUNT_TEXT_SCALE, COUNT_TEXT_SCALE);
 
             String count = Integer.toString(stack.getCount());
             int width = font.width(count);
 
-            // Schwarzer Hintergrund für bessere Lesbarkeit
-            font.drawInBatch(count, -width / 2f, 0, 0xFFFFFF, true,
-                    poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0x80000000, packedLight);
+            // Render with a dark background for readability
+            font.drawInBatch(count, -width / 2f, 0, COUNT_TEXT_COLOR, true,
+                    poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, COUNT_TEXT_BG_COLOR, packedLight);
             poseStack.popPose();
         }
     }

@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.util.custom.entity;
 
 import de.bigbull.marketblocks.config.Config;
+import de.bigbull.marketblocks.data.lang.ModLang;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
@@ -10,10 +11,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -27,6 +30,8 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -116,7 +121,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         @Override
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
             ItemStack result = super.extractItem(slot, amount, simulate);
             if (!simulate && !result.isEmpty()) {
                 processPurchase();
@@ -149,9 +154,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     // --- Sided Wrapper for Item Handlers ---
+
     /**
      * A wrapper for IItemHandler that restricts insertion or extraction.
-     * @param backing The backing item handler.
+     * This is used to expose either insert-only or extract-only capabilities for the sides.
+     *
+     * @param backing     The backing item handler.
      * @param extractOnly If true, only extraction is allowed. If false, only insertion is allowed.
      */
     record SidedWrapper(IItemHandler backing, boolean extractOnly) implements IItemHandler {
@@ -161,12 +169,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         @Override
-        public ItemStack getStackInSlot(int slot) {
+        public @NotNull ItemStack getStackInSlot(int slot) {
             return backing.getStackInSlot(slot);
         }
 
         @Override
-        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+        public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
             if (extractOnly) {
                 return stack; // Cannot insert into an extract-only wrapper
             }
@@ -174,7 +182,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         @Override
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
             if (!extractOnly) {
                 return ItemStack.EMPTY; // Cannot extract from an insert-only wrapper
             }
@@ -187,19 +195,20 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         @Override
-        public boolean isItemValid(int slot, ItemStack stack) {
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             return !extractOnly && backing.isItemValid(slot, stack);
         }
     }
 
     // --- Menu Provider ---
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("container.marketblocks.small_shop");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable(ModLang.CONTAINER_SMALL_SHOP);
     }
 
+    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+    public AbstractContainerMenu createMenu(int containerId, @NotNull Inventory playerInventory, @NotNull Player player) {
         return new SmallShopOffersMenu(containerId, playerInventory, this);
     }
 
@@ -238,12 +247,18 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         setChanged();
     }
 
+    /**
+     * Invalidates the capabilities of this block, forcing a re-evaluation by neighbors.
+     */
     public void invalidateCaps() {
         if (level != null) {
             level.invalidateCapabilities(worldPosition);
         }
     }
 
+    /**
+     * Marks the block entity as changed and sends an update packet to the client.
+     */
     public void sync() {
         setChanged();
         if (level != null && !level.isClientSide) {
@@ -251,7 +266,11 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    public boolean stillValid(Player player) {
+    /**
+     * Checks if a player is close enough to interact with this block entity.
+     * Used by the menu to determine if it should close.
+     */
+    public boolean stillValid(@NotNull Player player) {
         if (level == null || level.getBlockEntity(worldPosition) != this) {
             return false;
         }
@@ -262,28 +281,44 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     // --- Owner System ---
-    public void setOwner(Player player) {
+
+    /**
+     * Sets the primary owner of this shop.
+     */
+    public void setOwner(final @NotNull Player player) {
         this.ownerId = player.getUUID();
         this.ownerName = player.getName().getString();
         setChanged();
     }
 
-    public void addOwner(UUID id, String name) {
+    /**
+     * Adds a player to the list of additional owners (server-side).
+     */
+    public void addOwner(final @NotNull UUID id, final @NotNull String name) {
         additionalOwners.put(id, name);
         sync();
     }
 
-    public void addOwnerClient(UUID id, String name) {
+    /**
+     * Adds a player to the list of additional owners (client-side prediction).
+     */
+    public void addOwnerClient(final @NotNull UUID id, final @NotNull String name) {
         additionalOwners.put(id, name);
     }
 
-    public void removeOwner(UUID id) {
+    /**
+     * Removes a player from the list of additional owners.
+     */
+    public void removeOwner(final @NotNull UUID id) {
         if (additionalOwners.remove(id) != null) {
             sync();
         }
     }
 
-    public Set<UUID> getOwners() {
+    /**
+     * Gets a set of all UUIDs that are owners of this shop (primary + additional).
+     */
+    public @NotNull Set<UUID> getOwners() {
         Set<UUID> owners = new HashSet<>(additionalOwners.keySet());
         if (ownerId != null) {
             owners.add(ownerId);
@@ -291,49 +326,70 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return owners;
     }
 
-    public Map<UUID, String> getAdditionalOwners() {
-        return additionalOwners;
+    /**
+     * Gets the map of additional owners (UUID -> Name).
+     */
+    public @NotNull Map<UUID, String> getAdditionalOwners() {
+        return Collections.unmodifiableMap(additionalOwners);
     }
 
-    public void setAdditionalOwners(Map<UUID, String> owners) {
+    /**
+     * Replaces the entire list of additional owners.
+     */
+    public void setAdditionalOwners(final @NotNull Map<UUID, String> owners) {
         additionalOwners.clear();
         additionalOwners.putAll(owners);
         sync();
     }
 
-    public boolean isOwner(Player player) {
-        UUID id = player.getUUID();
+    /**
+     * Checks if the given player is an owner of this shop.
+     */
+    public boolean isOwner(final @NotNull Player player) {
+        final UUID id = player.getUUID();
         return (ownerId != null && ownerId.equals(id)) || additionalOwners.containsKey(id);
     }
 
-    public void ensureOwner(Player player) {
-        if (!player.level().isClientSide() && ownerId == null) {
-            setOwner(player);
+    /**
+     * Ensures that the block entity has an owner, setting it to the given player if not.
+     * This is a fallback for cases where a shop might be placed by a non-player entity.
+     */
+    public void ensureOwner(final @NotNull Player player) {
+        if (player.level().isClientSide() || ownerId != null) {
+            return;
         }
+            setOwner(player);
     }
 
-    public UUID getOwnerId() {
+    public @Nullable UUID getOwnerId() {
         return ownerId;
     }
 
-    public String getOwnerName() {
+    public @NotNull String getOwnerName() {
         return ownerName;
     }
 
     // --- Shop Settings ---
-    public String getShopName() {
+    public @NotNull String getShopName() {
         return shopName;
     }
 
-    public void setShopName(String name) {
+    /**
+     * Sets the custom name for the shop.
+     */
+    public void setShopName(final @NotNull String name) {
         if (name.length() > MAX_SHOP_NAME_LENGTH) {
-            name = name.substring(0, MAX_SHOP_NAME_LENGTH);
+            this.shopName = name.substring(0, MAX_SHOP_NAME_LENGTH);
+        } else {
+            this.shopName = name;
         }
-        this.shopName = name;
         sync();
     }
 
-    public void setShopNameClient(String name) {
+    /**
+     * Sets the shop name on the client for predictive updates.
+     */
+    public void setShopNameClient(final @NotNull String name) {
         this.shopName = name;
     }
 
@@ -341,22 +397,37 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return emitRedstone;
     }
 
+    /**
+     * Sets whether the shop should emit a redstone pulse on purchase.
+     */
     public void setEmitRedstone(boolean emitRedstone) {
         this.emitRedstone = emitRedstone;
         sync();
     }
 
+    /**
+     * Sets the redstone setting on the client for predictive updates.
+     */
     public void setEmitRedstoneClient(boolean emitRedstone) {
         this.emitRedstone = emitRedstone;
     }
 
     // --- Side Configuration ---
-    public SideMode getMode(Direction dir) {
+
+    /**
+     * Gets the I/O mode for a given side.
+     */
+    public @NotNull SideMode getMode(final @NotNull Direction dir) {
         return sideModes.getOrDefault(dir, SideMode.DISABLED);
     }
 
-    public void setMode(Direction dir, SideMode mode) {
-        SideMode oldMode = getMode(dir);
+    /**
+     * Sets the I/O mode for a given side and triggers capability invalidation.
+     */
+    public void setMode(final @NotNull Direction dir, final @NotNull SideMode mode) {
+        final SideMode oldMode = getMode(dir);
+        if (oldMode == mode) return;
+
         sideModes.put(dir, mode);
         markDirty();
         invalidateCaps();
@@ -369,29 +440,42 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    public void setModeClient(Direction dir, SideMode mode) {
+    /**
+     * Sets the side mode on the client for predictive updates.
+     */
+    public void setModeClient(final @NotNull Direction dir, final @NotNull SideMode mode) {
         sideModes.put(dir, mode);
     }
 
-    public SideMode getModeForSide(Direction side) {
+    public @NotNull SideMode getModeForSide(final @NotNull Direction side) {
         return getMode(side);
     }
 
-    private void invalidateNeighbor(Direction dir) {
+    /**
+     * Invalidates the capabilities of the block adjacent to the given side.
+     */
+    private void invalidateNeighbor(final @NotNull Direction dir) {
         if (level != null) {
-            BlockPos neighbour = worldPosition.relative(dir);
-            level.invalidateCapabilities(neighbour);
+            level.invalidateCapabilities(worldPosition.relative(dir));
         }
     }
 
-    private IItemHandler getValidNeighborHandler(Direction dir) {
+    /**
+     * Gets the item handler of a valid, unlocked neighbor on a given side.
+     *
+     * @return The neighbor's IItemHandler, or null if no valid handler exists.
+     */
+    @Nullable
+    private IItemHandler getValidNeighborHandler(final @NotNull Direction dir) {
         if (level == null) return null;
-        BlockPos neighbourPos = worldPosition.relative(dir);
+        final BlockPos neighbourPos = worldPosition.relative(dir);
         IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
         if (neighbour == null) {
             neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
         }
+
         if (neighbour instanceof LockedChestWrapper locked) {
+            // If the neighbor is a locked chest, only allow access if it belongs to one of this shop's owners.
             if (locked.getOwnerId() != null && getOwners().contains(locked.getOwnerId())) {
                 return locked.getDelegate();
             } else {
@@ -401,7 +485,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return neighbour;
     }
 
-    private void transferItems(IItemHandler from, IItemHandler to) {
+    /**
+     * Transfers all possible items from one item handler to another.
+     */
+    private void transferItems(final @NotNull IItemHandler from, final @NotNull IItemHandler to) {
         for (int i = 0; i < from.getSlots(); i++) {
             ItemStack stackInSlot = from.getStackInSlot(i);
             if (stackInSlot.isEmpty()) continue;
@@ -411,6 +498,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
                 ItemStack extracted = from.extractItem(i, transferable, false);
                 ItemStack leftover = ItemHandlerHelper.insertItem(to, extracted, false);
                 if (!leftover.isEmpty()) {
+                    // If some items couldn't be inserted, put them back.
                     from.insertItem(i, leftover, false);
                 }
             }
@@ -418,7 +506,11 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     // --- Offer System ---
-    public void createOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
+
+    /**
+     * Sets the shop's trade offer.
+     */
+    public void createOffer(final @NotNull ItemStack payment1, final @NotNull ItemStack payment2, final @NotNull ItemStack result) {
         this.offerPayment1 = payment1.copy();
         this.offerPayment2 = payment2.copy();
         this.offerResult = result.copy();
@@ -427,6 +519,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         needsOfferRefresh = true;
     }
 
+    /**
+     * Clears the shop's trade offer and empties the result slot.
+     */
     public void clearOffer() {
         offerPayment1 = ItemStack.EMPTY;
         offerPayment2 = ItemStack.EMPTY;
@@ -441,23 +536,29 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return hasOffer;
     }
 
+    /**
+     * Sets the offer status on the client.
+     */
     public void setHasOfferClient(boolean hasOffer) {
         this.hasOffer = hasOffer;
     }
 
-    public ItemStack getOfferPayment1() {
+    public @NotNull ItemStack getOfferPayment1() {
         return offerPayment1;
     }
 
-    public ItemStack getOfferPayment2() {
+    public @NotNull ItemStack getOfferPayment2() {
         return offerPayment2;
     }
 
-    public ItemStack getOfferResult() {
+    public @NotNull ItemStack getOfferResult() {
         return offerResult;
     }
 
-    private int countMatchingPayment(ItemStack target) {
+    /**
+     * Counts the total number of items matching the target in the payment slots.
+     */
+    private int countMatchingPayment(final @NotNull ItemStack target) {
         int total = 0;
         for (int i = 0; i < paymentHandler.getSlots(); i++) {
             ItemStack stack = paymentHandler.getStackInSlot(i);
@@ -468,10 +569,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return total;
     }
 
-    private boolean hasEnoughPayment(ItemStack required) {
+    /**
+     * Checks if the payment slots contain enough items for the given requirement.
+     */
+    private boolean hasEnoughPayment(final @NotNull ItemStack required) {
         return required.isEmpty() || countMatchingPayment(required) >= required.getCount();
     }
 
+    /**
+     * Updates the result slot based on whether the trade can be performed.
+     * If the trade is possible, the result item is shown; otherwise, the slot is cleared.
+     */
     public void updateOfferSlot() {
         if (!hasOffer) {
             return;
@@ -486,13 +594,17 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    /**
+     * Checks if the items in the payment slots are sufficient for the current offer.
+     */
     public boolean canAfford() {
-        ItemStack p1 = getOfferPayment1();
-        ItemStack p2 = getOfferPayment2();
+        final ItemStack p1 = getOfferPayment1();
+        final ItemStack p2 = getOfferPayment2();
         if (p1.isEmpty() && p2.isEmpty()) {
             return true; // Free trade
         }
 
+        // Handle cases where both payments are the same item type
         if (!p1.isEmpty() && ItemStack.isSameItemSameComponents(p1, p2)) {
             int required = p1.getCount() + p2.getCount();
             return countMatchingPayment(p1) >= required;
@@ -505,8 +617,13 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return hasResultItemInInput(false);
     }
 
+    /**
+     * Checks if the shop has enough items in its input storage to provide the trade result.
+     *
+     * @param checkNeighbors If true, also checks connected external inventories.
+     */
     public boolean hasResultItemInInput(boolean checkNeighbors) {
-        ItemStack result = getOfferResult();
+        final ItemStack result = getOfferResult();
         if (result.isEmpty()) return false;
 
         int found = 0;
@@ -544,6 +661,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return found >= result.getCount();
     }
 
+    /**
+     * The main logic for when a player purchases an item from the result slot.
+     */
     private void processPurchase() {
         pullFromInputChest();
         if (!isReadyToPurchase()) {
@@ -557,14 +677,20 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         needsOfferRefresh = true;
     }
 
+    /**
+     * Checks if all conditions for a trade are met.
+     */
     private boolean isReadyToPurchase() {
         return hasOffer && canAfford() && hasResultItemInInput(false);
     }
 
+    /**
+     * Executes the item transfer for a trade: removes payment, removes result from input, and moves payment to output.
+     */
     private void executeTrade() {
-        ItemStack p1 = getOfferPayment1();
-        ItemStack p2 = getOfferPayment2();
-        ItemStack result = getOfferResult();
+        final ItemStack p1 = getOfferPayment1();
+        final ItemStack p2 = getOfferPayment2();
+        final ItemStack result = getOfferResult();
 
         if (!p1.isEmpty()) removePayment(p1);
         if (!p2.isEmpty()) removePayment(p2);
@@ -575,6 +701,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (!p2.isEmpty()) addToOutput(p2.copy());
     }
 
+    /**
+     * Emits a short redstone pulse if the setting is enabled.
+     */
     private void triggerRedstonePulse() {
         if (level == null || level.isClientSide || !emitRedstone) {
             return;
@@ -587,12 +716,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-
-    public void performPurchase() {
-        processPurchase();
-    }
-
-    private void removeFromInput(ItemStack toRemove) {
+    /**
+     * Removes the specified items from the input storage (internal and external).
+     */
+    private void removeFromInput(final @NotNull ItemStack toRemove) {
         int remaining = toRemove.getCount();
         if (remaining <= 0) return;
 
@@ -627,7 +754,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private void removePayment(ItemStack required) {
+    /**
+     * Removes the specified items from the payment slots.
+     */
+    private void removePayment(final @NotNull ItemStack required) {
         int remaining = required.getCount();
         if (required.isEmpty() || remaining <= 0) {
             return;
@@ -644,19 +774,28 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private void addToOutput(ItemStack toAdd) {
-        ItemStack remaining = ItemHandlerHelper.insertItem(outputHandler, toAdd, false);
+    /**
+     * Adds an item stack to the output inventory, dropping it in the world if it doesn't fit.
+     */
+    private void addToOutput(final @NotNull ItemStack toAdd) {
+        final ItemStack remaining = ItemHandlerHelper.insertItem(outputHandler, toAdd, false);
 
         if (!remaining.isEmpty() && level != null && !level.isClientSide) {
-            net.minecraft.world.Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remaining);
+            Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY() + 1.0, worldPosition.getZ(), remaining);
         }
     }
 
+    /**
+     * Checks if the current offer is available for purchase (i.e., has stock).
+     */
     public boolean isOfferAvailable() {
         return hasOffer && hasResultItemInInput(false);
     }
 
-    public ContainerData createMenuFlags(Player player) {
+    /**
+     * Creates a ContainerData object to sync boolean flags to the client menu.
+     */
+    public ContainerData createMenuFlags(final @NotNull Player player) {
         return new ContainerData() {
             @Override
             public int get(int index) {
@@ -672,7 +811,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
             @Override
             public void set(int index, int value) {
-                // Not needed on client side
+                // Not needed on client side, server is the source of truth.
             }
 
             @Override
@@ -683,33 +822,49 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     // --- Item and Chest Handling ---
-    private void dropItems(Level level, BlockPos pos, ItemStackHandler handler) {
+
+    /**
+     * Helper to drop all items from a given item handler into the world.
+     */
+    private void dropItems(final @NotNull Level level, final @NotNull BlockPos pos, final @NotNull ItemStackHandler handler) {
         for (int i = 0; i < handler.getSlots(); i++) {
             ItemStack stack = handler.getStackInSlot(i);
             if (!stack.isEmpty()) {
-                net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
+                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
             }
         }
     }
 
-    public void dropContents(Level level, BlockPos pos) {
+    /**
+     * Drops all contents of all internal inventories. Called when the block is broken.
+     */
+    public void dropContents(final @NotNull Level level, final @NotNull BlockPos pos) {
         handlerMap.values().forEach(handler -> dropItems(level, pos, handler));
     }
 
+    /**
+     * Invalidates capabilities of all adjacent blocks to force them to re-evaluate this shop.
+     * Used when unlocking chests after the shop is broken.
+     */
     public void unlockAdjacentChests() {
         if (level == null) return;
         for (Direction dir : Direction.values()) {
-            BlockPos neighbour = worldPosition.relative(dir);
-            level.invalidateCapabilities(neighbour);
+            level.invalidateCapabilities(worldPosition.relative(dir));
         }
     }
 
-    private void lockAdjacentChest(Direction dir) {
+    /**
+     * Invalidates capabilities of a specific adjacent block. Used when a side mode is changed.
+     */
+    private void lockAdjacentChest(final @NotNull Direction dir) {
         if (level == null) return;
-        BlockPos neighbour = worldPosition.relative(dir);
-        level.invalidateCapabilities(neighbour);
+        level.invalidateCapabilities(worldPosition.relative(dir));
     }
 
+    /**
+     * Invalidates capabilities of all adjacent blocks that are configured for I/O.
+     * Used when the owner is set.
+     */
     public void lockAdjacentChests() {
         if (level == null) return;
         for (Direction dir : Direction.values()) {
@@ -719,13 +874,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    public static void tick(Level level, BlockPos pos, BlockState state, SmallShopBlockEntity be) {
+    /**
+     * The server-side tick method for this block entity.
+     */
+    public static void tick(final @NotNull Level level, final @NotNull BlockPos pos, final @NotNull BlockState state, final @NotNull SmallShopBlockEntity be) {
         if (level.isClientSide) {
             return;
         }
 
         be.tickCounter++;
-        int offerInterval = Config.OFFER_UPDATE_INTERVAL.get();
+        final int offerInterval = Config.OFFER_UPDATE_INTERVAL.get();
         if (offerInterval > 0 && be.tickCounter % offerInterval == 0) {
             if (be.needsOfferRefresh) {
                 be.updateOfferSlot();
@@ -733,13 +891,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
                 be.needsOfferRefresh = false;
             }
         }
-        int chestInterval = Config.CHEST_IO_INTERVAL.get();
+        final int chestInterval = Config.CHEST_IO_INTERVAL.get();
         if (chestInterval > 0 && be.tickCounter % chestInterval == 0) {
             be.pullFromInputChest();
             be.pushToOutputChest();
         }
     }
 
+    /**
+     * Pulls items from adjacent inventories configured as INPUT.
+     */
     private void pullFromInputChest() {
         if (level == null || level.isClientSide) return;
         for (Direction dir : Direction.values()) {
@@ -752,6 +913,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    /**
+     * Pushes items to adjacent inventories configured as OUTPUT.
+     */
     private void pushToOutputChest() {
         if (level == null || level.isClientSide) return;
         for (Direction dir : Direction.values()) {
@@ -766,7 +930,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     // --- NBT Serialization / Deserialization ---
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+    protected void loadAdditional(final @NotNull CompoundTag tag, final @NotNull HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         loadHandlers(tag, registries);
         loadOwner(tag);
@@ -780,7 +944,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+    protected void saveAdditional(final @NotNull CompoundTag tag, final @NotNull HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         saveHandlers(tag, registries);
         saveOwner(tag);
@@ -789,7 +953,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         saveSideModes(tag);
     }
 
-    private void loadHandlers(CompoundTag tag, HolderLookup.Provider registries) {
+    private void loadHandlers(final @NotNull CompoundTag tag, final @NotNull HolderLookup.Provider registries) {
         handlerMap.forEach((name, handler) -> {
             if (tag.contains(name)) {
                 handler.deserializeNBT(registries, tag.getCompound(name));
@@ -797,16 +961,16 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         });
     }
 
-    private void saveHandlers(CompoundTag tag, HolderLookup.Provider registries) {
+    private void saveHandlers(final @NotNull CompoundTag tag, final @NotNull HolderLookup.Provider registries) {
         handlerMap.forEach((name, handler) -> tag.put(name, handler.serializeNBT(registries)));
     }
 
-    private void loadOwner(CompoundTag tag) {
+    private void loadOwner(final @NotNull CompoundTag tag) {
         ownerId = tag.hasUUID(NBT_OWNER_ID) ? tag.getUUID(NBT_OWNER_ID) : null;
         ownerName = tag.getString(NBT_OWNER_NAME);
         additionalOwners.clear();
-        if (tag.contains(NBT_ADDITIONAL_OWNERS, 9)) { // 9 = ListTag
-            ListTag list = tag.getList(NBT_ADDITIONAL_OWNERS, 10); // 10 = CompoundTag
+        if (tag.contains(NBT_ADDITIONAL_OWNERS, Tag.TAG_LIST)) {
+            ListTag list = tag.getList(NBT_ADDITIONAL_OWNERS, Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag entry = list.getCompound(i);
                 UUID id = entry.getUUID(NBT_ADDITIONAL_OWNER_ID);
@@ -816,7 +980,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private void saveOwner(CompoundTag tag) {
+    private void saveOwner(final @NotNull CompoundTag tag) {
         if (ownerId != null) {
             tag.putUUID(NBT_OWNER_ID, ownerId);
         }
@@ -831,54 +995,67 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         tag.put(NBT_ADDITIONAL_OWNERS, list);
     }
 
-    private void loadOffer(CompoundTag tag, HolderLookup.Provider registries) {
+    private void loadOffer(final @NotNull CompoundTag tag, final @NotNull HolderLookup.Provider registries) {
         offerPayment1 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT1));
         offerPayment2 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT2));
         offerResult = ItemStack.parseOptional(registries, tag.getCompound(KEY_RESULT));
         hasOffer = tag.getBoolean(NBT_HAS_OFFER);
     }
 
-    private void saveOffer(CompoundTag tag, HolderLookup.Provider registries) {
+    private void saveOffer(final @NotNull CompoundTag tag, final @NotNull HolderLookup.Provider registries) {
         if (!offerPayment1.isEmpty()) tag.put(KEY_PAYMENT1, offerPayment1.save(registries));
         if (!offerPayment2.isEmpty()) tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
         if (!offerResult.isEmpty()) tag.put(KEY_RESULT, offerResult.save(registries));
         tag.putBoolean(NBT_HAS_OFFER, hasOffer);
     }
 
-    private void loadSettings(CompoundTag tag) {
+    private void loadSettings(final @NotNull CompoundTag tag) {
         shopName = tag.getString(NBT_SHOP_NAME);
         emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
     }
 
-    private void saveSettings(CompoundTag tag) {
+    private void saveSettings(final @NotNull CompoundTag tag) {
         tag.putString(NBT_SHOP_NAME, shopName);
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
     }
 
-    private void loadSideModes(CompoundTag tag) {
+    /**
+     * Loads the I/O mode for each side from NBT.
+     * Uses integer ordinals for efficiency.
+     */
+    private void loadSideModes(final @NotNull CompoundTag tag) {
+        // Initialize with defaults
         sideModes.clear();
         for (Direction dir : Direction.values()) {
             sideModes.put(dir, SideMode.DISABLED);
         }
-        ListTag sideList = tag.getList(NBT_SIDE_MODES, 10);
+
+        ListTag sideList = tag.getList(NBT_SIDE_MODES, Tag.TAG_COMPOUND);
         for (int i = 0; i < sideList.size(); i++) {
             CompoundTag sideTag = sideList.getCompound(i);
-            try {
-                Direction dir = Direction.valueOf(sideTag.getString(NBT_DIRECTION));
-                SideMode mode = SideMode.valueOf(sideTag.getString(NBT_MODE));
+            // Ordinal is used for efficiency. The values() array order must not change.
+            int dirOrdinal = sideTag.getInt(NBT_DIRECTION);
+            int modeOrdinal = sideTag.getInt(NBT_MODE);
+
+            if (dirOrdinal >= 0 && dirOrdinal < Direction.values().length) {
+                Direction dir = Direction.values()[dirOrdinal];
+                SideMode mode = SideMode.fromId(modeOrdinal); // Use safe fromId method
                 sideModes.put(dir, mode);
-            } catch (IllegalArgumentException e) {
-                // Log error for invalid enum value
             }
         }
     }
 
-    private void saveSideModes(CompoundTag tag) {
+    /**
+     * Saves the I/O mode for each side to NBT.
+     * Uses integer ordinals for efficiency.
+     */
+    private void saveSideModes(final @NotNull CompoundTag tag) {
         ListTag sideList = new ListTag();
         for (Map.Entry<Direction, SideMode> entry : sideModes.entrySet()) {
             CompoundTag sideTag = new CompoundTag();
-            sideTag.putString(NBT_DIRECTION, entry.getKey().name());
-            sideTag.putString(NBT_MODE, entry.getValue().name());
+            // Ordinal is used for efficiency. The values() array order must not change.
+            sideTag.putInt(NBT_DIRECTION, entry.getKey().ordinal());
+            sideTag.putInt(NBT_MODE, entry.getValue().ordinal());
             sideList.add(sideTag);
         }
         tag.put(NBT_SIDE_MODES, sideList);
@@ -891,7 +1068,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     @Override
-    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+    public @NotNull CompoundTag getUpdateTag(final @NotNull HolderLookup.Provider registries) {
         // The update tag should be a complete representation of the TE's data.
         return saveWithoutMetadata(registries);
     }

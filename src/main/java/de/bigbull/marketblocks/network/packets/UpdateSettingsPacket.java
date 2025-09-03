@@ -10,44 +10,62 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
-public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, SideMode bottom, SideMode back, String name, boolean redstone) implements CustomPacketPayload {
-    public static final CustomPacketPayload.Type<UpdateSettingsPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_side_config"));
+/**
+ * C2S packet to update all settings of a shop from the settings screen.
+ *
+ * @param pos      The {@link BlockPos} of the shop.
+ * @param left     The {@link SideMode} for the left side of the shop.
+ * @param right    The {@link SideMode} for the right side of the shop.
+ * @param bottom   The {@link SideMode} for the bottom side of the shop.
+ * @param back     The {@link SideMode} for the back side of the shop.
+ * @param name     The new name for the shop.
+ * @param redstone The new value for the redstone setting.
+ */
+public record UpdateSettingsPacket(
+        @NotNull BlockPos pos,
+        @NotNull SideMode left,
+        @NotNull SideMode right,
+        @NotNull SideMode bottom,
+        @NotNull SideMode back,
+        @NotNull String name,
+        boolean redstone
+) implements CustomPacketPayload {
 
-    public static final StreamCodec<ByteBuf, UpdateSettingsPacket> CODEC = StreamCodec.of(
-            (buf, packet) -> {
-                BlockPos.STREAM_CODEC.encode(buf, packet.pos());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.left().name());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.right().name());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.bottom().name());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.back().name());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.name());
-                ByteBufCodecs.BOOL.encode(buf, packet.redstone());
-            },
-            buf -> {
-                BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
-                SideMode left = SideMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode right = SideMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode bottom = SideMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode back = SideMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
-                String name = ByteBufCodecs.STRING_UTF8.decode(buf);
-                boolean redstone = ByteBufCodecs.BOOL.decode(buf);
-                return new UpdateSettingsPacket(pos, left, right, bottom, back, name, redstone);
-            }
+    public static final Type<UpdateSettingsPacket> TYPE = new Type<>(MarketBlocks.id("update_settings"));
+
+    private static final StreamCodec<ByteBuf, SideMode> SIDE_MODE_CODEC = ByteBufCodecs.idMapper(SideMode::fromId, SideMode::ordinal);
+
+    public static final StreamCodec<ByteBuf, UpdateSettingsPacket> CODEC = StreamCodec.composite(
+            BlockPos.STREAM_CODEC, UpdateSettingsPacket::pos,
+            SIDE_MODE_CODEC, UpdateSettingsPacket::left,
+            SIDE_MODE_CODEC, UpdateSettingsPacket::right,
+            SIDE_MODE_CODEC, UpdateSettingsPacket::bottom,
+            SIDE_MODE_CODEC, UpdateSettingsPacket::back,
+            ByteBufCodecs.STRING_UTF8, UpdateSettingsPacket::name,
+            ByteBufCodecs.BOOL, UpdateSettingsPacket::redstone,
+            UpdateSettingsPacket::new
     );
+
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<UpdateSettingsPacket> type() {
         return TYPE;
     }
 
-    public static void handle(UpdateSettingsPacket packet, IPayloadContext context) {
+    /**
+     * Handles the packet on the server side.
+     * Validates ownership and applies all the new settings to the shop.
+     */
+    public static void handle(final UpdateSettingsPacket packet, final IPayloadContext context) {
         context.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) context.player();
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
+
             Level level = player.level();
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
                 Direction facing = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
@@ -55,8 +73,10 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
                 blockEntity.setMode(facing.getClockWise(), packet.right());
                 blockEntity.setMode(Direction.DOWN, packet.bottom());
                 blockEntity.setMode(facing.getOpposite(), packet.back());
-                String name = packet.name().strip().replaceAll("[^A-Za-z0-9 _-]", "");
-                blockEntity.setShopName(name);
+
+                // Sanitize the shop name to prevent issues
+                String sanitizedName = packet.name().strip().replaceAll("[^A-Za-z0-9 _-]", "");
+                blockEntity.setShopName(sanitizedName);
                 blockEntity.setEmitRedstone(packet.redstone());
             }
         });

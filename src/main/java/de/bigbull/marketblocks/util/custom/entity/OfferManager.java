@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.util.custom.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.data.lang.ModLang;
 import de.bigbull.marketblocks.network.packets.OfferStatusPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -9,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
@@ -20,18 +22,19 @@ import java.util.function.IntFunction;
  *
  * @param shopEntity The block entity this manager belongs to.
  */
-public record OfferManager(SmallShopBlockEntity shopEntity) {
+public record OfferManager(@NotNull SmallShopBlockEntity shopEntity) {
     private static final int PAYMENT_SLOT_COUNT = 2;
     private static final int RESULT_SLOT_INDEX = 2;
     private static final int TOTAL_OFFER_SLOTS = 3;
 
     /**
      * A record to hold the result of an offer validation check.
+     *
      * @param valid    True if the offer is valid, false otherwise.
      * @param errorKey A translation key for the error message if the offer is invalid.
      */
-    public record OfferValidation(boolean valid, String errorKey) {
-        public static final OfferValidation VALID = new OfferValidation(true, null);
+    public record OfferValidation(boolean valid, @NotNull String errorKey) {
+        public static final OfferValidation VALID = new OfferValidation(true, "");
     }
 
     /**
@@ -44,7 +47,7 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
      * @param result   The result item from the client.
      * @return True if the offer was successfully created, false otherwise.
      */
-    public boolean applyOffer(ServerPlayer player, ItemStack payment1, ItemStack payment2, ItemStack result) {
+    public boolean applyOffer(final @NotNull ServerPlayer player, final @NotNull ItemStack payment1, final @NotNull ItemStack payment2, final @NotNull ItemStack result) {
         OfferValidation validation = validateOffer(payment1, payment2, result);
         if (!validation.valid()) {
             player.sendSystemMessage(Component.translatable(validation.errorKey()));
@@ -72,18 +75,18 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
     /**
      * Validates the proposed offer against the items currently in the shop's offer slots.
      */
-    private OfferValidation validateOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
+    private OfferValidation validateOffer(final @NotNull ItemStack payment1, final @NotNull ItemStack payment2, final @NotNull ItemStack result) {
         if (result.isEmpty()) {
-            return new OfferValidation(false, "gui.marketblocks.error.no_result_item");
+            return new OfferValidation(false, ModLang.GUI_ERROR_NO_RESULT_ITEM);
         }
         if (payment1.isEmpty() && payment2.isEmpty()) {
-            return new OfferValidation(false, "gui.marketblocks.error.no_payment_items");
+            return new OfferValidation(false, ModLang.GUI_ERROR_NO_PAYMENT_ITEMS);
         }
 
         ItemStack[] itemsInSlots = copyOfferSlotsFromShop();
         ItemStack[] expectedItems = new ItemStack[]{payment1, payment2, result};
         if (!areOfferSlotsConsistent(expectedItems, itemsInSlots)) {
-            return new OfferValidation(false, "gui.marketblocks.error.invalid_offer");
+            return new OfferValidation(false, ModLang.GUI_ERROR_INVALID_OFFER);
         }
 
         return OfferValidation.VALID;
@@ -111,7 +114,7 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
     /**
      * Copies items from an item handler to a destination array.
      */
-    private void copyRange(IItemHandler handler, ItemStack[] dest, int destStart, int handlerStart, int length) {
+    private void copyRange(final IItemHandler handler, final ItemStack[] dest, int destStart, int handlerStart, int length) {
         forRange(handlerStart, length, handler::getStackInSlot,
                 (i, stack) -> dest[destStart + i] = stack.copy());
     }
@@ -120,7 +123,7 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
      * Checks if the items expected from the client match the items actually in the server-side slots.
      * This is a security check to prevent data mismatch.
      */
-    private boolean areOfferSlotsConsistent(ItemStack[] expected, ItemStack[] actual) {
+    private boolean areOfferSlotsConsistent(final @NotNull ItemStack[] expected, final @NotNull ItemStack[] actual) {
         // Check the result slot
         if (!isItemBasicallyEqual(expected[RESULT_SLOT_INDEX], actual[RESULT_SLOT_INDEX])) {
             return false;
@@ -156,7 +159,7 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
     /**
      * Extracts all items from the offer slots based on a copy of their contents.
      */
-    private ItemStack[] extractItemsFromOfferSlots(ItemStack[] slotContents) {
+    private ItemStack[] extractItemsFromOfferSlots(final @NotNull ItemStack[] slotContents) {
         ItemStack[] extracted = new ItemStack[slotContents.length];
         extractRange(shopEntity.getPaymentHandler(), slotContents, extracted, 0, 0, PAYMENT_SLOT_COUNT);
         extractRange(shopEntity.getOfferHandler(), slotContents, extracted, RESULT_SLOT_INDEX, RESULT_SLOT_INDEX, 1);
@@ -166,7 +169,7 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
     /**
      * Extracts items from an item handler.
      */
-    private void extractRange(IItemHandler handler, ItemStack[] slots, ItemStack[] dest, int handlerStart, int destStart, int length) {
+    private void extractRange(final IItemHandler handler, final ItemStack[] slots, final ItemStack[] dest, int handlerStart, int destStart, int length) {
         forRange(destStart, length, idx -> slots[idx], (i, stack) ->
                 dest[i] = stack.isEmpty() ? ItemStack.EMPTY
                         : handler.extractItem(handlerStart + (i - destStart), stack.getCount(), false));
@@ -175,7 +178,7 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
     /**
      * Compares two ItemStacks to see if they are the same item with the same components and count.
      */
-    private boolean isItemBasicallyEqual(ItemStack expected, ItemStack actual) {
+    private boolean isItemBasicallyEqual(final @NotNull ItemStack expected, final @NotNull ItemStack actual) {
         if (expected.isEmpty()) {
             return actual.isEmpty();
         }
@@ -187,11 +190,10 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
     /**
      * Gives a list of item stacks back to the player, dropping any that don't fit in their inventory.
      */
-    private void returnStacksToPlayer(ServerPlayer player, ItemStack... stacks) {
+    private void returnStacksToPlayer(final @NotNull ServerPlayer player, final @NotNull ItemStack... stacks) {
         for (ItemStack stack : stacks) {
             if (!stack.isEmpty()) {
-                player.getInventory().placeItemBackInInventory(stack);
-                if (!stack.isEmpty()) {
+                if (!player.getInventory().add(stack)) {
                     Containers.dropItemStack(player.level(), player.getX(), player.getY(), player.getZ(), stack);
                 }
             }

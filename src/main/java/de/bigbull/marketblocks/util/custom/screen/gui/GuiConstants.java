@@ -1,18 +1,19 @@
 package de.bigbull.marketblocks.util.custom.screen.gui;
 
 /**
- * Gemeinsame GUI-Konstanten für SmallShop-Menüs und -Screens.
+ * A utility class holding common GUI constants for Small Shop menus and screens.
  */
 public final class GuiConstants {
-    /** Gesamthöhe des GUI-Hintergrundbildes. */
+    /** The total height of the GUI background image. */
     public static final int IMAGE_HEIGHT = 166;
-    /** Gesamtbreite des GUI-Hintergrundbildes. */
+    /** The total width of the GUI background image. */
     public static final int IMAGE_WIDTH = 176;
-    /** Y-Startposition des Spielerinventars. */
+    /** The Y-coordinate where the player inventory slots begin. */
     public static final int PLAYER_INV_Y_START = 84;
-    /** Y-Position des Inventar-Titels. */
+    /** The Y-coordinate for the player inventory title label. */
     public static final int PLAYER_INV_LABEL_Y = PLAYER_INV_Y_START - 11;
 
     private GuiConstants() {
+        // Private constructor to prevent instantiation
     }
 }

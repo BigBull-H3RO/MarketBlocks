@@ -20,12 +20,20 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.function.Supplier;
 
+/**
+ * Handles the registration of all blocks, items, block entities, and menu types for the mod.
+ * Uses NeoForge's DeferredRegister system to ensure thread-safe registration.
+ */
 public class RegistriesInit {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MarketBlocks.MODID);
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MarketBlocks.MODID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MarketBlocks.MODID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MarketBlocks.MODID);
 
+    /**
+     * Registers all deferred registers to the mod event bus.
+     * @param bus The mod event bus.
+     */
     public static void register(IEventBus bus) {
         BLOCKS.register(bus);
         ITEMS.register(bus);
@@ -33,32 +41,43 @@ public class RegistriesInit {
         MENU_TYPES.register(bus);
     }
 
-    // Block Registrierung
+    // Block Registration
     public static final DeferredBlock<Block> SMALL_SHOP_BLOCK = registerBlock("small_shop",
             () -> new SmallShopBlock(BlockBehaviour.Properties.of().noOcclusion()));
 
-    // BlockEntity Registrierung
+    // BlockEntity Registration
     public static final Supplier<BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(
                     SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get()).build(null));
 
-    // Menu Registrierungen
+    // Menu Registrations
     public static final Supplier<MenuType<SmallShopOffersMenu>> SMALL_SHOP_OFFERS_MENU =
             MENU_TYPES.register("small_shop_offers_menu", () -> IMenuTypeExtension.create(SmallShopOffersMenu::new));
 
     public static final Supplier<MenuType<SmallShopInventoryMenu>> SMALL_SHOP_INVENTORY_MENU =
             MENU_TYPES.register("small_shop_inventory_menu", () -> IMenuTypeExtension.create(SmallShopInventoryMenu::new));
 
-    public static final Supplier<MenuType<SmallShopSettingsMenu>> SMALL_SHOP_CONFIG_MENU =
+    public static final Supplier<MenuType<SmallShopSettingsMenu>> SMALL_SHOP_SETTINGS_MENU =
             MENU_TYPES.register("small_shop_config_menu", () -> IMenuTypeExtension.create(SmallShopSettingsMenu::new));
 
-    public static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
+    /**
+     * Helper method to register a block and its corresponding BlockItem.
+     * @param name The name of the block.
+     * @param block A supplier for the block instance.
+     * @return The DeferredBlock instance.
+     */
+    private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);
         registerBlockItem(name, toReturn);
         return toReturn;
     }
 
-    public static <T extends Block> void registerBlockItem(String name, DeferredBlock<T> block) {
+    /**
+     * Helper method to register a BlockItem for a given block.
+     * @param name The name of the item.
+     * @param block The DeferredBlock to create an item for.
+     */
+    private static <T extends Block> void registerBlockItem(String name, DeferredBlock<T> block) {
         ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
     }
 }
