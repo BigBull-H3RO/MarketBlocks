@@ -111,6 +111,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         protected void onContentsChanged(int slot) {
             setChanged();
             needsOfferRefresh = true;
+            updateOfferSlot();
+            sync();
         }
     };
 

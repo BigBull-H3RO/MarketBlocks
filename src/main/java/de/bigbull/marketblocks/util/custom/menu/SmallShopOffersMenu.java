@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMenu {
     private final SmallShopBlockEntity blockEntity;
-    private final ContainerData data;
+    private ContainerData data;
     private final Player player;
 
     private static final int PAYMENT_SLOTS = 2;
@@ -73,6 +73,38 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         if (sourceSlot == null || !sourceSlot.hasItem()) {
             return ItemStack.EMPTY;
         }
+
+        // --- Special handling for the offer slot (index 2) ---
+        if (index == 2) {
+            // Determine how many items can be purchased based on payment and stock.
+            ItemStack simulated = this.blockEntity.getOfferHandler().extractItem(0, Integer.MAX_VALUE, true);
+            if (simulated.isEmpty()) {
+                return ItemStack.EMPTY; // Cannot afford or no stock
+            }
+
+            // Ensure the player's inventory has enough space.
+            if (!canFitInPlayerInventory(simulated)) {
+                return ItemStack.EMPTY; // No space, do not execute trade
+            }
+
+            // Perform the actual extraction (trade).
+            ItemStack extracted = this.blockEntity.getOfferHandler().extractItem(0, simulated.getCount(), false);
+            if (extracted.isEmpty()) {
+                return ItemStack.EMPTY; // Trade failed
+            }
+
+            ItemStack result = extracted.copy();
+            if (!this.moveItemStackTo(extracted, CONTAINER_SLOT_COUNT, this.slots.size(), true) || !extracted.isEmpty()) {
+                // Failed to move to the player's inventory, refund the trade.
+                this.blockEntity.getOfferHandler().insertItem(0, result, false);
+                this.blockEntity.updateOfferSlot();
+                return ItemStack.EMPTY;
+            }
+
+            this.blockEntity.updateOfferSlot();
+            return result;
+        }
+
         ItemStack sourceStack = sourceSlot.getItem();
         ItemStack copyStack = sourceStack.copy();
 
@@ -106,6 +138,24 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
         sourceSlot.onTake(player, sourceStack);
         return copyStack;
+    }
+
+    private boolean canFitInPlayerInventory(final @NotNull ItemStack stack) {
+        Inventory inv = this.player.getInventory();
+        int remaining = stack.getCount();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack slotStack = inv.getItem(i);
+            if (slotStack.isEmpty()) {
+                remaining -= Math.min(remaining, Math.min(stack.getMaxStackSize(), inv.getMaxStackSize()));
+            } else if (ItemStack.isSameItemSameComponents(slotStack, stack)) {
+                int maxSize = Math.min(slotStack.getMaxStackSize(), inv.getMaxStackSize());
+                remaining -= Math.min(remaining, maxSize - slotStack.getCount());
+            }
+            if (remaining <= 0) {
+                return true;
+            }
+        }
+        return remaining <= 0;
     }
 
     @Override
@@ -144,6 +194,11 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
         return data.get(0);
     }
 
+    public void refreshFlags() {
+        this.data = blockEntity.createMenuFlags(this.player);
+        this.broadcastChanges();
+    }
+
     public void fillPaymentSlots(ItemStack required1, ItemStack required2) {
         // Fulfill the required items from the player's inventory.
         // This logic is now additive and will pull all matching items from the player's inventory
@@ -153,6 +208,7 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
         // Tell the client that the container has changed.
         this.broadcastChanges();
+        blockEntity.updateOfferSlot();
     }
 
     private void fulfillRequirement(ItemStack required, Slot targetSlot) {

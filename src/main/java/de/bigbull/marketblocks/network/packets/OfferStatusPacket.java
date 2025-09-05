@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopOffersScreen;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -52,6 +53,9 @@ public record OfferStatusPacket(@NotNull BlockPos pos, boolean hasOffer) impleme
         }
 
         shopEntity.setHasOfferClient(packet.hasOffer());
+
+        if (Minecraft.getInstance().player.containerMenu instanceof SmallShopOffersMenu m)
+            m.refreshFlags();
 
         // If the player is viewing the correct screen, trigger a refresh.
         if (Minecraft.getInstance().screen instanceof SmallShopOffersScreen screen && screen.isFor(packet.pos())) {

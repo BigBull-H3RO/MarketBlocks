@@ -171,8 +171,8 @@ public record OfferManager(@NotNull SmallShopBlockEntity shopEntity) {
      */
     private void extractRange(final IItemHandler handler, final ItemStack[] slots, final ItemStack[] dest, int handlerStart, int destStart, int length) {
         forRange(destStart, length, idx -> slots[idx], (i, stack) ->
-                dest[i] = stack.isEmpty() ? ItemStack.EMPTY
-                        : handler.extractItem(handlerStart + (i - destStart), stack.getCount(), false));
+                dest[destStart + i] = stack.isEmpty() ? ItemStack.EMPTY
+                        : handler.extractItem(handlerStart + i, stack.getCount(), false));
     }
 
     /**
