@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.network.packets;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.OfferManager;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -10,6 +11,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
@@ -60,7 +62,16 @@ public record CreateOfferPacket(
                 if (shopEntity.isOwner(player)) {
                     OfferManager manager = shopEntity.getOfferManager();
                     boolean success = manager.applyOffer(player, packet.payment1(), packet.payment2(), packet.result());
-                    if (!success) {
+                    if (success) {
+                        // Send a status update to all players viewing this shop's menu.
+                        if (level.getServer() != null) {
+                            for (ServerPlayer p : level.getServer().getPlayerList().getPlayers()) {
+                                if (p.containerMenu instanceof SmallShopOffersMenu menu && menu.getBlockEntity() == shopEntity) {
+                                    PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), true));
+                                }
+                            }
+                        }
+                    } else {
                         MarketBlocks.LOGGER.warn("Invalid offer creation attempt by player {}", player.getName().getString());
                     }
                 } else {

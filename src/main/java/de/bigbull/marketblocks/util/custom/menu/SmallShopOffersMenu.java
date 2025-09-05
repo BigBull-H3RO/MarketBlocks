@@ -109,6 +109,27 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
     }
 
     @Override
+    public void removed(@NotNull Player player) {
+        super.removed(player);
+
+        // When the menu is closed, return the items from the payment slots to the owner
+        // if they are not creating a trade. This prevents item loss.
+        if (this.isOwner() && !this.hasFlag(SmallShopBlockEntity.HAS_OFFER_FLAG)) {
+            // We can't use clearContainer here as it drops items on the client side,
+            // but the logic needs to run on the server. The BE's handler is the source of truth.
+            if (!player.level().isClientSide()) {
+                for (int i = 0; i < PAYMENT_SLOTS; i++) {
+                    ItemStack stack = this.blockEntity.getPaymentHandler().getStackInSlot(i);
+                    if (!stack.isEmpty()) {
+                        player.getInventory().placeItemBackInInventory(stack);
+                        this.blockEntity.getPaymentHandler().setStackInSlot(i, ItemStack.EMPTY);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public boolean stillValid(@NotNull Player player) {
         return this.blockEntity.stillValid(player);
     }
@@ -227,15 +248,6 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
                 return super.remove(amount);
             }
             return ItemStack.EMPTY;
-        }
-
-        @Override
-        public void set(@NotNull ItemStack stack) {
-            // Prevent setting the slot if an offer already exists, to avoid visual glitches.
-            if (menu.hasFlag(SmallShopBlockEntity.HAS_OFFER_FLAG) && !stack.isEmpty()) {
-                return;
-            }
-            super.set(stack);
         }
 
         @Override

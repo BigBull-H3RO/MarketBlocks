@@ -129,6 +129,16 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
     }
 
     /**
+     * Called by a packet handler when the server confirms the offer has been created.
+     */
+    public void onOfferCreated() {
+        if (this.minecraft != null && this.minecraft.player != null) {
+            menu.getBlockEntity().setHasOfferClient(true);
+            init(); // Re-initialize the screen to update buttons
+        }
+    }
+
+    /**
      * Checks if this screen instance is for the shop at the given position.
      * @param pos The BlockPos to check.
      * @return True if this screen is for the given pos, false otherwise.

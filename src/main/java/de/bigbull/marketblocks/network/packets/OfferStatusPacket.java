@@ -53,9 +53,11 @@ public record OfferStatusPacket(@NotNull BlockPos pos, boolean hasOffer) impleme
 
         shopEntity.setHasOfferClient(packet.hasOffer());
 
-        // If the offer was deleted, and the player is viewing the correct screen, trigger a refresh.
-        if (!packet.hasOffer()) {
-            if (Minecraft.getInstance().screen instanceof SmallShopOffersScreen screen && screen.isFor(packet.pos())) {
+        // If the player is viewing the correct screen, trigger a refresh.
+        if (Minecraft.getInstance().screen instanceof SmallShopOffersScreen screen && screen.isFor(packet.pos())) {
+            if (packet.hasOffer()) {
+                screen.onOfferCreated();
+            } else {
                 screen.onOfferDeleted();
             }
         }

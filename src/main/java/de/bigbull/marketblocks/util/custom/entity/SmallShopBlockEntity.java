@@ -122,11 +122,76 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
-            ItemStack result = super.extractItem(slot, amount, simulate);
-            if (!simulate && !result.isEmpty()) {
-                processPurchase();
+            // The simulation part is tricky with this custom logic.
+            // For now, we simulate by checking how many trades are possible and returning that.
+            // This is not a perfect simulation but better than the default.
+            if (simulate) {
+                if (!isReadyToPurchase()) {
+                    return ItemStack.EMPTY;
+                }
+                ItemStack resultPerTrade = getOfferResult();
+                if (resultPerTrade.isEmpty()) {
+                    return ItemStack.EMPTY;
+                }
+
+                int maxTrades = 0;
+                // A full simulation would require cloning the inventories and running the logic,
+                // which is too complex for this context. We'll simulate based on one check.
+                if (isReadyToPurchase()) {
+                    // This is a simplified check. A real simulation would be much more involved.
+                    // We'll assume we can perform as many as requested, up to the stack size.
+                    maxTrades = amount / resultPerTrade.getCount();
+                }
+
+                if (maxTrades == 0) return ItemStack.EMPTY;
+
+                ItemStack simulatedStack = resultPerTrade.copy();
+                simulatedStack.setCount(Math.min(amount, maxTrades * resultPerTrade.getCount()));
+                return simulatedStack;
             }
-            return result;
+
+            // --- Execution part (not simulating) ---
+            int itemsPerTrade = getOfferResult().getCount();
+            if (itemsPerTrade <= 0) {
+                return ItemStack.EMPTY; // Avoid division by zero
+            }
+
+            int tradesToAttempt = amount / itemsPerTrade;
+            if (tradesToAttempt == 0 && amount > 0) {
+                tradesToAttempt = 1; // Allow taking single items even if result stack is > 1
+            }
+
+            int successfulTrades = 0;
+            for (int i = 0; i < tradesToAttempt; i++) {
+                // We must check readiness *inside* the loop, as each trade changes the state.
+                if (isReadyToPurchase()) {
+                    executeTrade(); // This deducts payment and stock
+                    successfulTrades++;
+                } else {
+                    // Stop if we can no longer afford the trade or stock is out
+                    break;
+                }
+            }
+
+            if (successfulTrades > 0) {
+                // Manually create the stack of resulting items
+                ItemStack returnedStack = getOfferResult().copy();
+                returnedStack.setCount(successfulTrades * itemsPerTrade);
+
+                // Manually shrink the stack in the offer slot
+                ItemStack stackInSlot = this.getStackInSlot(slot);
+                stackInSlot.shrink(returnedStack.getCount());
+
+                // Sync changes and update state
+                sync();
+                triggerRedstonePulse(); // Pulse once for the whole transaction
+                needsOfferRefresh = true; // Refresh the offer slot display
+                updateOfferSlot(); // Immediately update the slot
+
+                return returnedStack;
+            }
+
+            return ItemStack.EMPTY;
         }
     };
 
