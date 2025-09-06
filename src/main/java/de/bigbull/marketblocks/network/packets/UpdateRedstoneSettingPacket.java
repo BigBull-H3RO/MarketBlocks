@@ -7,43 +7,32 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
 
-/**
- * C2S packet to update the "Emit Redstone" setting for a shop.
- *
- * @param pos     The {@link BlockPos} of the shop.
- * @param enabled The new value for the redstone setting.
- */
-public record UpdateRedstoneSettingPacket(@NotNull BlockPos pos, boolean enabled) implements CustomPacketPayload {
+public record UpdateRedstoneSettingPacket(BlockPos pos, boolean enabled) implements CustomPacketPayload {
 
-    public static final Type<UpdateRedstoneSettingPacket> TYPE = new Type<>(MarketBlocks.id("update_redstone_setting"));
-
+    public static final CustomPacketPayload.Type<UpdateRedstoneSettingPacket> TYPE =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_redstone_setting"));
 
     public static final StreamCodec<ByteBuf, UpdateRedstoneSettingPacket> CODEC = StreamCodec.composite(
-            BlockPos.STREAM_CODEC, UpdateRedstoneSettingPacket::pos,
-            ByteBufCodecs.BOOL, UpdateRedstoneSettingPacket::enabled,
+            BlockPos.STREAM_CODEC,
+            UpdateRedstoneSettingPacket::pos,
+            ByteBufCodecs.BOOL,
+            UpdateRedstoneSettingPacket::enabled,
             UpdateRedstoneSettingPacket::new
     );
 
     @Override
-    public @NotNull Type<UpdateRedstoneSettingPacket> type() {
+    public Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 
-    /**
-     * Handles the packet on the server side.
-     * It validates that the player is the owner of the shop and then updates the setting.
-     */
-    public static void handle(final UpdateRedstoneSettingPacket packet, final IPayloadContext context) {
+    public static void handle(UpdateRedstoneSettingPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (!(context.player() instanceof ServerPlayer player)) {
-                return;
-            }
-
+            ServerPlayer player = (ServerPlayer) context.player();
             Level level = player.level();
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
                 blockEntity.setEmitRedstone(packet.enabled());

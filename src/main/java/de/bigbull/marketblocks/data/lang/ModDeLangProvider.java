@@ -5,9 +5,6 @@ import de.bigbull.marketblocks.util.RegistriesInit;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 
-/**
- * Generates German (de_de) translations for the mod.
- */
 public class ModDeLangProvider extends LanguageProvider {
     public ModDeLangProvider(PackOutput output) {
         super(output, MarketBlocks.MODID, "de_de");
@@ -15,76 +12,66 @@ public class ModDeLangProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
-        // Creative Tab
-        add(ModLang.CREATIVE_TAB, "Market Blocks");
+        add("itemGroup.marketblocks", "Market Blocks");
+
+        // Container-Titel
+        add("container.marketblocks.small_shop", "Laden");
+        add("container.marketblocks.small_shop_offers", "Laden - Angebote");
+        add("container.marketblocks.small_shop_inventory", "Laden - Inventar");
+
+        add("gui.marketblocks.shop_title", "Laden");
+        add("gui.marketblocks.inventory_title", "Laden Inventar");
+        add("gui.marketblocks.trade_available", "Handel verfügbar");
+        add("gui.marketblocks.trade_unavailable", "Handel nicht verfügbar");
+        add("gui.marketblocks.available", "Verfügbar");
+        add("gui.marketblocks.no_offers", "Keine Angebote verfügbar");
+        add("gui.marketblocks.no_players_available", "Es sind aktuell keine Spieler verfügbar");
+        add("gui.marketblocks.create_hint", "Platziere Items in den unteren Slots");
+        add("gui.marketblocks.confirm_offer", "Angebot bestätigen");
+        add("gui.marketblocks.cancel_offer", "Abbrechen");
+        add("gui.marketblocks.create_offer", "Angebot erstellen");
+        add("gui.marketblocks.delete_offer", "Angebot löschen");
+        add("gui.marketblocks.offers", "Angebote");
+        add("gui.marketblocks.offers_tab", "Angebote anzeigen");
+        add("gui.marketblocks.inventory_tab", "Inventar anzeigen");
+        add("gui.marketblocks.settings_tab", "Einstellungen anzeigen");
+        add("gui.marketblocks.input_inventory", "Eingabe");
+        add("gui.marketblocks.output_inventory", "Ausgabe");
+        add("gui.marketblocks.inventory_owner_only", "Nur der Besitzer kann das Inventar verwalten");
+        add("gui.marketblocks.inventory_flow_hint", "Items wandern vom Eingabe- ins Ausgabeinventar");
+        add("gui.marketblocks.owner", "Besitzer: %s");
+        add("gui.marketblocks.out_of_stock", "Nicht auf Lager");
+
+        // Einstellungen
+        add("gui.marketblocks.settings_title", "Shop-Einstellungen");
+        add("gui.marketblocks.save", "Speichern");
+        add("gui.marketblocks.shop_name", "Shopname");
+        add("gui.marketblocks.emit_redstone", "Redstone-Signal ausgeben");
+        add("gui.marketblocks.emit_redstone.tooltip", "Gibt nach einem Kauf kurz ein Redstone-Signal aus");
+        add("gui.marketblocks.settings_owner_only", "Nur der Besitzer kann Einstellungen ändern");
+
+        add("gui.marketblocks.side.left", "Links");
+        add("gui.marketblocks.side.right", "Rechts");
+        add("gui.marketblocks.side.bottom", "Unten");
+        add("gui.marketblocks.side.back", "Hinten");
+        add("gui.marketblocks.input", "Eingang");
+        add("gui.marketblocks.output", "Ausgang");
+        add("gui.marketblocks.disabled", "Deaktiviert");
+
+        // Fehler- und Erfolgsmeldungen
+        add("gui.marketblocks.error.no_result_item", "Bitte platziere ein Item im Ergebnis-Slot");
+        add("gui.marketblocks.error.no_payment_items", "Bitte platziere mindestens ein Zahlungsitem");
+        add("gui.marketblocks.error.invalid_offer", "Ungültige Angebotskonfiguration");
+
+        add("gui.marketblocks.success.offer_created", "Angebot erfolgreich erstellt");
+        add("gui.marketblocks.success.offer_deleted", "Angebot erfolgreich gelöscht");
+
+        // Zusätzliche Statusmeldungen
+        add("gui.marketblocks.creating_offer", "Angebot wird erstellt...");
+        add("gui.marketblocks.offer_ready", "Angebot bereit");
+        add("gui.marketblocks.insufficient_stock", "Nicht genügend Bestand");
 
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Kleiner Laden");
-
-        // Container Titles
-        add(ModLang.CONTAINER_SMALL_SHOP, "Laden");
-        add(ModLang.CONTAINER_SMALL_SHOP_OFFERS, "Laden - Angebote");
-        add(ModLang.CONTAINER_SMALL_SHOP_INVENTORY, "Laden - Inventar");
-
-        // GUI Titles
-        add(ModLang.GUI_SHOP_TITLE, "Laden");
-        add(ModLang.GUI_INVENTORY_TITLE, "Laden Inventar");
-        add(ModLang.GUI_SETTINGS_TITLE, "Shop-Einstellungen");
-
-        // GUI Status Messages
-        add(ModLang.GUI_TRADE_AVAILABLE, "Handel verfügbar");
-        add(ModLang.GUI_TRADE_UNAVAILABLE, "Handel nicht verfügbar");
-        add(ModLang.GUI_AVAILABLE, "Verfügbar");
-        add(ModLang.GUI_NO_OFFERS, "Keine Angebote verfügbar");
-        add(ModLang.GUI_NO_PLAYERS_AVAILABLE, "Es sind aktuell keine Spieler verfügbar");
-        add(ModLang.GUI_OUT_OF_STOCK, "Nicht auf Lager");
-        add(ModLang.GUI_OWNER, "Besitzer: %s");
-        add(ModLang.GUI_CREATING_OFFER, "Angebot wird erstellt...");
-        add(ModLang.GUI_OFFER_READY, "Angebot bereit");
-        add(ModLang.GUI_INSUFFICIENT_STOCK, "Nicht genügend Bestand");
-
-        // GUI Offer Creation
-        add(ModLang.GUI_CREATE_HINT, "Platziere Items in den unteren Slots");
-        add(ModLang.GUI_CONFIRM_OFFER, "Angebot bestätigen");
-        add(ModLang.GUI_CANCEL_OFFER, "Abbrechen");
-        add(ModLang.GUI_CREATE_OFFER, "Angebot erstellen");
-        add(ModLang.GUI_DELETE_OFFER, "Angebot löschen");
-
-        // GUI Navigation
-        add(ModLang.GUI_OFFERS, "Angebote");
-        add(ModLang.GUI_OFFERS_TAB, "Angebote anzeigen");
-        add(ModLang.GUI_INVENTORY_TAB, "Inventar anzeigen");
-        add(ModLang.GUI_SETTINGS_TAB, "Einstellungen anzeigen");
-
-        // GUI Inventory Labels
-        add(ModLang.GUI_INPUT_INVENTORY, "Eingabe");
-        add(ModLang.GUI_OUTPUT_INVENTORY, "Ausgabe");
-        add(ModLang.GUI_INVENTORY_OWNER_ONLY, "Nur der Besitzer kann das Inventar verwalten");
-        add(ModLang.GUI_INVENTORY_FLOW_HINT, "Items wandern vom Eingabe- ins Ausgabeinventar");
-
-        // GUI Settings
-        add(ModLang.GUI_SAVE, "Speichern");
-        add(ModLang.GUI_SHOP_NAME, "Shopname");
-        add(ModLang.GUI_EMIT_REDSTONE, "Redstone-Signal ausgeben");
-        add(ModLang.GUI_EMIT_REDSTONE_TOOLTIP, "Gibt nach einem Kauf kurz ein Redstone-Signal aus");
-        add(ModLang.GUI_SETTINGS_OWNER_ONLY, "Nur der Besitzer kann Einstellungen ändern");
-
-        // GUI Side Configuration
-        add(ModLang.GUI_SIDE_LEFT, "Links");
-        add(ModLang.GUI_SIDE_RIGHT, "Rechts");
-        add(ModLang.GUI_SIDE_BOTTOM, "Unten");
-        add(ModLang.GUI_SIDE_BACK, "Hinten");
-        add(ModLang.GUI_INPUT, "Eingang");
-        add(ModLang.GUI_OUTPUT, "Ausgang");
-        add(ModLang.GUI_DISABLED, "Deaktiviert");
-
-        // GUI Error Messages
-        add(ModLang.GUI_ERROR_NO_RESULT_ITEM, "Bitte platziere ein Item im Ergebnis-Slot");
-        add(ModLang.GUI_ERROR_NO_PAYMENT_ITEMS, "Bitte platziere mindestens ein Zahlungsitem");
-        add(ModLang.GUI_ERROR_INVALID_OFFER, "Ungültige Angebotskonfiguration");
-
-        // GUI Success Messages
-        add(ModLang.GUI_SUCCESS_OFFER_CREATED, "Angebot erfolgreich erstellt");
-        add(ModLang.GUI_SUCCESS_OFFER_DELETED, "Angebot erfolgreich gelöscht");
     }
 }

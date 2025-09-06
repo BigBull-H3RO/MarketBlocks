@@ -10,29 +10,20 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * The menu for the "Settings" tab of the Small Shop.
- * This menu is unique as it contains no item slots. Its primary purpose is to hold
- * the client-side state of the settings while the user is editing them, before they are
- * sent to the server via a packet.
- */
 public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements ShopMenu {
     private final SmallShopBlockEntity blockEntity;
     private final EnumMap<Direction, SideMode> sideModes;
     private final EnumMap<Direction, SideMode> initialModes;
     private final ContainerData data;
 
-    /**
-     * Server-side constructor.
-     */
-    public SmallShopSettingsMenu(int containerId, @NotNull Inventory playerInventory, @NotNull SmallShopBlockEntity blockEntity) {
-        super(RegistriesInit.SMALL_SHOP_SETTINGS_MENU.get(), containerId);
+    // Server constructor
+    public SmallShopSettingsMenu(int containerId, Inventory playerInventory, SmallShopBlockEntity blockEntity) {
+        super(RegistriesInit.SMALL_SHOP_CONFIG_MENU.get(), containerId);
         this.blockEntity = blockEntity;
         this.sideModes = new EnumMap<>(Direction.class);
         this.initialModes = new EnumMap<>(Direction.class);
@@ -46,58 +37,53 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
         initSlots(playerInventory);
     }
 
-    /**
-     * Client-side constructor.
-     */
-    public SmallShopSettingsMenu(int containerId, @NotNull Inventory playerInventory, @NotNull RegistryFriendlyByteBuf buf) {
-        super(RegistriesInit.SMALL_SHOP_SETTINGS_MENU.get(), containerId);
-        this.blockEntity = readBlockEntity(playerInventory, buf);
-        this.data = new SimpleContainerData(1);
+    // Client constructor
+    public SmallShopSettingsMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
+        super(RegistriesInit.SMALL_SHOP_CONFIG_MENU.get(), containerId);
+        SmallShopBlockEntity be = readBlockEntity(playerInventory, buf);
+        if (be == null) {
+            playerInventory.player.closeContainer();
+        }
+        this.blockEntity = be;
         this.sideModes = new EnumMap<>(Direction.class);
         this.initialModes = new EnumMap<>(Direction.class);
-
-        for (Direction dir : Direction.values()) {
-            SideMode mode = this.blockEntity.getMode(dir);
-            sideModes.put(dir, mode);
-            initialModes.put(dir, mode);
+        if (be != null) {
+            for (Direction dir : Direction.values()) {
+                SideMode mode = be.getMode(dir);
+                sideModes.put(dir, mode);
+                initialModes.put(dir, mode);
+            }
         }
-
+        this.data = be != null ? be.createMenuFlags(playerInventory.player) : new SimpleContainerData(1);
         addDataSlots(this.data);
-        initSlots(playerInventory);
+        if (be != null) {
+            initSlots(playerInventory);
+        }
     }
 
     @Override
-    public @NotNull ItemStack quickMoveStack(@NotNull Player player, int index) {
-        return ItemStack.EMPTY; // No slots, no quick-moving.
+    public ItemStack quickMoveStack(Player player, int index) {
+        return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean stillValid(@NotNull Player player) {
+    public boolean stillValid(Player player) {
         return blockEntity.stillValid(player);
     }
 
     @Override
-    public @NotNull SmallShopBlockEntity getBlockEntity() {
+    public SmallShopBlockEntity getBlockEntity() {
         return blockEntity;
     }
 
-    /**
-     * Gets the current, potentially unsaved, mode for a given side.
-     */
     public SideMode getMode(Direction dir) {
         return sideModes.getOrDefault(dir, SideMode.DISABLED);
     }
 
-    /**
-     * Sets the mode for a given side in the local menu state.
-     */
     public void setMode(Direction dir, SideMode mode) {
         sideModes.put(dir, mode);
     }
 
-    /**
-     * Resets any changes made to the side modes back to their initial state.
-     */
     public void resetModes() {
         sideModes.clear();
         sideModes.putAll(initialModes);
@@ -108,20 +94,15 @@ public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements Shop
         return data.get(0);
     }
 
-    /**
-     * Gets the map of additional owners directly from the block entity.
-     */
     public Map<UUID, String> getAdditionalOwners() {
         return blockEntity.getAdditionalOwners();
     }
 
     @Override
-    protected void addCustomSlots(@NotNull Inventory playerInventory) {
-        // No custom slots in the settings menu.
-    }
+    protected void addCustomSlots(Inventory playerInventory) {}
 
     @Override
     protected boolean showPlayerInventory() {
-        return false; // No player inventory shown in the settings menu.
+        return false;
     }
 }
