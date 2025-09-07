@@ -159,7 +159,7 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
     private ItemStack[] extractItemsFromOfferSlots(ItemStack[] slotContents) {
         ItemStack[] extracted = new ItemStack[slotContents.length];
         extractRange(shopEntity.getPaymentHandler(), slotContents, extracted, 0, 0, PAYMENT_SLOT_COUNT);
-        extractRange(shopEntity.getOfferHandler(), slotContents, extracted, RESULT_SLOT_INDEX, RESULT_SLOT_INDEX, 1);
+        extractRange(shopEntity.getOfferHandler(), slotContents, extracted, 0, RESULT_SLOT_INDEX, 1);
         return extracted;
     }
 
@@ -167,9 +167,12 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
      * Extracts items from an item handler.
      */
     private void extractRange(IItemHandler handler, ItemStack[] slots, ItemStack[] dest, int handlerStart, int destStart, int length) {
-        forRange(destStart, length, idx -> slots[idx], (i, stack) ->
-                dest[i] = stack.isEmpty() ? ItemStack.EMPTY
-                        : handler.extractItem(handlerStart + (i - destStart), stack.getCount(), false));
+        for (int i = 0; i < length; i++) {
+            int index = destStart + i;
+            ItemStack stack = slots[index];
+            dest[index] = stack.isEmpty() ? ItemStack.EMPTY
+                    : handler.extractItem(handlerStart + i, stack.getCount(), false);
+        }
     }
 
     /**

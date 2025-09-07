@@ -243,8 +243,9 @@ public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMe
 
         @Override
         public void set(ItemStack stack) {
-            // Prevent setting the slot if an offer already exists, to avoid visual glitches.
-            if (menu.hasOffer() && !stack.isEmpty()) {
+            // Allow server updates to display the result preview even when an offer exists.
+            // Only block manual placement by the owner while an offer is active.
+            if (menu.hasOffer() && menu.isOwner() && !stack.isEmpty()) {
                 return;
             }
             super.set(stack);
