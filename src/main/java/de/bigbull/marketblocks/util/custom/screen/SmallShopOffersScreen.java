@@ -114,6 +114,7 @@ public class SmallShopOffersScreen extends AbstractSmallShopScreen<SmallShopOffe
                     result
             ));
 
+            menu.getBlockEntity().setHasOfferClient(true);
             playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
             init();
 
