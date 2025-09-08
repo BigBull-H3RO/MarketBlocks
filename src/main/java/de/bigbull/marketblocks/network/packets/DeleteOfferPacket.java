@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.StreamCodec;
@@ -69,7 +69,7 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
                     // Sende Status-Update an alle Spieler mit geöffnetem Menü
                     ServerLevel serverLevel = (ServerLevel) level;
                     for (ServerPlayer p : serverLevel.players()) {
-                        if (p.containerMenu instanceof SmallShopOffersMenu menu && menu.getBlockEntity() == shopEntity) {
+                        if (p.containerMenu instanceof SmallShopMenu menu && menu.getBlockEntity() == shopEntity) {
                             PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), false));
                         }
                     }

@@ -15,6 +15,7 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 /**
  * Menü für den Inventar-Modus des SmallShop
  */
+// deprecated – ersetzt durch SmallShopMenu
 public class SmallShopInventoryMenu extends AbstractSmallShopMenu implements ShopMenu  {
     private final SmallShopBlockEntity blockEntity;
     private final IItemHandler inputHandler;

@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.util.custom.block;
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -122,8 +122,8 @@ public class SmallShopBlock extends BaseEntityBlock {
                 // Besitzer sehen standardmäßig ebenfalls das Offers-Menü
                 serverPlayer.openMenu(
                         new SimpleMenuProvider(
-                                (id, inv, p) -> new SmallShopOffersMenu(id, inv, shopEntity),
-                                Component.translatable("container.marketblocks.small_shop_offers")
+                                (id, inv, p) -> new SmallShopMenu(id, inv, shopEntity),
+                                Component.translatable("container.marketblocks.small_shop")
                         ),
                         pos
                 );
@@ -137,16 +137,29 @@ public class SmallShopBlock extends BaseEntityBlock {
 
     @Override
     protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
-            // Standardmäßig Offers-Menu zurückgeben
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof SmallShopBlockEntity shop) {
+            // Unified Small Shop menu
             return new SimpleMenuProvider(
-                    (id, inv, player) -> new SmallShopOffersMenu(id, inv, shopEntity),
-                    Component.translatable("container.marketblocks.small_shop_offers")
+                    (id, inv, p) -> new SmallShopMenu(id, inv, shop),
+                    Component.translatable("container.marketblocks.small_shop") // neutraler Titel
             );
         }
         return null;
     }
+
+//    @Override
+//    protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
+//        BlockEntity blockEntity = level.getBlockEntity(pos);
+//        if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
+//            // Standardmäßig Offers-Menu zurückgeben
+//            return new SimpleMenuProvider(
+//                    (id, inv, player) -> new SmallShopOffersMenu(id, inv, shopEntity),
+//                    Component.translatable("container.marketblocks.small_shop_offers")
+//            );
+//        }
+//        return null;
+//    }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {

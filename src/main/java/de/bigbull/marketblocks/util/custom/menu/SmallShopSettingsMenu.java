@@ -15,6 +15,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
+// deprecated – ersetzt durch SmallShopMenu
 public class SmallShopSettingsMenu extends AbstractSmallShopMenu implements ShopMenu {
     private final SmallShopBlockEntity blockEntity;
     private final EnumMap<Direction, SideMode> sideModes;

@@ -3,18 +3,14 @@ package de.bigbull.marketblocks.network.packets;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.ShopTab;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopInventoryMenu;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopSettingsMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -53,30 +49,10 @@ public record SwitchTabPacket(BlockPos pos, ShopTab tab) implements CustomPacket
             }
 
             if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity blockEntity) {
-                if (tab == ShopTab.OFFERS) {
-                    player.openMenu(
-                            new SimpleMenuProvider(
-                                    (id, inv, p) -> new SmallShopOffersMenu(id, inv, blockEntity),
-                                    Component.translatable("container.marketblocks.small_shop_offers")
-                            ),
-                            pos
-                    );
-                } else if (tab == ShopTab.INVENTORY && blockEntity.isOwner(player)) {
-                    player.openMenu(
-                            new SimpleMenuProvider(
-                                    (id, inv, p) -> new SmallShopInventoryMenu(id, inv, blockEntity),
-                                    Component.translatable("container.marketblocks.small_shop_inventory")
-                            ),
-                            pos
-                    );
-                } else if (tab == ShopTab.SETTINGS && blockEntity.isOwner(player)) {
-                    player.openMenu(
-                            new SimpleMenuProvider(
-                                    (id, inv, p) -> new SmallShopSettingsMenu(id, inv, blockEntity),
-                                    Component.translatable("container.marketblocks.small_shop")
-                            ),
-                            pos
-                    );
+                if (player.containerMenu instanceof SmallShopMenu menu && menu.getBlockEntity() == blockEntity) {
+                    if (tab == ShopTab.OFFERS || blockEntity.isOwner(player)) {
+                        menu.setActiveTabServer(tab);
+                    }
                 }
             }
         });

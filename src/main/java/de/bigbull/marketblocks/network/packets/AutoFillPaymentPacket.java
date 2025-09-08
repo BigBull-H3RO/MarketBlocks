@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.network.packets;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.StreamCodec;
@@ -31,7 +31,7 @@ public record AutoFillPaymentPacket(BlockPos pos) implements CustomPacketPayload
     public static void handle(AutoFillPaymentPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             ServerPlayer player = (ServerPlayer) context.player();
-            if (player.containerMenu instanceof SmallShopOffersMenu menu) {
+            if (player.containerMenu instanceof SmallShopMenu menu) {
                 SmallShopBlockEntity blockEntity = menu.getBlockEntity();
                 if (blockEntity.getBlockPos().equals(packet.pos())) {
                     ItemStack required1 = blockEntity.getOfferPayment1();

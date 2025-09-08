@@ -17,6 +17,7 @@ import net.neoforged.neoforge.items.SlotItemHandler;
  * The menu for the "Offers" mode of the Small Shop.
  * This UI is used for creating and viewing trade offers.
  */
+// deprecated – ersetzt durch SmallShopMenu
 public class SmallShopOffersMenu extends AbstractSmallShopMenu implements ShopMenu {
     private final SmallShopBlockEntity blockEntity;
     private final IItemHandler paymentHandler;

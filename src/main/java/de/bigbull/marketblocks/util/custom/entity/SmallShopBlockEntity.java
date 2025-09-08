@@ -4,7 +4,7 @@ import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopOffersMenu;
+import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -202,7 +202,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        return new SmallShopOffersMenu(containerId, playerInventory, this);
+        return new SmallShopMenu(containerId, playerInventory, this);
     }
 
     // --- Getters for Handlers ---
@@ -546,7 +546,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return found >= result.getCount();
     }
 
-    private void processPurchase() {
+    public void processPurchase() {
         pullFromInputChest();
         if (!isReadyToPurchase()) {
             return;

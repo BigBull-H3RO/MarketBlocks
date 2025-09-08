@@ -24,6 +24,7 @@ import net.minecraft.world.entity.player.Inventory;
 
 import java.util.*;
 
+// deprecated – ersetzt durch SmallShopScreen
 public class SmallShopSettingsScreen extends AbstractSmallShopScreen<SmallShopSettingsMenu> {
     private static final ResourceLocation BACKGROUND =
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_settings.png");
