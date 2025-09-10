@@ -91,6 +91,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         protected void onContentsChanged(int slot) {
             setChanged();
             needsOfferRefresh = true;
+            updateOfferSlot();
+            sync();
         }
     };
 
@@ -120,6 +122,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         @Override
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
             ItemStack result = super.extractItem(slot, amount, simulate);
+            // Nur bei einem tatsächlichen Entnehmen den Kauf auslösen
             if (!simulate && !result.isEmpty()) {
                 processPurchase();
             }

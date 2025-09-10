@@ -236,15 +236,29 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
         if (index == OFFER_SLOT_INDEX && isTab(ShopTab.OFFERS)) {
             Slot slot = this.slots.get(index);
-            if (!slot.hasItem()) {
-                return ItemStack.EMPTY;
+            ItemStack result = ItemStack.EMPTY;
+
+            while (blockEntity.isOfferAvailable() && slot.hasItem()) {
+                ItemStack stack = slot.getItem();
+                if (result.isEmpty()) {
+                    result = stack.copy();
+                }
+
+                if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
+                    ItemStack drop = stack.copy();
+                    slot.set(ItemStack.EMPTY);
+                    blockEntity.processPurchase();
+                    player.drop(drop, false);
+                    blockEntity.updateOfferSlot();
+                    break;
+                }
+
+                slot.set(stack);
+                blockEntity.processPurchase();
+                blockEntity.updateOfferSlot();
             }
-            ItemStack stack = slot.getItem();
-            ItemStack result = stack.copy();
-            if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
-                return ItemStack.EMPTY;
-            }
-            slot.onTake(player, stack);
+
+            blockEntity.updateOfferSlot();
             return result;
         }
 
@@ -394,10 +408,6 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         @Override
         public void onTake(Player player, ItemStack stack) {
             super.onTake(player, stack);
-            // Kauf nur im Angebots-Modus auslösen
-            if (blockEntity.hasOffer() && blockEntity.isOfferAvailable()) {
-                blockEntity.processPurchase();
-            }
             blockEntity.updateOfferSlot();
         }
 
