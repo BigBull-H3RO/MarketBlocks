@@ -195,12 +195,15 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
     private void clearPaymentSlots() {
         for (int i = 0; i < PAYMENT_SLOTS; i++) {
-            ItemStack stack = this.slots.get(i).getItem();
+            Slot s = this.slots.get(i);
+            ItemStack stack = s.getItem();
             if (!stack.isEmpty() && this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
-                this.slots.get(i).set(stack.isEmpty() ? ItemStack.EMPTY : stack);
+                s.set(stack.isEmpty() ? ItemStack.EMPTY : stack);
+                s.setChanged(); // <--
             }
         }
     }
+
 
     private void transferRequiredItems(ItemStack required, int slotIndex) {
         for (int i = TOTAL_SLOTS; i < this.slots.size(); i++) {
@@ -229,6 +232,8 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
     // --- Quick move / shift click ---
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
+        if (isTab(ShopTab.SETTINGS)) return ItemStack.EMPTY;
+
         if (index == OFFER_SLOT_INDEX && isTab(ShopTab.OFFERS)) {
             Slot slot = this.slots.get(index);
             if (!slot.hasItem()) {
@@ -239,8 +244,6 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
             if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
-            blockEntity.processPurchase();
-            blockEntity.updateOfferSlot();
             slot.onTake(player, stack);
             return result;
         }
@@ -317,6 +320,7 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
             super(handler, slot, x, y);
             this.tab = tab;
         }
+
         @Override
         public boolean isActive() {
             return isTab(tab);
@@ -333,10 +337,12 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         OwnerGatedSlot(IItemHandler handler, int slot, int x, int y, ShopTab tab) {
             super(handler, slot, x, y, tab);
         }
+
         @Override
         public boolean mayPlace(ItemStack stack) {
             return isOwner();
         }
+
         @Override
         public boolean mayPickup(Player player) {
             return isOwner();
@@ -347,45 +353,61 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         OfferSlot(IItemHandler handler, int slot, int x, int y) {
             super(handler, slot, x, y, ShopTab.OFFERS);
         }
+
         @Override
         public boolean mayPlace(ItemStack stack) {
-            if (blockEntity.hasOffer()) {
-                return false;
-            }
+            // Angebot existiert -> nie überschreiben
+            if (blockEntity.hasOffer()) return false;
+            // Template-Modus: nur Owner dürfen vorlegen
             return isOwner();
         }
+
         @Override
         public boolean mayPickup(Player player) {
-            if (isOwner()) {
-                return true;
+            if (!blockEntity.hasOffer()) {
+                // Template-Modus: Owner dürfen falsch gelegte Items wieder rausnehmen
+                return isOwner();
             }
-            return blockEntity.hasOffer() && blockEntity.isOfferAvailable();
+            // Angebots-Modus: Kauf erlaubt, wenn verfügbar (Owner darf auch kaufen)
+            return blockEntity.isOfferAvailable();
         }
+
         @Override
         public ItemStack remove(int amount) {
-            if (isOwner() || (blockEntity.hasOffer() && blockEntity.isOfferAvailable())) {
+            if (!blockEntity.hasOffer()) {
+                // Template-Modus: normal entfernen (Owner-Check übernimmt mayPickup)
                 return super.remove(amount);
             }
-            return ItemStack.EMPTY;
+            // Angebots-Modus: nur wenn verfügbar
+            return blockEntity.isOfferAvailable() ? super.remove(amount) : ItemStack.EMPTY;
         }
+
         @Override
         public void set(ItemStack stack) {
-            if (blockEntity.hasOffer() && isOwner() && !stack.isEmpty()) {
-                return;
-            }
+            // Bestehendes Angebot nie per Set überschreiben
+            if (blockEntity.hasOffer()) return;
+            // Template-Modus: nur Owner dürfen setzen
+            if (!isOwner()) return;
             super.set(stack);
         }
+
         @Override
         public void onTake(Player player, ItemStack stack) {
             super.onTake(player, stack);
+            // Kauf nur im Angebots-Modus auslösen
+            if (blockEntity.hasOffer() && blockEntity.isOfferAvailable()) {
+                blockEntity.processPurchase();
+            }
             blockEntity.updateOfferSlot();
         }
+
     }
 
     private class OutputGatedSlot extends BaseSlot {
         OutputGatedSlot(IItemHandler handler, int slot, int x, int y, ShopTab tab) {
             super(handler, slot, x, y, tab);
         }
+
         @Override
         public boolean mayPlace(ItemStack stack) {
             return false;
@@ -396,6 +418,7 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         PlayerSlot(Inventory inv, int index, int x, int y) {
             super(inv, index, x, y);
         }
+
         @Override
         public boolean isActive() {
             return !isTab(ShopTab.SETTINGS);

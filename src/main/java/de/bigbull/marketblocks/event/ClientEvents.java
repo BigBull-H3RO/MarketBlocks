@@ -3,10 +3,7 @@ package de.bigbull.marketblocks.event;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.renderer.SmallShopBlockEntityRenderer;
-import de.bigbull.marketblocks.util.custom.screen.SmallShopInventoryScreen;
-import de.bigbull.marketblocks.util.custom.screen.SmallShopOffersScreen;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopScreen;
-import de.bigbull.marketblocks.util.custom.screen.SmallShopSettingsScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -18,9 +15,9 @@ public class ClientEvents {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         // Deprecated registrations
-        event.register(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), SmallShopOffersScreen::new);
-        event.register(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), SmallShopInventoryScreen::new);
-        event.register(RegistriesInit.SMALL_SHOP_CONFIG_MENU.get(), SmallShopSettingsScreen::new);
+//        event.register(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), SmallShopOffersScreen::new);
+//        event.register(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), SmallShopInventoryScreen::new);
+//        event.register(RegistriesInit.SMALL_SHOP_CONFIG_MENU.get(), SmallShopSettingsScreen::new);
 
         // New unified screen
         event.register(RegistriesInit.SMALL_SHOP_MENU.get(), SmallShopScreen::new);
