@@ -14,11 +14,6 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 public class ClientEvents {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        // Deprecated registrations
-//        event.register(RegistriesInit.SMALL_SHOP_OFFERS_MENU.get(), SmallShopOffersScreen::new);
-//        event.register(RegistriesInit.SMALL_SHOP_INVENTORY_MENU.get(), SmallShopInventoryScreen::new);
-//        event.register(RegistriesInit.SMALL_SHOP_CONFIG_MENU.get(), SmallShopSettingsScreen::new);
-
         // New unified screen
         event.register(RegistriesInit.SMALL_SHOP_MENU.get(), SmallShopScreen::new);
     }

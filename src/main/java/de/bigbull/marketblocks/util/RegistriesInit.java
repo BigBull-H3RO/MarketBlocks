@@ -41,18 +41,9 @@ public class RegistriesInit {
                     SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get()).build(null));
 
     // Menu Registrierungen
-    // Deprecated registrations - replaced by SMALL_SHOP_MENU
     public static final Supplier<MenuType<SmallShopMenu>> SMALL_SHOP_MENU =
             MENU_TYPES.register("small_shop_menu", () -> IMenuTypeExtension.create(SmallShopMenu::new));
 
-//    public static final Supplier<MenuType<SmallShopOffersMenu>> SMALL_SHOP_OFFERS_MENU =
-//            MENU_TYPES.register("small_shop_offers_menu", () -> IMenuTypeExtension.create(SmallShopOffersMenu::new));
-//
-//    public static final Supplier<MenuType<SmallShopInventoryMenu>> SMALL_SHOP_INVENTORY_MENU =
-//            MENU_TYPES.register("small_shop_inventory_menu", () -> IMenuTypeExtension.create(SmallShopInventoryMenu::new));
-//
-//    public static final Supplier<MenuType<SmallShopSettingsMenu>> SMALL_SHOP_CONFIG_MENU =
-//            MENU_TYPES.register("small_shop_config_menu", () -> IMenuTypeExtension.create(SmallShopSettingsMenu::new));
 
     public static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);
