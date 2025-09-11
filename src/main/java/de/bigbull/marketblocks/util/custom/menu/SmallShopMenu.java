@@ -236,6 +236,25 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
         if (index == OFFER_SLOT_INDEX && isTab(ShopTab.OFFERS)) {
             Slot slot = this.slots.get(index);
+
+            if (!blockEntity.hasOffer()) {
+                ItemStack stack = slot.getItem();
+                if (stack.isEmpty()) {
+                    return ItemStack.EMPTY;
+                }
+                ItemStack ret = stack.copy();
+                if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
+                    return ItemStack.EMPTY;
+                }
+                if (stack.isEmpty()) {
+                    slot.setByPlayer(ItemStack.EMPTY);
+                } else {
+                    slot.setChanged();
+                }
+                blockEntity.updateOfferSlot();
+                return ret;
+            }
+
             ItemStack result = ItemStack.EMPTY;
 
             while (blockEntity.isOfferAvailable() && slot.hasItem()) {
@@ -275,8 +294,21 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
             }
         } else {
             if (isTab(ShopTab.OFFERS)) {
-                if (!this.moveItemStackTo(stack, 0, PAYMENT_SLOTS, false)) {
-                    return ItemStack.EMPTY;
+                if (!blockEntity.hasOffer()) {
+                    this.moveItemStackTo(stack, 0, PAYMENT_SLOTS, false);
+                    if (!stack.isEmpty()) {
+                        Slot offerSlot = this.slots.get(OFFER_SLOT_INDEX);
+                        if (offerSlot.getItem().isEmpty()) {
+                            this.moveItemStackTo(stack, OFFER_SLOT_INDEX, OFFER_SLOT_INDEX + 1, false);
+                        }
+                    }
+                    if (!stack.isEmpty()) {
+                        return ItemStack.EMPTY;
+                    }
+                } else {
+                    if (!this.moveItemStackTo(stack, 0, PAYMENT_SLOTS, false)) {
+                        return ItemStack.EMPTY;
+                    }
                 }
             } else if (isTab(ShopTab.INVENTORY) && isOwner()) {
                 int start = PAYMENT_SLOTS + OFFER_SLOTS;
@@ -305,8 +337,13 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
     @Override
     public void clicked(int slotId, int button, ClickType type, Player player) {
-        if (type == ClickType.PICKUP_ALL && slotId >= 0 && slotId < PAYMENT_SLOTS) {
-            return;
+        if (type == ClickType.PICKUP_ALL) {
+            if (slotId >= 0 && slotId < PAYMENT_SLOTS) {
+                return;
+            }
+            if (slotId == OFFER_SLOT_INDEX && !blockEntity.hasOffer()) {
+                return;
+            }
         }
         super.clicked(slotId, button, type, player);
     }
