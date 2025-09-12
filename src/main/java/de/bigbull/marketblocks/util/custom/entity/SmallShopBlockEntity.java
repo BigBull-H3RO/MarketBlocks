@@ -86,7 +86,11 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
 
     // --- Inventories ---
-    private final ItemStackHandler inputHandler = new ItemStackHandler(12) {
+    private class TrackedItemStackHandler extends ItemStackHandler {
+        TrackedItemStackHandler(int size) {
+            super(size);
+        }
+
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
@@ -94,24 +98,21 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             updateOfferSlot();
             sync();
         }
-    };
+    }
+
+    private final ItemStackHandler inputHandler = new TrackedItemStackHandler(12);
 
     private final ItemStackHandler outputHandler = new ItemStackHandler(12) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
-        }
-    };
-
-    private final ItemStackHandler paymentHandler = new ItemStackHandler(2) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
             needsOfferRefresh = true;
             updateOfferSlot();
             sync();
         }
     };
+
+    private final ItemStackHandler paymentHandler = new TrackedItemStackHandler(2);
 
     private final ItemStackHandler offerHandler = new ItemStackHandler(1) {
         @Override
@@ -340,6 +341,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public void setShopNameClient(String name) {
         this.shopName = name;
+        updateOfferSlot();
     }
 
     public boolean isEmitRedstone() {
@@ -353,6 +355,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public void setEmitRedstoneClient(boolean emitRedstone) {
         this.emitRedstone = emitRedstone;
+        updateOfferSlot();
     }
 
     // --- Side Configuration ---
@@ -376,6 +379,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public void setModeClient(Direction dir, SideMode mode) {
         sideModes.put(dir, mode);
+        updateOfferSlot();
     }
 
     public SideMode getModeForSide(Direction side) {
@@ -448,6 +452,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public void setHasOfferClient(boolean hasOffer) {
         this.hasOffer = hasOffer;
+        updateOfferSlot();
     }
 
     public ItemStack getOfferPayment1() {
@@ -482,7 +487,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
-        if (canAfford() && hasResultItemInInput(false)) {
+        ItemStack p1 = getOfferPayment1();
+        ItemStack p2 = getOfferPayment2();
+        if (canAfford() && hasResultItemInInput(false) && hasOutputSpace(p1, p2)) {
             if (offerHandler.getStackInSlot(0).isEmpty()) {
                 offerHandler.setStackInSlot(0, getOfferResult().copy());
             }
@@ -563,7 +570,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private boolean isReadyToPurchase() {
-        return hasOffer && canAfford() && hasResultItemInInput(false);
+        ItemStack p1 = getOfferPayment1();
+        ItemStack p2 = getOfferPayment2();
+        return hasOffer && canAfford() && hasResultItemInInput(false) && hasOutputSpace(p1, p2);
     }
 
     private void executeTrade() {
@@ -590,11 +599,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             level.updateNeighborsAt(worldPosition, block);
             level.scheduleTick(worldPosition, block, 2);
         }
-    }
-
-
-    public void performPurchase() {
-        processPurchase();
     }
 
     private void removeFromInput(ItemStack toRemove) {
@@ -649,12 +653,27 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private void addToOutput(ItemStack toAdd) {
-        ItemStack remaining = ItemHandlerHelper.insertItem(outputHandler, toAdd, false);
-
-        if (!remaining.isEmpty() && level != null && !level.isClientSide) {
-            net.minecraft.world.Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), remaining);
+    private boolean hasOutputSpace(ItemStack... stacks) {
+        ItemStackHandler testHandler = new ItemStackHandler(outputHandler.getSlots());
+        for (int i = 0; i < outputHandler.getSlots(); i++) {
+            testHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
         }
+
+        for (ItemStack stack : stacks) {
+            if (stack == null || stack.isEmpty()) continue;
+            if (!ItemHandlerHelper.insertItem(outputHandler, stack, true).isEmpty()) {
+                return false;
+            }
+            ItemStack remaining = ItemHandlerHelper.insertItem(testHandler, stack.copy(), false);
+            if (!remaining.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void addToOutput(ItemStack toAdd) {
+        ItemHandlerHelper.insertItem(outputHandler, toAdd, false);
     }
 
     public boolean isOfferAvailable() {
