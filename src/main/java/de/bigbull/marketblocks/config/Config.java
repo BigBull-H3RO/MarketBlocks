@@ -28,7 +28,7 @@ public class Config {
                 .define("enableOutputWarning", true);
         OUTPUT_WARNING_PERCENT = COMMON_BUILDER
                 .comment("Percentage of output inventory considered (almost) full")
-                .defineInRange("outputWarningPercent", 100, 1, 100);
+                .defineInRange("outputWarningPercent", 90, 1, 100);
         COMMON_BUILDER.pop();
 
         COMMON_SPEC = COMMON_BUILDER.build();

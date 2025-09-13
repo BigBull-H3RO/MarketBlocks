@@ -43,6 +43,9 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
     private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/input_output.png");
 
+    private record IconRect(int x, int y, int width, int height) { }
+    private static final IconRect STATUS_ICON_RECT = new IconRect(82, 50, 28, 21);
+
     private ShopTab lastTab;
 
     // Offers widgets
@@ -251,11 +254,9 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         if (menu.getActiveTab() == ShopTab.OFFERS) {
             SmallShopBlockEntity be = menu.getBlockEntity();
             if (be.hasOffer()) {
-                int iconX = leftPos + 82;
-                int iconY = topPos + 50;
-                if (!be.isOfferAvailable() && isHovering(iconX, iconY, 28, 21, mouseX, mouseY)) {
+                if (!be.isOfferAvailable() && isHovering(STATUS_ICON_RECT.x(), STATUS_ICON_RECT.y(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), mouseX, mouseY)) {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX, mouseY);
-                } else if (be.isOfferAvailable() && be.isOutputAlmostFull() && isHovering(iconX, iconY, 28, 21, mouseX, mouseY)) {
+                } else if (be.isOfferAvailable() && be.isOutputAlmostFull() && isHovering(STATUS_ICON_RECT.x(), STATUS_ICON_RECT.y(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), mouseX, mouseY)) {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_almost_full"), mouseX, mouseY);
                 }
             }
@@ -283,10 +284,13 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
             Pair<ItemStack, ItemStack> norm = normalizePayments(p1, p2);
             offerButton.update(norm.getFirst(), norm.getSecond(), menu.slots.get(2).getItem(), true);
         }
+        int iconX = leftPos + STATUS_ICON_RECT.x();
+        int iconY = topPos + STATUS_ICON_RECT.y();
+
         if (be.hasOffer() && !be.isOfferAvailable()) {
-            graphics.blit(OUT_OF_STOCK_ICON, leftPos + 82, topPos + 50, 0, 0, 28, 21, 28, 21);
+            graphics.blit(OUT_OF_STOCK_ICON, iconX, iconY, 0, 0, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height());
         } else if (be.hasOffer() && be.isOfferAvailable() && be.isOutputAlmostFull()) {
-            graphics.blit(OUTPUT_FULL_ICON, leftPos + 82, topPos + 50, 0, 0, 28, 21, 28, 21);
+            graphics.blit(OUTPUT_FULL_ICON, iconX, iconY, 0, 0, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height());
         }
     }
 
