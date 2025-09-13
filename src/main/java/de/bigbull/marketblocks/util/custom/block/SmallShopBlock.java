@@ -148,19 +148,6 @@ public class SmallShopBlock extends BaseEntityBlock {
         return null;
     }
 
-//    @Override
-//    protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-//        BlockEntity blockEntity = level.getBlockEntity(pos);
-//        if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
-//            // Standardmäßig Offers-Menu zurückgeben
-//            return new SimpleMenuProvider(
-//                    (id, inv, player) -> new SmallShopOffersMenu(id, inv, shopEntity),
-//                    Component.translatable("container.marketblocks.small_shop_offers")
-//            );
-//        }
-//        return null;
-//    }
-
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {

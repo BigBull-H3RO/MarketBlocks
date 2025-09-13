@@ -38,6 +38,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     private static final ResourceLocation INVENTORY_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_inventory.png");
     private static final ResourceLocation SETTINGS_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/small_shop_settings.png");
     private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
+    private static final ResourceLocation OUTPUT_FULL_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/output_full.png");
     private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
     private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/input_output.png");
@@ -264,6 +265,8 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         }
         if (be.hasOffer() && !be.isOfferAvailable()) {
             graphics.blit(OUT_OF_STOCK_ICON, leftPos + 82, topPos + 50, 0, 0, 28, 21, 28, 21);
+        } else if (be.hasOffer() && be.isOfferAvailable() && be.isOutputAlmostFull()) {
+            graphics.blit(OUTPUT_FULL_ICON, leftPos + 82, topPos + 50, 0, 0, 28, 21, 28, 21);
         }
     }
 

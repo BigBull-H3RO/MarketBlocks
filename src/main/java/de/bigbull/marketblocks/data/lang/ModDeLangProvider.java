@@ -41,6 +41,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.inventory_flow_hint", "Items wandern vom Eingabe- ins Ausgabeinventar");
         add("gui.marketblocks.owner", "Besitzer: %s");
         add("gui.marketblocks.out_of_stock", "Nicht auf Lager");
+        add("gui.marketblocks.output_almost_full", "Ausgabe fast voll");
 
         // Einstellungen
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");

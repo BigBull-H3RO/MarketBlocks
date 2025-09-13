@@ -55,6 +55,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private static final String KEY_PAYMENT1 = "OfferPayment1";
     private static final String KEY_PAYMENT2 = "OfferPayment2";
     private static final String KEY_RESULT = "OfferResult";
+    private static final String NBT_OUTPUT_WARNING = "OutputWarning";
 
     // Inventory Handler Names
     private static final String HANDLER_INPUT = "InputInventory";
@@ -81,6 +82,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     // Shop Settings
     private String shopName = "";
     private boolean emitRedstone = false;
+    private boolean outputAlmostFull = false;
 
     // Side Configuration
     private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
@@ -108,6 +110,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             setChanged();
             needsOfferRefresh = true;
             updateOfferSlot();
+            updateOutputFullness();
             sync();
         }
     };
@@ -676,6 +679,57 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         ItemHandlerHelper.insertItem(outputHandler, toAdd, false);
     }
 
+    public boolean isOutputAlmostFull() {
+        return outputAlmostFull;
+    }
+
+    private void updateOutputFullness() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        if (!Config.ENABLE_OUTPUT_WARNING.get()) {
+            if (outputAlmostFull) {
+                outputAlmostFull = false;
+                sync();
+            }
+            return;
+        }
+        int threshold = Config.OUTPUT_WARNING_PERCENT.get();
+        int total = 0;
+        int filled = 0;
+
+        for (int i = 0; i < outputHandler.getSlots(); i++) {
+            ItemStack stack = outputHandler.getStackInSlot(i);
+            int limit = outputHandler.getSlotLimit(i);
+            if (!stack.isEmpty()) {
+                limit = Math.min(limit, stack.getMaxStackSize());
+            }
+            total += limit;
+            filled += stack.getCount();
+        }
+
+        for (Direction dir : Direction.values()) {
+            if (getModeForSide(dir) != SideMode.OUTPUT) continue;
+            IItemHandler neighbour = getValidNeighborHandler(dir);
+            if (neighbour == null) continue;
+            for (int i = 0; i < neighbour.getSlots(); i++) {
+                ItemStack stack = neighbour.getStackInSlot(i);
+                int limit = neighbour.getSlotLimit(i);
+                if (!stack.isEmpty()) {
+                    limit = Math.min(limit, stack.getMaxStackSize());
+                }
+                total += limit;
+                filled += stack.getCount();
+            }
+        }
+
+        boolean newVal = total > 0 && (filled * 100 >= total * threshold);
+        if (newVal != outputAlmostFull) {
+            outputAlmostFull = newVal;
+            sync();
+        }
+    }
+
     public boolean isOfferAvailable() {
         return hasOffer && hasResultItemInInput(false);
     }
@@ -762,6 +816,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             be.pullFromInputChest();
             be.pushToOutputChest();
         }
+
+        be.updateOutputFullness();
     }
 
     private void pullFromInputChest() {
@@ -797,6 +853,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         loadOffer(tag, registries);
         loadSettings(tag);
         loadSideModes(tag);
+        outputAlmostFull = tag.getBoolean(NBT_OUTPUT_WARNING);
 
         lockAdjacentChests();
         invalidateCaps();
@@ -811,6 +868,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         saveOffer(tag, registries);
         saveSettings(tag);
         saveSideModes(tag);
+        tag.putBoolean(NBT_OUTPUT_WARNING, outputAlmostFull);
     }
 
     private void loadHandlers(CompoundTag tag, HolderLookup.Provider registries) {
