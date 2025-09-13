@@ -243,6 +243,26 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
 
     // --- Rendering ---
     @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderBackground(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
+        renderTooltip(graphics, mouseX, mouseY);
+
+        if (menu.getActiveTab() == ShopTab.OFFERS) {
+            SmallShopBlockEntity be = menu.getBlockEntity();
+            if (be.hasOffer()) {
+                int iconX = leftPos + 82;
+                int iconY = topPos + 50;
+                if (!be.isOfferAvailable() && isHovering(iconX, iconY, 28, 21, mouseX, mouseY)) {
+                    graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX, mouseY);
+                } else if (be.isOfferAvailable() && be.isOutputAlmostFull() && isHovering(iconX, iconY, 28, 21, mouseX, mouseY)) {
+                    graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_almost_full"), mouseX, mouseY);
+                }
+            }
+        }
+    }
+
+    @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         switch (menu.getActiveTab()) {
             case OFFERS -> renderOffersBg(graphics);
