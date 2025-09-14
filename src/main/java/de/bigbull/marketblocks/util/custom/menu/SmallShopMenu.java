@@ -256,7 +256,14 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
                 return ret;
             }
 
-            if (blockEntity.isOutputFull()) {
+            if (!blockEntity.hasResultItemInInput(false)) {
+                if (!player.level().isClientSide) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                }
+                return ItemStack.EMPTY;
+            }
+
+            if (blockEntity.isOutputSpaceMissing()) {
                 if (!player.level().isClientSide) {
                     player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 }
@@ -428,7 +435,14 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
                 return isOwner();
             }
 
-            if (blockEntity.isOutputFull()) {
+            if (!blockEntity.hasResultItemInInput(false)) {
+                if (!player.level().isClientSide) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                }
+                return false;
+            }
+
+            if (blockEntity.isOutputSpaceMissing()) {
                 if (!player.level().isClientSide) {
                     player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 }

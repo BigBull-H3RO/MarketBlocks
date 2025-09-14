@@ -254,10 +254,10 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         if (menu.getActiveTab() == ShopTab.OFFERS) {
             SmallShopBlockEntity be = menu.getBlockEntity();
             if (be.hasOffer() && isHovering(STATUS_ICON_RECT.x(), STATUS_ICON_RECT.y(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), mouseX, mouseY)) {
-                if (be.isOutputFull()) {
-                    graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_full"), mouseX, mouseY);
-                } else if (!be.isOfferAvailable()) {
+                if (!be.hasResultItemInInput(false)) {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX, mouseY);
+                } else if (be.isOutputSpaceMissing()) {
+                    graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_full"), mouseX, mouseY);
                 } else if (be.isOutputAlmostFull()) {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_almost_full"), mouseX, mouseY);
                 }
@@ -289,7 +289,12 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         int iconX = leftPos + STATUS_ICON_RECT.x();
         int iconY = topPos + STATUS_ICON_RECT.y();
 
-        if (be.hasOffer() && (!be.isOfferAvailable() || be.isOutputFull())) {
+        boolean outOfStock = be.hasOffer() && !be.hasResultItemInInput(false);
+        boolean outputBlocked = be.hasOffer() && be.isOutputSpaceMissing();
+
+        if (outOfStock) {
+            graphics.blit(OUT_OF_STOCK_ICON, iconX, iconY, 0, 0, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height());
+        } else if (outputBlocked) {
             graphics.blit(OUT_OF_STOCK_ICON, iconX, iconY, 0, 0, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height());
         } else if (be.hasOffer() && be.isOfferAvailable() && be.isOutputAlmostFull()) {
             graphics.blit(OUTPUT_FULL_ICON, iconX, iconY, 0, 0, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height());

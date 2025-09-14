@@ -689,6 +689,15 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return outputFull;
     }
 
+    public boolean isOutputSpaceMissing() {
+        if (!hasResultItemInInput(false)) {
+            return false;
+        }
+        ItemStack p1 = getOfferPayment1();
+        ItemStack p2 = getOfferPayment2();
+        return !hasOutputSpace(p1, p2);
+    }
+
     private void updateOutputFullness() {
         if (level == null || level.isClientSide) {
             return;
