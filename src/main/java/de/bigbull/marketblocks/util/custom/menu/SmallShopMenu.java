@@ -5,6 +5,7 @@ import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
@@ -255,6 +256,13 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
                 return ret;
             }
 
+            if (blockEntity.isOutputFull()) {
+                if (!player.level().isClientSide) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                }
+                return ItemStack.EMPTY;
+            }
+
             ItemStack result = ItemStack.EMPTY;
 
             while (blockEntity.isOfferAvailable() && slot.hasItem()) {
@@ -418,6 +426,13 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
             if (!blockEntity.hasOffer()) {
                 // Template-Modus: Owner dürfen falsch gelegte Items wieder rausnehmen
                 return isOwner();
+            }
+
+            if (blockEntity.isOutputFull()) {
+                if (!player.level().isClientSide) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                }
+                return false;
             }
             // Angebots-Modus: Kauf erlaubt, wenn verfügbar (Owner darf auch kaufen)
             return blockEntity.isOfferAvailable();

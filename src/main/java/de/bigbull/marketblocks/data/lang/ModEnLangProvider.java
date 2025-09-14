@@ -32,6 +32,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.no_players_available", "No players available");
         add("gui.marketblocks.out_of_stock", "Out of Stock");
         add("gui.marketblocks.output_almost_full", "Output Nearly Full");
+        add("gui.marketblocks.output_full", "Output Full");
         add("gui.marketblocks.owner", "Owner: %s");
 
         // Offer Creation

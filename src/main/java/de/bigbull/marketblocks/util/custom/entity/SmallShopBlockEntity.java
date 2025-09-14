@@ -56,6 +56,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private static final String KEY_PAYMENT2 = "OfferPayment2";
     private static final String KEY_RESULT = "OfferResult";
     private static final String NBT_OUTPUT_WARNING = "OutputWarning";
+    private static final String NBT_OUTPUT_FULL = "OutputFull";
 
     // Inventory Handler Names
     private static final String HANDLER_INPUT = "InputInventory";
@@ -83,6 +84,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private String shopName = "";
     private boolean emitRedstone = false;
     private boolean outputAlmostFull = false;
+    private boolean outputFull = false;
 
     // Side Configuration
     private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
@@ -492,7 +494,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
-        if (canAfford() && hasResultItemInInput(false) && hasOutputSpace(p1, p2)) {
+        if (canAfford() && hasResultItemInInput(false) && !isOutputFull() && hasOutputSpace(p1, p2)) {
             if (offerHandler.getStackInSlot(0).isEmpty()) {
                 offerHandler.setStackInSlot(0, getOfferResult().copy());
             }
@@ -575,7 +577,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private boolean isReadyToPurchase() {
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
-        return hasOffer && canAfford() && hasResultItemInInput(false) && hasOutputSpace(p1, p2);
+        return hasOffer && canAfford() && hasResultItemInInput(false) && !isOutputFull() && hasOutputSpace(p1, p2);
     }
 
     private void executeTrade() {
@@ -683,18 +685,15 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return outputAlmostFull;
     }
 
+    public boolean isOutputFull() {
+        return outputFull;
+    }
+
     private void updateOutputFullness() {
         if (level == null || level.isClientSide) {
             return;
         }
-        if (!Config.ENABLE_OUTPUT_WARNING.get()) {
-            if (outputAlmostFull) {
-                outputAlmostFull = false;
-                sync();
-            }
-            return;
-        }
-        int threshold = Config.OUTPUT_WARNING_PERCENT.get();
+
         int total = 0;
         int filled = 0;
 
@@ -723,15 +722,25 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
 
-        boolean newVal = total > 0 && (filled * 100 >= total * threshold);
-        if (newVal != outputAlmostFull) {
-            outputAlmostFull = newVal;
+        boolean newOutputFull = total > 0 && filled >= total;
+
+        boolean newOutputAlmostFull = false;
+        if (Config.ENABLE_OUTPUT_WARNING.get()) {
+            int threshold = Config.OUTPUT_WARNING_PERCENT.get();
+            newOutputAlmostFull = total > 0 && (filled * 100 >= total * threshold);
+        }
+
+        if (newOutputFull != outputFull || newOutputAlmostFull != outputAlmostFull) {
+            outputFull = newOutputFull;
+            outputAlmostFull = newOutputAlmostFull;
             sync();
         }
     }
 
     public boolean isOfferAvailable() {
-        return hasOffer && hasResultItemInInput(false);
+        ItemStack p1 = getOfferPayment1();
+        ItemStack p2 = getOfferPayment2();
+        return hasOffer && hasResultItemInInput(false) && !isOutputFull() && hasOutputSpace(p1, p2);
     }
 
     public ContainerData createMenuFlags(Player player) {
@@ -854,6 +863,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         loadSettings(tag);
         loadSideModes(tag);
         outputAlmostFull = tag.getBoolean(NBT_OUTPUT_WARNING);
+        outputFull = tag.getBoolean(NBT_OUTPUT_FULL);
 
         lockAdjacentChests();
         invalidateCaps();
@@ -869,6 +879,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         saveSettings(tag);
         saveSideModes(tag);
         tag.putBoolean(NBT_OUTPUT_WARNING, outputAlmostFull);
+        tag.putBoolean(NBT_OUTPUT_FULL, outputFull);
     }
 
     private void loadHandlers(CompoundTag tag, HolderLookup.Provider registries) {
