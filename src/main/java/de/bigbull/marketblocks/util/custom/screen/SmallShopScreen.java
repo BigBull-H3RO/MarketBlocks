@@ -279,7 +279,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         SmallShopBlockEntity be = menu.getBlockEntity();
         offerButton.active = be.hasOffer();
         if (be.hasOffer()) {
-            offerButton.update(be.getOfferPayment1(), be.getOfferPayment2(), be.getOfferResult(), be.isOfferAvailable());
+            offerButton.update(be.getOfferPayment1(), be.getOfferPayment2(), be.getOfferResult(), be.hasResultItemInInput(false));
         } else {
             ItemStack p1 = menu.slots.get(0).getItem();
             ItemStack p2 = menu.slots.get(1).getItem();
