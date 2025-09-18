@@ -9,8 +9,11 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -33,7 +36,12 @@ public class RegistriesInit {
 
     // Block Registrierung
     public static final DeferredBlock<Block> SMALL_SHOP_BLOCK = registerBlock("small_shop",
-            () -> new SmallShopBlock(BlockBehaviour.Properties.of().noOcclusion()));
+            () -> new SmallShopBlock(BlockBehaviour.Properties.of()
+                    .noOcclusion()
+                    .mapColor(MapColor.PODZOL)
+                    .instrument(NoteBlockInstrument.BASS)
+                    .strength(2.5F, 3.0F)
+                    .sound(SoundType.WOOD)));
 
     // BlockEntity Registrierung
     public static final Supplier<BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =

@@ -32,6 +32,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -146,6 +147,22 @@ public class SmallShopBlock extends BaseEntityBlock {
             );
         }
         return null;
+    }
+
+    @Override
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
+        if (!level.isClientSide) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof SmallShopBlockEntity shop && !shop.isOwner(player)) {
+                if (player instanceof ServerPlayer sp) {
+                    sp.displayClientMessage(Component.translatable("message.marketblocks.small_shop.not_owner"), true);
+                }
+                // Server teilt dem Client mit, dass der Block unverändert bleibt
+                level.sendBlockUpdated(pos, state, state, 3);
+                return false; // Abbau verhindern
+            }
+        }
+        return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
     }
 
     @Override

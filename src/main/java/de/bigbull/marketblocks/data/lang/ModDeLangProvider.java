@@ -73,6 +73,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.offer_ready", "Angebot bereit");
         add("gui.marketblocks.insufficient_stock", "Nicht genügend Bestand");
 
+        add("message.marketblocks.small_shop.not_owner", "Nur der Besitzer kann diesen Shop abbauen.");
+
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Kleiner Laden");
     }

@@ -86,6 +86,8 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.offer_ready", "Offer Ready");
         add("gui.marketblocks.insufficient_stock", "Insufficient Stock");
 
+        add("message.marketblocks.small_shop.not_owner", "Only the owner can break this shop.");
+
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Small Shop");
     }

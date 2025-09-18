@@ -43,6 +43,12 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
     private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/input_output.png");
 
+    // Stonecutter-Scroller-Sprites wiederverwenden
+    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller");
+    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller_disabled");
+    private static final int SCROLLER_WIDTH = 12;
+    private static final int SCROLLER_HEIGHT = 15;
+
     private record IconRect(int x, int y, int width, int height) { }
     private static final IconRect STATUS_ICON_RECT = new IconRect(82, 50, 28, 21);
 
@@ -59,7 +65,25 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     private boolean saved;
     private boolean noPlayers;
     private String originalName;
+
+    // ---- Owner-Liste (mit Scroller) ----
+    // Sichtbare Checkboxen (nur das Fenster)
     private final Map<UUID, Checkbox> ownerCheckboxes = new HashMap<>();
+    // vollständige Reihenfolge aller Kandidaten (online zuerst, dann offline gespeicherte)
+    private final List<UUID> ownerOrder = new ArrayList<>();
+    // persistente Auswahl über Scroll hinweg
+    private final Map<UUID, Boolean> ownerSelected = new HashMap<>();
+    // Fenster-Layout
+    private static final int OWNER_VISIBLE_ROWS = 1;  // Anzahl sichtbarer Zeilen (CheckBox-Höhe inkl. Abstand: 20 px)
+    private static final int OWNER_ROW_HEIGHT = 20;
+    // Scrollbar-Position (X relativ zum linken Screen-Rand)
+    private static final int OWNER_SCROLLBAR_X_OFFSET = 130; // ggf. bei Bedarf optisch anpassen
+    // Scroll-Zustand
+    private float ownerScrollOffs = 0.0F;   // 0..1
+    private boolean ownerScrolling = false;
+    private int ownerStartIndex = 0;        // Index der ersten sichtbaren Zeile
+    // Baseline Y der Liste im Settings-Tab (wird beim UI-Aufbau gesetzt)
+    private int ownerListBaseY = 0;
 
     public SmallShopScreen(SmallShopMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -166,26 +190,39 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         addRenderableWidget(Button.builder(Component.translatable("gui.marketblocks.save"), b -> {
             String name = nameField.getValue();
             boolean emit = emitRedstoneCheckbox.selected();
+
+            // Clientseitig UI-State anwenden
             be.setShopNameClient(name);
             be.setEmitRedstoneClient(emit);
             be.setModeClient(leftDir, menu.getMode(leftDir));
             be.setModeClient(rightDir, menu.getMode(rightDir));
             be.setModeClient(bottomDir, menu.getMode(bottomDir));
             be.setModeClient(backDir, menu.getMode(backDir));
+
+            // Owners: gesamte (persistente) Auswahl auswerten
             List<UUID> selectedOwners = new ArrayList<>();
             be.getAdditionalOwners().clear();
             Map<UUID, String> stored = menu.getAdditionalOwners();
-            ownerCheckboxes.forEach((id, cb) -> {
-                if (cb.selected()) {
+
+            for (Map.Entry<UUID, Boolean> e : ownerSelected.entrySet()) {
+                if (Boolean.TRUE.equals(e.getValue())) {
+                    UUID id = e.getKey();
                     selectedOwners.add(id);
-                    PlayerInfo info = Minecraft.getInstance().getConnection() != null ?
-                            Minecraft.getInstance().getConnection().getPlayerInfo(id) : null;
-                    String n = info != null ? info.getProfile().getName() : stored.getOrDefault(id, "");
+                    String n = resolveName(id, stored);
                     be.addOwnerClient(id, n);
                 }
-            });
-            NetworkHandler.sendToServer(new UpdateSettingsPacket(be.getBlockPos(), menu.getMode(leftDir), menu.getMode(rightDir),
-                    menu.getMode(bottomDir), menu.getMode(backDir), name, emit));
+            }
+
+            // Pakete senden
+            NetworkHandler.sendToServer(new UpdateSettingsPacket(
+                    be.getBlockPos(),
+                    menu.getMode(leftDir),
+                    menu.getMode(rightDir),
+                    menu.getMode(bottomDir),
+                    menu.getMode(backDir),
+                    name,
+                    emit
+            ));
             NetworkHandler.sendToServer(new UpdateOwnersPacket(be.getBlockPos(), selectedOwners));
             saved = true;
         }).bounds(leftPos + imageWidth - 68, topPos + imageHeight - 28, 60, 20).build());
@@ -211,37 +248,38 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         backButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.back")));
         backButton.setMessage(Component.translatable("gui.marketblocks.side.back"));
 
-        int playerY = y + 88;
+        // --- Owner-Liste mit Scroller vorbereiten ---
+        ownerListBaseY = y + 88; // Start-Y der Liste
         ownerCheckboxes.clear();
+        ownerOrder.clear();
+        ownerSelected.clear();
+
         Map<UUID, String> current = new HashMap<>(menu.getAdditionalOwners());
+
+        // Online-Spieler zuerst (ohne den eigentlichen Owner)
         if (Minecraft.getInstance().getConnection() != null) {
             Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();
             for (PlayerInfo info : players) {
                 UUID id = info.getProfile().getId();
                 if (id.equals(be.getOwnerId())) continue;
-                String pname = info.getProfile().getName();
-                Checkbox cb = addRenderableWidget(Checkbox.builder(Component.literal(pname), font)
-                        .pos(leftPos + 8, playerY)
-                        .selected(current.containsKey(id))
-                        .onValueChange((btn, val) -> saved = false)
-                        .build());
-                ownerCheckboxes.put(id, cb);
-                playerY += 20;
+                ownerOrder.add(id);
+                ownerSelected.put(id, current.containsKey(id)); // vorselektieren, wenn bereits hinterlegt
                 current.remove(id);
             }
         }
+        // Danach gespeicherte Offline-Owner
         for (Map.Entry<UUID, String> entry : current.entrySet()) {
             UUID id = entry.getKey();
-            String pname = entry.getValue();
-            Checkbox cb = addRenderableWidget(Checkbox.builder(Component.literal(pname), font)
-                    .pos(leftPos + 8, playerY)
-                    .selected(true)
-                    .onValueChange((btn, val) -> saved = false)
-                    .build());
-            ownerCheckboxes.put(id, cb);
-            playerY += 20;
+            ownerOrder.add(id);
+            ownerSelected.put(id, true);
         }
-        noPlayers = ownerCheckboxes.isEmpty();
+
+        // Scroll zurücksetzen und Fenster rendern
+        ownerScrollOffs = 0.0F;
+        ownerStartIndex = 0;
+        renderOwnerWindow(ownerListBaseY);
+
+        noPlayers = ownerOrder.isEmpty();
     }
 
     // --- Rendering ---
@@ -258,7 +296,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX, mouseY);
                 } else if (be.isOutputSpaceMissing()) {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_full"), mouseX, mouseY);
-                } else if (be.isOutputAlmostFull()) {
+                } else if (be.hasOffer() && be.isOfferAvailable() && be.isOutputAlmostFull()) {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_almost_full"), mouseX, mouseY);
                 }
             }
@@ -308,6 +346,22 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
 
     private void renderSettingsBg(GuiGraphics graphics) {
         graphics.blit(SETTINGS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+
+        // Owner-Scrollbar zeichnen (nur wenn Owner & Liste aktiv)
+        if (menu.isOwner() && isOwnerScrollActive() && !noPlayers) {
+            int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
+            int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
+            int barY = this.ownerListBaseY;
+            int barFull = Math.max(0, listHeight - SCROLLER_HEIGHT);
+            int knobOffset = (int)(ownerScrollOffs * (float)barFull);
+            ResourceLocation sprite = SCROLLER_SPRITE;
+            graphics.blitSprite(sprite, barX, barY + knobOffset, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+        } else if (menu.isOwner() && !isOwnerScrollActive() && !noPlayers) {
+            // Disabled-Variante anzeigen, wenn Liste nicht scrollt
+            int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
+            int barY = this.ownerListBaseY;
+            graphics.blitSprite(SCROLLER_DISABLED_SPRITE, barX, barY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+        }
     }
 
     @Override
@@ -358,6 +412,56 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
             int w = font.width(info);
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
         }
+    }
+
+    // --- Maus-Events für den Owner-Scroller ---
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (menu.getActiveTab() == ShopTab.SETTINGS && menu.isOwner() && isOwnerScrollActive() && !noPlayers) {
+            int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
+            int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
+            int barY = this.ownerListBaseY;
+
+            if (mouseX >= barX && mouseX < barX + SCROLLER_WIDTH && mouseY >= barY && mouseY < barY + listHeight) {
+                this.ownerScrolling = true;
+                return true; // Klick konsumieren (wie Stonecutter)
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (ownerScrolling && menu.getActiveTab() == ShopTab.SETTINGS && isOwnerScrollActive() && !noPlayers) {
+            int top = this.ownerListBaseY;
+            int bottom = top + OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
+
+            this.ownerScrollOffs = ((float)mouseY - (float)top - (SCROLLER_HEIGHT / 2.0F))
+                    / ((float)(bottom - top) - (float)SCROLLER_HEIGHT);
+            this.ownerScrollOffs = net.minecraft.util.Mth.clamp(this.ownerScrollOffs, 0.0F, 1.0F);
+
+            setOwnerScrollFromOffs();
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.ownerScrolling = false;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (menu.getActiveTab() == ShopTab.SETTINGS && isOwnerScrollActive() && !noPlayers) {
+            int offRows = getOwnerOffscreenRows();
+            float step = (float)scrollY / (float)Math.max(1, offRows);
+            this.ownerScrollOffs = net.minecraft.util.Mth.clamp(this.ownerScrollOffs - step, 0.0F, 1.0F);
+            setOwnerScrollFromOffs();
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     // --- Helpers for offers ---
@@ -434,5 +538,58 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
             menu.getBlockEntity().setShopNameClient(originalName);
         }
         super.onClose();
+    }
+
+    // ---------- Owner-Scroller: interne Helfer ----------
+
+    private boolean isOwnerScrollActive() {
+        return ownerOrder.size() > OWNER_VISIBLE_ROWS;
+    }
+
+    private int getOwnerOffscreenRows() {
+        // Anzahl "verdeckter" Zeilen oberhalb/unterhalb
+        return Math.max(0, ownerOrder.size() - OWNER_VISIBLE_ROWS);
+    }
+
+    private void setOwnerScrollFromOffs() {
+        int offRows = getOwnerOffscreenRows();
+        this.ownerStartIndex = (int)((double)(this.ownerScrollOffs * (float)offRows) + 0.5);
+        renderOwnerWindow(this.ownerListBaseY);
+    }
+
+    private void renderOwnerWindow(int baseY) {
+        // aktuelle sichtbare Checkboxen entfernen
+        ownerCheckboxes.values().forEach(this::removeWidget);
+        ownerCheckboxes.clear();
+
+        int visible = Math.min(OWNER_VISIBLE_ROWS, ownerOrder.size());
+        for (int row = 0; row < visible; row++) {
+            int idx = ownerStartIndex + row;
+            if (idx >= ownerOrder.size()) break;
+
+            UUID id = ownerOrder.get(idx);
+            String name = resolveName(id, menu.getAdditionalOwners());
+            boolean sel = ownerSelected.getOrDefault(id, false);
+
+            Checkbox cb = Checkbox.builder(Component.literal(name), font)
+                    .pos(leftPos + 8, baseY + row * OWNER_ROW_HEIGHT)
+                    .selected(sel)
+                    .onValueChange((btn, val) -> { ownerSelected.put(id, val); saved = false; })
+                    .build();
+
+            ownerCheckboxes.put(id, cb);
+            addRenderableWidget(cb);
+        }
+    }
+
+    private String resolveName(UUID id, Map<UUID, String> stored) {
+        var con = Minecraft.getInstance().getConnection();
+        if (con != null) {
+            PlayerInfo info = con.getPlayerInfo(id);
+            if (info != null) {
+                return info.getProfile().getName();
+            }
+        }
+        return stored.getOrDefault(id, "");
     }
 }
