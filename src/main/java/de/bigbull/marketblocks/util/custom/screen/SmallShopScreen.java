@@ -304,6 +304,29 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (nameField != null && nameField.isFocused()) {
+            if (nameField.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+
+            if (Minecraft.getInstance().options.keyInventory.matches(keyCode, scanCode)) {
+                return true;
+            }
+        }
+
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (nameField != null && nameField.isFocused() && nameField.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         switch (menu.getActiveTab()) {
             case OFFERS -> renderOffersBg(graphics);
