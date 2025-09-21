@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
@@ -22,13 +23,22 @@ import java.util.function.Consumer;
 
 public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/server_shop.png");
+    private static final int DEFAULT_MAX_VISIBLE_ROWS = 7;
+    private static final int ROW_HEIGHT = 24;
+    private static final int SCROLLER_WIDTH = 6;
+    private static final int SCROLLER_HANDLE_HEIGHT = 12;
     private final List<Button> dynamicWidgets = new ArrayList<>();
+    private final List<RowEntry> rowEntries = new ArrayList<>();
+    private int scrollOffset;
+    private int maxVisibleRows = DEFAULT_MAX_VISIBLE_ROWS;
+    private boolean isDragging;
     private ServerShopData cachedData = ServerShopClientState.data();
     private boolean cachedEditor = menu.isEditor();
 
     public ServerShopScreen(ServerShopMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 276;
+        this.imageHeight = 256;
         this.titleLabelY = 6;
         this.inventoryLabelY = 118;
     }
@@ -53,6 +63,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private void rebuildUi() {
         dynamicWidgets.forEach(this::removeWidget);
         dynamicWidgets.clear();
+        rowEntries.clear();
 
         buildPageSidebar();
         buildEditorControls();
@@ -105,107 +116,138 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
     private void buildCategoryControls() {
         if (cachedData.pages().isEmpty()) {
+            scrollOffset = 0;
+            maxVisibleRows = DEFAULT_MAX_VISIBLE_ROWS;
             return;
         }
         ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
         List<ServerShopCategory> categories = page.categories();
-        int y = topPos + 36;
-        int baseX = leftPos + 8;
-
-        if (categories.isEmpty()) {
-            if (menu.isEditor()) {
-                addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.add_category"),
-                                b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_category"), "",
-                                        name -> NetworkHandler.sendToServer(new ServerShopAddCategoryPacket(page.name(), name))))
-                        .bounds(baseX, y, 140, 20).build());
-            }
-            return;
-        }
+        rowEntries.clear();
 
         if (menu.isEditor()) {
-            addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.add_category"),
-                            b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_category"), "",
-                                    name -> NetworkHandler.sendToServer(new ServerShopAddCategoryPacket(page.name(), name))))
-                    .bounds(baseX, topPos + 36, 140, 20).build());
-            y += 24;
+            rowEntries.add(RowEntry.addCategory(page));
         }
 
         for (ServerShopCategory category : categories) {
-            Button header = Button.builder(Component.literal(category.name()),
-                            b -> NetworkHandler.sendToServer(new ServerShopToggleCategoryPacket(page.name(), category.name())))
-                    .bounds(baseX, y, 140, 20).build();
-            addDynamic(header);
-            if (menu.isEditor()) {
-                addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.rename_category"),
-                                b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.rename_category"), category.name(),
-                                        name -> NetworkHandler.sendToServer(new ServerShopRenameCategoryPacket(page.name(), category.name(), name))))
-                        .bounds(baseX + 148, y, 110, 20).build());
-                addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.delete_category"),
-                                b -> NetworkHandler.sendToServer(new ServerShopDeleteCategoryPacket(page.name(), category.name())))
-                        .bounds(baseX + 262, y, 110, 20).build());
-            }
-            y += 24;
+            rowEntries.add(RowEntry.category(page, category));
             if (!category.collapsed()) {
-                y = buildOfferControls(page, categories, category, y);
+                if (menu.isEditor()) {
+                    rowEntries.add(RowEntry.addOffer(page, category));
+                }
+                for (int index = 0; index < category.offers().size(); index++) {
+                    rowEntries.add(RowEntry.offer(page, category, category.offers().get(index), index));
+                }
             }
-            y += 6;
+        }
+
+        updateScrollLimits();
+        renderVisibleRows(categories);
+    }
+
+    private void renderVisibleRows(List<ServerShopCategory> categories) {
+        int listTop = topPos + 36;
+        int end = Math.min(scrollOffset + maxVisibleRows, rowEntries.size());
+        int y = listTop;
+        for (int index = 0; index < end; index++) {
+            RowEntry entry = rowEntries.get(index);
+            if (index < scrollOffset) {
+                y += ROW_HEIGHT;
+                continue;
+            }
+            switch (entry.type()) {
+                case ADD_CATEGORY -> renderAddCategory(entry, y);
+                case CATEGORY_HEADER -> renderCategoryRow(entry, y);
+                case ADD_OFFER -> renderAddOffer(entry, y);
+                case OFFER -> renderOfferRow(entry, y, categories);
+            }
+            y += ROW_HEIGHT;
+        }
+
+    }
+
+    private void renderAddCategory(RowEntry entry, int y) {
+        addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.add_category"),
+                        b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_category"), "",
+                                name -> NetworkHandler.sendToServer(new ServerShopAddCategoryPacket(entry.page().name(), name))))
+                .bounds(leftPos + 8, y, 140, 20).build());
+    }
+
+    private void renderCategoryRow(RowEntry entry, int y) {
+        ServerShopCategory category = entry.category();
+        ServerShopPage page = entry.page();
+        Button header = Button.builder(Component.literal(category.name()),
+                        b -> NetworkHandler.sendToServer(new ServerShopToggleCategoryPacket(page.name(), category.name())))
+                .bounds(leftPos + 8, y, 140, 20).build();
+        addDynamic(header);
+
+        if (menu.isEditor()) {
+            addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.rename_category"),
+                            b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.rename_category"), category.name(),
+                                    name -> NetworkHandler.sendToServer(new ServerShopRenameCategoryPacket(page.name(), category.name(), name))))
+                    .bounds(leftPos + 156, y, 110, 20).build());
+            addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.delete_category"),
+                            b -> NetworkHandler.sendToServer(new ServerShopDeleteCategoryPacket(page.name(), category.name())))
+                    .bounds(leftPos + 270, y, 110, 20).build());
         }
     }
 
-    private int buildOfferControls(ServerShopPage page, List<ServerShopCategory> categories, ServerShopCategory category, int startY) {
-        int y = startY;
-        List<ServerShopOffer> offers = category.offers();
-        if (offers.isEmpty()) {
-            if (menu.isEditor()) {
-                addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.add_offer"),
-                                b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name(), category.name())))
-                        .bounds(leftPos + 20, y, 160, 20).build());
-                y += 24;
-            }
-            return y;
-        }
+    private void renderAddOffer(RowEntry entry, int y) {
+        ServerShopPage page = entry.page();
+        ServerShopCategory category = entry.category();
+        addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.add_offer"),
+                        b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name(), category.name())))
+                .bounds(leftPos + 20, y, 160, 20).build());
+    }
+
+    private void renderOfferRow(RowEntry entry, int y, List<ServerShopCategory> categories) {
+        ServerShopPage page = entry.page();
+        ServerShopCategory category = entry.category();
+        ServerShopOffer offer = entry.offer();
+        int offerIndex = entry.offerIndex();
+        addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.delete_offer"),
+                        b -> NetworkHandler.sendToServer(new ServerShopDeleteOfferPacket(offer.id())))
+                .bounds(leftPos + 20, y, 100, 20).build());
         if (menu.isEditor()) {
-            addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.add_offer"),
-                            b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name(), category.name())))
-                    .bounds(leftPos + 20, y, 160, 20).build());
-            y += 24;
-        }
-        List<ServerShopCategory> allCategories = categories;
-        for (int index = 0; index < offers.size(); index++) {
-            ServerShopOffer offer = offers.get(index);
-            final int offerIndex = index;
-            Button delete = Button.builder(Component.translatable("gui.marketblocks.server_shop.delete_offer"),
-                            b -> NetworkHandler.sendToServer(new ServerShopDeleteOfferPacket(offer.id())))
-                    .bounds(leftPos + 20, y, 100, 20).build();
-            addDynamic(delete);
-            if (menu.isEditor()) {
-                Button update = Button.builder(Component.translatable("gui.marketblocks.server_shop.replace_offer"),
-                                b -> NetworkHandler.sendToServer(new ServerShopReplaceOfferStacksPacket(offer.id())))
-                        .bounds(leftPos + 124, y, 110, 20).build();
-                addDynamic(update);
-                if (offerIndex > 0) {
-                    addDynamic(Button.builder(Component.literal("↑"),
-                                    b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), category.name(), offerIndex - 1)))
-                            .bounds(leftPos + 238, y, 24, 20).build());
-                }
-                if (offerIndex < offers.size() - 1) {
-                    addDynamic(Button.builder(Component.literal("↓"),
-                                    b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), category.name(), offerIndex + 1)))
-                            .bounds(leftPos + 266, y, 24, 20).build());
-                }
-                if (allCategories.size() > 1) {
-                    addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.move_offer"),
-                            b -> {
-                                int current = allCategories.indexOf(category);
-                                int next = (current + 1) % allCategories.size();
-                                ServerShopCategory target = allCategories.get(next);
-                                NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), target.name(), Integer.MAX_VALUE));
-                            }).bounds(leftPos + 294, y, 110, 20).build());
-                }
+            addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.replace_offer"),
+                            b -> NetworkHandler.sendToServer(new ServerShopReplaceOfferStacksPacket(offer.id())))
+                    .bounds(leftPos + 124, y, 110, 20).build());
+            if (offerIndex > 0) {
+                addDynamic(Button.builder(Component.literal("↑"),
+                                b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), category.name(), offerIndex - 1)))
+                        .bounds(leftPos + 238, y, 24, 20).build());
             }
-            y += 22;
+            if (offerIndex < category.offers().size() - 1) {
+                addDynamic(Button.builder(Component.literal("↓"),
+                                b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), category.name(), offerIndex + 1)))
+                        .bounds(leftPos + 266, y, 24, 20).build());
+            }
+            if (categories.size() > 1) {
+                addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.move_offer"),
+                        b -> {
+                            int current = categories.indexOf(category);
+                            int next = (current + 1) % categories.size();
+                            ServerShopCategory target = categories.get(next);
+                            NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), target.name(), Integer.MAX_VALUE));
+                        }).bounds(leftPos + 294, y, 110, 20).build());
+            }
         }
-        return y;
+    }
+
+    private void updateScrollLimits() {
+        int totalRows = rowEntries.size();
+        maxVisibleRows = Math.min(DEFAULT_MAX_VISIBLE_ROWS, Math.max(totalRows, 1));
+        int maxScroll = Math.max(0, totalRows - maxVisibleRows);
+        scrollOffset = Mth.clamp(scrollOffset, 0, maxScroll);
+    }
+
+    private void updateScrollOffset(int newOffset) {
+        int totalRows = rowEntries.size();
+        int maxScroll = Math.max(0, totalRows - maxVisibleRows);
+        int clamped = Mth.clamp(newOffset, 0, maxScroll);
+        if (clamped != scrollOffset) {
+            scrollOffset = clamped;
+            rebuildUi();
+        }
     }
 
     private void addDynamic(Button button) {
@@ -229,8 +271,87 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        renderScroller(guiGraphics);
         renderTooltip(guiGraphics, mouseX, mouseY);
         renderData(guiGraphics);
+    }
+
+    private void renderScroller(GuiGraphics guiGraphics) {
+        if (!isScrollBarActive()) {
+            return;
+        }
+        int scrollerX = leftPos + imageWidth - SCROLLER_WIDTH - 4;
+        int scrollerY = topPos + 36;
+        int scrollerHeight = maxVisibleRows * ROW_HEIGHT;
+        guiGraphics.fill(scrollerX, scrollerY, scrollerX + SCROLLER_WIDTH, scrollerY + scrollerHeight, 0x33000000);
+        int maxScroll = rowEntries.size() - maxVisibleRows;
+        if (maxScroll <= 0) {
+            return;
+        }
+        float progress = (float) scrollOffset / (float) maxScroll;
+        int handleTravel = scrollerHeight - SCROLLER_HANDLE_HEIGHT;
+        int handleY = scrollerY + Mth.floor(progress * handleTravel);
+        guiGraphics.fill(scrollerX, handleY, scrollerX + SCROLLER_WIDTH, handleY + SCROLLER_HANDLE_HEIGHT, isDragging ? 0xFFAAAAAA : 0xFF888888);
+    }
+
+    private boolean isScrollBarActive() {
+        return rowEntries.size() > maxVisibleRows;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (isScrollBarActive()) {
+            int direction = (int) Math.signum(scrollY);
+            if (direction != 0) {
+                updateScrollOffset(scrollOffset - direction);
+            }
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && isScrollBarActive()) {
+            if (isWithinScroller(mouseX, mouseY)) {
+                isDragging = true;
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (isDragging && isScrollBarActive()) {
+            int scrollerY = topPos + 36;
+            int scrollerHeight = maxVisibleRows * ROW_HEIGHT;
+            int handleTravel = scrollerHeight - SCROLLER_HANDLE_HEIGHT;
+            if (handleTravel > 0) {
+                double relative = (mouseY - scrollerY - (SCROLLER_HANDLE_HEIGHT / 2.0D)) / handleTravel;
+                relative = Mth.clamp(relative, 0.0D, 1.0D);
+                int maxScroll = rowEntries.size() - maxVisibleRows;
+                int newOffset = Mth.floor(relative * maxScroll + 0.5D);
+                updateScrollOffset(newOffset);
+            }
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            isDragging = false;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    private boolean isWithinScroller(double mouseX, double mouseY) {
+        int scrollerX = leftPos + imageWidth - SCROLLER_WIDTH - 4;
+        int scrollerY = topPos + 36;
+        int scrollerHeight = maxVisibleRows * ROW_HEIGHT;
+        return mouseX >= scrollerX && mouseX < scrollerX + SCROLLER_WIDTH && mouseY >= scrollerY && mouseY < scrollerY + scrollerHeight;
     }
 
     private void renderData(GuiGraphics guiGraphics) {
@@ -265,6 +386,31 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
             }
             y += 4;
         }
+    }
+
+    private record RowEntry(RowType type, ServerShopPage page, ServerShopCategory category, ServerShopOffer offer, int offerIndex) {
+        static RowEntry addCategory(ServerShopPage page) {
+            return new RowEntry(RowType.ADD_CATEGORY, page, null, null, -1);
+        }
+
+        static RowEntry category(ServerShopPage page, ServerShopCategory category) {
+            return new RowEntry(RowType.CATEGORY_HEADER, page, category, null, -1);
+        }
+
+        static RowEntry addOffer(ServerShopPage page, ServerShopCategory category) {
+            return new RowEntry(RowType.ADD_OFFER, page, category, null, -1);
+        }
+
+        static RowEntry offer(ServerShopPage page, ServerShopCategory category, ServerShopOffer offer, int offerIndex) {
+            return new RowEntry(RowType.OFFER, page, category, offer, offerIndex);
+        }
+    }
+
+    private enum RowType {
+        ADD_CATEGORY,
+        CATEGORY_HEADER,
+        ADD_OFFER,
+        OFFER
     }
 
     private static class TextInputScreen extends Screen {
