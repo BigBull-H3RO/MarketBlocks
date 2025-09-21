@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.util.custom.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.packets.OfferStatusPacket;
+import de.bigbull.marketblocks.network.packets.smallShop.OfferStatusPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;

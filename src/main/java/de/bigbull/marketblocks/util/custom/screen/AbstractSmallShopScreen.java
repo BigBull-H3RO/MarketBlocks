@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.SwitchTabPacket;
+import de.bigbull.marketblocks.network.packets.smallShop.SwitchTabPacket;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.ShopMenu;
 import de.bigbull.marketblocks.util.custom.menu.ShopTab;

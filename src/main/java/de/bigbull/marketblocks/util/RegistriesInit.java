@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.util;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
@@ -51,6 +52,9 @@ public class RegistriesInit {
     // Menu Registrierungen
     public static final Supplier<MenuType<SmallShopMenu>> SMALL_SHOP_MENU =
             MENU_TYPES.register("small_shop_menu", () -> IMenuTypeExtension.create(SmallShopMenu::new));
+
+    public static final Supplier<MenuType<ServerShopMenu>> SERVER_SHOP_MENU =
+            MENU_TYPES.register("server_shop_menu", () -> IMenuTypeExtension.create(ServerShopMenu::new));
 
 
     public static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {

@@ -19,6 +19,13 @@ public class ModDeLangProvider extends LanguageProvider {
         add("container.marketblocks.small_shop_offers", "Laden - Angebote");
         add("container.marketblocks.small_shop_inventory", "Laden - Inventar");
 
+        // Menüs
+        add("menu.marketblocks.server_shop", "Server-Shop");
+
+        // Tastenkürzel
+        add("key.categories.marketblocks", "Market Blocks");
+        add("key.marketblocks.open_server_shop", "Server-Shop öffnen");
+
         add("gui.marketblocks.shop_title", "Laden");
         add("gui.marketblocks.inventory_title", "Laden Inventar");
         add("gui.marketblocks.trade_available", "Handel verfügbar");
@@ -72,6 +79,23 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.creating_offer", "Angebot wird erstellt...");
         add("gui.marketblocks.offer_ready", "Angebot bereit");
         add("gui.marketblocks.insufficient_stock", "Nicht genügend Bestand");
+
+        // Server-Shop
+        add("gui.marketblocks.server_shop.unnamed_page", "Seite %s");
+        add("gui.marketblocks.server_shop.add_page", "Seite hinzufügen");
+        add("gui.marketblocks.server_shop.rename_page", "Seite umbenennen");
+        add("gui.marketblocks.server_shop.delete_page", "Seite löschen");
+        add("gui.marketblocks.server_shop.add_category", "Kategorie hinzufügen");
+        add("gui.marketblocks.server_shop.rename_category", "Kategorie umbenennen");
+        add("gui.marketblocks.server_shop.delete_category", "Kategorie löschen");
+        add("gui.marketblocks.server_shop.add_offer", "Angebot hinzufügen");
+        add("gui.marketblocks.server_shop.delete_offer", "Angebot löschen");
+        add("gui.marketblocks.server_shop.replace_offer", "Angebot aktualisieren");
+        add("gui.marketblocks.server_shop.move_offer", "Angebot verschieben");
+        add("gui.marketblocks.server_shop.no_pages", "Keine Seiten vorhanden");
+        add("gui.marketblocks.server_shop.no_categories", "Keine Kategorien vorhanden");
+        add("gui.marketblocks.server_shop.collapsed", "Eingeklappt");
+        add("gui.marketblocks.server_shop.no_offers", "Keine Angebote in dieser Kategorie");
 
         add("message.marketblocks.small_shop.not_owner", "Nur der Besitzer kann diesen Shop abbauen.");
 
