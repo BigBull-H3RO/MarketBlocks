@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
+import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.serverShop.*;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
@@ -11,6 +12,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
@@ -19,14 +21,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
+    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/server_shop.png");
     private final List<Button> dynamicWidgets = new ArrayList<>();
     private ServerShopData cachedData = ServerShopClientState.data();
     private boolean cachedEditor = menu.isEditor();
 
     public ServerShopScreen(ServerShopMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
-        this.imageWidth = 230;
-        this.imageHeight = 210;
+        this.imageWidth = 276;
         this.titleLabelY = 6;
         this.inventoryLabelY = 118;
     }
@@ -217,8 +219,9 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, 0xFF1F1F1F);
-        guiGraphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + 70, 0xFF2B2B2B);
+        int i = (this.width - this.imageWidth) / 2;
+        int j = (this.height - this.imageHeight) / 2;
+        guiGraphics.blit(BACKGROUND_TEXTURE, i, j, 0, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
         guiGraphics.drawString(font, title, leftPos + 8, topPos + 8, 0xFFFFFF, false);
     }
 
