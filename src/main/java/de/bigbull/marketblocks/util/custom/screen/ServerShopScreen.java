@@ -38,9 +38,9 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     public ServerShopScreen(ServerShopMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 276;
-        this.imageHeight = 256;
-        this.titleLabelY = 6;
-        this.inventoryLabelY = 118;
+        this.imageHeight = 207;
+        this.inventoryLabelY = this.imageHeight - 94;
+        this.inventoryLabelX = 108;
     }
 
     @Override

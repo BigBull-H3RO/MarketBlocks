@@ -19,7 +19,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
     public static final int TEMPLATE_SLOTS = 3;
     private static final int PLAYER_INV_ROWS = 3;
     private static final int PLAYER_INV_COLS = 9;
-    private static final int PLAYER_INV_START_Y = 84;
+    private static final int PLAYER_INV_START_Y = 125;
 
     private final Container templateContainer;
     private final boolean canEdit;
@@ -61,8 +61,8 @@ public class ServerShopMenu extends AbstractContainerMenu {
     }
 
     private void addTemplateSlots() {
-        int startX = 44;
-        int y = 32;
+        int startX = 75;
+        int y = 60;
         for (int i = 0; i < TEMPLATE_SLOTS; i++) {
             int x = startX + i * 26;
             addSlot(new TemplateSlot(templateContainer, i, x, y));
@@ -72,14 +72,14 @@ public class ServerShopMenu extends AbstractContainerMenu {
     private void addPlayerInventory(Inventory inventory) {
         for (int row = 0; row < PLAYER_INV_ROWS; row++) {
             for (int col = 0; col < PLAYER_INV_COLS; col++) {
-                addSlot(new Slot(inventory, col + row * PLAYER_INV_COLS + 9, 8 + col * 18,
+                addSlot(new Slot(inventory, col + row * PLAYER_INV_COLS + 9, 108 + col * 18,
                         PLAYER_INV_START_Y + row * 18));
             }
         }
 
         int hotbarY = PLAYER_INV_START_Y + 58;
         for (int col = 0; col < PLAYER_INV_COLS; col++) {
-            addSlot(new Slot(inventory, col, 8 + col * 18, hotbarY));
+            addSlot(new Slot(inventory, col, 108 + col * 18, hotbarY));
         }
     }
 
