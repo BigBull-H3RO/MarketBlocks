@@ -4,6 +4,7 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.serverShop.*;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
+import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.util.custom.servershop.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -34,6 +35,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private boolean isDragging;
     private ServerShopData cachedData = ServerShopClientState.data();
     private boolean cachedEditor = menu.isEditor();
+    private OfferTemplateButton offerPreviewButton;
 
     public ServerShopScreen(ServerShopMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -58,12 +60,21 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
             cachedEditor = menu.isEditor();
             rebuildUi();
         }
+
+        if (this.offerPreviewButton != null && this.menu.isEditor()) {
+            ItemStack p1 = this.menu.getTemplateStack(0);
+            ItemStack p2 = this.menu.getTemplateStack(1);
+            ItemStack result = this.menu.getTemplateStack(2);
+            // Pfeil ist aktiv, wenn ein Ergebnis-Item vorhanden ist
+            this.offerPreviewButton.update(p1, p2, result, !result.isEmpty());
+        }
     }
 
     private void rebuildUi() {
         dynamicWidgets.forEach(this::removeWidget);
         dynamicWidgets.clear();
         rowEntries.clear();
+        this.offerPreviewButton = null;
 
         buildPageSidebar();
         buildEditorControls();
@@ -83,7 +94,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
                     menu.setSelectedPageClient(index);
                     NetworkHandler.sendToServer(new ServerShopSelectPagePacket(index));
                 }
-            }).bounds(baseX, y, 100, 20).build();
+            }).bounds(baseX, y, 20, 20).build();
             button.active = menu.selectedPage() != index;
             addDynamic(button);
             y += 22;
@@ -92,7 +103,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         if (menu.isEditor()) {
             Button addPage = Button.builder(Component.translatable("gui.marketblocks.server_shop.add_page"),
                     b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_page"), "",
-                            name -> NetworkHandler.sendToServer(new ServerShopCreatePagePacket(name)))).bounds(baseX, y + 6, 100, 20).build();
+                            name -> NetworkHandler.sendToServer(new ServerShopCreatePagePacket(name)))).bounds(baseX, y + 6, 20, 20).build();
             addDynamic(addPage);
         }
     }
@@ -109,9 +120,14 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         int baseY = topPos + 6;
         addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.rename_page"),
                 b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.rename_page"), page.name(),
-                        name -> NetworkHandler.sendToServer(new ServerShopRenamePagePacket(page.name(), name)))).bounds(baseX, baseY, 100, 20).build());
+                        name -> NetworkHandler.sendToServer(new ServerShopRenamePagePacket(page.name(), name)))).bounds(baseX, baseY, 20, 20).build());
         addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.delete_page"),
-                b -> NetworkHandler.sendToServer(new ServerShopDeletePagePacket(page.name()))).bounds(baseX + 108, baseY, 100, 20).build());
+                b -> NetworkHandler.sendToServer(new ServerShopDeletePagePacket(page.name()))).bounds(baseX + 108, baseY, 20, 20).build());
+
+        this.offerPreviewButton = new OfferTemplateButton(this.leftPos + 144, this.topPos + 43, b -> {});
+        this.offerPreviewButton.active = false;
+        this.addRenderableWidget(this.offerPreviewButton);
+        this.dynamicWidgets.add(this.offerPreviewButton);
     }
 
     private void buildCategoryControls() {
@@ -151,7 +167,6 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         for (int index = 0; index < end; index++) {
             RowEntry entry = rowEntries.get(index);
             if (index < scrollOffset) {
-                y += ROW_HEIGHT;
                 continue;
             }
             switch (entry.type()) {
@@ -264,7 +279,6 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
         guiGraphics.blit(BACKGROUND_TEXTURE, i, j, 0, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
-        guiGraphics.drawString(font, title, leftPos + 8, topPos + 8, 0xFFFFFF, false);
     }
 
     @Override
@@ -273,7 +287,6 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderScroller(guiGraphics);
         renderTooltip(guiGraphics, mouseX, mouseY);
-        renderData(guiGraphics);
     }
 
     private void renderScroller(GuiGraphics guiGraphics) {
@@ -355,6 +368,8 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private void renderData(GuiGraphics guiGraphics) {
+        // Diese Methode wird nicht mehr benötigt, da die UI jetzt alles anzeigt.
+        // Der Code wird zur Sicherheit hier belassen, falls er wieder benötigt wird.
         int x = leftPos + 10;
         int y = topPos + 74;
         if (cachedData.pages().isEmpty()) {

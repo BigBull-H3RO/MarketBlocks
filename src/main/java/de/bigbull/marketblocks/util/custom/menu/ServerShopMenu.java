@@ -61,12 +61,9 @@ public class ServerShopMenu extends AbstractContainerMenu {
     }
 
     private void addTemplateSlots() {
-        int startX = 75;
-        int y = 60;
-        for (int i = 0; i < TEMPLATE_SLOTS; i++) {
-            int x = startX + i * 26;
-            addSlot(new TemplateSlot(templateContainer, i, x, y));
-        }
+        addSlot(new TemplateSlot(templateContainer, 0, 136, 78)); // Payment 1
+        addSlot(new TemplateSlot(templateContainer, 1, 162, 78)); // Payment 2
+        addSlot(new TemplateSlot(templateContainer, 2, 220, 78)); // Result
     }
 
     private void addPlayerInventory(Inventory inventory) {
