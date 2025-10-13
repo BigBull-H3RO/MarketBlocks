@@ -4,11 +4,13 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.serverShop.*;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
+import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.util.custom.servershop.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.CommonComponents;
@@ -28,6 +30,18 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final int ROW_HEIGHT = 24;
     private static final int SCROLLER_WIDTH = 6;
     private static final int SCROLLER_HANDLE_HEIGHT = 12;
+
+    // NEU: Button Sprites und Platzhalter-Icons definiert
+    private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
+    );
+    private static final ResourceLocation ADD_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
+    private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
+    private static final ResourceLocation RENAME_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png"); // Platzhalter für "Bearbeiten"
+
     private final List<Button> dynamicWidgets = new ArrayList<>();
     private final List<RowEntry> rowEntries = new ArrayList<>();
     private int scrollOffset;
@@ -65,7 +79,6 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
             ItemStack p1 = this.menu.getTemplateStack(0);
             ItemStack p2 = this.menu.getTemplateStack(1);
             ItemStack result = this.menu.getTemplateStack(2);
-            // Pfeil ist aktiv, wenn ein Ergebnis-Item vorhanden ist
             this.offerPreviewButton.update(p1, p2, result, !result.isEmpty());
         }
     }
@@ -94,16 +107,17 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
                     menu.setSelectedPageClient(index);
                     NetworkHandler.sendToServer(new ServerShopSelectPagePacket(index));
                 }
-            }).bounds(baseX, y, 20, 20).build();
+            }).bounds(baseX, y, 100, 20).build();
             button.active = menu.selectedPage() != index;
             addDynamic(button);
             y += 22;
         }
 
         if (menu.isEditor()) {
-            Button addPage = Button.builder(Component.translatable("gui.marketblocks.server_shop.add_page"),
-                    b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_page"), "",
-                            name -> NetworkHandler.sendToServer(new ServerShopCreatePagePacket(name)))).bounds(baseX, y + 6, 20, 20).build();
+            Component tooltip = Component.translatable("gui.marketblocks.server_shop.add_page");
+            IconButton addPage = new IconButton(baseX, y + 6, 20, 20, BUTTON_SPRITES, ADD_ICON,
+                    b -> openTextInput(tooltip, "", name -> NetworkHandler.sendToServer(new ServerShopCreatePagePacket(name))),
+                    tooltip, () -> false);
             addDynamic(addPage);
         }
     }
@@ -118,11 +132,18 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
         int baseX = leftPos + 8;
         int baseY = topPos + 6;
-        addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.rename_page"),
-                b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.rename_page"), page.name(),
-                        name -> NetworkHandler.sendToServer(new ServerShopRenamePagePacket(page.name(), name)))).bounds(baseX, baseY, 20, 20).build());
-        addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.delete_page"),
-                b -> NetworkHandler.sendToServer(new ServerShopDeletePagePacket(page.name()))).bounds(baseX + 108, baseY, 20, 20).build());
+
+        Component renameTooltip = Component.translatable("gui.marketblocks.server_shop.rename_page");
+        IconButton renameButton = new IconButton(baseX, baseY, 20, 20, BUTTON_SPRITES, RENAME_ICON,
+                b -> openTextInput(renameTooltip, page.name(), name -> NetworkHandler.sendToServer(new ServerShopRenamePagePacket(page.name(), name))),
+                renameTooltip, () -> false);
+        addDynamic(renameButton);
+
+        Component deleteTooltip = Component.translatable("gui.marketblocks.server_shop.delete_page");
+        IconButton deleteButton = new IconButton(baseX + 24, baseY, 20, 20, BUTTON_SPRITES, DELETE_ICON,
+                b -> NetworkHandler.sendToServer(new ServerShopDeletePagePacket(page.name())),
+                deleteTooltip, () -> false);
+        addDynamic(deleteButton);
 
         this.offerPreviewButton = new OfferTemplateButton(this.leftPos + 144, this.topPos + 43, b -> {});
         this.offerPreviewButton.active = false;
@@ -161,30 +182,28 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private void renderVisibleRows(List<ServerShopCategory> categories) {
-        int listTop = topPos + 36;
+        int listTop = topPos + 60; // GEÄNDERT: Y-Position angepasst für Angebots-Vorschau
         int end = Math.min(scrollOffset + maxVisibleRows, rowEntries.size());
-        int y = listTop;
-        for (int index = 0; index < end; index++) {
-            RowEntry entry = rowEntries.get(index);
-            if (index < scrollOffset) {
-                continue;
-            }
-            switch (entry.type()) {
-                case ADD_CATEGORY -> renderAddCategory(entry, y);
-                case CATEGORY_HEADER -> renderCategoryRow(entry, y);
-                case ADD_OFFER -> renderAddOffer(entry, y);
-                case OFFER -> renderOfferRow(entry, y, categories);
-            }
-            y += ROW_HEIGHT;
-        }
+        int currentY = listTop;
 
+        for (int i = scrollOffset; i < end; i++) {
+            RowEntry entry = rowEntries.get(i);
+            switch (entry.type()) {
+                case ADD_CATEGORY -> renderAddCategory(entry, currentY);
+                case CATEGORY_HEADER -> renderCategoryRow(entry, currentY);
+                case ADD_OFFER -> renderAddOffer(entry, currentY);
+                case OFFER -> renderOfferRow(entry, currentY, categories);
+            }
+            currentY += ROW_HEIGHT;
+        }
     }
 
     private void renderAddCategory(RowEntry entry, int y) {
-        addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.add_category"),
-                        b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_category"), "",
-                                name -> NetworkHandler.sendToServer(new ServerShopAddCategoryPacket(entry.page().name(), name))))
-                .bounds(leftPos + 8, y, 140, 20).build());
+        Component tooltip = Component.translatable("gui.marketblocks.server_shop.add_category");
+        IconButton button = new IconButton(leftPos + 8, y, 20, 20, BUTTON_SPRITES, ADD_ICON,
+                b -> openTextInput(tooltip, "", name -> NetworkHandler.sendToServer(new ServerShopAddCategoryPacket(entry.page().name(), name))),
+                tooltip, () -> false);
+        addDynamic(button);
     }
 
     private void renderCategoryRow(RowEntry entry, int y) {
@@ -196,22 +215,29 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         addDynamic(header);
 
         if (menu.isEditor()) {
-            addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.rename_category"),
-                            b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.rename_category"), category.name(),
-                                    name -> NetworkHandler.sendToServer(new ServerShopRenameCategoryPacket(page.name(), category.name(), name))))
-                    .bounds(leftPos + 156, y, 110, 20).build());
-            addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.delete_category"),
-                            b -> NetworkHandler.sendToServer(new ServerShopDeleteCategoryPacket(page.name(), category.name())))
-                    .bounds(leftPos + 270, y, 110, 20).build());
+            int buttonX = leftPos + 152;
+            Component renameTooltip = Component.translatable("gui.marketblocks.server_shop.rename_category");
+            IconButton renameButton = new IconButton(buttonX, y, 20, 20, BUTTON_SPRITES, RENAME_ICON,
+                    b -> openTextInput(renameTooltip, category.name(), name -> NetworkHandler.sendToServer(new ServerShopRenameCategoryPacket(page.name(), category.name(), name))),
+                    renameTooltip, () -> false);
+            addDynamic(renameButton);
+
+            Component deleteTooltip = Component.translatable("gui.marketblocks.server_shop.delete_category");
+            IconButton deleteButton = new IconButton(buttonX + 24, y, 20, 20, BUTTON_SPRITES, DELETE_ICON,
+                    b -> NetworkHandler.sendToServer(new ServerShopDeleteCategoryPacket(page.name(), category.name())),
+                    deleteTooltip, () -> false);
+            addDynamic(deleteButton);
         }
     }
 
     private void renderAddOffer(RowEntry entry, int y) {
         ServerShopPage page = entry.page();
         ServerShopCategory category = entry.category();
-        addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.add_offer"),
-                        b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name(), category.name())))
-                .bounds(leftPos + 20, y, 160, 20).build());
+        Component tooltip = Component.translatable("gui.marketblocks.server_shop.add_offer");
+        IconButton button = new IconButton(leftPos + 20, y, 20, 20, BUTTON_SPRITES, ADD_ICON,
+                b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name(), category.name())),
+                tooltip, () -> false);
+        addDynamic(button);
     }
 
     private void renderOfferRow(RowEntry entry, int y, List<ServerShopCategory> categories) {
@@ -337,7 +363,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (isDragging && isScrollBarActive()) {
-            int scrollerY = topPos + 36;
+            int scrollerY = topPos + 60;
             int scrollerHeight = maxVisibleRows * ROW_HEIGHT;
             int handleTravel = scrollerHeight - SCROLLER_HANDLE_HEIGHT;
             if (handleTravel > 0) {
@@ -362,7 +388,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
     private boolean isWithinScroller(double mouseX, double mouseY) {
         int scrollerX = leftPos + imageWidth - SCROLLER_WIDTH - 4;
-        int scrollerY = topPos + 36;
+        int scrollerY = topPos + 60;
         int scrollerHeight = maxVisibleRows * ROW_HEIGHT;
         return mouseX >= scrollerX && mouseX < scrollerX + SCROLLER_WIDTH && mouseY >= scrollerY && mouseY < scrollerY + scrollerHeight;
     }
