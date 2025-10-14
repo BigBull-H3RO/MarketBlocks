@@ -7,6 +7,7 @@ import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.util.custom.servershop.*;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -153,49 +154,78 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
     private void buildCategoryControls() {
         if (cachedData.pages().isEmpty()) {
-            scrollOffset = 0;
-            maxVisibleRows = DEFAULT_MAX_VISIBLE_ROWS;
             return;
         }
         ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
-        List<ServerShopCategory> categories = page.categories();
         rowEntries.clear();
 
         if (menu.isEditor()) {
             rowEntries.add(RowEntry.addCategory(page));
-        }
-
-        for (ServerShopCategory category : categories) {
-            rowEntries.add(RowEntry.category(page, category));
-            if (!category.collapsed()) {
-                if (menu.isEditor()) {
+            for (ServerShopCategory category : page.categories()) {
+                rowEntries.add(RowEntry.category(page, category));
+                if (!category.collapsed()) {
                     rowEntries.add(RowEntry.addOffer(page, category));
+                    // Angebote im Edit-Modus werden nur als einfache Buttons zur Verwaltung angezeigt
+                    for (int i = 0; i < category.offers().size(); i++) {
+                        rowEntries.add(RowEntry.offer(page, category, category.offers().get(i), i));
+                    }
                 }
-                for (int index = 0; index < category.offers().size(); index++) {
-                    rowEntries.add(RowEntry.offer(page, category, category.offers().get(index), index));
+            }
+        } else { // Logik für Spieler
+            for (ServerShopCategory category : page.categories()) {
+                rowEntries.add(RowEntry.category(page, category));
+                if (!category.collapsed()) {
+                    for (ServerShopOffer offer : category.offers()) {
+                        rowEntries.add(RowEntry.offer(page, category, offer, -1)); // index -1 für Spieleransicht
+                    }
                 }
             }
         }
 
         updateScrollLimits();
-        renderVisibleRows(categories);
+        renderVisibleRows();
     }
 
-    private void renderVisibleRows(List<ServerShopCategory> categories) {
-        int listTop = topPos + 60; // GEÄNDERT: Y-Position angepasst für Angebots-Vorschau
+    private void renderVisibleRows() {
+        int listTop = topPos + 60;
         int end = Math.min(scrollOffset + maxVisibleRows, rowEntries.size());
         int currentY = listTop;
 
         for (int i = scrollOffset; i < end; i++) {
             RowEntry entry = rowEntries.get(i);
-            switch (entry.type()) {
-                case ADD_CATEGORY -> renderAddCategory(entry, currentY);
-                case CATEGORY_HEADER -> renderCategoryRow(entry, currentY);
-                case ADD_OFFER -> renderAddOffer(entry, currentY);
-                case OFFER -> renderOfferRow(entry, currentY, categories);
+            if(menu.isEditor()) {
+                // Admin-Ansicht
+                switch (entry.type()) {
+                    case ADD_CATEGORY -> renderAddCategory(entry, currentY);
+                    case CATEGORY_HEADER -> renderCategoryRow(entry, currentY);
+                    case ADD_OFFER -> renderAddOffer(entry, currentY);
+                    case OFFER -> renderEditOfferRow(entry, currentY);
+                }
+            } else {
+                // Spieler-Ansicht
+                switch (entry.type()) {
+                    case CATEGORY_HEADER -> renderCategoryHeader(entry, currentY);
+                    case OFFER -> renderPlayerOffer(entry, currentY);
+                }
             }
             currentY += ROW_HEIGHT;
         }
+    }
+
+    private void renderCategoryHeader(RowEntry entry, int y) {
+        Component categoryName = Component.literal(entry.category().name());
+        this.font.drawInBatch(categoryName, this.leftPos + 8, y + (ROW_HEIGHT - this.font.lineHeight) / 2f, 0xFFFFFF, true,
+                this.pose.last().pose(), this.minecraft.renderBuffers().bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+    }
+
+    private void renderPlayerOffer(RowEntry entry, int y) {
+        OfferTemplateButton offerButton = new OfferTemplateButton(this.leftPos + 8, y,
+                b -> {
+                    // Sendet Packet, um dieses Angebot im Menü auszuwählen
+                    NetworkHandler.sendToServer(new ServerShopFillRequestPacket(entry.offer().id()));
+                });
+        offerButton.update(entry.offer().payments().get(0), entry.offer().payments().get(1), entry.offer().result(), true);
+        addDynamic(offerButton);
     }
 
     private void renderAddCategory(RowEntry entry, int y) {
@@ -240,7 +270,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         addDynamic(button);
     }
 
-    private void renderOfferRow(RowEntry entry, int y, List<ServerShopCategory> categories) {
+    private void renderEditOfferRow(RowEntry entry, int y) {
         ServerShopPage page = entry.page();
         ServerShopCategory category = entry.category();
         ServerShopOffer offer = entry.offer();

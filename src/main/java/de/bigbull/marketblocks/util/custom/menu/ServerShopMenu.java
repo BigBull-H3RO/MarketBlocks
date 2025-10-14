@@ -1,7 +1,12 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
+import de.bigbull.marketblocks.network.NetworkHandler;
+import de.bigbull.marketblocks.network.packets.serverShop.ServerShopPurchasePacket;
 import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
+import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -12,6 +17,8 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.UUID;
+
 /**
  * Container-Menü für den blocklosen Server-Shop.
  */
@@ -20,10 +27,13 @@ public class ServerShopMenu extends AbstractContainerMenu {
     private static final int PLAYER_INV_ROWS = 3;
     private static final int PLAYER_INV_COLS = 9;
     private static final int PLAYER_INV_START_Y = 125;
+    private static final int RESULT_SLOT = 2;
 
-    private final Container templateContainer;
+    private final Container tradeContainer;
     private final boolean canEdit;
     private final DataSlot selectedPage;
+    private UUID selectedOfferId;
+    private ServerShopOffer selectedOffer;
 
     public ServerShopMenu(int containerId, Inventory inventory, boolean canEdit, int initialPage) {
         this(RegistriesInit.SERVER_SHOP_MENU.get(), containerId, inventory, canEdit, initialPage);
@@ -36,12 +46,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
     private ServerShopMenu(MenuType<?> menuType, int containerId, Inventory inventory, boolean canEdit, int initialPage) {
         super(menuType, containerId);
         this.canEdit = canEdit;
-        this.templateContainer = new SimpleContainer(TEMPLATE_SLOTS) {
-            @Override
-            public boolean stillValid(Player player) {
-                return true;
-            }
-        };
+        this.tradeContainer  = new SimpleContainer(TEMPLATE_SLOTS);
         this.selectedPage = new DataSlot() {
             private int value = Math.max(0, initialPage);
 
@@ -61,9 +66,11 @@ public class ServerShopMenu extends AbstractContainerMenu {
     }
 
     private void addTemplateSlots() {
-        addSlot(new TemplateSlot(templateContainer, 0, 136, 78)); // Payment 1
-        addSlot(new TemplateSlot(templateContainer, 1, 162, 78)); // Payment 2
-        addSlot(new TemplateSlot(templateContainer, 2, 220, 78)); // Result
+        // Payment Slots
+        addSlot(new Slot(tradeContainer, 0, 136, 78));
+        addSlot(new Slot(tradeContainer, 1, 162, 78));
+        // Result Slot
+        addSlot(new ServerShopResultSlot(inventory.player, tradeContainer, RESULT_SLOT, 220, 78));
     }
 
     private void addPlayerInventory(Inventory inventory) {
@@ -80,56 +87,85 @@ public class ServerShopMenu extends AbstractContainerMenu {
         }
     }
 
-    @Override
-    public boolean stillValid(Player player) {
-        return true;
+    public void setSelectedOffer(UUID offerId) {
+        this.selectedOfferId = offerId;
+        this.selectedOffer = ServerShopManager.get().findOffer(offerId);
+        if (selectedOffer != null) {
+            this.tradeContainer.setItem(0, selectedOffer.payments().get(0));
+            this.tradeContainer.setItem(1, selectedOffer.payments().get(1));
+            this.tradeContainer.setItem(RESULT_SLOT, selectedOffer.result());
+        } else {
+            this.tradeContainer.clearContent();
+        }
+        broadcastChanges();
     }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        int containerSlots = TEMPLATE_SLOTS;
-        if (index < containerSlots) {
-            Slot slot = this.slots.get(index);
-            if (!slot.hasItem()) {
-                return ItemStack.EMPTY;
-            }
-            ItemStack stack = slot.getItem();
-            ItemStack copy = stack.copy();
-            if (!moveItemStackTo(stack, containerSlots, this.slots.size(), true)) {
-                return ItemStack.EMPTY;
-            }
-            slot.onTake(player, stack);
-            return copy;
-        }
-
-        if (!canEdit) {
-            return ItemStack.EMPTY;
-        }
-
         Slot slot = this.slots.get(index);
-        if (!slot.hasItem()) {
+        if (slot == null || !slot.hasItem()) {
             return ItemStack.EMPTY;
         }
-        ItemStack stack = slot.getItem();
-        ItemStack copy = stack.copy();
-        if (!moveItemStackTo(stack, 0, TEMPLATE_SLOTS, false)) {
+
+        ItemStack newStack = slot.getItem();
+        ItemStack originalStack = newStack.copy();
+
+        // GEÄNDERT: Shift-Click-Kauflogik
+        if (index == RESULT_SLOT) {
+            if (selectedOffer == null) return ItemStack.EMPTY;
+
+            int maxPurchase = player.getInventory().getFreeSlot();
+            if (maxPurchase != -1) {
+                // Vereinfacht: Kaufe nur 1 Item bei Shift-Click.
+                // Komplexere Logik (Stack kaufen) kann hier ergänzt werden.
+                if (ServerShopManager.get().purchaseOffer((ServerPlayer) player, selectedOfferId, 1)) {
+                    // Item wird durch onTake gegeben
+                }
+            }
             return ItemStack.EMPTY;
         }
-        slot.onTake(player, stack);
-        return copy;
+
+        // Bewegung zwischen Spieler-Inventar und Hotbar
+        if (index >= TEMPLATE_SLOTS) {
+            if (!this.moveItemStackTo(newStack, 0, TEMPLATE_SLOTS, false)) {
+                // Standard-Inventar-Verhalten
+                if (index < TEMPLATE_SLOTS + 27) { // Player inventory
+                    if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS + 27, TEMPLATE_SLOTS + 36, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else { // Hotbar
+                    if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, TEMPLATE_SLOTS + 27, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                }
+            }
+        }
+
+        if (newStack.isEmpty()) {
+            slot.set(ItemStack.EMPTY);
+        } else {
+            slot.setChanged();
+        }
+
+        return originalStack;
     }
 
     @Override
     public void removed(Player player) {
         super.removed(player);
         if (!player.level().isClientSide) {
-            for (int i = 0; i < templateContainer.getContainerSize(); i++) {
-                ItemStack stack = templateContainer.removeItemNoUpdate(i);
+            for (int i = 0; i < tradeContainer.getContainerSize(); i++) {
+                ItemStack stack = tradeContainer.removeItemNoUpdate(i);
                 if (!stack.isEmpty()) {
                     player.drop(stack, false);
                 }
             }
         }
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return true;
     }
 
     public boolean isEditor() {
@@ -150,17 +186,17 @@ public class ServerShopMenu extends AbstractContainerMenu {
     }
 
     public Container templateContainer() {
-        return templateContainer;
+        return tradeContainer;
     }
 
     public void clearTemplate() {
-        for (int i = 0; i < templateContainer.getContainerSize(); i++) {
-            templateContainer.setItem(i, ItemStack.EMPTY);
+        for (int i = 0; i < tradeContainer.getContainerSize(); i++) {
+            tradeContainer.setItem(i, ItemStack.EMPTY);
         }
     }
 
     public ItemStack getTemplateStack(int slot) {
-        return templateContainer.getItem(slot);
+        return tradeContainer.getItem(slot);
     }
 
     private class TemplateSlot extends Slot {
@@ -176,6 +212,28 @@ public class ServerShopMenu extends AbstractContainerMenu {
         @Override
         public boolean mayPickup(Player player) {
             return canEdit;
+        }
+    }
+
+    private class ServerShopResultSlot extends Slot {
+        private final Player player;
+
+        public ServerShopResultSlot(Player player, Container container, int index, int x, int y) {
+            super(container, index, x, y);
+            this.player = player;
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return false;
+        }
+
+        @Override
+        public void onTake(Player pPlayer, ItemStack pStack) {
+            if (!pPlayer.level().isClientSide && selectedOfferId != null) {
+                NetworkHandler.sendToServer(new ServerShopPurchasePacket(selectedOfferId, pStack.getCount()));
+            }
+            super.onTake(pPlayer, pStack);
         }
     }
 }

@@ -11,6 +11,7 @@ import de.bigbull.marketblocks.util.custom.menu.ServerShopMenuProvider;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -100,6 +101,44 @@ public final class ServerShopManager {
     public ServerShopData snapshot() {
         synchronized (lock) {
             return data.copy();
+        }
+    }
+
+    // NEU: Kauf-Logik
+    public boolean purchaseOffer(ServerPlayer player, UUID offerId, int amount) {
+        synchronized (lock) {
+            ensureInitialized();
+            ServerShopOffer offer = findOffer(offerId);
+            if (offer == null || amount <= 0) {
+                return false;
+            }
+
+            // Prüfe, ob der Spieler genug Items für die Bezahlung hat
+            List<ItemStack> payments = offer.payments();
+            for (ItemStack payment : payments) {
+                if (payment.isEmpty()) continue;
+                ItemStack required = payment.copy();
+                required.setCount(payment.getCount() * amount);
+                if (!player.getInventory().hasItemStack(required)) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.insufficient_stock"));
+                    return false;
+                }
+            }
+
+            // Ziehe Bezahlung ab
+            for (ItemStack payment : payments) {
+                if (payment.isEmpty()) continue;
+                ItemStack toRemove = payment.copy();
+                toRemove.setCount(payment.getCount() * amount);
+                player.getInventory().removeItem(toRemove);
+            }
+
+            // Gib dem Spieler das Ergebnis
+            ItemStack result = offer.result().copy();
+            result.setCount(offer.result().getCount() * amount);
+            player.getInventory().placeItemBackInInventory(result);
+
+            return true;
         }
     }
 
@@ -234,9 +273,23 @@ public final class ServerShopManager {
         synchronized (lock) {
             ensureInitialized();
             ServerShopCategory category = getCategory(pageName, categoryName);
+
+            // GEÄNDERT: Automatisch eine Standard-Kategorie erstellen
             if (category == null) {
-                return Optional.empty();
+                if (categoryName.isEmpty()) {
+                    // Wenn keine Kategorie angegeben wurde und keine existiert, erstelle eine
+                    ServerShopPage page = getPage(pageName);
+                    if (page != null && page.categories().isEmpty()) {
+                        addCategory(pageName, "Allgemein");
+                        category = getCategory(pageName, "Allgemein");
+                    } else {
+                        return Optional.empty(); // Finde keine Seite oder es gibt schon Kategorien
+                    }
+                } else {
+                    return Optional.empty();
+                }
             }
+
             DataResult<Void> validation = offer.validate();
             if (validation.error().isPresent()) {
                 LOGGER.warn("Ungültiges Angebot: {}", validation.error().get().message());
@@ -350,7 +403,7 @@ public final class ServerShopManager {
         }
     }
 
-    private ServerShopOffer findOffer(UUID offerId) {
+    public ServerShopOffer findOffer(UUID offerId) {
         if (offerId == null) {
             return null;
         }
