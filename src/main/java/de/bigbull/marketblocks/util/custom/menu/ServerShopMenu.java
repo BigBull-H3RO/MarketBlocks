@@ -34,6 +34,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
     private final DataSlot selectedPage;
     private UUID selectedOfferId;
     private ServerShopOffer selectedOffer;
+    private final Inventory inventory;
 
     public ServerShopMenu(int containerId, Inventory inventory, boolean canEdit, int initialPage) {
         this(RegistriesInit.SERVER_SHOP_MENU.get(), containerId, inventory, canEdit, initialPage);
@@ -45,6 +46,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
 
     private ServerShopMenu(MenuType<?> menuType, int containerId, Inventory inventory, boolean canEdit, int initialPage) {
         super(menuType, containerId);
+        this.inventory = inventory;
         this.canEdit = canEdit;
         this.tradeContainer  = new SimpleContainer(TEMPLATE_SLOTS);
         this.selectedPage = new DataSlot() {
@@ -110,35 +112,26 @@ public class ServerShopMenu extends AbstractContainerMenu {
         ItemStack newStack = slot.getItem();
         ItemStack originalStack = newStack.copy();
 
-        // GEÄNDERT: Shift-Click-Kauflogik
         if (index == RESULT_SLOT) {
             if (selectedOffer == null) return ItemStack.EMPTY;
-
-            int maxPurchase = player.getInventory().getFreeSlot();
-            if (maxPurchase != -1) {
-                // Vereinfacht: Kaufe nur 1 Item bei Shift-Click.
-                // Komplexere Logik (Stack kaufen) kann hier ergänzt werden.
+            if (!player.level().isClientSide) {
                 if (ServerShopManager.get().purchaseOffer((ServerPlayer) player, selectedOfferId, 1)) {
-                    // Item wird durch onTake gegeben
+                    // Der Kauf war erfolgreich, das Item wird dem Spieler serverseitig gegeben
                 }
             }
             return ItemStack.EMPTY;
         }
 
-        // Bewegung zwischen Spieler-Inventar und Hotbar
         if (index >= TEMPLATE_SLOTS) {
-            if (!this.moveItemStackTo(newStack, 0, TEMPLATE_SLOTS, false)) {
-                // Standard-Inventar-Verhalten
-                if (index < TEMPLATE_SLOTS + 27) { // Player inventory
-                    if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS + 27, TEMPLATE_SLOTS + 36, false)) {
-                        return ItemStack.EMPTY;
-                    }
-                } else { // Hotbar
-                    if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, TEMPLATE_SLOTS + 27, false)) {
-                        return ItemStack.EMPTY;
-                    }
+            if (index < TEMPLATE_SLOTS + 27) {
+                if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS + 27, this.slots.size(), false)) {
+                    return ItemStack.EMPTY;
                 }
+            } else if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, TEMPLATE_SLOTS + 27, false)) {
+                return ItemStack.EMPTY;
             }
+        } else if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, this.slots.size(), true)) {
+            return ItemStack.EMPTY;
         }
 
         if (newStack.isEmpty()) {

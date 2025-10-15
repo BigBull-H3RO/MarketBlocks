@@ -7,7 +7,6 @@ import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.util.custom.servershop.*;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -183,45 +182,56 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         }
 
         updateScrollLimits();
-        renderVisibleRows();
     }
 
-    private void renderVisibleRows() {
-        int listTop = topPos + 60;
+    @Override
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+
+        // KORREKTUR: Dynamische Widgets und Texte hier zeichnen
+        clearWidgets(); // Entferne alte Widgets
+        dynamicWidgets.clear();
+
+        buildPageSidebar(); // Seitenleiste neu aufbauen
+        if(menu.isEditor()) {
+            buildEditorControls();
+        }
+
+        int listTop = menu.isEditor() ? topPos + 60 : topPos + 8;
         int end = Math.min(scrollOffset + maxVisibleRows, rowEntries.size());
         int currentY = listTop;
 
         for (int i = scrollOffset; i < end; i++) {
             RowEntry entry = rowEntries.get(i);
             if(menu.isEditor()) {
-                // Admin-Ansicht
                 switch (entry.type()) {
                     case ADD_CATEGORY -> renderAddCategory(entry, currentY);
                     case CATEGORY_HEADER -> renderCategoryRow(entry, currentY);
                     case ADD_OFFER -> renderAddOffer(entry, currentY);
-                    case OFFER -> renderEditOfferRow(entry, currentY);
+                    case OFFER -> renderEditOfferRow(entry, currentY, cachedData.pages().get(menu.selectedPage()).categories());
                 }
             } else {
-                // Spieler-Ansicht
                 switch (entry.type()) {
-                    case CATEGORY_HEADER -> renderCategoryHeader(entry, currentY);
+                    case CATEGORY_HEADER -> renderCategoryHeader(guiGraphics, entry, currentY);
                     case OFFER -> renderPlayerOffer(entry, currentY);
                 }
             }
             currentY += ROW_HEIGHT;
         }
+
+        renderScroller(guiGraphics);
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
-    private void renderCategoryHeader(RowEntry entry, int y) {
+    private void renderCategoryHeader(GuiGraphics guiGraphics, RowEntry entry, int y) {
         Component categoryName = Component.literal(entry.category().name());
-        this.font.drawInBatch(categoryName, this.leftPos + 8, y + (ROW_HEIGHT - this.font.lineHeight) / 2f, 0xFFFFFF, true,
-                this.pose.last().pose(), this.minecraft.renderBuffers().bufferSource(), Font.DisplayMode.NORMAL, 0, 15728880);
+        guiGraphics.drawString(this.font, categoryName, this.leftPos + 8, y + (ROW_HEIGHT - this.font.lineHeight) / 2, 0xFFFFFF);
     }
 
     private void renderPlayerOffer(RowEntry entry, int y) {
         OfferTemplateButton offerButton = new OfferTemplateButton(this.leftPos + 8, y,
                 b -> {
-                    // Sendet Packet, um dieses Angebot im Menü auszuwählen
                     NetworkHandler.sendToServer(new ServerShopFillRequestPacket(entry.offer().id()));
                 });
         offerButton.update(entry.offer().payments().get(0), entry.offer().payments().get(1), entry.offer().result(), true);
@@ -270,7 +280,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         addDynamic(button);
     }
 
-    private void renderEditOfferRow(RowEntry entry, int y) {
+    private void renderEditOfferRow(RowEntry entry, int y, List<ServerShopCategory> categories) {
         ServerShopPage page = entry.page();
         ServerShopCategory category = entry.category();
         ServerShopOffer offer = entry.offer();
@@ -335,14 +345,6 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
         guiGraphics.blit(BACKGROUND_TEXTURE, i, j, 0, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
-    }
-
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderScroller(guiGraphics);
-        renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
     private void renderScroller(GuiGraphics guiGraphics) {

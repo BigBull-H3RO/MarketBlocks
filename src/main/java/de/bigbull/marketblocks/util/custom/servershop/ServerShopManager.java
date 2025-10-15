@@ -35,7 +35,7 @@ public final class ServerShopManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final LevelResource SHOP_DIR = new LevelResource("marketblocks");
     private static final String FILE_NAME = "server_shop.json";
-    private static final int AUTO_SAVE_TICKS = 20 * 60; // 1 Minute
+    private static final int AUTO_SAVE_TICKS = 20 * 60;
 
     private static final ServerShopManager INSTANCE = new ServerShopManager();
 
@@ -119,7 +119,7 @@ public final class ServerShopManager {
                 if (payment.isEmpty()) continue;
                 ItemStack required = payment.copy();
                 required.setCount(payment.getCount() * amount);
-                if (!player.getInventory().hasItemStack(required)) {
+                if (!player.getInventory().contains(required)) {
                     player.sendSystemMessage(Component.translatable("gui.marketblocks.insufficient_stock"));
                     return false;
                 }
@@ -272,20 +272,20 @@ public final class ServerShopManager {
     public Optional<ServerShopOffer> addOffer(String pageName, String categoryName, ServerShopOffer offer) {
         synchronized (lock) {
             ensureInitialized();
+            ServerShopPage page = getPage(pageName);
+            if(page == null) return Optional.empty();
+
             ServerShopCategory category = getCategory(pageName, categoryName);
 
-            // GEÄNDERT: Automatisch eine Standard-Kategorie erstellen
             if (category == null) {
-                if (categoryName.isEmpty()) {
-                    // Wenn keine Kategorie angegeben wurde und keine existiert, erstelle eine
-                    ServerShopPage page = getPage(pageName);
-                    if (page != null && page.categories().isEmpty()) {
-                        addCategory(pageName, "Allgemein");
-                        category = getCategory(pageName, "Allgemein");
-                    } else {
-                        return Optional.empty(); // Finde keine Seite oder es gibt schon Kategorien
-                    }
+                if (categoryName.isEmpty() && page.categories().isEmpty()) {
+                    addCategory(pageName, "Allgemein");
+                    category = getCategory(pageName, "Allgemein");
+                } else if (!categoryName.isEmpty()){
+                    // Kategorie existiert nicht
+                    return Optional.empty();
                 } else {
+                    // Es gibt bereits Kategorien, also muss eine ausgewählt werden
                     return Optional.empty();
                 }
             }
