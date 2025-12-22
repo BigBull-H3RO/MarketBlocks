@@ -45,13 +45,9 @@ public class NetworkHandler {
         // Server Shop packets
         registrar.playToServer(ServerShopOpenRequestPacket.TYPE, ServerShopOpenRequestPacket.CODEC, ServerShopOpenRequestPacket::handle);
         registrar.playToServer(ServerShopSelectPagePacket.TYPE, ServerShopSelectPagePacket.CODEC, ServerShopSelectPagePacket::handle);
-        registrar.playToServer(ServerShopToggleCategoryPacket.TYPE, ServerShopToggleCategoryPacket.CODEC, ServerShopToggleCategoryPacket::handle);
         registrar.playToServer(ServerShopCreatePagePacket.TYPE, ServerShopCreatePagePacket.CODEC, ServerShopCreatePagePacket::handle);
         registrar.playToServer(ServerShopRenamePagePacket.TYPE, ServerShopRenamePagePacket.CODEC, ServerShopRenamePagePacket::handle);
         registrar.playToServer(ServerShopDeletePagePacket.TYPE, ServerShopDeletePagePacket.CODEC, ServerShopDeletePagePacket::handle);
-        registrar.playToServer(ServerShopAddCategoryPacket.TYPE, ServerShopAddCategoryPacket.CODEC, ServerShopAddCategoryPacket::handle);
-        registrar.playToServer(ServerShopRenameCategoryPacket.TYPE, ServerShopRenameCategoryPacket.CODEC, ServerShopRenameCategoryPacket::handle);
-        registrar.playToServer(ServerShopDeleteCategoryPacket.TYPE, ServerShopDeleteCategoryPacket.CODEC, ServerShopDeleteCategoryPacket::handle);
         registrar.playToServer(ServerShopAddOfferPacket.TYPE, ServerShopAddOfferPacket.CODEC, ServerShopAddOfferPacket::handle);
         registrar.playToServer(ServerShopMoveOfferPacket.TYPE, ServerShopMoveOfferPacket.CODEC, ServerShopMoveOfferPacket::handle);
         registrar.playToServer(ServerShopDeleteOfferPacket.TYPE, ServerShopDeleteOfferPacket.CODEC, ServerShopDeleteOfferPacket::handle);

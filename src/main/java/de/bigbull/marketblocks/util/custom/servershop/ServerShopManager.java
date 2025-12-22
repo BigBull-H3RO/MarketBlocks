@@ -104,7 +104,6 @@ public final class ServerShopManager {
         }
     }
 
-    // NEU: Kauf-Logik
     public boolean purchaseOffer(ServerPlayer player, UUID offerId, int amount) {
         synchronized (lock) {
             ensureInitialized();
@@ -113,7 +112,19 @@ public final class ServerShopManager {
                 return false;
             }
 
-            // Prüfe, ob der Spieler genug Items für die Bezahlung hat
+            // 1. LIMIT PRÜFUNG
+            OfferLimit limit = offer.limits();
+            if (!limit.isUnlimited()) {
+                if (limit.stockLimit().isPresent()) {
+                    int stock = limit.stockLimit().get();
+                    if (stock < amount) {
+                        player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                        return false;
+                    }
+                }
+            }
+
+            // 2. ITEM KOSTEN PRÜFUNG
             List<ItemStack> payments = offer.payments();
             for (ItemStack payment : payments) {
                 if (payment.isEmpty()) continue;
@@ -125,7 +136,7 @@ public final class ServerShopManager {
                 }
             }
 
-            // Ziehe Bezahlung ab
+            // 3. ZAHLUNG ABZIEHEN
             for (ItemStack payment : payments) {
                 if (payment.isEmpty()) continue;
                 ItemStack toRemove = payment.copy();
@@ -133,7 +144,17 @@ public final class ServerShopManager {
                 player.getInventory().removeItem(toRemove);
             }
 
-            // Gib dem Spieler das Ergebnis
+            // 4. LIMIT AKTUALISIEREN
+            if (!limit.isUnlimited() && limit.stockLimit().isPresent()) {
+                int newStock = limit.stockLimit().get() - amount;
+                OfferLimit newLimit = limit.withStockLimit(newStock);
+                offer.setLimits(newLimit);
+                markDirty();
+                // Wichtig: Syncen, damit alle Clients das neue Limit sehen
+                syncOpenViewers(player);
+            }
+
+            // 5. WARE GEBEN
             ItemStack result = offer.result().copy();
             result.setCount(offer.result().getCount() * amount);
             player.getInventory().placeItemBackInInventory(result);
@@ -145,12 +166,8 @@ public final class ServerShopManager {
     public boolean selectPage(int index) {
         synchronized (lock) {
             ensureInitialized();
-            if (data.size() <= 0) {
-                return false;
-            }
-            if (index < 0 || index >= data.size()) {
-                return false;
-            }
+            if (data.size() <= 0) return false;
+            if (index < 0 || index >= data.size()) return false;
             data.setSelectedPage(index);
             markDirty();
             return true;
@@ -161,40 +178,8 @@ public final class ServerShopManager {
         synchronized (lock) {
             ensureInitialized();
             ServerShopPage page = getPage(oldName);
-            if (page == null) {
-                return false;
-            }
+            if (page == null) return false;
             page.rename(newName);
-            markDirty();
-            return true;
-        }
-    }
-
-    public boolean deleteCategory(String pageName, String categoryName) {
-        synchronized (lock) {
-            ensureInitialized();
-            ServerShopPage page = getPage(pageName);
-            if (page == null) {
-                return false;
-            }
-            int index = page.indexOf(categoryName);
-            if (index < 0) {
-                return false;
-            }
-            page.removeCategory(index);
-            markDirty();
-            return true;
-        }
-    }
-
-    public boolean toggleCategory(String pageName, String categoryName) {
-        synchronized (lock) {
-            ensureInitialized();
-            ServerShopCategory category = getCategory(pageName, categoryName);
-            if (category == null) {
-                return false;
-            }
-            category.setCollapsed(!category.collapsed());
             markDirty();
             return true;
         }
@@ -219,9 +204,7 @@ public final class ServerShopManager {
         synchronized (lock) {
             ensureInitialized();
             int index = findPageIndex(name);
-            if (index < 0) {
-                return false;
-            }
+            if (index < 0) return false;
             data.internalPages().remove(index);
             data.setSelectedPage(Math.min(data.selectedPage(), Math.max(0, data.size() - 1)));
             markDirty();
@@ -229,110 +212,56 @@ public final class ServerShopManager {
         }
     }
 
-    public Optional<ServerShopCategory> addCategory(String pageName, String categoryName) {
+    // --- ANGEBOTS LOGIK (Vereinfacht) ---
+
+    public Optional<ServerShopOffer> addOffer(String pageName, ServerShopOffer offer) {
         synchronized (lock) {
             ensureInitialized();
             ServerShopPage page = getPage(pageName);
-            if (page == null) {
-                return Optional.empty();
-            }
-            ServerShopCategory category = new ServerShopCategory(categoryName, false, Collections.emptyList());
-            page.internalCategories().add(category);
-            markDirty();
-            return Optional.of(category.copy());
-        }
-    }
-
-    public boolean renameCategory(String pageName, String oldName, String newName) {
-        synchronized (lock) {
-            ensureInitialized();
-            ServerShopCategory category = getCategory(pageName, oldName);
-            if (category == null) {
-                return false;
-            }
-            category.rename(newName);
-            markDirty();
-            return true;
-        }
-    }
-
-    public Optional<ServerShopCategory> setCategoryCollapsed(String pageName, String categoryName, boolean collapsed) {
-        synchronized (lock) {
-            ensureInitialized();
-            ServerShopCategory category = getCategory(pageName, categoryName);
-            if (category == null) {
-                return Optional.empty();
-            }
-            category.setCollapsed(collapsed);
-            markDirty();
-            return Optional.of(category.copy());
-        }
-    }
-
-    public Optional<ServerShopOffer> addOffer(String pageName, String categoryName, ServerShopOffer offer) {
-        synchronized (lock) {
-            ensureInitialized();
-            ServerShopPage page = getPage(pageName);
-            if(page == null) return Optional.empty();
-
-            ServerShopCategory category = getCategory(pageName, categoryName);
-
-            if (category == null) {
-                if (categoryName.isEmpty() && page.categories().isEmpty()) {
-                    addCategory(pageName, "Allgemein");
-                    category = getCategory(pageName, "Allgemein");
-                } else if (!categoryName.isEmpty()){
-                    // Kategorie existiert nicht
-                    return Optional.empty();
-                } else {
-                    // Es gibt bereits Kategorien, also muss eine ausgewählt werden
-                    return Optional.empty();
-                }
-            }
+            if (page == null) return Optional.empty();
 
             DataResult<Void> validation = offer.validate();
             if (validation.error().isPresent()) {
                 LOGGER.warn("Ungültiges Angebot: {}", validation.error().get().message());
                 return Optional.empty();
             }
-            category.internalOffers().add(offer.copy());
+            page.internalOffers().add(offer.copy());
             markDirty();
             return Optional.of(offer.copy());
         }
     }
 
-    public boolean moveOffer(UUID offerId, String targetPage, String targetCategory, int targetIndex) {
+    public boolean moveOffer(UUID offerId, String targetPageName, int direction) {
         synchronized (lock) {
             ensureInitialized();
-            if (offerId == null) {
-                return false;
-            }
-            ServerShopCategory sourceCategory = null;
+            if (offerId == null) return false;
+
+            // Finde das Angebot und entferne es
+            ServerShopPage sourcePage = null;
             ServerShopOffer offer = null;
+            int oldIndex = -1;
+
             for (ServerShopPage page : data.internalPages()) {
-                for (ServerShopCategory category : page.internalCategories()) {
-                    int idx = category.findOfferIndex(offerId);
-                    if (idx >= 0) {
-                        offer = category.internalOffers().remove(idx);
-                        sourceCategory = category;
-                        break;
-                    }
-                }
-                if (offer != null) {
+                int idx = page.findOfferIndex(offerId);
+                if (idx >= 0) {
+                    sourcePage = page;
+                    oldIndex = idx;
+                    offer = page.internalOffers().get(idx);
                     break;
                 }
             }
-            if (offer == null) {
-                return false;
+
+            if (offer == null || sourcePage == null) return false;
+
+            // Wir verschieben nur innerhalb der Seite (einfachheitshalber, oder wie gewünscht)
+            // direction: -1 für hoch, +1 für runter
+            int newIndex = oldIndex + direction;
+            if (newIndex < 0 || newIndex >= sourcePage.internalOffers().size()) {
+                return false; // Geht nicht weiter hoch/runter
             }
-            ServerShopCategory destination = getCategory(targetPage, targetCategory);
-            if (destination == null) {
-                Objects.requireNonNull(sourceCategory).internalOffers().add(offer);
-                return false;
-            }
-            List<ServerShopOffer> offers = destination.internalOffers();
-            int insertIndex = Math.max(0, Math.min(targetIndex, offers.size()));
-            offers.add(insertIndex, offer);
+
+            // Swap
+            Collections.swap(sourcePage.internalOffers(), oldIndex, newIndex);
             markDirty();
             return true;
         }
@@ -341,17 +270,13 @@ public final class ServerShopManager {
     public boolean deleteOffer(UUID offerId) {
         synchronized (lock) {
             ensureInitialized();
-            if (offerId == null) {
-                return false;
-            }
+            if (offerId == null) return false;
             for (ServerShopPage page : data.internalPages()) {
-                for (ServerShopCategory category : page.internalCategories()) {
-                    int idx = category.findOfferIndex(offerId);
-                    if (idx >= 0) {
-                        category.internalOffers().remove(idx);
-                        markDirty();
-                        return true;
-                    }
+                int idx = page.findOfferIndex(offerId);
+                if (idx >= 0) {
+                    page.internalOffers().remove(idx);
+                    markDirty();
+                    return true;
                 }
             }
             return false;
@@ -362,9 +287,7 @@ public final class ServerShopManager {
         synchronized (lock) {
             ensureInitialized();
             ServerShopOffer offer = findOffer(offerId);
-            if (offer == null) {
-                return false;
-            }
+            if (offer == null) return false;
             offer.setLimits(limit);
             markDirty();
             return true;
@@ -375,9 +298,7 @@ public final class ServerShopManager {
         synchronized (lock) {
             ensureInitialized();
             ServerShopOffer offer = findOffer(offerId);
-            if (offer == null) {
-                return false;
-            }
+            if (offer == null) return false;
             offer.setPricing(pricing);
             markDirty();
             return true;
@@ -388,9 +309,7 @@ public final class ServerShopManager {
         synchronized (lock) {
             ensureInitialized();
             ServerShopOffer offer = findOffer(offerId);
-            if (offer == null) {
-                return false;
-            }
+            if (offer == null) return false;
             offer.setResult(result);
             if (payments != null) {
                 int max = Math.min(offer.payments().size(), payments.size());
@@ -404,28 +323,11 @@ public final class ServerShopManager {
     }
 
     public ServerShopOffer findOffer(UUID offerId) {
-        if (offerId == null) {
-            return null;
-        }
+        if (offerId == null) return null;
         for (ServerShopPage page : data.internalPages()) {
-            for (ServerShopCategory category : page.internalCategories()) {
-                int idx = category.findOfferIndex(offerId);
-                if (idx >= 0) {
-                    return category.internalOffers().get(idx);
-                }
-            }
-        }
-        return null;
-    }
-
-    private ServerShopCategory getCategory(String pageName, String categoryName) {
-        ServerShopPage page = getPage(pageName);
-        if (page == null) {
-            return null;
-        }
-        for (ServerShopCategory category : page.internalCategories()) {
-            if (category.name().equalsIgnoreCase(categoryName)) {
-                return category;
+            int idx = page.findOfferIndex(offerId);
+            if (idx >= 0) {
+                return page.internalOffers().get(idx);
             }
         }
         return null;
@@ -441,9 +343,7 @@ public final class ServerShopManager {
     }
 
     public void openShop(ServerPlayer player) {
-        if (player == null) {
-            return;
-        }
+        if (player == null) return;
         ServerShopData snapshot;
         boolean editable;
         synchronized (lock) {
@@ -460,16 +360,12 @@ public final class ServerShopManager {
     }
 
     public void syncOpenViewers(ServerPlayer source) {
-        if (source == null) {
-            return;
-        }
+        if (source == null) return;
         ServerShopData snapshot = snapshot();
         sendSnapshot(source, snapshot, canEdit(source));
         if (source.server != null) {
             for (ServerPlayer player : source.server.getPlayerList().getPlayers()) {
-                if (player == source) {
-                    continue;
-                }
+                if (player == source) continue;
                 if (player.containerMenu instanceof ServerShopMenu) {
                     sendSnapshot(player, snapshot, canEdit(player));
                 }
@@ -478,13 +374,10 @@ public final class ServerShopManager {
     }
 
     private void sendSnapshot(ServerPlayer player, ServerShopData snapshot, boolean canEditFlag) {
-        if (player == null || snapshot == null || registryAccess == null) {
-            return;
-        }
+        if (player == null || snapshot == null || registryAccess == null) return;
         DataResult<CompoundTag> encoded = ServerShopSerialization.encodeData(snapshot, registryAccess);
         if (encoded.error().isPresent()) {
-            LOGGER.error("Fehler beim Serialisieren der Server-Shop-Daten für {}: {}", player.getGameProfile().getName(),
-                    encoded.error().get().message());
+            LOGGER.error("Fehler beim Serialisieren: {}", encoded.error().get().message());
             return;
         }
         CompoundTag tag = encoded.result().orElseGet(CompoundTag::new);
@@ -502,9 +395,7 @@ public final class ServerShopManager {
     }
 
     private void loadFromDisk() {
-        if (configFile == null || registryAccess == null) {
-            return;
-        }
+        if (configFile == null || registryAccess == null) return;
         if (!Files.exists(configFile)) {
             data = ServerShopData.empty();
             return;
@@ -514,9 +405,7 @@ public final class ServerShopManager {
             RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registryAccess);
             DataResult<ServerShopData> result = ServerShopData.CODEC.parse(ops, element);
             data = result.result().orElseGet(() -> {
-                LOGGER.error("Fehler beim Laden der Server-Shop-Konfiguration: {}",
-                        result.error().map(com.mojang.serialization.DataResult.Error::message).orElse("unbekannt"));
-
+                LOGGER.error("Fehler beim Laden der Server-Shop-Konfiguration");
                 return ServerShopData.empty();
             });
             dirty = false;
@@ -527,9 +416,7 @@ public final class ServerShopManager {
     }
 
     private void saveNow() {
-        if (configFile == null || registryAccess == null) {
-            return;
-        }
+        if (configFile == null || registryAccess == null) return;
         try (BufferedWriter writer = Files.newBufferedWriter(configFile, StandardCharsets.UTF_8)) {
             RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registryAccess);
             DataResult<JsonElement> result = ServerShopData.CODEC.encodeStart(ops, data);

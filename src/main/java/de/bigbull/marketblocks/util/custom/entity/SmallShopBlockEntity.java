@@ -602,7 +602,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (state.getBlock() instanceof SmallShopBlock block) {
             level.setBlock(worldPosition, state.setValue(SmallShopBlock.POWERED, true), 3);
             level.updateNeighborsAt(worldPosition, block);
-            level.scheduleTick(worldPosition, block, 2);
+            level.scheduleTick(worldPosition, block, 20);
         }
     }
 

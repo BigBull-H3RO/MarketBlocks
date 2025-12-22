@@ -18,15 +18,13 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.List;
 
-public record ServerShopAddOfferPacket(String pageName, String categoryName) implements CustomPacketPayload {
+public record ServerShopAddOfferPacket(String pageName) implements CustomPacketPayload {
     public static final Type<ServerShopAddOfferPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "server_shop_add_offer"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ServerShopAddOfferPacket> CODEC = StreamCodec.composite(
             ByteBufCodecs.STRING_UTF8,
             ServerShopAddOfferPacket::pageName,
-            ByteBufCodecs.STRING_UTF8,
-            ServerShopAddOfferPacket::categoryName,
             ServerShopAddOfferPacket::new
     );
 
@@ -37,22 +35,16 @@ public record ServerShopAddOfferPacket(String pageName, String categoryName) imp
 
     public static void handle(ServerShopAddOfferPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (!(context.player() instanceof ServerPlayer player)) {
-                return;
-            }
-            if (!(player.containerMenu instanceof ServerShopMenu menu) || !menu.isEditor()) {
-                return;
-            }
+            if (!(context.player() instanceof ServerPlayer player)) return;
+            if (!(player.containerMenu instanceof ServerShopMenu menu) || !menu.isEditor()) return;
             Container template = menu.templateContainer();
             ItemStack payment1 = template.getItem(0).copy();
             ItemStack payment2 = template.getItem(1).copy();
             ItemStack result = template.getItem(2).copy();
-            if (result.isEmpty()) {
-                return;
-            }
+            if (result.isEmpty()) return;
             ServerShopOffer offer = new ServerShopOffer(null, result, List.of(payment1, payment2),
                     OfferLimit.unlimited(), DemandPricing.disabled());
-            if (ServerShopManager.get().addOffer(packet.pageName(), packet.categoryName(), offer).isPresent()) {
+            if (ServerShopManager.get().addOffer(packet.pageName(), offer).isPresent()) {
                 returnTemplateItems(player, template);
                 ServerShopManager.get().syncOpenViewers(player);
             }

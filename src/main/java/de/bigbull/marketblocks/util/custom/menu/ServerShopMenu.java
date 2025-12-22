@@ -51,16 +51,8 @@ public class ServerShopMenu extends AbstractContainerMenu {
         this.tradeContainer  = new SimpleContainer(TEMPLATE_SLOTS);
         this.selectedPage = new DataSlot() {
             private int value = Math.max(0, initialPage);
-
-            @Override
-            public int get() {
-                return value;
-            }
-
-            @Override
-            public void set(int newValue) {
-                this.value = Math.max(0, newValue);
-            }
+            @Override public int get() { return value; }
+            @Override public void set(int newValue) { this.value = Math.max(0, newValue); }
         };
         addDataSlot(this.selectedPage);
         addTemplateSlots();
@@ -68,10 +60,9 @@ public class ServerShopMenu extends AbstractContainerMenu {
     }
 
     private void addTemplateSlots() {
-        // Payment Slots
         addSlot(new Slot(tradeContainer, 0, 136, 78));
         addSlot(new Slot(tradeContainer, 1, 162, 78));
-        // Result Slot
+        // FIX BUG 1: Result Slot Logik angepasst
         addSlot(new ServerShopResultSlot(inventory.player, tradeContainer, RESULT_SLOT, 220, 78));
     }
 
@@ -82,7 +73,6 @@ public class ServerShopMenu extends AbstractContainerMenu {
                         PLAYER_INV_START_Y + row * 18));
             }
         }
-
         int hotbarY = PLAYER_INV_START_Y + 58;
         for (int col = 0; col < PLAYER_INV_COLS; col++) {
             addSlot(new Slot(inventory, col, 108 + col * 18, hotbarY));
@@ -113,16 +103,22 @@ public class ServerShopMenu extends AbstractContainerMenu {
         ItemStack originalStack = newStack.copy();
 
         if (index == RESULT_SLOT) {
-            if (selectedOffer == null) return ItemStack.EMPTY;
-            if (!player.level().isClientSide) {
-                if (ServerShopManager.get().purchaseOffer((ServerPlayer) player, selectedOfferId, 1)) {
-                    // Der Kauf war erfolgreich, das Item wird dem Spieler serverseitig gegeben
+            if (canEdit) {
+                // Im Editor-Modus einfach nur Item nehmen (zum Bearbeiten)
+                if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, this.slots.size(), true)) {
+                    return ItemStack.EMPTY;
                 }
+            } else {
+                // Im Kauf-Modus: KAUFEN
+                if (selectedOffer == null) return ItemStack.EMPTY;
+                if (!player.level().isClientSide) {
+                    if (ServerShopManager.get().purchaseOffer((ServerPlayer) player, selectedOfferId, 1)) {
+                        // Erfolg
+                    }
+                }
+                return ItemStack.EMPTY;
             }
-            return ItemStack.EMPTY;
-        }
-
-        if (index >= TEMPLATE_SLOTS) {
+        } else if (index >= TEMPLATE_SLOTS) {
             if (index < TEMPLATE_SLOTS + 27) {
                 if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS + 27, this.slots.size(), false)) {
                     return ItemStack.EMPTY;
@@ -146,13 +142,11 @@ public class ServerShopMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        if (!player.level().isClientSide) {
-            for (int i = 0; i < tradeContainer.getContainerSize(); i++) {
-                ItemStack stack = tradeContainer.removeItemNoUpdate(i);
-                if (!stack.isEmpty()) {
-                    player.drop(stack, false);
-                }
-            }
+        // Im Editor-Modus Items zurückgeben, sonst löschen
+        if (canEdit && !player.level().isClientSide) {
+            clearContainer(player, tradeContainer);
+        } else {
+            tradeContainer.clearContent();
         }
     }
 
@@ -183,47 +177,28 @@ public class ServerShopMenu extends AbstractContainerMenu {
     }
 
     public void clearTemplate() {
-        for (int i = 0; i < tradeContainer.getContainerSize(); i++) {
-            tradeContainer.setItem(i, ItemStack.EMPTY);
-        }
+        tradeContainer.clearContent();
     }
 
     public ItemStack getTemplateStack(int slot) {
         return tradeContainer.getItem(slot);
     }
 
-    private class TemplateSlot extends Slot {
-        TemplateSlot(Container container, int index, int x, int y) {
-            super(container, index, x, y);
-        }
-
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            return canEdit && !stack.isEmpty();
-        }
-
-        @Override
-        public boolean mayPickup(Player player) {
-            return canEdit;
-        }
-    }
-
     private class ServerShopResultSlot extends Slot {
-        private final Player player;
-
         public ServerShopResultSlot(Player player, Container container, int index, int x, int y) {
             super(container, index, x, y);
-            this.player = player;
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return false;
+            // FIX BUG 1: Im Editor-Modus darf man Items hier reinlegen!
+            return canEdit;
         }
 
         @Override
         public void onTake(Player pPlayer, ItemStack pStack) {
-            if (!pPlayer.level().isClientSide && selectedOfferId != null) {
+            // Kauf nur auslösen, wenn NICHT im Editor
+            if (!canEdit && !pPlayer.level().isClientSide && selectedOfferId != null) {
                 NetworkHandler.sendToServer(new ServerShopPurchasePacket(selectedOfferId, pStack.getCount()));
             }
             super.onTake(pPlayer, pStack);

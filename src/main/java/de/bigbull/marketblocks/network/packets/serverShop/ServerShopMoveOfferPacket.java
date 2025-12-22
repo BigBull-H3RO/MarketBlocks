@@ -13,8 +13,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.UUID;
 
-public record ServerShopMoveOfferPacket(UUID offerId, String targetPage, String targetCategory, int targetIndex)
-        implements CustomPacketPayload {
+// direction: -1 für hoch, +1 für runter
+public record ServerShopMoveOfferPacket(UUID offerId, String targetPage, int direction) implements CustomPacketPayload {
     public static final Type<ServerShopMoveOfferPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "server_shop_move_offer"));
 
@@ -23,10 +23,8 @@ public record ServerShopMoveOfferPacket(UUID offerId, String targetPage, String 
             ServerShopMoveOfferPacket::offerId,
             ByteBufCodecs.STRING_UTF8,
             ServerShopMoveOfferPacket::targetPage,
-            ByteBufCodecs.STRING_UTF8,
-            ServerShopMoveOfferPacket::targetCategory,
             ByteBufCodecs.VAR_INT,
-            ServerShopMoveOfferPacket::targetIndex,
+            ServerShopMoveOfferPacket::direction,
             ServerShopMoveOfferPacket::new
     );
 
@@ -38,7 +36,7 @@ public record ServerShopMoveOfferPacket(UUID offerId, String targetPage, String 
     public static void handle(ServerShopMoveOfferPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && ServerShopManager.get().canEdit(player) &&
-                    ServerShopManager.get().moveOffer(packet.offerId(), packet.targetPage(), packet.targetCategory(), packet.targetIndex())) {
+                    ServerShopManager.get().moveOffer(packet.offerId(), packet.targetPage(), packet.direction())) {
                 ServerShopManager.get().syncOpenViewers(player);
             }
         });

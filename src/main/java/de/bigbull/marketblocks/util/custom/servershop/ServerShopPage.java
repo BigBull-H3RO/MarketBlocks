@@ -8,23 +8,24 @@ import java.util.stream.Collectors;
 
 /**
  * Beschreibt eine Seite im Server-Shop.
+ * Jetzt direkt mit einer Liste von Angeboten (ohne Kategorien).
  */
 public final class ServerShopPage {
     public static final Codec<ServerShopPage> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.fieldOf("name").forGetter(ServerShopPage::name),
             Codec.STRING.optionalFieldOf("icon").forGetter(ServerShopPage::icon),
-            ServerShopCategory.CODEC.listOf().fieldOf("categories").orElse(Collections.emptyList()).forGetter(ServerShopPage::categories)
+            ServerShopOffer.CODEC.listOf().fieldOf("offers").orElse(Collections.emptyList()).forGetter(ServerShopPage::offers)
     ).apply(instance, ServerShopPage::new));
 
     private String name;
     private Optional<String> icon;
-    private final List<ServerShopCategory> categories;
+    private final List<ServerShopOffer> offers;
 
-    public ServerShopPage(String name, Optional<String> icon, List<ServerShopCategory> categories) {
+    public ServerShopPage(String name, Optional<String> icon, List<ServerShopOffer> offers) {
         this.name = name == null ? "" : name;
         this.icon = icon == null ? Optional.empty() : icon;
-        List<ServerShopCategory> categoryList = categories == null ? Collections.emptyList() : categories;
-        this.categories = new ArrayList<>(categoryList.stream().map(ServerShopCategory::copy).collect(Collectors.toList()));
+        List<ServerShopOffer> offerList = offers == null ? Collections.emptyList() : offers;
+        this.offers = new ArrayList<>(offerList.stream().map(ServerShopOffer::copy).collect(Collectors.toList()));
     }
 
     public String name() {
@@ -43,26 +44,22 @@ public final class ServerShopPage {
         this.icon = Optional.ofNullable(icon);
     }
 
-    public List<ServerShopCategory> categories() {
-        return categories.stream().map(ServerShopCategory::copy).collect(Collectors.toUnmodifiableList());
+    public List<ServerShopOffer> offers() {
+        return offers.stream().map(ServerShopOffer::copy).collect(Collectors.toUnmodifiableList());
     }
 
-    List<ServerShopCategory> internalCategories() {
-        return categories;
+    // Zugriff für den Manager (Package-Private)
+    List<ServerShopOffer> internalOffers() {
+        return offers;
     }
 
-    public void addCategory(ServerShopCategory category) {
-        categories.add(Objects.requireNonNull(category, "category").copy());
+    public void addOffer(ServerShopOffer offer) {
+        offers.add(Objects.requireNonNull(offer, "offer").copy());
     }
 
-    public ServerShopCategory removeCategory(int index) {
-        ServerShopCategory removed = categories.remove(index);
-        return removed == null ? null : removed.copy();
-    }
-
-    public int indexOf(String categoryName) {
-        for (int i = 0; i < categories.size(); i++) {
-            if (categories.get(i).name().equalsIgnoreCase(categoryName)) {
+    public int findOfferIndex(UUID offerId) {
+        for (int i = 0; i < offers.size(); i++) {
+            if (offers.get(i).id().equals(offerId)) {
                 return i;
             }
         }
@@ -70,11 +67,11 @@ public final class ServerShopPage {
     }
 
     public int size() {
-        return categories.size();
+        return offers.size();
     }
 
     public ServerShopPage copy() {
-        return new ServerShopPage(name, icon, categories);
+        return new ServerShopPage(name, icon, offers);
     }
 
     @Override
@@ -87,11 +84,11 @@ public final class ServerShopPage {
         }
         return Objects.equals(name, other.name)
                 && Objects.equals(icon, other.icon)
-                && Objects.equals(categories, other.categories);
+                && Objects.equals(offers, other.offers);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, icon, categories);
+        return Objects.hash(name, icon, offers);
     }
 }

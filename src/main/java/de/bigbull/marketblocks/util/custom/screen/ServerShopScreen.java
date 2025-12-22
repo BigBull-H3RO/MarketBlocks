@@ -6,7 +6,11 @@ import de.bigbull.marketblocks.network.packets.serverShop.*;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
-import de.bigbull.marketblocks.util.custom.servershop.*;
+import de.bigbull.marketblocks.util.custom.servershop.ServerShopClientState;
+import de.bigbull.marketblocks.util.custom.servershop.ServerShopData;
+import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
+import de.bigbull.marketblocks.util.custom.servershop.ServerShopPage;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -22,34 +26,64 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/server_shop.png");
-    private static final int DEFAULT_MAX_VISIBLE_ROWS = 7;
-    private static final int ROW_HEIGHT = 24;
-    private static final int SCROLLER_WIDTH = 6;
-    private static final int SCROLLER_HANDLE_HEIGHT = 12;
 
-    // NEU: Button Sprites und Platzhalter-Icons definiert
+    // --- Layout Konstanten ---
+    private static final int LIST_X_OFFSET = 5;
+    private static final int LIST_Y_OFFSET = 18;
+    private static final int LIST_WIDTH = 88;
+    private static final int LIST_HEIGHT = 140;
+    private static final int ROW_HEIGHT = 22; // Etwas höher für den Button-Look
+    private static final int MAX_VISIBLE_ROWS = 6;
+
+    private static final int SCROLLER_X_OFFSET = 96;
+    private static final int SCROLLER_WIDTH = 6;
+    private static final int SCROLLER_HEIGHT = 27;
+
+    private static final int PREVIEW_X_OFFSET = 136;
+    private static final int PREVIEW_Y_OFFSET = 45;
+
+    // Steuerungsbereich rechts
+    private static final int CONTROLS_X_OFFSET = 120;
+    private static final int CONTROLS_Y_START = 100;
+
+    // --- Texturen ---
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
     );
+
     private static final ResourceLocation ADD_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
-    private static final ResourceLocation RENAME_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png"); // Platzhalter für "Bearbeiten"
+    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
+    private static final ResourceLocation UPDATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/input_output.png");
+    private static final ResourceLocation ARROW_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
 
+    // Icon für den Modus-Wechsel (Editor <-> View)
+    private static final ResourceLocation EDIT_MODE_ICON = ResourceLocation.withDefaultNamespace("textures/gui/sprites/icon/accessibility.png"); // Vanilla Icon als Platzhalter oder eigenes
+
+    // --- State ---
     private final List<Button> dynamicWidgets = new ArrayList<>();
-    private final List<RowEntry> rowEntries = new ArrayList<>();
+    private final List<ServerShopOffer> visibleOffers = new ArrayList<>();
+
     private int scrollOffset;
-    private int maxVisibleRows = DEFAULT_MAX_VISIBLE_ROWS;
+    private int maxVisibleRows = MAX_VISIBLE_ROWS;
     private boolean isDragging;
+
     private ServerShopData cachedData = ServerShopClientState.data();
-    private boolean cachedEditor = menu.isEditor();
+    private boolean cachedEditorPermission = menu.isEditor();
+
+    // Der "lokale" Editor Modus. Nur wenn true (und Permission da ist), werden Editor-Buttons angezeigt.
+    private boolean isLocalEditMode = false;
+
     private OfferTemplateButton offerPreviewButton;
+    private UUID selectedOfferId = null;
 
     public ServerShopScreen(ServerShopMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -57,6 +91,9 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         this.imageHeight = 207;
         this.inventoryLabelY = this.imageHeight - 94;
         this.inventoryLabelX = 108;
+
+        // Standardmäßig Editor-Modus an, wenn man Rechte hat
+        this.isLocalEditMode = menu.isEditor();
     }
 
     @Override
@@ -68,14 +105,20 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     @Override
     public void containerTick() {
         super.containerTick();
+
         ServerShopData current = ServerShopClientState.data();
-        if (current != cachedData || cachedEditor != menu.isEditor()) {
+        boolean perm = menu.isEditor();
+
+        if (current != cachedData || cachedEditorPermission != perm) {
             cachedData = current;
-            cachedEditor = menu.isEditor();
+            cachedEditorPermission = perm;
+            // Wenn Rechte verloren gehen, Editor-Modus aus
+            if (!perm) isLocalEditMode = false;
             rebuildUi();
         }
 
-        if (this.offerPreviewButton != null && this.menu.isEditor()) {
+        // Live-Update der Vorschau (Was liegt in den Slots?)
+        if (this.offerPreviewButton != null) {
             ItemStack p1 = this.menu.getTemplateStack(0);
             ItemStack p2 = this.menu.getTemplateStack(1);
             ItemStack result = this.menu.getTemplateStack(2);
@@ -86,26 +129,72 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private void rebuildUi() {
         dynamicWidgets.forEach(this::removeWidget);
         dynamicWidgets.clear();
-        rowEntries.clear();
-        this.offerPreviewButton = null;
+        visibleOffers.clear();
 
+        // Daten laden
+        if (!cachedData.pages().isEmpty()) {
+            ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
+            visibleOffers.addAll(page.offers());
+        }
+
+        // Sidebar (Seitenwahl)
         buildPageSidebar();
-        buildEditorControls();
-        buildCategoryControls();
+
+        // Vorschau Button (Über den Slots)
+        // Dient als Anzeige. Klickbar für Auto-Fill (als Komfort-Funktion)
+        this.offerPreviewButton = new OfferTemplateButton(this.leftPos + PREVIEW_X_OFFSET, this.topPos + PREVIEW_Y_OFFSET, b -> {
+            if (selectedOfferId != null && !isLocalEditMode) {
+                // Im Kaufmodus: Klick auf Vorschau könnte Kauf auslösen oder Items nachfüllen?
+                // Aktuell: Auto-Fill aus Inventar in Slots
+                // NetworkHandler.sendToServer(new AutoFillPacket...); // Optional
+            }
+        });
+        // Vorschau ist immer aktiv, damit man Tooltips sieht
+        addDynamic(this.offerPreviewButton);
+
+        // Editor Controls (Nur wenn Modus aktiv)
+        if (isLocalEditMode && menu.isEditor()) {
+            buildEditorControls();
+        }
+
+        // Toggle Button für Editor Modus (Oben Rechts im GUI, wenn man Rechte hat)
+        if (menu.isEditor()) {
+            int toggleX = leftPos + imageWidth - 24;
+            int toggleY = topPos + 6;
+
+            Component tooltip = isLocalEditMode ?
+                    Component.translatable("gui.marketblocks.mode.view") :
+                    Component.translatable("gui.marketblocks.mode.edit");
+
+            IconButton toggleBtn = new IconButton(toggleX, toggleY, 16, 16, BUTTON_SPRITES, SETTINGS_ICON, b -> {
+                isLocalEditMode = !isLocalEditMode;
+                // Auswahl zurücksetzen beim Wechsel, um Verwirrung zu vermeiden
+                selectedOfferId = null;
+                // Slots leeren beim Wechsel (optional, aber sauberer)
+                // NetworkHandler.sendToServer(new ClearTemplatePacket()); // Müsste man implementieren, hier erstmal egal
+                rebuildUi();
+            }, tooltip, () -> isLocalEditMode);
+            addDynamic(toggleBtn);
+        }
+
+        updateScrollLimits();
     }
 
     private void buildPageSidebar() {
         List<ServerShopPage> pages = cachedData.pages();
-        int baseX = leftPos - 110;
-        int y = topPos + 20;
+        int baseX = leftPos - 105;
+        int y = topPos + 10;
+
         for (int i = 0; i < pages.size(); i++) {
             int index = i;
             ServerShopPage page = pages.get(i);
-            Component label = Component.literal(page.name().isEmpty() ? Component.translatable("gui.marketblocks.server_shop.unnamed_page", i + 1).getString() : page.name());
-            Button button = Button.builder(label, b -> {
+            String name = page.name().isEmpty() ? "Page " + (i + 1) : page.name();
+
+            Button button = Button.builder(Component.literal(name), b -> {
                 if (menu.selectedPage() != index) {
                     menu.setSelectedPageClient(index);
                     NetworkHandler.sendToServer(new ServerShopSelectPagePacket(index));
+                    this.selectedOfferId = null;
                 }
             }).bounds(baseX, y, 100, 20).build();
             button.active = menu.selectedPage() != index;
@@ -113,7 +202,8 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
             y += 22;
         }
 
-        if (menu.isEditor()) {
+        // Seite hinzufügen nur im Edit Mode
+        if (isLocalEditMode) {
             Component tooltip = Component.translatable("gui.marketblocks.server_shop.add_page");
             IconButton addPage = new IconButton(baseX, y + 6, 20, 20, BUTTON_SPRITES, ADD_ICON,
                     b -> openTextInput(tooltip, "", name -> NetworkHandler.sendToServer(new ServerShopCreatePagePacket(name))),
@@ -123,65 +213,67 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private void buildEditorControls() {
-        if (!menu.isEditor()) {
-            return;
-        }
-        if (cachedData.pages().isEmpty()) {
-            return;
-        }
+        if (cachedData.pages().isEmpty()) return;
         ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
-        int baseX = leftPos + 8;
-        int baseY = topPos + 6;
 
-        Component renameTooltip = Component.translatable("gui.marketblocks.server_shop.rename_page");
-        IconButton renameButton = new IconButton(baseX, baseY, 20, 20, BUTTON_SPRITES, RENAME_ICON,
-                b -> openTextInput(renameTooltip, page.name(), name -> NetworkHandler.sendToServer(new ServerShopRenamePagePacket(page.name(), name))),
-                renameTooltip, () -> false);
-        addDynamic(renameButton);
+        // Page Rename/Delete (Oben Links)
+        int headerX = leftPos + 8;
+        int headerY = topPos + 5;
 
-        Component deleteTooltip = Component.translatable("gui.marketblocks.server_shop.delete_page");
-        IconButton deleteButton = new IconButton(baseX + 24, baseY, 20, 20, BUTTON_SPRITES, DELETE_ICON,
+        IconButton renamePage = new IconButton(headerX, headerY, 16, 16, BUTTON_SPRITES, SETTINGS_ICON,
+                b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.rename_page"), page.name(),
+                        name -> NetworkHandler.sendToServer(new ServerShopRenamePagePacket(page.name(), name))),
+                Component.translatable("gui.marketblocks.server_shop.rename_page"), () -> false);
+        addDynamic(renamePage);
+
+        IconButton deletePage = new IconButton(headerX + 18, headerY, 16, 16, BUTTON_SPRITES, DELETE_ICON,
                 b -> NetworkHandler.sendToServer(new ServerShopDeletePagePacket(page.name())),
-                deleteTooltip, () -> false);
-        addDynamic(deleteButton);
+                Component.translatable("gui.marketblocks.server_shop.delete_page"), () -> false);
+        addDynamic(deletePage);
 
-        this.offerPreviewButton = new OfferTemplateButton(this.leftPos + 144, this.topPos + 43, b -> {});
-        this.offerPreviewButton.active = false;
-        this.addRenderableWidget(this.offerPreviewButton);
-        this.dynamicWidgets.add(this.offerPreviewButton);
-    }
 
-    private void buildCategoryControls() {
-        if (cachedData.pages().isEmpty()) {
-            return;
+        // Offer Management (Rechts bei den Slots)
+        int controlsX = leftPos + 136;
+        int controlsY = topPos + 100; // Unter den Slots
+
+        // 1. ADD OFFER (Immer da im Edit Mode)
+        // Speichert den INHALT DER SLOTS als neues Angebot
+        Component addTooltip = Component.translatable("gui.marketblocks.server_shop.add_offer");
+        IconButton addOfferBtn = new IconButton(controlsX, controlsY, 20, 20, BUTTON_SPRITES, ADD_ICON,
+                b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name())),
+                addTooltip, () -> false);
+        addDynamic(addOfferBtn);
+
+        // 2. EXISTIERENDES ANGEBOT BEARBEITEN (Nur wenn eins ausgewählt ist)
+        if (selectedOfferId != null) {
+            int startX = controlsX + 24;
+
+            // Update: Überschreibt das ausgewählte Angebot mit den Items aus den Slots
+            IconButton updateBtn = new IconButton(startX, controlsY, 20, 20, BUTTON_SPRITES, UPDATE_ICON,
+                    b -> NetworkHandler.sendToServer(new ServerShopReplaceOfferStacksPacket(selectedOfferId)),
+                    Component.translatable("gui.marketblocks.server_shop.replace_offer"), () -> false);
+            addDynamic(updateBtn);
+
+            // Delete: Löscht das ausgewählte Angebot
+            IconButton deleteBtn = new IconButton(startX + 22, controlsY, 20, 20, BUTTON_SPRITES, DELETE_ICON,
+                    b -> {
+                        NetworkHandler.sendToServer(new ServerShopDeleteOfferPacket(selectedOfferId));
+                        selectedOfferId = null; // Auswahl aufheben
+                    },
+                    Component.translatable("gui.marketblocks.server_shop.delete_offer"), () -> false);
+            addDynamic(deleteBtn);
+
+            // Move Up/Down
+            Button upBtn = Button.builder(Component.literal("↑"),
+                            b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(selectedOfferId, page.name(), -1)))
+                    .bounds(startX + 44, controlsY, 15, 20).build();
+            addDynamic(upBtn);
+
+            Button downBtn = Button.builder(Component.literal("↓"),
+                            b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(selectedOfferId, page.name(), 1)))
+                    .bounds(startX + 60, controlsY, 15, 20).build();
+            addDynamic(downBtn);
         }
-        ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
-        rowEntries.clear();
-
-        if (menu.isEditor()) {
-            rowEntries.add(RowEntry.addCategory(page));
-            for (ServerShopCategory category : page.categories()) {
-                rowEntries.add(RowEntry.category(page, category));
-                if (!category.collapsed()) {
-                    rowEntries.add(RowEntry.addOffer(page, category));
-                    // Angebote im Edit-Modus werden nur als einfache Buttons zur Verwaltung angezeigt
-                    for (int i = 0; i < category.offers().size(); i++) {
-                        rowEntries.add(RowEntry.offer(page, category, category.offers().get(i), i));
-                    }
-                }
-            }
-        } else { // Logik für Spieler
-            for (ServerShopCategory category : page.categories()) {
-                rowEntries.add(RowEntry.category(page, category));
-                if (!category.collapsed()) {
-                    for (ServerShopOffer offer : category.offers()) {
-                        rowEntries.add(RowEntry.offer(page, category, offer, -1)); // index -1 für Spieleransicht
-                    }
-                }
-            }
-        }
-
-        updateScrollLimits();
     }
 
     @Override
@@ -189,146 +281,129 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        // KORREKTUR: Dynamische Widgets und Texte hier zeichnen
-        clearWidgets(); // Entferne alte Widgets
-        dynamicWidgets.clear();
-
-        buildPageSidebar(); // Seitenleiste neu aufbauen
-        if(menu.isEditor()) {
-            buildEditorControls();
+        if (visibleOffers.isEmpty()) {
+            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.server_shop.no_offers"), leftPos + 15, topPos + 40, 0xAAAAAA, false);
         }
 
-        int listTop = menu.isEditor() ? topPos + 60 : topPos + 8;
-        int end = Math.min(scrollOffset + maxVisibleRows, rowEntries.size());
-        int currentY = listTop;
+        // --- LISTE RENDERN ---
+        int listStartX = leftPos + LIST_X_OFFSET;
+        int listStartY = topPos + LIST_Y_OFFSET;
+
+        guiGraphics.enableScissor(listStartX, listStartY, listStartX + LIST_WIDTH + 2, listStartY + (MAX_VISIBLE_ROWS * ROW_HEIGHT));
+
+        int end = Math.min(scrollOffset + maxVisibleRows, visibleOffers.size());
+        int currentY = listStartY;
 
         for (int i = scrollOffset; i < end; i++) {
-            RowEntry entry = rowEntries.get(i);
-            if(menu.isEditor()) {
-                switch (entry.type()) {
-                    case ADD_CATEGORY -> renderAddCategory(entry, currentY);
-                    case CATEGORY_HEADER -> renderCategoryRow(entry, currentY);
-                    case ADD_OFFER -> renderAddOffer(entry, currentY);
-                    case OFFER -> renderEditOfferRow(entry, currentY, cachedData.pages().get(menu.selectedPage()).categories());
-                }
-            } else {
-                switch (entry.type()) {
-                    case CATEGORY_HEADER -> renderCategoryHeader(guiGraphics, entry, currentY);
-                    case OFFER -> renderPlayerOffer(entry, currentY);
-                }
-            }
+            ServerShopOffer offer = visibleOffers.get(i);
+            boolean isSelected = offer.id().equals(selectedOfferId);
+
+            // Wir zeichnen hier quasi einen "Fake" OfferTemplateButton
+            renderListButton(guiGraphics, offer, listStartX, currentY, isSelected, mouseX, mouseY);
+
             currentY += ROW_HEIGHT;
         }
+
+        guiGraphics.disableScissor();
 
         renderScroller(guiGraphics);
         this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
-    private void renderCategoryHeader(GuiGraphics guiGraphics, RowEntry entry, int y) {
-        Component categoryName = Component.literal(entry.category().name());
-        guiGraphics.drawString(this.font, categoryName, this.leftPos + 8, y + (ROW_HEIGHT - this.font.lineHeight) / 2, 0xFFFFFF);
-    }
+    private void renderListButton(GuiGraphics graphics, ServerShopOffer offer, int x, int y, boolean isSelected, int mouseX, int mouseY) {
+        // 1. Hintergrund (Button Style)
+        boolean hovered = mouseX >= x && mouseX < x + LIST_WIDTH && mouseY >= y && mouseY < y + ROW_HEIGHT;
+        ResourceLocation sprite = BUTTON_SPRITES.get(true, isSelected || hovered);
 
-    private void renderPlayerOffer(RowEntry entry, int y) {
-        OfferTemplateButton offerButton = new OfferTemplateButton(this.leftPos + 8, y,
-                b -> {
-                    NetworkHandler.sendToServer(new ServerShopFillRequestPacket(entry.offer().id()));
-                });
-        offerButton.update(entry.offer().payments().get(0), entry.offer().payments().get(1), entry.offer().result(), true);
-        addDynamic(offerButton);
-    }
+        // Zeichne Button-Hintergrund über die ganze Breite der Liste
+        // Wir nutzen blitSprite für skalierbare Button-Texturen (9-Slice wenn möglich, sonst strecken)
+        graphics.blitSprite(sprite, x, y, LIST_WIDTH, ROW_HEIGHT - 2); // -2 für kleinen Abstand
 
-    private void renderAddCategory(RowEntry entry, int y) {
-        Component tooltip = Component.translatable("gui.marketblocks.server_shop.add_category");
-        IconButton button = new IconButton(leftPos + 8, y, 20, 20, BUTTON_SPRITES, ADD_ICON,
-                b -> openTextInput(tooltip, "", name -> NetworkHandler.sendToServer(new ServerShopAddCategoryPacket(entry.page().name(), name))),
-                tooltip, () -> false);
-        addDynamic(button);
-    }
+        // 2. Items und Pfeil
+        int itemY = y + (ROW_HEIGHT - 18) / 2; // Zentriert vertikal
+        int startX = x + 4;
 
-    private void renderCategoryRow(RowEntry entry, int y) {
-        ServerShopCategory category = entry.category();
-        ServerShopPage page = entry.page();
-        Button header = Button.builder(Component.literal(category.name()),
-                        b -> NetworkHandler.sendToServer(new ServerShopToggleCategoryPacket(page.name(), category.name())))
-                .bounds(leftPos + 8, y, 140, 20).build();
-        addDynamic(header);
+        // Payment 1
+        if (!offer.payments().isEmpty()) {
+            graphics.renderItem(offer.payments().get(0), startX, itemY);
+            // Keine Decorations (Menge) rendern? Doch, ist wichtig.
+            graphics.renderItemDecorations(font, offer.payments().get(0), startX, itemY);
+        }
 
-        if (menu.isEditor()) {
-            int buttonX = leftPos + 152;
-            Component renameTooltip = Component.translatable("gui.marketblocks.server_shop.rename_category");
-            IconButton renameButton = new IconButton(buttonX, y, 20, 20, BUTTON_SPRITES, RENAME_ICON,
-                    b -> openTextInput(renameTooltip, category.name(), name -> NetworkHandler.sendToServer(new ServerShopRenameCategoryPacket(page.name(), category.name(), name))),
-                    renameTooltip, () -> false);
-            addDynamic(renameButton);
+        // Payment 2 (kleiner versetzt oder daneben?)
+        // Platz ist eng (88px).
+        // 16px (Item) + 16px (Item) + 10px (Arrow) + 16px (Result) = 58px. Passt.
+        if (offer.payments().size() > 1 && !offer.payments().get(1).isEmpty()) {
+            graphics.renderItem(offer.payments().get(1), startX + 18, itemY);
+            graphics.renderItemDecorations(font, offer.payments().get(1), startX + 18, itemY);
+        }
 
-            Component deleteTooltip = Component.translatable("gui.marketblocks.server_shop.delete_category");
-            IconButton deleteButton = new IconButton(buttonX + 24, y, 20, 20, BUTTON_SPRITES, DELETE_ICON,
-                    b -> NetworkHandler.sendToServer(new ServerShopDeleteCategoryPacket(page.name(), category.name())),
-                    deleteTooltip, () -> false);
-            addDynamic(deleteButton);
+        // Pfeil
+        graphics.blit(ARROW_ICON, startX + 38, itemY + 4, 0, 0, 10, 9, 10, 9);
+
+        // Result
+        graphics.renderItem(offer.result(), startX + 54, itemY);
+        graphics.renderItemDecorations(font, offer.result(), startX + 54, itemY);
+
+        // 3. Tooltips (Nur wenn Hover)
+        if (hovered) {
+            if (mouseX >= startX && mouseX <= startX + 16)
+                graphics.renderTooltip(font, offer.payments().get(0), mouseX, mouseY);
+            else if (mouseX >= startX + 18 && mouseX <= startX + 34 && offer.payments().size() > 1)
+                graphics.renderTooltip(font, offer.payments().get(1), mouseX, mouseY);
+            else if (mouseX >= startX + 54 && mouseX <= startX + 70)
+                graphics.renderTooltip(font, offer.result(), mouseX, mouseY);
         }
     }
 
-    private void renderAddOffer(RowEntry entry, int y) {
-        ServerShopPage page = entry.page();
-        ServerShopCategory category = entry.category();
-        Component tooltip = Component.translatable("gui.marketblocks.server_shop.add_offer");
-        IconButton button = new IconButton(leftPos + 20, y, 20, 20, BUTTON_SPRITES, ADD_ICON,
-                b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name(), category.name())),
-                tooltip, () -> false);
-        addDynamic(button);
-    }
-
-    private void renderEditOfferRow(RowEntry entry, int y, List<ServerShopCategory> categories) {
-        ServerShopPage page = entry.page();
-        ServerShopCategory category = entry.category();
-        ServerShopOffer offer = entry.offer();
-        int offerIndex = entry.offerIndex();
-        addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.delete_offer"),
-                        b -> NetworkHandler.sendToServer(new ServerShopDeleteOfferPacket(offer.id())))
-                .bounds(leftPos + 20, y, 100, 20).build());
-        if (menu.isEditor()) {
-            addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.replace_offer"),
-                            b -> NetworkHandler.sendToServer(new ServerShopReplaceOfferStacksPacket(offer.id())))
-                    .bounds(leftPos + 124, y, 110, 20).build());
-            if (offerIndex > 0) {
-                addDynamic(Button.builder(Component.literal("↑"),
-                                b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), category.name(), offerIndex - 1)))
-                        .bounds(leftPos + 238, y, 24, 20).build());
-            }
-            if (offerIndex < category.offers().size() - 1) {
-                addDynamic(Button.builder(Component.literal("↓"),
-                                b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), category.name(), offerIndex + 1)))
-                        .bounds(leftPos + 266, y, 24, 20).build());
-            }
-            if (categories.size() > 1) {
-                addDynamic(Button.builder(Component.translatable("gui.marketblocks.server_shop.move_offer"),
-                        b -> {
-                            int current = categories.indexOf(category);
-                            int next = (current + 1) % categories.size();
-                            ServerShopCategory target = categories.get(next);
-                            NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(offer.id(), page.name(), target.name(), Integer.MAX_VALUE));
-                        }).bounds(leftPos + 294, y, 110, 20).build());
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && isScrollBarActive()) {
+            if (isWithinScroller(mouseX, mouseY)) {
+                isDragging = true;
+                return true;
             }
         }
+
+        int listStartX = leftPos + LIST_X_OFFSET;
+        int listStartY = topPos + LIST_Y_OFFSET;
+        int listWidth = LIST_WIDTH;
+        int listHeight = MAX_VISIBLE_ROWS * ROW_HEIGHT;
+
+        if (mouseX >= listStartX && mouseX < listStartX + listWidth && mouseY >= listStartY && mouseY < listStartY + listHeight) {
+            int clickedOffset = (int) ((mouseY - listStartY) / ROW_HEIGHT);
+            int index = scrollOffset + clickedOffset;
+
+            if (index >= 0 && index < visibleOffers.size()) {
+                ServerShopOffer clickedOffer = visibleOffers.get(index);
+                this.selectedOfferId = clickedOffer.id();
+
+                Minecraft.getInstance().getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+
+                // Server: Bitte fülle die Slots mit diesem Angebot
+                NetworkHandler.sendToServer(new ServerShopFillRequestPacket(clickedOffer.id()));
+
+                rebuildUi(); // Buttons aktualisieren
+                return true;
+            }
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
     }
+
+    // --- Standard Methods ---
 
     private void updateScrollLimits() {
-        int totalRows = rowEntries.size();
-        maxVisibleRows = Math.min(DEFAULT_MAX_VISIBLE_ROWS, Math.max(totalRows, 1));
+        int totalRows = visibleOffers.size();
+        maxVisibleRows = MAX_VISIBLE_ROWS;
         int maxScroll = Math.max(0, totalRows - maxVisibleRows);
         scrollOffset = Mth.clamp(scrollOffset, 0, maxScroll);
     }
 
     private void updateScrollOffset(int newOffset) {
-        int totalRows = rowEntries.size();
+        int totalRows = visibleOffers.size();
         int maxScroll = Math.max(0, totalRows - maxVisibleRows);
-        int clamped = Mth.clamp(newOffset, 0, maxScroll);
-        if (clamped != scrollOffset) {
-            scrollOffset = clamped;
-            rebuildUi();
-        }
+        scrollOffset = Mth.clamp(newOffset, 0, maxScroll);
     }
 
     private void addDynamic(Button button) {
@@ -345,63 +420,51 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
         guiGraphics.blit(BACKGROUND_TEXTURE, i, j, 0, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
+
+        // Titel: Modus anzeigen (für den Owner zur Info)
+        if (isLocalEditMode) {
+            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 160, topPos + 6, 0xFF5555, false);
+        }
     }
 
     private void renderScroller(GuiGraphics guiGraphics) {
-        if (!isScrollBarActive()) {
-            return;
-        }
-        int scrollerX = leftPos + imageWidth - SCROLLER_WIDTH - 4;
-        int scrollerY = topPos + 36;
-        int scrollerHeight = maxVisibleRows * ROW_HEIGHT;
-        guiGraphics.fill(scrollerX, scrollerY, scrollerX + SCROLLER_WIDTH, scrollerY + scrollerHeight, 0x33000000);
-        int maxScroll = rowEntries.size() - maxVisibleRows;
-        if (maxScroll <= 0) {
-            return;
-        }
+        if (!isScrollBarActive()) return;
+        int scrollerX = leftPos + SCROLLER_X_OFFSET;
+        int scrollerY = topPos + LIST_Y_OFFSET;
+
+        int maxScroll = visibleOffers.size() - MAX_VISIBLE_ROWS;
+        if (maxScroll <= 0) return;
+
         float progress = (float) scrollOffset / (float) maxScroll;
-        int handleTravel = scrollerHeight - SCROLLER_HANDLE_HEIGHT;
+        int handleTravel = (MAX_VISIBLE_ROWS * ROW_HEIGHT) - SCROLLER_HEIGHT;
         int handleY = scrollerY + Mth.floor(progress * handleTravel);
-        guiGraphics.fill(scrollerX, handleY, scrollerX + SCROLLER_WIDTH, handleY + SCROLLER_HANDLE_HEIGHT, isDragging ? 0xFFAAAAAA : 0xFF888888);
+
+        guiGraphics.fill(scrollerX, handleY, scrollerX + SCROLLER_WIDTH, handleY + SCROLLER_HEIGHT, isDragging ? 0xFFAAAAAA : 0xFF888888);
     }
 
     private boolean isScrollBarActive() {
-        return rowEntries.size() > maxVisibleRows;
+        return visibleOffers.size() > MAX_VISIBLE_ROWS;
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (isScrollBarActive()) {
             int direction = (int) Math.signum(scrollY);
-            if (direction != 0) {
-                updateScrollOffset(scrollOffset - direction);
-            }
+            if (direction != 0) updateScrollOffset(scrollOffset - direction);
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && isScrollBarActive()) {
-            if (isWithinScroller(mouseX, mouseY)) {
-                isDragging = true;
-                return true;
-            }
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (isDragging && isScrollBarActive()) {
-            int scrollerY = topPos + 60;
-            int scrollerHeight = maxVisibleRows * ROW_HEIGHT;
-            int handleTravel = scrollerHeight - SCROLLER_HANDLE_HEIGHT;
+            int scrollerY = topPos + LIST_Y_OFFSET;
+            int handleTravel = (MAX_VISIBLE_ROWS * ROW_HEIGHT) - SCROLLER_HEIGHT;
             if (handleTravel > 0) {
-                double relative = (mouseY - scrollerY - (SCROLLER_HANDLE_HEIGHT / 2.0D)) / handleTravel;
+                double relative = (mouseY - scrollerY - (SCROLLER_HEIGHT / 2.0D)) / handleTravel;
                 relative = Mth.clamp(relative, 0.0D, 1.0D);
-                int maxScroll = rowEntries.size() - maxVisibleRows;
+                int maxScroll = visibleOffers.size() - MAX_VISIBLE_ROWS;
                 int newOffset = Mth.floor(relative * maxScroll + 0.5D);
                 updateScrollOffset(newOffset);
             }
@@ -412,78 +475,15 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) {
-            isDragging = false;
-        }
+        if (button == 0) isDragging = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
     private boolean isWithinScroller(double mouseX, double mouseY) {
-        int scrollerX = leftPos + imageWidth - SCROLLER_WIDTH - 4;
-        int scrollerY = topPos + 60;
-        int scrollerHeight = maxVisibleRows * ROW_HEIGHT;
+        int scrollerX = leftPos + SCROLLER_X_OFFSET;
+        int scrollerY = topPos + LIST_Y_OFFSET;
+        int scrollerHeight = MAX_VISIBLE_ROWS * ROW_HEIGHT;
         return mouseX >= scrollerX && mouseX < scrollerX + SCROLLER_WIDTH && mouseY >= scrollerY && mouseY < scrollerY + scrollerHeight;
-    }
-
-    private void renderData(GuiGraphics guiGraphics) {
-        // Diese Methode wird nicht mehr benötigt, da die UI jetzt alles anzeigt.
-        // Der Code wird zur Sicherheit hier belassen, falls er wieder benötigt wird.
-        int x = leftPos + 10;
-        int y = topPos + 74;
-        if (cachedData.pages().isEmpty()) {
-            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.server_shop.no_pages"), x, y, 0xAAAAAA, false);
-            return;
-        }
-        ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
-        if (page.categories().isEmpty()) {
-            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.server_shop.no_categories"), x, y, 0xAAAAAA, false);
-            return;
-        }
-        for (ServerShopCategory category : page.categories()) {
-            guiGraphics.drawString(font, Component.literal(category.name()), x, y, 0xFFFFFF, false);
-            y += 10;
-            if (category.collapsed()) {
-                guiGraphics.drawString(font, Component.translatable("gui.marketblocks.server_shop.collapsed"), x + 6, y, 0x888888, false);
-                y += 12;
-                continue;
-            }
-            if (category.offers().isEmpty()) {
-                guiGraphics.drawString(font, Component.translatable("gui.marketblocks.server_shop.no_offers"), x + 6, y, 0x888888, false);
-                y += 12;
-                continue;
-            }
-            for (ServerShopOffer offer : category.offers()) {
-                ItemStack result = offer.result();
-                guiGraphics.drawString(font, result.getHoverName(), x + 6, y, 0xFFFFFF, false);
-                y += 10;
-            }
-            y += 4;
-        }
-    }
-
-    private record RowEntry(RowType type, ServerShopPage page, ServerShopCategory category, ServerShopOffer offer, int offerIndex) {
-        static RowEntry addCategory(ServerShopPage page) {
-            return new RowEntry(RowType.ADD_CATEGORY, page, null, null, -1);
-        }
-
-        static RowEntry category(ServerShopPage page, ServerShopCategory category) {
-            return new RowEntry(RowType.CATEGORY_HEADER, page, category, null, -1);
-        }
-
-        static RowEntry addOffer(ServerShopPage page, ServerShopCategory category) {
-            return new RowEntry(RowType.ADD_OFFER, page, category, null, -1);
-        }
-
-        static RowEntry offer(ServerShopPage page, ServerShopCategory category, ServerShopOffer offer, int offerIndex) {
-            return new RowEntry(RowType.OFFER, page, category, offer, offerIndex);
-        }
-    }
-
-    private enum RowType {
-        ADD_CATEGORY,
-        CATEGORY_HEADER,
-        ADD_OFFER,
-        OFFER
     }
 
     private static class TextInputScreen extends Screen {
@@ -506,35 +506,22 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
             this.input.setValue(initialValue);
             addRenderableWidget(input);
             addRenderableWidget(Button.builder(CommonComponents.GUI_OK,
-                    b -> {
-                        minecraft.setScreen(parent);
-                        onConfirm.accept(input.getValue());
-                    }).bounds(this.width / 2 - 100, this.height / 2 + 16, 96, 20).build());
+                            b -> { minecraft.setScreen(parent); onConfirm.accept(input.getValue()); })
+                    .bounds(this.width / 2 - 100, this.height / 2 + 16, 96, 20).build());
             addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL,
                     b -> minecraft.setScreen(parent)).bounds(this.width / 2 + 4, this.height / 2 + 16, 96, 20).build());
             setInitialFocus(input);
         }
 
-        @Override
-        public void onClose() {
-            minecraft.setScreen(parent);
+        @Override public void onClose() { minecraft.setScreen(parent); }
+        @Override public void render(GuiGraphics g, int x, int y, float p) {
+            renderBackground(g, x, y, p);
+            g.drawString(font, this.title, this.width / 2 - this.font.width(this.title) / 2, this.height / 2 - 40, 0xFFFFFF, false);
+            super.render(g, x, y, p);
         }
-
-        @Override
-        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-            renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-            guiGraphics.drawString(font, this.title, this.width / 2 - this.font.width(this.title) / 2, this.height / 2 - 40, 0xFFFFFF, false);
-            super.render(guiGraphics, mouseX, mouseY, partialTick);
-        }
-
-        @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (keyCode == 257 || keyCode == 335) {
-                minecraft.setScreen(parent);
-                onConfirm.accept(input.getValue());
-                return true;
-            }
-            return super.keyPressed(keyCode, scanCode, modifiers);
+        @Override public boolean keyPressed(int k, int s, int m) {
+            if (k == 257 || k == 335) { minecraft.setScreen(parent); onConfirm.accept(input.getValue()); return true; }
+            return super.keyPressed(k, s, m);
         }
     }
 }

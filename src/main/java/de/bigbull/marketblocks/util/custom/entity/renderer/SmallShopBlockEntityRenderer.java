@@ -37,7 +37,7 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
             float time = (blockEntity.getLevel().getGameTime() + partialTick) * 2.0f; // Langsamere Rotation
             poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
             poseStack.scale(0.8F, 0.8F, 0.8F);
-            itemRenderer.renderStatic(result, ItemDisplayContext.GROUND, packedLight, packedOverlay, poseStack, bufferSource,
+            itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, packedLight, packedOverlay, poseStack, bufferSource,
                     blockEntity.getLevel(), 0);
             poseStack.popPose();
         }
