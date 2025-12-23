@@ -93,22 +93,21 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.offer_ready", "Offer Ready");
         add("gui.marketblocks.insufficient_stock", "Insufficient Stock");
 
+        // Modes
+        add("gui.marketblocks.mode.edit_active", "EDIT MODE");
+
         // Server Shop
         add("gui.marketblocks.server_shop.unnamed_page", "Page %s");
         add("gui.marketblocks.server_shop.add_page", "Add Page");
         add("gui.marketblocks.server_shop.rename_page", "Rename Page");
         add("gui.marketblocks.server_shop.delete_page", "Delete Page");
-        add("gui.marketblocks.server_shop.add_category", "Add Category");
-        add("gui.marketblocks.server_shop.rename_category", "Rename Category");
-        add("gui.marketblocks.server_shop.delete_category", "Delete Category");
         add("gui.marketblocks.server_shop.add_offer", "Add Offer");
         add("gui.marketblocks.server_shop.delete_offer", "Delete Offer");
         add("gui.marketblocks.server_shop.replace_offer", "Update Offer Items");
         add("gui.marketblocks.server_shop.move_offer", "Move Offer");
         add("gui.marketblocks.server_shop.no_pages", "No pages available");
-        add("gui.marketblocks.server_shop.no_categories", "No categories available");
         add("gui.marketblocks.server_shop.collapsed", "Collapsed");
-        add("gui.marketblocks.server_shop.no_offers", "No offers in this category");
+        add("gui.marketblocks.server_shop.no_offers", "No offers");
 
         add("message.marketblocks.small_shop.not_owner", "Only the owner can break this shop.");
 

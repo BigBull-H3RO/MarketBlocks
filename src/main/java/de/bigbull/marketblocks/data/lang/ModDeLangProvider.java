@@ -80,22 +80,21 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.offer_ready", "Angebot bereit");
         add("gui.marketblocks.insufficient_stock", "Nicht genügend Bestand");
 
+        // Modi
+        add("gui.marketblocks.mode.edit_active", "EDITOR AKTIV");
+
         // Server-Shop
         add("gui.marketblocks.server_shop.unnamed_page", "Seite %s");
         add("gui.marketblocks.server_shop.add_page", "Seite hinzufügen");
         add("gui.marketblocks.server_shop.rename_page", "Seite umbenennen");
         add("gui.marketblocks.server_shop.delete_page", "Seite löschen");
-        add("gui.marketblocks.server_shop.add_category", "Kategorie hinzufügen");
-        add("gui.marketblocks.server_shop.rename_category", "Kategorie umbenennen");
-        add("gui.marketblocks.server_shop.delete_category", "Kategorie löschen");
         add("gui.marketblocks.server_shop.add_offer", "Angebot hinzufügen");
         add("gui.marketblocks.server_shop.delete_offer", "Angebot löschen");
         add("gui.marketblocks.server_shop.replace_offer", "Angebot aktualisieren");
         add("gui.marketblocks.server_shop.move_offer", "Angebot verschieben");
         add("gui.marketblocks.server_shop.no_pages", "Keine Seiten vorhanden");
-        add("gui.marketblocks.server_shop.no_categories", "Keine Kategorien vorhanden");
         add("gui.marketblocks.server_shop.collapsed", "Eingeklappt");
-        add("gui.marketblocks.server_shop.no_offers", "Keine Angebote in dieser Kategorie");
+        add("gui.marketblocks.server_shop.no_offers", "Keine Angebote");
 
         add("message.marketblocks.small_shop.not_owner", "Nur der Besitzer kann diesen Shop abbauen.");
 

@@ -51,11 +51,11 @@ public class NetworkHandler {
         registrar.playToServer(ServerShopAddOfferPacket.TYPE, ServerShopAddOfferPacket.CODEC, ServerShopAddOfferPacket::handle);
         registrar.playToServer(ServerShopMoveOfferPacket.TYPE, ServerShopMoveOfferPacket.CODEC, ServerShopMoveOfferPacket::handle);
         registrar.playToServer(ServerShopDeleteOfferPacket.TYPE, ServerShopDeleteOfferPacket.CODEC, ServerShopDeleteOfferPacket::handle);
-        registrar.playToServer(ServerShopReplaceOfferStacksPacket.TYPE, ServerShopReplaceOfferStacksPacket.CODEC, ServerShopReplaceOfferStacksPacket::handle);
         registrar.playToServer(ServerShopUpdateOfferLimitsPacket.TYPE, ServerShopUpdateOfferLimitsPacket.CODEC, ServerShopUpdateOfferLimitsPacket::handle);
         registrar.playToServer(ServerShopUpdateOfferPricingPacket.TYPE, ServerShopUpdateOfferPricingPacket.CODEC, ServerShopUpdateOfferPricingPacket::handle);
         registrar.playToServer(ServerShopPurchasePacket.TYPE, ServerShopPurchasePacket.CODEC, ServerShopPurchasePacket::handle);
         registrar.playToServer(ServerShopFillRequestPacket.TYPE, ServerShopFillRequestPacket.CODEC, ServerShopFillRequestPacket::handle);
+        registrar.playToServer(ServerShopAutoFillPacket.TYPE, ServerShopAutoFillPacket.CODEC, ServerShopAutoFillPacket::handle);
 
         // Server to Client packets
         // Small Shop packets

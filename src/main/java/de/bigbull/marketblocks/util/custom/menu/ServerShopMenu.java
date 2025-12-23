@@ -1,12 +1,9 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
-import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.serverShop.ServerShopPurchasePacket;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -29,12 +26,19 @@ public class ServerShopMenu extends AbstractContainerMenu {
     private static final int PLAYER_INV_START_Y = 125;
     private static final int RESULT_SLOT = 2;
 
-    private final Container tradeContainer;
+    private final Container tradeContainer = new SimpleContainer(TEMPLATE_SLOTS) {
+        @Override
+        public void setChanged() {
+            super.setChanged();
+            ServerShopMenu.this.slotsChanged(this);
+        }
+    };
+
     private final boolean canEdit;
     private final DataSlot selectedPage;
-    private UUID selectedOfferId;
-    private ServerShopOffer selectedOffer;
     private final Inventory inventory;
+
+    private ServerShopOffer currentTradingOffer;
 
     public ServerShopMenu(int containerId, Inventory inventory, boolean canEdit, int initialPage) {
         this(RegistriesInit.SERVER_SHOP_MENU.get(), containerId, inventory, canEdit, initialPage);
@@ -48,21 +52,25 @@ public class ServerShopMenu extends AbstractContainerMenu {
         super(menuType, containerId);
         this.inventory = inventory;
         this.canEdit = canEdit;
-        this.tradeContainer  = new SimpleContainer(TEMPLATE_SLOTS);
+
         this.selectedPage = new DataSlot() {
             private int value = Math.max(0, initialPage);
             @Override public int get() { return value; }
             @Override public void set(int newValue) { this.value = Math.max(0, newValue); }
         };
         addDataSlot(this.selectedPage);
+
         addTemplateSlots();
         addPlayerInventory(inventory);
     }
 
     private void addTemplateSlots() {
-        addSlot(new Slot(tradeContainer, 0, 136, 78));
-        addSlot(new Slot(tradeContainer, 1, 162, 78));
-        // FIX BUG 1: Result Slot Logik angepasst
+        addSlot(new Slot(tradeContainer, 0, 136, 78) {
+            @Override public void setChanged() { super.setChanged(); slotsChanged(tradeContainer); }
+        });
+        addSlot(new Slot(tradeContainer, 1, 162, 78) {
+            @Override public void setChanged() { super.setChanged(); slotsChanged(tradeContainer); }
+        });
         addSlot(new ServerShopResultSlot(inventory.player, tradeContainer, RESULT_SLOT, 220, 78));
     }
 
@@ -79,129 +87,185 @@ public class ServerShopMenu extends AbstractContainerMenu {
         }
     }
 
+    // --- API für Pakete ---
+
     public void setSelectedOffer(UUID offerId) {
-        this.selectedOfferId = offerId;
-        this.selectedOffer = ServerShopManager.get().findOffer(offerId);
-        if (selectedOffer != null) {
-            this.tradeContainer.setItem(0, selectedOffer.payments().get(0));
-            this.tradeContainer.setItem(1, selectedOffer.payments().get(1));
-            this.tradeContainer.setItem(RESULT_SLOT, selectedOffer.result());
-        } else {
-            this.tradeContainer.clearContent();
+        ServerShopOffer offer = ServerShopManager.get().findOffer(offerId);
+        setCurrentTradingOffer(offer);
+    }
+
+    public void setCurrentTradingOffer(ServerShopOffer offer) {
+        this.currentTradingOffer = offer;
+        // Bei Angebotswechsel leeren wir zur Sicherheit den Output-Slot, damit kein "Geister-Item" drin bleibt
+        if (!canEdit && !tradeContainer.getItem(RESULT_SLOT).isEmpty()) {
+            tradeContainer.setItem(RESULT_SLOT, ItemStack.EMPTY);
         }
-        broadcastChanges();
+        slotsChanged(tradeContainer);
+    }
+
+    @Override
+    public void slotsChanged(Container container) {
+        if (canEdit) return;
+
+        ItemStack pay1 = container.getItem(0);
+        ItemStack pay2 = container.getItem(1);
+
+        if (currentTradingOffer == null) {
+            if (!container.getItem(RESULT_SLOT).isEmpty()) {
+                container.setItem(RESULT_SLOT, ItemStack.EMPTY);
+            }
+            return;
+        }
+
+        boolean valid = true;
+        if (!currentTradingOffer.payments().isEmpty()) {
+            ItemStack required1 = currentTradingOffer.payments().get(0);
+            if (!required1.isEmpty()) {
+                if (pay1.isEmpty() || !ItemStack.isSameItemSameComponents(pay1, required1) || pay1.getCount() < required1.getCount()) {
+                    valid = false;
+                }
+            }
+        }
+
+        if (valid && currentTradingOffer.payments().size() > 1) {
+            ItemStack required2 = currentTradingOffer.payments().get(1);
+            if (!required2.isEmpty()) {
+                if (pay2.isEmpty() || !ItemStack.isSameItemSameComponents(pay2, required2) || pay2.getCount() < required2.getCount()) {
+                    valid = false;
+                }
+            }
+        }
+
+        ItemStack currentResult = container.getItem(RESULT_SLOT);
+        if (valid) {
+            if (currentResult.isEmpty()) {
+                container.setItem(RESULT_SLOT, currentTradingOffer.result().copy());
+            }
+        } else {
+            if (!currentResult.isEmpty()) {
+                container.setItem(RESULT_SLOT, ItemStack.EMPTY);
+            }
+        }
+    }
+
+    public void autoFillPayment(Player player, ServerShopOffer offer) {
+        if (offer == null) return;
+
+        // Zuerst alte Items raus, damit Platz ist und nichts gemischt wird
+        if (!canEdit) {
+            clearTemplate(player);
+        }
+
+        if (!offer.payments().isEmpty()) {
+            transferItemsToSlot(player, offer.payments().get(0), 0);
+        }
+        if (offer.payments().size() > 1) {
+            transferItemsToSlot(player, offer.payments().get(1), 1);
+        }
+    }
+
+    private void transferItemsToSlot(Player player, ItemStack required, int slotIndex) {
+        if (required.isEmpty()) return;
+        Inventory inv = player.getInventory();
+        ItemStack currentInSlot = tradeContainer.getItem(slotIndex);
+        int needed = required.getCount() - currentInSlot.getCount();
+
+        if (needed <= 0) return;
+
+        for (int i = 0; i < inv.items.size(); i++) {
+            ItemStack invStack = inv.items.get(i);
+            if (ItemStack.isSameItemSameComponents(invStack, required)) {
+                int toMove = Math.min(needed, invStack.getCount());
+
+                ItemStack newStack = currentInSlot.isEmpty() ? invStack.copy() : currentInSlot.copy();
+                newStack.setCount(newStack.getCount() + toMove);
+                tradeContainer.setItem(slotIndex, newStack);
+
+                inv.removeItem(i, toMove);
+                needed -= toMove;
+                currentInSlot = tradeContainer.getItem(slotIndex);
+                if (needed <= 0) break;
+            }
+        }
+    }
+
+    public void clearTemplate(Player player) {
+        for (int i = 0; i < tradeContainer.getContainerSize(); i++) {
+            if (!canEdit && i == RESULT_SLOT) {
+                tradeContainer.setItem(i, ItemStack.EMPTY);
+                continue;
+            }
+            ItemStack stack = tradeContainer.removeItemNoUpdate(i);
+            if (!stack.isEmpty()) {
+                player.getInventory().placeItemBackInInventory(stack);
+            }
+        }
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        if (!player.level().isClientSide) {
+            clearTemplate(player);
+        }
     }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         Slot slot = this.slots.get(index);
-        if (slot == null || !slot.hasItem()) {
-            return ItemStack.EMPTY;
-        }
+        if (slot == null || !slot.hasItem()) return ItemStack.EMPTY;
 
         ItemStack newStack = slot.getItem();
         ItemStack originalStack = newStack.copy();
 
         if (index == RESULT_SLOT) {
-            if (canEdit) {
-                // Im Editor-Modus einfach nur Item nehmen (zum Bearbeiten)
-                if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, this.slots.size(), true)) {
-                    return ItemStack.EMPTY;
-                }
-            } else {
-                // Im Kauf-Modus: KAUFEN
-                if (selectedOffer == null) return ItemStack.EMPTY;
-                if (!player.level().isClientSide) {
-                    if (ServerShopManager.get().purchaseOffer((ServerPlayer) player, selectedOfferId, 1)) {
-                        // Erfolg
-                    }
-                }
+            if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
+            slot.onQuickCraft(newStack, originalStack);
         } else if (index >= TEMPLATE_SLOTS) {
-            if (index < TEMPLATE_SLOTS + 27) {
-                if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS + 27, this.slots.size(), false)) {
-                    return ItemStack.EMPTY;
-                }
-            } else if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, TEMPLATE_SLOTS + 27, false)) {
+            if (!this.moveItemStackTo(newStack, 0, 2, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, this.slots.size(), true)) {
             return ItemStack.EMPTY;
         }
 
-        if (newStack.isEmpty()) {
-            slot.set(ItemStack.EMPTY);
-        } else {
-            slot.setChanged();
-        }
+        if (newStack.isEmpty()) slot.set(ItemStack.EMPTY);
+        else slot.setChanged();
 
+        if (newStack.getCount() == originalStack.getCount()) return ItemStack.EMPTY;
+
+        slot.onTake(player, newStack);
         return originalStack;
     }
 
     @Override
-    public void removed(Player player) {
-        super.removed(player);
-        // Im Editor-Modus Items zurückgeben, sonst löschen
-        if (canEdit && !player.level().isClientSide) {
-            clearContainer(player, tradeContainer);
-        } else {
-            tradeContainer.clearContent();
-        }
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return true;
-    }
-
-    public boolean isEditor() {
-        return canEdit;
-    }
-
-    public int selectedPage() {
-        return selectedPage.get();
-    }
-
-    public void setSelectedPageServer(int page) {
-        selectedPage.set(page);
-        broadcastChanges();
-    }
-
-    public void setSelectedPageClient(int page) {
-        selectedPage.set(page);
-    }
-
-    public Container templateContainer() {
-        return tradeContainer;
-    }
-
-    public void clearTemplate() {
-        tradeContainer.clearContent();
-    }
-
-    public ItemStack getTemplateStack(int slot) {
-        return tradeContainer.getItem(slot);
-    }
+    public boolean stillValid(Player player) { return true; }
+    public boolean isEditor() { return canEdit; }
+    public int selectedPage() { return selectedPage.get(); }
+    public void setSelectedPageServer(int page) { selectedPage.set(page); broadcastChanges(); }
+    public void setSelectedPageClient(int page) { selectedPage.set(page); }
+    public Container templateContainer() { return tradeContainer; }
+    public ItemStack getTemplateStack(int slot) { return tradeContainer.getItem(slot); }
 
     private class ServerShopResultSlot extends Slot {
-        public ServerShopResultSlot(Player player, Container container, int index, int x, int y) {
-            super(container, index, x, y);
-        }
-
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            // FIX BUG 1: Im Editor-Modus darf man Items hier reinlegen!
-            return canEdit;
-        }
-
-        @Override
-        public void onTake(Player pPlayer, ItemStack pStack) {
-            // Kauf nur auslösen, wenn NICHT im Editor
-            if (!canEdit && !pPlayer.level().isClientSide && selectedOfferId != null) {
-                NetworkHandler.sendToServer(new ServerShopPurchasePacket(selectedOfferId, pStack.getCount()));
+        public ServerShopResultSlot(Player player, Container container, int index, int x, int y) { super(container, index, x, y); }
+        @Override public boolean mayPlace(ItemStack stack) { return canEdit; }
+        @Override public void onTake(Player player, ItemStack stack) {
+            if (!canEdit) {
+                this.checkTakeAchievements(stack);
+                if (currentTradingOffer != null) {
+                    removePayment(0, currentTradingOffer.payments().isEmpty() ? ItemStack.EMPTY : currentTradingOffer.payments().get(0));
+                    removePayment(1, currentTradingOffer.payments().size() > 1 ? currentTradingOffer.payments().get(1) : ItemStack.EMPTY);
+                }
+                slotsChanged(tradeContainer);
             }
-            super.onTake(pPlayer, pStack);
+            super.onTake(player, stack);
+        }
+        private void removePayment(int slotIndex, ItemStack required) {
+            if (required.isEmpty()) return;
+            tradeContainer.removeItem(slotIndex, required.getCount());
         }
     }
 }
