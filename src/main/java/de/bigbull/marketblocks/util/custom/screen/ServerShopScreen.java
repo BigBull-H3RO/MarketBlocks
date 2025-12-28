@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.serverShop.*;
@@ -30,19 +31,27 @@ import java.util.function.Consumer;
 public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/server_shop.png");
 
+    // List
     private static final int LIST_X_OFFSET = 5;
-    private static final int LIST_Y_OFFSET = 18;
+    private static final int LIST_Y_OFFSET = 26;
     private static final int LIST_WIDTH = 88;
     private static final int LIST_HEIGHT = 140;
+
     private static final int ROW_HEIGHT = 22;
     private static final int MAX_VISIBLE_ROWS = 6;
+
+    // Scroller
     private static final int SCROLLER_X_OFFSET = 96;
     private static final int SCROLLER_WIDTH = 6;
     private static final int SCROLLER_HEIGHT = 27;
-    private static final int PREVIEW_X_OFFSET = 136;
-    private static final int PREVIEW_Y_OFFSET = 45;
-    private static final int CONTROLS_X_OFFSET = 136;
-    private static final int CONTROLS_Y_START = 100;
+
+    // Preview
+    private static final int PREVIEW_X_OFFSET = 144;
+    private static final int PREVIEW_Y_OFFSET = 43;
+
+    // Controls (Buttons unter den Slots)
+    private static final int CONTROLS_X_START = 160; // Beginnt linksbündig mit Slot 1
+    private static final int CONTROLS_Y_START = 102; // Unterhalb der Slots (Slots sind bei Y=78, Höhe 18)
 
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
@@ -103,21 +112,61 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         if (this.offerPreviewButton == null) return;
 
         if (isLocalEditMode) {
-            ItemStack p1 = menu.getTemplateStack(0);
-            ItemStack p2 = menu.getTemplateStack(1);
-            ItemStack res = menu.getTemplateStack(2);
-            this.offerPreviewButton.update(p1, p2, res, !res.isEmpty());
-        } else {
             if (selectedOfferId != null) {
-                ServerShopOffer offer = ServerShopManager.get().findOffer(selectedOfferId);
+                // Suche im lokalen Cache, nicht über Manager (der ist serverseitig)
+                ServerShopOffer offer = findOfferInCache(selectedOfferId);
                 if (offer != null) {
                     ItemStack p1 = offer.payments().isEmpty() ? ItemStack.EMPTY : offer.payments().get(0);
                     ItemStack p2 = offer.payments().size() > 1 ? offer.payments().get(1) : ItemStack.EMPTY;
+                    this.offerPreviewButton.visible = true;
                     this.offerPreviewButton.update(p1, p2, offer.result(), true);
+                } else {
+                    showTemplateSlotsInPreview();
                 }
             } else {
-                this.offerPreviewButton.update(ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, false);
+                showTemplateSlotsInPreview();
             }
+        } else {
+            if (selectedOfferId != null) {
+                ServerShopOffer offer = findOfferInCache(selectedOfferId);
+                if (offer != null) {
+                    ItemStack p1 = offer.payments().isEmpty() ? ItemStack.EMPTY : offer.payments().get(0);
+                    ItemStack p2 = offer.payments().size() > 1 ? offer.payments().get(1) : ItemStack.EMPTY;
+                    this.offerPreviewButton.visible = true;
+                    this.offerPreviewButton.update(p1, p2, offer.result(), true);
+                } else {
+                    this.offerPreviewButton.visible = false;
+                }
+            } else {
+                this.offerPreviewButton.visible = false;
+            }
+        }
+    }
+
+    // Neue Hilfsmethode - sucht im Client-Cache statt über ServerShopManager
+    private ServerShopOffer findOfferInCache(UUID offerId) {
+        if (offerId == null || cachedData == null) return null;
+        for (ServerShopPage page : cachedData.pages()) {
+            for (ServerShopOffer offer : page.offers()) {
+                if (offer.id().equals(offerId)) {
+                    return offer;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void showTemplateSlotsInPreview() {
+        ItemStack p1 = menu.getTemplateStack(0);
+        ItemStack p2 = menu.getTemplateStack(1);
+        ItemStack res = menu.getTemplateStack(2);
+
+        // Nur anzeigen, wenn Ergebnis da ist, um "rotes X" bei leerem Editor zu vermeiden
+        if (!res.isEmpty()) {
+            this.offerPreviewButton.visible = true;
+            this.offerPreviewButton.update(p1, p2, res, true);
+        } else {
+            this.offerPreviewButton.visible = false;
         }
     }
 
@@ -140,18 +189,27 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
         buildPageSidebar();
 
+        // Vorschau Button
         this.offerPreviewButton = new OfferTemplateButton(this.leftPos + PREVIEW_X_OFFSET, this.topPos + PREVIEW_Y_OFFSET, b -> {
-            if (!isLocalEditMode && selectedOfferId != null) {
-                NetworkHandler.sendToServer(new ServerShopAutoFillPacket(selectedOfferId));
+            if (!isLocalEditMode && selectedOfferId != null && minecraft != null && minecraft.player != null) {
+                ServerShopOffer offer = findOfferInCache(selectedOfferId);
+                if (offer != null) {
+                    // Setze das Angebot im Menu falls noch nicht geschehen
+                    menu.setCurrentTradingOffer(offer);
+                    // Fülle die Slots mit maximaler Menge
+                    menu.autoFillPayment(minecraft.player, offer);
+                }
             }
         });
         this.offerPreviewButton.active = !isLocalEditMode;
+        this.offerPreviewButton.visible = false;
         addDynamic(this.offerPreviewButton);
 
+        // Toggle Mode Button (Oben Rechts)
         if (menu.isEditor()) {
-            int toggleX = leftPos + imageWidth - 24;
+            int toggleX = leftPos + imageWidth - 26;
             int toggleY = topPos + 6;
-            IconButton toggleBtn = new IconButton(toggleX, toggleY, 16, 16, BUTTON_SPRITES, SETTINGS_ICON, b -> {
+            IconButton toggleBtn = new IconButton(toggleX, toggleY, 20, 20, BUTTON_SPRITES, SETTINGS_ICON, b -> {
                 setEditMode(!isLocalEditMode);
             }, Component.literal(isLocalEditMode ? "View Mode" : "Edit Mode"), () -> isLocalEditMode);
             addDynamic(toggleBtn);
@@ -165,33 +223,46 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private void buildEditorControls() {
-        if (cachedData.pages().isEmpty()) return;
+        // Page Management (Oben Links/Mitte)
+        int headerX = leftPos + 4;
+        int headerY = topPos - 24;
+
+        addDynamic(new IconButton(headerX, headerY, 20, 20, BUTTON_SPRITES, ADD_ICON,
+                b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_page"), "",
+                        name -> NetworkHandler.sendToServer(new ServerShopCreatePagePacket(name))),
+                Component.translatable("gui.marketblocks.server_shop.add_page"), () -> false));
+
+        if (cachedData.pages().isEmpty()) {
+            return;
+        }
+
         ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
 
-        int headerX = leftPos + 8;
-        int headerY = topPos + 5;
-        addDynamic(new IconButton(headerX, headerY, 16, 16, BUTTON_SPRITES, SETTINGS_ICON,
+        addDynamic(new IconButton(headerX + 24, headerY, 20, 20, BUTTON_SPRITES, SETTINGS_ICON,
                 b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.rename_page"), page.name(),
                         name -> NetworkHandler.sendToServer(new ServerShopRenamePagePacket(page.name(), name))),
                 Component.translatable("gui.marketblocks.server_shop.rename_page"), () -> false));
-        addDynamic(new IconButton(headerX + 18, headerY, 16, 16, BUTTON_SPRITES, DELETE_ICON,
+
+        addDynamic(new IconButton(headerX + 48, headerY, 20, 20, BUTTON_SPRITES, DELETE_ICON,
                 b -> NetworkHandler.sendToServer(new ServerShopDeletePagePacket(page.name())),
                 Component.translatable("gui.marketblocks.server_shop.delete_page"), () -> false));
 
-        int controlsX = leftPos + CONTROLS_X_OFFSET;
-        int controlsY = topPos + CONTROLS_Y_START;
+        // --- OFFER CONTROLS ---
+        // ADD OFFER Button: Neben der Vorschau-Kachel (rechts davon)
+        int addOfferX = leftPos + PREVIEW_X_OFFSET + 92; // 88 (Button-Breite) + 4 Abstand
+        int addOfferY = topPos + PREVIEW_Y_OFFSET;
 
-        // Button: ERSTELLEN (+)
-        addDynamic(new IconButton(controlsX, controlsY, 20, 20, BUTTON_SPRITES, ADD_ICON,
+        addDynamic(new IconButton(addOfferX, addOfferY, 20, 20, BUTTON_SPRITES, ADD_ICON,
                 b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name())),
                 Component.translatable("gui.marketblocks.server_shop.add_offer"), () -> false));
 
-        // Selected Offer Controls
+        // SELECTED OFFER ACTIONS: Unter den Slots
         if (selectedOfferId != null) {
-            int startX = controlsX + 24;
+            int controlsX = leftPos + CONTROLS_X_START;
+            int controlsY = topPos + CONTROLS_Y_START;
 
             // DELETE
-            addDynamic(new IconButton(startX, controlsY, 20, 20, BUTTON_SPRITES, DELETE_ICON,
+            addDynamic(new IconButton(controlsX, controlsY, 20, 20, BUTTON_SPRITES, DELETE_ICON,
                     b -> {
                         NetworkHandler.sendToServer(new ServerShopDeleteOfferPacket(selectedOfferId));
                         selectedOfferId = null;
@@ -199,13 +270,15 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
                     },
                     Component.translatable("gui.marketblocks.server_shop.delete_offer"), () -> false));
 
-            // Move Arrows
+            // UP ARROW
             addDynamic(Button.builder(Component.literal("↑"),
                             b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(selectedOfferId, page.name(), -1)))
-                    .bounds(startX + 24, controlsY, 15, 20).build());
+                    .bounds(controlsX + 24, controlsY, 15, 20).build());
+
+            // DOWN ARROW
             addDynamic(Button.builder(Component.literal("↓"),
                             b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(selectedOfferId, page.name(), 1)))
-                    .bounds(startX + 40, controlsY, 15, 20).build());
+                    .bounds(controlsX + 41, controlsY, 15, 20).build());
         }
     }
 
@@ -227,12 +300,6 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
             button.active = menu.selectedPage() != index;
             addDynamic(button);
             y += 22;
-        }
-        if (isLocalEditMode) {
-            IconButton addPage = new IconButton(baseX, y + 6, 20, 20, BUTTON_SPRITES, ADD_ICON,
-                    b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_page"), "", name -> NetworkHandler.sendToServer(new ServerShopCreatePagePacket(name))),
-                    Component.translatable("gui.marketblocks.server_shop.add_page"), () -> false);
-            addDynamic(addPage);
         }
     }
 
@@ -269,35 +336,46 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
     private void renderListButton(GuiGraphics graphics, ServerShopOffer offer, int x, int y, boolean isSelected, int mouseX, int mouseY) {
         boolean hovered = mouseX >= x && mouseX < x + LIST_WIDTH && mouseY >= y && mouseY < y + ROW_HEIGHT;
-        ResourceLocation sprite = BUTTON_SPRITES.get(true, isSelected || hovered);
 
-        graphics.blitSprite(sprite, x, y, LIST_WIDTH, ROW_HEIGHT - 2);
+        ResourceLocation texture;
+        if (isSelected) {
+            texture = BUTTON_SPRITES.get(false, true);
+        } else if (hovered) {
+            texture = BUTTON_SPRITES.get(true, true);
+        } else {
+            texture = BUTTON_SPRITES.get(true, false);
+        }
 
-        // Koordinaten exakt wie OfferTemplateButton angepasst
+        RenderSystem.setShaderTexture(0, texture);
+        graphics.blit(texture, x, y, 0, 0, LIST_WIDTH, ROW_HEIGHT - 2, LIST_WIDTH, ROW_HEIGHT - 2);
+
         int itemY = y + 1;
-        int startX = x + 2;
+        int startX = x + 4;
 
         if (!offer.payments().isEmpty()) {
-            graphics.renderItem(offer.payments().get(0), startX + 2, itemY);
-            graphics.renderItemDecorations(font, offer.payments().get(0), startX + 2, itemY);
+            ItemStack stack = offer.payments().get(0);
+            graphics.renderItem(stack, startX, itemY);
+            graphics.renderItemDecorations(font, stack, startX, itemY);
         }
 
         if (offer.payments().size() > 1 && !offer.payments().get(1).isEmpty()) {
-            graphics.renderItem(offer.payments().get(1), startX + 26, itemY);
-            graphics.renderItemDecorations(font, offer.payments().get(1), startX + 26, itemY);
+            ItemStack stack = offer.payments().get(1);
+            graphics.renderItem(stack, startX + 18, itemY);
+            graphics.renderItemDecorations(font, stack, startX + 18, itemY);
         }
 
-        graphics.blit(ARROW_ICON, startX + 52, itemY + 4, 0, 0, 10, 9, 10, 9);
+        graphics.blit(ARROW_ICON, startX + 38, itemY + 4, 0, 0, 10, 9, 10, 9);
 
-        graphics.renderItem(offer.result(), startX + 66, itemY);
-        graphics.renderItemDecorations(font, offer.result(), startX + 66, itemY);
+        int resultX = x + LIST_WIDTH - 20;
+        graphics.renderItem(offer.result(), resultX, itemY);
+        graphics.renderItemDecorations(font, offer.result(), resultX, itemY);
 
         if (hovered) {
-            if (mouseX >= startX + 2 && mouseX <= startX + 18)
+            if (mouseX >= startX && mouseX <= startX + 16)
                 graphics.renderTooltip(font, offer.payments().get(0), mouseX, mouseY);
-            else if (mouseX >= startX + 26 && mouseX <= startX + 42 && offer.payments().size() > 1)
+            else if (mouseX >= startX + 18 && mouseX <= startX + 34 && offer.payments().size() > 1)
                 graphics.renderTooltip(font, offer.payments().get(1), mouseX, mouseY);
-            else if (mouseX >= startX + 66 && mouseX <= startX + 82)
+            else if (mouseX >= resultX && mouseX <= resultX + 16)
                 graphics.renderTooltip(font, offer.result(), mouseX, mouseY);
         }
     }
@@ -305,7 +383,8 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && isScrollBarActive() && isWithinScroller(mouseX, mouseY)) {
-            isDragging = true; return true;
+            isDragging = true;
+            return true;
         }
 
         int listStartX = leftPos + LIST_X_OFFSET;
@@ -316,13 +395,16 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
             if (index >= 0 && index < visibleOffers.size()) {
                 ServerShopOffer clickedOffer = visibleOffers.get(index);
-                this.selectedOfferId = clickedOffer.id();
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
 
+                this.selectedOfferId = clickedOffer.id();
+
+                // WICHTIG: Setze das Angebot im Menu, damit slotsChanged funktioniert
                 if (!isLocalEditMode) {
-                    NetworkHandler.sendToServer(new ServerShopFillRequestPacket(clickedOffer.id()));
+                    menu.setCurrentTradingOffer(clickedOffer);
                 }
 
+                updatePreview();
                 rebuildUi();
                 return true;
             }
