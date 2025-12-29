@@ -211,8 +211,20 @@ public class ServerShopMenu extends AbstractContainerMenu {
             }
             ItemStack stack = tradeContainer.removeItemNoUpdate(i);
             if (!stack.isEmpty()) {
-                player.getInventory().placeItemBackInInventory(stack);
+                // FIX: Sicherstellen, dass das Item zurückgegeben oder gedroppt wird
+                giveItemToPlayer(player, stack);
             }
+        }
+    }
+
+    // Hilfsmethode für sicheres Item-Zurückgeben
+    private void giveItemToPlayer(Player player, ItemStack stack) {
+        if (stack.isEmpty()) return;
+        player.getInventory().placeItemBackInInventory(stack);
+        // Wenn placeItemBackInInventory nicht alles aufnehmen konnte (Inventar voll),
+        // bleibt ein Rest im Stack. Diesen müssen wir manuell droppen.
+        if (!stack.isEmpty()) {
+            player.drop(stack, false);
         }
     }
 

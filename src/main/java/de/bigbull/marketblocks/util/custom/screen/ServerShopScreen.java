@@ -192,13 +192,8 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         // Vorschau Button
         this.offerPreviewButton = new OfferTemplateButton(this.leftPos + PREVIEW_X_OFFSET, this.topPos + PREVIEW_Y_OFFSET, b -> {
             if (!isLocalEditMode && selectedOfferId != null && minecraft != null && minecraft.player != null) {
-                ServerShopOffer offer = findOfferInCache(selectedOfferId);
-                if (offer != null) {
-                    // Setze das Angebot im Menu falls noch nicht geschehen
-                    menu.setCurrentTradingOffer(offer);
-                    // Fülle die Slots mit maximaler Menge
-                    menu.autoFillPayment(minecraft.player, offer);
-                }
+                // FIX: Packet senden statt lokal manipulieren!
+                NetworkHandler.sendToServer(new ServerShopAutoFillPacket(selectedOfferId));
             }
         });
         this.offerPreviewButton.active = !isLocalEditMode;
@@ -402,6 +397,8 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
                 // WICHTIG: Setze das Angebot im Menu, damit slotsChanged funktioniert
                 if (!isLocalEditMode) {
                     menu.setCurrentTradingOffer(clickedOffer);
+                    // FIX: Server informieren, welches Angebot aktiv ist!
+                    NetworkHandler.sendToServer(new ServerShopSetOfferPacket(clickedOffer.id()));
                 }
 
                 updatePreview();

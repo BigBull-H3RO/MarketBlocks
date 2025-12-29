@@ -56,6 +56,7 @@ public class NetworkHandler {
         registrar.playToServer(ServerShopPurchasePacket.TYPE, ServerShopPurchasePacket.CODEC, ServerShopPurchasePacket::handle);
         registrar.playToServer(ServerShopFillRequestPacket.TYPE, ServerShopFillRequestPacket.CODEC, ServerShopFillRequestPacket::handle);
         registrar.playToServer(ServerShopAutoFillPacket.TYPE, ServerShopAutoFillPacket.CODEC, ServerShopAutoFillPacket::handle);
+        registrar.playToServer(ServerShopSetOfferPacket.TYPE, ServerShopSetOfferPacket.CODEC, ServerShopSetOfferPacket::handle);
 
         // Server to Client packets
         // Small Shop packets

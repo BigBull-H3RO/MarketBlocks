@@ -32,11 +32,11 @@ public record ServerShopAutoFillPacket(UUID offerId) implements CustomPacketPayl
     public static void handle(ServerShopAutoFillPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof ServerShopMenu menu) {
-                // Nur im Normal-Modus (nicht Editor) erlauben, um Verwirrung zu vermeiden?
-                // Oder beides? Hier erlauben wir es generell, das Menu regelt den Rest.
-
                 ServerShopOffer offer = ServerShopManager.get().findOffer(packet.offerId());
                 if (offer != null) {
+                    // WICHTIG: Erst Angebot setzen (damit slotsChanged weiß was zu tun ist)
+                    menu.setCurrentTradingOffer(offer);
+                    // Dann Items einfüllen -> triggert slotsChanged -> Result Slot erscheint
                     menu.autoFillPayment(player, offer);
                 }
             }
