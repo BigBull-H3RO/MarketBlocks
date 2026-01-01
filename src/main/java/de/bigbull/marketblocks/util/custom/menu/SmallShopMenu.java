@@ -142,6 +142,30 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         }
     }
 
+    private boolean hasSpaceInPlayerInventory(ItemStack stack) {
+        // Iterate over player slots (last 36 slots in this container)
+        int start = TOTAL_SLOTS;
+        int end = this.slots.size();
+        int remaining = stack.getCount();
+
+        for (int i = start; i < end; i++) {
+            Slot s = this.slots.get(i);
+            if (!s.hasItem()) {
+                 remaining -= Math.min(s.getMaxStackSize(), stack.getMaxStackSize());
+            } else {
+                ItemStack invStack = s.getItem();
+                if (ItemStack.isSameItemSameComponents(invStack, stack)) {
+                    int space = invStack.getMaxStackSize() - invStack.getCount();
+                    if (space > 0) {
+                        remaining -= space;
+                    }
+                }
+            }
+            if (remaining <= 0) return true;
+        }
+        return false;
+    }
+
     // --- Tab API ---
     public ShopTab getActiveTab() {
         return ShopTab.fromId(tabData.get(0));
@@ -274,14 +298,24 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
             while (blockEntity.isOfferAvailable() && slot.hasItem()) {
                 ItemStack stack = slot.getItem();
+
+                // Pre-check: Calculate if we can fit the stack.
+                // If the player inventory cannot accept the FULL offer stack, we must STOP.
+                // Partial moves would cause moveItemStackTo to return true,
+                // which would then trigger processPurchase (full price), leading to item loss.
+
+                // Simulate move? AbstractContainerMenu doesn't support simulation easily.
+                // We manually check capacity.
+                ItemStack offerResult = blockEntity.getOfferResult();
+                if (offerResult.isEmpty() || !hasSpaceInPlayerInventory(offerResult)) {
+                    break;
+                }
+
                 if (result.isEmpty()) {
                     result = stack.copy();
                 }
 
-                // FIX: If inventory is full, STOP. Do not buy and drop.
                 if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
-                    // Spec Violation Fix: "Ist das Spielerinventar voll: ist der Shift-Klick-Kauf nicht erlaubt"
-                    // We simply break the loop. No purchase happens for this iteration.
                     break;
                 }
 
