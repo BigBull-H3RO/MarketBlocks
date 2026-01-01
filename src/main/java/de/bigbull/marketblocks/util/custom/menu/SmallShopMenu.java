@@ -278,12 +278,10 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
                     result = stack.copy();
                 }
 
+                // FIX: If inventory is full, STOP. Do not buy and drop.
                 if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
-                    ItemStack drop = stack.copy();
-                    slot.set(ItemStack.EMPTY);
-                    blockEntity.processPurchase();
-                    player.drop(drop, false);
-                    blockEntity.updateOfferSlot();
+                    // Spec Violation Fix: "Ist das Spielerinventar voll: ist der Shift-Klick-Kauf nicht erlaubt"
+                    // We simply break the loop. No purchase happens for this iteration.
                     break;
                 }
 

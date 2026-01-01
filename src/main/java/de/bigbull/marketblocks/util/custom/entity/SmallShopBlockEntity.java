@@ -127,9 +127,37 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            ItemStack result = super.extractItem(slot, amount, simulate);
-            // Nur bei einem tatsächlichen Entnehmen den Kauf auslösen
-            if (!simulate && !result.isEmpty()) {
+            // Fix Item Loss Bug: Ensure we only allow extraction of the FULL offer amount.
+            // If the player tries to extract less (e.g. because inventory is full), we deny it.
+            // This prevents paying full price for partial items.
+            ItemStack currentOffer = getOfferResult();
+            if (currentOffer.isEmpty()) return ItemStack.EMPTY;
+
+            // If we are simulating, we just check if it's possible.
+            // But we must respect the "all or nothing" rule even in simulation to signal the caller correctly.
+            if (amount < currentOffer.getCount()) {
+                return ItemStack.EMPTY;
+            }
+
+            if (simulate) {
+                return super.extractItem(slot, amount, true);
+            }
+
+            // CRITICAL FIX: Check if purchase is allowed BEFORE giving the item
+            if (!isReadyToPurchase()) {
+                updateOfferSlot(); // Force visual refresh
+                return ItemStack.EMPTY;
+            }
+
+            // Extract the item. We verified amount >= offer amount.
+            ItemStack result = super.extractItem(slot, amount, false);
+
+            // Double check: If we somehow extracted less than expected (shouldn't happen with ItemStackHandler if we checked count),
+            // we have a problem. But super.extractItem() returns what was extracted.
+            if (!result.isEmpty()) {
+                // Since we verified amount >= count earlier, and ItemStackHandler respects amount,
+                // and updateOfferSlot ensures the slot has the correct amount,
+                // we can safely assume full extraction occurred or the slot was empty (handled by !result.isEmpty()).
                 processPurchase();
             }
             return result;
