@@ -34,7 +34,8 @@ public class ServerShopMenu extends AbstractContainerMenu {
         }
     };
 
-    private final boolean canEdit;
+    private final boolean hasEditPermission;
+    private boolean isEditMode = false;
     private final DataSlot selectedPage;
     private final Inventory inventory;
 
@@ -51,7 +52,9 @@ public class ServerShopMenu extends AbstractContainerMenu {
     private ServerShopMenu(MenuType<?> menuType, int containerId, Inventory inventory, boolean canEdit, int initialPage) {
         super(menuType, containerId);
         this.inventory = inventory;
-        this.canEdit = canEdit;
+        this.hasEditPermission = canEdit;
+        // Standardmäßig im View-Mode, auch wenn Permission da ist
+        this.isEditMode = false;
 
         this.selectedPage = new DataSlot() {
             private int value = Math.max(0, initialPage);
@@ -99,16 +102,24 @@ public class ServerShopMenu extends AbstractContainerMenu {
     public void setCurrentTradingOffer(ServerShopOffer offer) {
         this.currentTradingOffer = offer;
         // Bei Angebotswechsel leeren wir zur Sicherheit den Output-Slot
-        if (!canEdit && !tradeContainer.getItem(RESULT_SLOT).isEmpty()) {
+        if (!isEditMode && !tradeContainer.getItem(RESULT_SLOT).isEmpty()) {
             tradeContainer.setItem(RESULT_SLOT, ItemStack.EMPTY);
         }
         slotsChanged(tradeContainer);
     }
 
+    public void setEditMode(boolean enable) {
+        if (enable && !hasEditPermission) return;
+        this.isEditMode = enable;
+
+        // Wenn wir in den View-Mode wechseln, sicherstellen, dass wir Slots updaten
+        // Wenn wir in den Edit-Mode wechseln, Slots nicht anfassen (bleiben wie sie sind oder leer)
+        slotsChanged(tradeContainer);
+    }
 
     @Override
     public void slotsChanged(Container container) {
-        if (canEdit) return;
+        if (isEditMode) return;
 
         if (currentTradingOffer == null) {
             if (!container.getItem(RESULT_SLOT).isEmpty()) {
@@ -159,7 +170,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
         if (offer == null) return;
 
         // 1. Slots leeren (alte Items zurück ins Inventar)
-        if (!canEdit) {
+        if (!isEditMode) {
             clearTemplate(player);
         }
 
@@ -205,7 +216,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
     public void clearTemplate(Player player) {
         for (int i = 0; i < tradeContainer.getContainerSize(); i++) {
             // Im View Mode lassen wir den Result Slot in Ruhe (wird durch slotsChanged geregelt)
-            if (!canEdit && i == RESULT_SLOT) {
+            if (!isEditMode && i == RESULT_SLOT) {
                 tradeContainer.setItem(i, ItemStack.EMPTY);
                 continue;
             }
@@ -246,7 +257,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
 
         // Wenn Klick auf den ERGEBNIS-SLOT (Kauf)
         if (index == RESULT_SLOT) {
-            if (canEdit) {
+            if (isEditMode) {
                 // Im Editor-Modus: Einfach ins Inventar legen
                 if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
@@ -277,7 +288,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
         }
         // Klick im Inventar -> In die Bezahl-Slots
         else {
-            if (canEdit) {
+            if (isEditMode) {
                 // Im Editor: In alle Slots möglich
                 if (!this.moveItemStackTo(newStack, 0, TEMPLATE_SLOTS, false)) {
                     return ItemStack.EMPTY;
@@ -301,7 +312,8 @@ public class ServerShopMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) { return true; }
-    public boolean isEditor() { return canEdit; }
+    public boolean hasEditPermission() { return hasEditPermission; }
+    public boolean isEditor() { return isEditMode; }
     public int selectedPage() { return selectedPage.get(); }
     public void setSelectedPageServer(int page) { selectedPage.set(page); broadcastChanges(); }
     public void setSelectedPageClient(int page) { selectedPage.set(page); }
@@ -319,18 +331,18 @@ public class ServerShopMenu extends AbstractContainerMenu {
         @Override
         public boolean mayPlace(ItemStack stack) {
             // Im View-Mode darf NIEMAND Items hier reinlegen - nur im Edit Mode
-            return canEdit;
+            return isEditMode;
         }
 
         @Override
         public boolean mayPickup(Player player) {
-            if (canEdit) return true;
+            if (isEditMode) return true;
             return currentTradingOffer != null && !this.getItem().isEmpty();
         }
 
         @Override
         public void onTake(Player player, ItemStack stack) {
-            if (!canEdit && currentTradingOffer != null) {
+            if (!isEditMode && currentTradingOffer != null) {
                 if (!currentTradingOffer.payments().isEmpty()) {
                     removePayment(0, currentTradingOffer.payments().get(0));
                 }

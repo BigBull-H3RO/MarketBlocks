@@ -44,6 +44,7 @@ public class NetworkHandler {
 
         // Server Shop packets
         registrar.playToServer(ServerShopOpenRequestPacket.TYPE, ServerShopOpenRequestPacket.CODEC, ServerShopOpenRequestPacket::handle);
+        registrar.playToServer(ServerShopToggleEditModePacket.TYPE, ServerShopToggleEditModePacket.CODEC, ServerShopToggleEditModePacket::handle);
         registrar.playToServer(ServerShopSelectPagePacket.TYPE, ServerShopSelectPagePacket.CODEC, ServerShopSelectPagePacket::handle);
         registrar.playToServer(ServerShopCreatePagePacket.TYPE, ServerShopCreatePagePacket.CODEC, ServerShopCreatePagePacket::handle);
         registrar.playToServer(ServerShopRenamePagePacket.TYPE, ServerShopRenamePagePacket.CODEC, ServerShopRenamePagePacket::handle);

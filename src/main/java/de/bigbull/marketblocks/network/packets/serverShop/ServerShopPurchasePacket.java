@@ -33,7 +33,12 @@ public record ServerShopPurchasePacket(UUID offerId, int amount) implements Cust
     public static void handle(ServerShopPurchasePacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player) {
-                ServerShopManager.get().purchaseOffer(player, packet.offerId(), packet.amount());
+                // IMPORTANT: The purchase amount should be 1 for standard interactions.
+                // Multi-buy via packet is risky if not strictly controlled.
+                // However, restoring this functionality for compatibility/completeness.
+                // We ensure 'amount' is reasonable to prevent overflow exploits.
+                int safeAmount = Math.max(1, Math.min(packet.amount(), 64));
+                ServerShopManager.get().purchaseOffer(player, packet.offerId(), safeAmount);
             }
         });
     }

@@ -85,7 +85,19 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         this.inventoryLabelY = this.imageHeight - 94;
         this.inventoryLabelX = 108;
 
-        this.isLocalEditMode = menu.isEditor() && ServerShopClientState.getLastEditMode();
+        // isLocalEditMode defaults to false on first open,
+        // unless player has permission AND last state was true.
+        // But ServerShopMenu defaults to false (View Mode).
+        // So we should sync with menu state OR enforce local state.
+        // Since we want to respect last edit mode if possible:
+        boolean initialMode = menu.hasEditPermission() && ServerShopClientState.getLastEditMode();
+        this.isLocalEditMode = initialMode;
+
+        // Ensure menu is in sync with our local decision
+        if (initialMode) {
+             menu.setEditMode(true);
+             NetworkHandler.sendToServer(new ServerShopToggleEditModePacket(true));
+        }
     }
 
     @Override
@@ -98,11 +110,15 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     public void containerTick() {
         super.containerTick();
         ServerShopData current = ServerShopClientState.data();
-        boolean perm = menu.isEditor();
+        boolean perm = menu.hasEditPermission();
 
-        if (current != cachedData || (perm != menu.isEditor())) {
+        // If permission is lost, exit edit mode
+        if (!perm && isLocalEditMode) {
+            setEditMode(false);
+        }
+
+        if (current != cachedData) {
             cachedData = current;
-            if (!perm && isLocalEditMode) setEditMode(false);
             rebuildUi();
         }
         updatePreview();
@@ -201,10 +217,12 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         addDynamic(this.offerPreviewButton);
 
         // Toggle Mode Button (Oben Rechts)
-        if (menu.isEditor()) {
+        if (menu.hasEditPermission()) {
             int toggleX = leftPos + imageWidth - 26;
             int toggleY = topPos + 6;
             IconButton toggleBtn = new IconButton(toggleX, toggleY, 20, 20, BUTTON_SPRITES, SETTINGS_ICON, b -> {
+                // Send toggle packet to server and update local state
+                NetworkHandler.sendToServer(new ServerShopToggleEditModePacket(!isLocalEditMode));
                 setEditMode(!isLocalEditMode);
             }, Component.literal(isLocalEditMode ? "View Mode" : "Edit Mode"), () -> isLocalEditMode);
             addDynamic(toggleBtn);
@@ -243,14 +261,6 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
                 Component.translatable("gui.marketblocks.server_shop.delete_page"), () -> false));
 
         // --- OFFER CONTROLS ---
-        // ADD OFFER Button: Neben der Vorschau-Kachel (rechts davon)
-        int addOfferX = leftPos + PREVIEW_X_OFFSET + 92; // 88 (Button-Breite) + 4 Abstand
-        int addOfferY = topPos + PREVIEW_Y_OFFSET;
-
-        addDynamic(new IconButton(addOfferX, addOfferY, 20, 20, BUTTON_SPRITES, ADD_ICON,
-                b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name())),
-                Component.translatable("gui.marketblocks.server_shop.add_offer"), () -> false));
-
         // SELECTED OFFER ACTIONS: Unter den Slots
         if (selectedOfferId != null) {
             int controlsX = leftPos + CONTROLS_X_START;
@@ -274,6 +284,14 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
             addDynamic(Button.builder(Component.literal("↓"),
                             b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(selectedOfferId, page.name(), 1)))
                     .bounds(controlsX + 41, controlsY, 15, 20).build());
+        } else {
+             // ADD OFFER Button: Only visible if NO offer is selected
+            int addOfferX = leftPos + PREVIEW_X_OFFSET + 92; // 88 (Button-Breite) + 4 Abstand
+            int addOfferY = topPos + PREVIEW_Y_OFFSET;
+
+            addDynamic(new IconButton(addOfferX, addOfferY, 20, 20, BUTTON_SPRITES, ADD_ICON,
+                    b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name())),
+                    Component.translatable("gui.marketblocks.server_shop.add_offer"), () -> false));
         }
     }
 
