@@ -127,11 +127,36 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            ItemStack result = super.extractItem(slot, amount, simulate);
-            // Nur bei einem tatsächlichen Entnehmen den Kauf auslösen
-            if (!simulate && !result.isEmpty()) {
+            // Fix Item Loss Bug: Ensure we only allow extraction of the FULL offer amount
+            // ONLY when an offer is active. In creation mode, normal rules apply.
+            if (hasOffer()) {
+                ItemStack currentOffer = getOfferResult();
+                if (currentOffer.isEmpty()) return ItemStack.EMPTY;
+
+                // Enforce all-or-nothing extraction to prevent partial payment
+                if (amount < currentOffer.getCount()) {
+                    return ItemStack.EMPTY;
+                }
+            }
+
+            if (simulate) {
+                return super.extractItem(slot, amount, true);
+            }
+
+            // Purchase logic only applies if an offer exists
+            if (hasOffer()) {
+                if (!isReadyToPurchase()) {
+                    updateOfferSlot();
+                    return ItemStack.EMPTY;
+                }
+            }
+
+            ItemStack result = super.extractItem(slot, amount, false);
+
+            if (hasOffer() && !result.isEmpty()) {
                 processPurchase();
             }
+
             return result;
         }
     };
