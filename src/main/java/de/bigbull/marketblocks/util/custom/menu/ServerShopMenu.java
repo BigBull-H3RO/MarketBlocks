@@ -343,13 +343,64 @@ public class ServerShopMenu extends AbstractContainerMenu {
         @Override
         public void onTake(Player player, ItemStack stack) {
             if (!isEditMode && currentTradingOffer != null) {
-                if (!currentTradingOffer.payments().isEmpty()) {
-                    removePayment(0, currentTradingOffer.payments().get(0));
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    // Serverseitig: Transaktion durchführen (Limits + Bezahlung aus Inventar!)
+                    // ACHTUNG: Die Bezahlung liegt aber in den SLOTS (tradeContainer), nicht im Spieler-Inventar direkt?
+                    // Nein, ServerShop ist "Villager-Style" oder "Click-Buy"?
+                    // Spec: "Spieler legen Bezahl-Items in die zwei Bezahl-Slots"
+                    // ServerShopManager.purchaseOffer prüft player.getInventory().contains(required).
+                    // Das passt NICHT zusammen. ServerShopManager geht davon aus, dass Items im Inventar sind.
+                    // ABER: ServerShopMenu legt Items in Slots 0 und 1. Diese sind "fake" Slots oder Container?
+                    // tradeContainer ist ein SimpleContainer.
+                    // Wenn der Spieler Items in Slot 0/1 legt, sind sie NICHT mehr im Inventar.
+
+                    // KORREKTUR:
+                    // ServerShopManager.processPurchaseTransaction prüft Inventar.
+                    // Das ist für den "Auto-Buy" via Packet/Button gut.
+                    // Aber hier im GUI liegen die Items in den Slots.
+                    // Wir müssen also:
+                    // 1. Prüfen, ob die Items in den Slots reichen.
+                    // 2. Limits prüfen (via Manager Helper?).
+                    // 3. Wenn OK: Items aus Slots entfernen, Limit updaten.
+
+                    // Wir können processPurchaseTransaction NICHT direkt nutzen, weil es im Inventar sucht.
+                    // Wir müssen eine Variante haben, die die Slots nutzt oder wir machen es hier manuell aber korrekt.
+
+                    // Da wir Limits haben, die im Manager verwaltet werden, müssen wir den Manager nutzen.
+                    // Wir erweitern processPurchaseTransaction oder nutzen eine neue Methode für "Slot-Based".
+
+                    // Aber halt: Spec sagt "Spieler legen Bezahl-Items in die zwei Bezahl-Slots".
+                    // ServerShopManager.purchaseOffer (und processPurchaseTransaction) zieht Items aus dem INVENTAR ab.
+                    // Das ist ein Widerspruch im bestehenden Code vs. Spec/GUI-Design.
+                    // Der Packet-Code (ServerShopPurchasePacket) nutzt purchaseOffer. Das würde bedeuten, man braucht Items im Inventar.
+                    // Aber das GUI hat Bezahl-Slots.
+
+                    // Entscheidung: Wir implementieren die Logik hier im Menu korrekt für Slots.
+                    // Und wir nutzen Manager NUR für Limits.
+
+                    // Limit Check & Update
+                    if (!ServerShopManager.get().processPurchaseTransactionSlotBased(serverPlayer, currentTradingOffer.id(), 1)) {
+                        // Fehlgeschlagen (z.B. Limit erreicht) -> Aktion abbrechen!
+                        // Der Spieler hat das Item auf dem Cursor (clientseitig), aber die Transaktion wurde serverseitig abgelehnt.
+                        // Wir dürfen das Item NICHT ins Inventar legen, da es noch nicht bezahlt wurde!
+
+                        // Item vom Cursor entfernen
+                        player.containerMenu.setCarried(ItemStack.EMPTY);
+
+                        // Das Item ist damit vernichtet (was korrekt ist, da es aus dem Nichts erzeugt wurde).
+                        return;
+                    }
+
+                    // Wenn wir hier sind, hat processPurchaseTransactionSlotBased das Limit geupdated.
+                    // Jetzt müssen wir die Bezahl-Items aus den Slots entfernen.
+                    if (!currentTradingOffer.payments().isEmpty()) {
+                        removePayment(0, currentTradingOffer.payments().get(0));
+                    }
+                    if (currentTradingOffer.payments().size() > 1) {
+                        removePayment(1, currentTradingOffer.payments().get(1));
+                    }
+                    slotsChanged(tradeContainer);
                 }
-                if (currentTradingOffer.payments().size() > 1) {
-                    removePayment(1, currentTradingOffer.payments().get(1));
-                }
-                slotsChanged(tradeContainer);
             }
             super.onTake(player, stack);
         }

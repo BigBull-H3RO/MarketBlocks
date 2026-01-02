@@ -142,28 +142,33 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         }
     }
 
-    private boolean hasSpaceInPlayerInventory(ItemStack stack) {
-        // Iterate over player slots (last 36 slots in this container)
+    private int calculateMaxFitInPlayerInventory(ItemStack stack) {
         int start = TOTAL_SLOTS;
         int end = this.slots.size();
-        int remaining = stack.getCount();
+
+        int totalSpace = 0;
+        int maxStackSize = Math.min(stack.getMaxStackSize(), 64); // Safety cap
 
         for (int i = start; i < end; i++) {
             Slot s = this.slots.get(i);
             if (!s.hasItem()) {
-                 remaining -= Math.min(s.getMaxStackSize(), stack.getMaxStackSize());
+                 totalSpace += maxStackSize;
             } else {
                 ItemStack invStack = s.getItem();
                 if (ItemStack.isSameItemSameComponents(invStack, stack)) {
-                    int space = invStack.getMaxStackSize() - invStack.getCount();
+                    int space = maxStackSize - invStack.getCount();
                     if (space > 0) {
-                        remaining -= space;
+                        totalSpace += space;
                     }
                 }
             }
-            if (remaining <= 0) return true;
         }
-        return false;
+
+        return totalSpace / stack.getCount();
+    }
+
+    private boolean hasSpaceInPlayerInventory(ItemStack stack) {
+        return calculateMaxFitInPlayerInventory(stack) >= 1;
     }
 
     // --- Tab API ---
@@ -296,36 +301,42 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
             ItemStack result = ItemStack.EMPTY;
 
-            while (blockEntity.isOfferAvailable() && slot.hasItem()) {
-                ItemStack stack = slot.getItem();
+            // NEW: Efficient bulk purchase
+            ItemStack offerResult = blockEntity.getOfferResult();
+            if (offerResult.isEmpty()) return ItemStack.EMPTY;
 
-                // Pre-check: Calculate if we can fit the stack.
-                // If the player inventory cannot accept the FULL offer stack, we must STOP.
-                // Partial moves would cause moveItemStackTo to return true,
-                // which would then trigger processPurchase (full price), leading to item loss.
+            // 1. Calculate how many fit in player inventory
+            int maxPlayerFit = calculateMaxFitInPlayerInventory(offerResult);
+            if (maxPlayerFit <= 0) return ItemStack.EMPTY;
 
-                // Simulate move? AbstractContainerMenu doesn't support simulation easily.
-                // We manually check capacity.
-                ItemStack offerResult = blockEntity.getOfferResult();
-                if (offerResult.isEmpty() || !hasSpaceInPlayerInventory(offerResult)) {
-                    break;
+            // 2. Execute bulk purchase on the server block entity
+            // The BlockEntity handles payment reduction, stock reduction, and output space check.
+            // It returns the actual number of transactions performed.
+            int bought = blockEntity.processBulkPurchase(maxPlayerFit);
+
+            if (bought > 0) {
+                // 3. Give items to player
+                ItemStack totalResult = offerResult.copy();
+                totalResult.setCount(offerResult.getCount() * bought);
+
+                if (this.moveItemStackTo(totalResult, TOTAL_SLOTS, this.slots.size(), true)) {
+                    // Success moving to player inv.
                 }
 
-                if (result.isEmpty()) {
-                    result = stack.copy();
+                // If there are leftovers for some reason (race condition), drop them?
+                if (!totalResult.isEmpty()) {
+                     player.drop(totalResult, false);
                 }
 
-                if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
-                    break;
-                }
-
-                slot.set(stack);
-                blockEntity.processPurchase();
                 blockEntity.updateOfferSlot();
-            }
 
-            blockEntity.updateOfferSlot();
-            return result;
+                // Let's return the full stack we 'moved'.
+                ItemStack ret = offerResult.copy();
+                ret.setCount(offerResult.getCount() * bought);
+                return ret;
+            } else {
+                 return ItemStack.EMPTY;
+            }
         }
 
         Slot slot = this.slots.get(index);

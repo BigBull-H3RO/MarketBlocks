@@ -293,6 +293,18 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
                     b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name())),
                     Component.translatable("gui.marketblocks.server_shop.add_offer"), () -> false));
         }
+
+        // "CLEAR" Button - nur wenn ein Angebot ausgewählt ist (Spec: "Clear-Button im Edit-Mode")
+        if (selectedOfferId != null) {
+            int clearX = leftPos + PREVIEW_X_OFFSET + 92;
+            int clearY = topPos + PREVIEW_Y_OFFSET;
+
+            addDynamic(Button.builder(Component.literal("X"), b -> {
+                this.selectedOfferId = null;
+                updatePreview();
+                rebuildUi();
+            }).bounds(clearX, clearY, 20, 20).tooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("gui.marketblocks.server_shop.clear_selection"))).build());
+        }
     }
 
     private void buildPageSidebar() {
