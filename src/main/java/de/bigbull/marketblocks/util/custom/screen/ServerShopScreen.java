@@ -293,7 +293,6 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
                     b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name())),
                     Component.translatable("gui.marketblocks.server_shop.add_offer"), () -> false));
         }
-        }
     }
 
     private void buildPageSidebar() {
