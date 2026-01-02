@@ -94,6 +94,32 @@ public class ServerShopMenu extends AbstractContainerMenu {
         }
     }
 
+    private int calculateMaxFitInPlayerInventory(ItemStack stack) {
+        // Player inventory slots are from TEMPLATE_SLOTS to end
+        int start = TEMPLATE_SLOTS;
+        int end = this.slots.size();
+
+        int totalSpace = 0;
+        int maxStackSize = Math.min(stack.getMaxStackSize(), 64);
+
+        for (int i = start; i < end; i++) {
+            Slot s = this.slots.get(i);
+            if (!s.hasItem()) {
+                 totalSpace += maxStackSize;
+            } else {
+                ItemStack invStack = s.getItem();
+                if (ItemStack.isSameItemSameComponents(invStack, stack)) {
+                    int space = maxStackSize - invStack.getCount();
+                    if (space > 0) {
+                        totalSpace += space;
+                    }
+                }
+            }
+        }
+
+        return totalSpace / stack.getCount();
+    }
+
     public void setSelectedOffer(UUID offerId) {
         ServerShopOffer offer = ServerShopManager.get().findOffer(offerId);
         setCurrentTradingOffer(offer);
@@ -263,21 +289,83 @@ public class ServerShopMenu extends AbstractContainerMenu {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // Im Kauf-Modus: Massenkauf Logik
+                // Im Kauf-Modus: Optimierte Massenkauf Logik (ohne Loop-Risiko)
                 if (currentTradingOffer == null) return ItemStack.EMPTY;
+                if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)) return ItemStack.EMPTY;
 
                 ItemStack resultProto = currentTradingOffer.result();
 
-                while (newStack.getCount() > 0 && ItemStack.isSameItemSameComponents(newStack, resultProto)) {
-                    if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, this.slots.size(), true)) {
-                        break;
+                // 1. Calculate Affordable (based on Payment Slots)
+                int affordable = Integer.MAX_VALUE;
+                ItemStack p1 = tradeContainer.getItem(0);
+                ItemStack p2 = tradeContainer.getItem(1);
+
+                if (!currentTradingOffer.payments().isEmpty()) {
+                    ItemStack cost1 = currentTradingOffer.payments().get(0);
+                    if (!cost1.isEmpty()) {
+                        if (p1.isEmpty() || !ItemStack.isSameItemSameComponents(p1, cost1)) affordable = 0;
+                        else affordable = Math.min(affordable, p1.getCount() / cost1.getCount());
                     }
-                    slot.onTake(player, newStack);
-                    slotsChanged(tradeContainer);
-                    newStack = slot.getItem();
-                    if (newStack.isEmpty()) break;
                 }
-                return originalStack;
+                if (currentTradingOffer.payments().size() > 1) {
+                    ItemStack cost2 = currentTradingOffer.payments().get(1);
+                    if (!cost2.isEmpty()) {
+                        if (p2.isEmpty() || !ItemStack.isSameItemSameComponents(p2, cost2)) affordable = 0;
+                        else affordable = Math.min(affordable, p2.getCount() / cost2.getCount());
+                    }
+                }
+                if (affordable == Integer.MAX_VALUE) affordable = 0; // Should not happen unless free, handle free?
+                if (currentTradingOffer.payments().stream().allMatch(ItemStack::isEmpty)) affordable = 6400; // Cap free items
+
+                // 2. Calculate Fit
+                int fit = calculateMaxFitInPlayerInventory(resultProto);
+
+                // 3. Amount to buy
+                int amount = Math.min(affordable, fit);
+                if (amount <= 0) return ItemStack.EMPTY;
+
+                // 4. Execute Transaction (Limits check & update)
+                // This deducts from Limits but NOT payment slots (as they are in Container)
+                if (ServerShopManager.get().processPurchaseTransactionSlotBased(serverPlayer, currentTradingOffer.id(), amount)) {
+                    // 5. Deduct Payment from Slots
+                    if (!currentTradingOffer.payments().isEmpty()) {
+                        ItemStack cost1 = currentTradingOffer.payments().get(0);
+                        if (!cost1.isEmpty()) {
+                            tradeContainer.removeItem(0, cost1.getCount() * amount);
+                        }
+                    }
+                    if (currentTradingOffer.payments().size() > 1) {
+                        ItemStack cost2 = currentTradingOffer.payments().get(1);
+                        if (!cost2.isEmpty()) {
+                            tradeContainer.removeItem(1, cost2.getCount() * amount);
+                        }
+                    }
+
+                    // 6. Give Items (Chunked)
+                    int remaining = resultProto.getCount() * amount;
+                    int maxStack = resultProto.getMaxStackSize();
+
+                    ItemStack totalBoughtCopy = resultProto.copy();
+                    totalBoughtCopy.setCount(remaining);
+
+                    while (remaining > 0) {
+                        int chunkSize = Math.min(remaining, maxStack);
+                        ItemStack chunk = resultProto.copy();
+                        chunk.setCount(chunkSize);
+
+                        if (!this.moveItemStackTo(chunk, TEMPLATE_SLOTS, this.slots.size(), true)) {
+                            // Should not happen
+                            if (!chunk.isEmpty()) player.drop(chunk, false);
+                        } else {
+                            if (!chunk.isEmpty()) player.drop(chunk, false);
+                        }
+                        remaining -= chunkSize;
+                    }
+
+                    slotsChanged(tradeContainer);
+                    return totalBoughtCopy;
+                }
+                return ItemStack.EMPTY;
             }
         }
         // Klick im Template/Bezahl-Bereich -> ins Inventar

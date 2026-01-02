@@ -147,7 +147,8 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         int end = this.slots.size();
 
         int totalSpace = 0;
-        int maxStackSize = Math.min(stack.getMaxStackSize(), 64); // Safety cap
+        // Fix: Use the item's max stack size, which is 1 for non-stackables (tools, etc.)
+        int maxStackSize = Math.min(stack.getMaxStackSize(), 64);
 
         for (int i = start; i < end; i++) {
             Slot s = this.slots.get(i);
@@ -316,24 +317,35 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
             if (bought > 0) {
                 // 3. Give items to player
-                ItemStack totalResult = offerResult.copy();
-                totalResult.setCount(offerResult.getCount() * bought);
+                // Split into chunks of maxStackSize to ensure moveItemStackTo handles them correctly.
+                int remaining = offerResult.getCount() * bought;
+                int maxStack = offerResult.getMaxStackSize();
 
-                if (this.moveItemStackTo(totalResult, TOTAL_SLOTS, this.slots.size(), true)) {
-                    // Success moving to player inv.
-                }
+                ItemStack totalBoughtCopy = offerResult.copy();
+                totalBoughtCopy.setCount(remaining);
 
-                // If there are leftovers for some reason (race condition), drop them?
-                if (!totalResult.isEmpty()) {
-                     player.drop(totalResult, false);
+                while (remaining > 0) {
+                    int chunkSize = Math.min(remaining, maxStack);
+                    ItemStack chunk = offerResult.copy();
+                    chunk.setCount(chunkSize);
+
+                    if (!this.moveItemStackTo(chunk, TOTAL_SLOTS, this.slots.size(), true)) {
+                        // Should not happen if calculateMaxFitInPlayerInventory is correct.
+                        // But if it does, we must drop the rest to avoid voiding paid items.
+                        if (!chunk.isEmpty()) {
+                            player.drop(chunk, false);
+                        }
+                    } else {
+                         // Double check if moveItemStackTo left something in chunk
+                         if (!chunk.isEmpty()) {
+                             player.drop(chunk, false);
+                         }
+                    }
+                    remaining -= chunkSize;
                 }
 
                 blockEntity.updateOfferSlot();
-
-                // Let's return the full stack we 'moved'.
-                ItemStack ret = offerResult.copy();
-                ret.setCount(offerResult.getCount() * bought);
-                return ret;
+                return totalBoughtCopy; // Return full amount for UI/Sound
             } else {
                  return ItemStack.EMPTY;
             }
