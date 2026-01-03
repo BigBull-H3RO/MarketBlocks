@@ -129,27 +129,31 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
         if (isLocalEditMode) {
             if (selectedOfferId != null) {
-                // Suche im lokalen Cache, nicht über Manager (der ist serverseitig)
+                // When an offer is selected in edit mode, we show IT, but we should probably
+                // reflect changes if we were editing it?
+                // Spec says: "Clear-Button im Edit-Mode" appears when offer selected.
+                // It implies we are in a state where we might edit it?
+                // But generally "Edit Mode" + "Selection" means we are viewing/managing that offer.
+                // The "Add Offer" workflow involves putting items in slots WITHOUT selection.
+                // So if selection is active, we show the selected offer.
                 ServerShopOffer offer = findOfferInCache(selectedOfferId);
                 if (offer != null) {
-                    ItemStack p1 = offer.payments().isEmpty() ? ItemStack.EMPTY : offer.payments().get(0);
-                    ItemStack p2 = offer.payments().size() > 1 ? offer.payments().get(1) : ItemStack.EMPTY;
-                    this.offerPreviewButton.visible = true;
-                    this.offerPreviewButton.update(p1, p2, offer.result(), true);
+                    displayOfferInPreview(offer);
                 } else {
+                    // Offer vanished?
+                    this.selectedOfferId = null;
                     showTemplateSlotsInPreview();
                 }
             } else {
+                // No selection -> Creating new offer -> Live Preview from Slots
                 showTemplateSlotsInPreview();
             }
         } else {
+            // View Mode
             if (selectedOfferId != null) {
                 ServerShopOffer offer = findOfferInCache(selectedOfferId);
                 if (offer != null) {
-                    ItemStack p1 = offer.payments().isEmpty() ? ItemStack.EMPTY : offer.payments().get(0);
-                    ItemStack p2 = offer.payments().size() > 1 ? offer.payments().get(1) : ItemStack.EMPTY;
-                    this.offerPreviewButton.visible = true;
-                    this.offerPreviewButton.update(p1, p2, offer.result(), true);
+                    displayOfferInPreview(offer);
                 } else {
                     this.offerPreviewButton.visible = false;
                 }
@@ -159,7 +163,21 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         }
     }
 
-    // Neue Hilfsmethode - sucht im Client-Cache statt über ServerShopManager
+    private void displayOfferInPreview(ServerShopOffer offer) {
+        ItemStack p1 = offer.payments().isEmpty() ? ItemStack.EMPTY : offer.payments().get(0);
+        ItemStack p2 = offer.payments().size() > 1 ? offer.payments().get(1) : ItemStack.EMPTY;
+        ItemStack res = offer.result();
+
+        // Dynamic Ordering for display
+        if (p1.isEmpty() && !p2.isEmpty()) {
+            p1 = p2;
+            p2 = ItemStack.EMPTY;
+        }
+
+        this.offerPreviewButton.visible = true;
+        this.offerPreviewButton.update(p1, p2, res, true);
+    }
+
     private ServerShopOffer findOfferInCache(UUID offerId) {
         if (offerId == null || cachedData == null) return null;
         for (ServerShopPage page : cachedData.pages()) {
@@ -177,10 +195,20 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         ItemStack p2 = menu.getTemplateStack(1);
         ItemStack res = menu.getTemplateStack(2);
 
-        // Nur anzeigen, wenn Ergebnis da ist, um "rotes X" bei leerem Editor zu vermeiden
-        if (!res.isEmpty()) {
+        // Dynamic Ordering for Live Preview
+        if (p1.isEmpty() && !p2.isEmpty()) {
+            p1 = p2;
+            p2 = ItemStack.EMPTY;
+        }
+
+        // Always show preview if ANY item is present in payment or buy slots
+        // Spec: "Payment items must appear immediately", "Buy item must appear immediately"
+        // "Preview must NOT depend on the buy slot being filled"
+        if (!p1.isEmpty() || !p2.isEmpty() || !res.isEmpty()) {
             this.offerPreviewButton.visible = true;
-            this.offerPreviewButton.update(p1, p2, res, true);
+            this.offerPreviewButton.update(p1, p2, res, true); // true = valid? actually 'valid' usually checks completeness
+            // OfferTemplateButton.update(p1, p2, out, valid) -> if valid is true, it draws arrow normally?
+            // We want it to look like a preview.
         } else {
             this.offerPreviewButton.visible = false;
         }
@@ -377,16 +405,22 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         int itemY = y + 1;
         int startX = x + 4;
 
-        if (!offer.payments().isEmpty()) {
-            ItemStack stack = offer.payments().get(0);
-            graphics.renderItem(stack, startX, itemY);
-            graphics.renderItemDecorations(font, stack, startX, itemY);
+        // Dynamic Ordering for List
+        ItemStack p1 = offer.payments().isEmpty() ? ItemStack.EMPTY : offer.payments().get(0);
+        ItemStack p2 = offer.payments().size() > 1 ? offer.payments().get(1) : ItemStack.EMPTY;
+        if (p1.isEmpty() && !p2.isEmpty()) {
+            p1 = p2;
+            p2 = ItemStack.EMPTY;
         }
 
-        if (offer.payments().size() > 1 && !offer.payments().get(1).isEmpty()) {
-            ItemStack stack = offer.payments().get(1);
-            graphics.renderItem(stack, startX + 18, itemY);
-            graphics.renderItemDecorations(font, stack, startX + 18, itemY);
+        if (!p1.isEmpty()) {
+            graphics.renderItem(p1, startX, itemY);
+            graphics.renderItemDecorations(font, p1, startX, itemY);
+        }
+
+        if (!p2.isEmpty()) {
+            graphics.renderItem(p2, startX + 18, itemY);
+            graphics.renderItemDecorations(font, p2, startX + 18, itemY);
         }
 
         graphics.blit(ARROW_ICON, startX + 38, itemY + 4, 0, 0, 10, 9, 10, 9);
@@ -396,11 +430,11 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         graphics.renderItemDecorations(font, offer.result(), resultX, itemY);
 
         if (hovered) {
-            if (mouseX >= startX && mouseX <= startX + 16)
-                graphics.renderTooltip(font, offer.payments().get(0), mouseX, mouseY);
-            else if (mouseX >= startX + 18 && mouseX <= startX + 34 && offer.payments().size() > 1)
-                graphics.renderTooltip(font, offer.payments().get(1), mouseX, mouseY);
-            else if (mouseX >= resultX && mouseX <= resultX + 16)
+            if (mouseX >= startX && mouseX <= startX + 16 && !p1.isEmpty())
+                graphics.renderTooltip(font, p1, mouseX, mouseY);
+            else if (mouseX >= startX + 18 && mouseX <= startX + 34 && !p2.isEmpty())
+                graphics.renderTooltip(font, p2, mouseX, mouseY);
+            else if (mouseX >= resultX && mouseX <= resultX + 16 && !offer.result().isEmpty())
                 graphics.renderTooltip(font, offer.result(), mouseX, mouseY);
         }
     }
@@ -473,15 +507,30 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private void renderScroller(GuiGraphics guiGraphics) {
-        if (!isScrollBarActive()) return;
+        // Spec: "Scrollbar must ALWAYS be visible"
         int scrollerX = leftPos + SCROLLER_X_OFFSET;
         int scrollerY = topPos + LIST_Y_OFFSET;
+        int scrollerH = MAX_VISIBLE_ROWS * ROW_HEIGHT;
+
+        // Draw Track (Optional, but looks better if "Always Visible")
+        guiGraphics.fill(scrollerX, scrollerY, scrollerX + SCROLLER_WIDTH, scrollerY + scrollerH, 0xFF000000);
+
         int maxScroll = visibleOffers.size() - MAX_VISIBLE_ROWS;
-        if (maxScroll <= 0) return;
-        float progress = (float) scrollOffset / (float) maxScroll;
-        int handleTravel = (MAX_VISIBLE_ROWS * ROW_HEIGHT) - SCROLLER_HEIGHT;
+        float progress = 0f;
+        if (maxScroll > 0) {
+            progress = (float) scrollOffset / (float) maxScroll;
+        }
+
+        int handleTravel = scrollerH - SCROLLER_HEIGHT;
         int handleY = scrollerY + Mth.floor(progress * handleTravel);
-        guiGraphics.fill(scrollerX, handleY, scrollerX + SCROLLER_WIDTH, handleY + SCROLLER_HEIGHT, isDragging ? 0xFFAAAAAA : 0xFF888888);
+
+        // Draw Handle
+        // If not active (maxScroll <= 0), handle stays at top or fills?
+        // Typically it stays at top and might be disabled color.
+        boolean active = maxScroll > 0;
+        int color = active ? (isDragging ? 0xFFAAAAAA : 0xFF888888) : 0xFF444444;
+
+        guiGraphics.fill(scrollerX, handleY, scrollerX + SCROLLER_WIDTH, handleY + SCROLLER_HEIGHT, color);
     }
 
     private boolean isScrollBarActive() {

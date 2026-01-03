@@ -257,12 +257,16 @@ public class ServerShopMenu extends AbstractContainerMenu {
     // Hilfsmethode für sicheres Item-Zurückgeben
     private void giveItemToPlayer(Player player, ItemStack stack) {
         if (stack.isEmpty()) return;
+        // placeItemBackInInventory adds to inventory OR drops if full.
+        // It modifies the stack passed to it?
+        // Wait, placeItemBackInInventory(ItemStack) returns boolean.
+        // It does NOT modify the stack in-place usually (it works on a copy or consumes it?).
+        // In recent versions, it consumes the stack.
+        // Let's rely on standard behavior: if it returns true, it's done.
+        // If it returns false (or stack is not empty), it means it failed/partial?
+        // Actually, for container closing, we should just ensure it's not lost.
+        // If placeItemBackInInventory handles dropping, we don't need manual drop.
         player.getInventory().placeItemBackInInventory(stack);
-        // Wenn placeItemBackInInventory nicht alles aufnehmen konnte (Inventar voll),
-        // bleibt ein Rest im Stack. Diesen müssen wir manuell droppen.
-        if (!stack.isEmpty()) {
-            player.drop(stack, false);
-        }
     }
 
     @Override
