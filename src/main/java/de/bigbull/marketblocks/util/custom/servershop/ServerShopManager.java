@@ -104,7 +104,11 @@ public final class ServerShopManager {
         }
     }
 
-    public boolean purchaseOffer(ServerPlayer player, UUID offerId, int amount) {
+    /**
+     * Führt die Transaktion durch (Bezahlung abziehen, Limits prüfen & updaten),
+     * gibt aber NICHT das Ergebnis-Item. Das muss der Aufrufer tun (z.B. Slot-Logik).
+     */
+    public boolean processPurchaseTransaction(ServerPlayer player, UUID offerId, int amount) {
         synchronized (lock) {
             ensureInitialized();
             ServerShopOffer offer = findOffer(offerId);
@@ -154,12 +158,63 @@ public final class ServerShopManager {
                 syncOpenViewers(player);
             }
 
-            // 5. WARE GEBEN
-            ItemStack result = offer.result().copy();
-            result.setCount(offer.result().getCount() * amount);
-            player.getInventory().placeItemBackInInventory(result);
+            return true;
+        }
+    }
+
+    /**
+     * Variante für GUI-basierte Käufe (Items liegen in Slots, nicht im Inventar).
+     * Hier prüfen wir NUR Limits und updaten diese. Die Bezahlung muss vom Caller (Menu) abgezogen werden!
+     */
+    public boolean processPurchaseTransactionSlotBased(ServerPlayer player, UUID offerId, int amount) {
+        synchronized (lock) {
+            ensureInitialized();
+            ServerShopOffer offer = findOffer(offerId);
+            if (offer == null || amount <= 0) {
+                return false;
+            }
+
+            // 1. LIMIT PRÜFUNG
+            OfferLimit limit = offer.limits();
+            if (!limit.isUnlimited()) {
+                if (limit.stockLimit().isPresent()) {
+                    int stock = limit.stockLimit().get();
+                    if (stock < amount) {
+                        player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                        return false;
+                    }
+                }
+            }
+
+            // 2. LIMIT AKTUALISIEREN
+            if (!limit.isUnlimited() && limit.stockLimit().isPresent()) {
+                int newStock = limit.stockLimit().get() - amount;
+                OfferLimit newLimit = limit.withStockLimit(newStock);
+                offer.setLimits(newLimit);
+                markDirty();
+                // Wichtig: Syncen, damit alle Clients das neue Limit sehen
+                syncOpenViewers(player);
+            }
 
             return true;
+        }
+    }
+
+    public boolean purchaseOffer(ServerPlayer player, UUID offerId, int amount) {
+        synchronized (lock) {
+            // Führe Transaktion durch
+            if (processPurchaseTransaction(player, offerId, amount)) {
+                // Wenn erfolgreich, Item geben
+                ServerShopOffer offer = findOffer(offerId);
+                // (Offer kann nicht null sein, wenn processPurchaseTransaction true ist, aber sicher ist sicher)
+                if (offer != null) {
+                    ItemStack result = offer.result().copy();
+                    result.setCount(offer.result().getCount() * amount);
+                    player.getInventory().placeItemBackInInventory(result);
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

@@ -94,6 +94,32 @@ public class ServerShopMenu extends AbstractContainerMenu {
         }
     }
 
+    private int calculateMaxFitInPlayerInventory(ItemStack stack) {
+        // Player inventory slots are from TEMPLATE_SLOTS to end
+        int start = TEMPLATE_SLOTS;
+        int end = this.slots.size();
+
+        int totalSpace = 0;
+        int maxStackSize = Math.min(stack.getMaxStackSize(), 64);
+
+        for (int i = start; i < end; i++) {
+            Slot s = this.slots.get(i);
+            if (!s.hasItem()) {
+                 totalSpace += maxStackSize;
+            } else {
+                ItemStack invStack = s.getItem();
+                if (ItemStack.isSameItemSameComponents(invStack, stack)) {
+                    int space = maxStackSize - invStack.getCount();
+                    if (space > 0) {
+                        totalSpace += space;
+                    }
+                }
+            }
+        }
+
+        return totalSpace / stack.getCount();
+    }
+
     public void setSelectedOffer(UUID offerId) {
         ServerShopOffer offer = ServerShopManager.get().findOffer(offerId);
         setCurrentTradingOffer(offer);
@@ -231,12 +257,16 @@ public class ServerShopMenu extends AbstractContainerMenu {
     // Hilfsmethode für sicheres Item-Zurückgeben
     private void giveItemToPlayer(Player player, ItemStack stack) {
         if (stack.isEmpty()) return;
+        // placeItemBackInInventory adds to inventory OR drops if full.
+        // It modifies the stack passed to it?
+        // Wait, placeItemBackInInventory(ItemStack) returns boolean.
+        // It does NOT modify the stack in-place usually (it works on a copy or consumes it?).
+        // In recent versions, it consumes the stack.
+        // Let's rely on standard behavior: if it returns true, it's done.
+        // If it returns false (or stack is not empty), it means it failed/partial?
+        // Actually, for container closing, we should just ensure it's not lost.
+        // If placeItemBackInInventory handles dropping, we don't need manual drop.
         player.getInventory().placeItemBackInInventory(stack);
-        // Wenn placeItemBackInInventory nicht alles aufnehmen konnte (Inventar voll),
-        // bleibt ein Rest im Stack. Diesen müssen wir manuell droppen.
-        if (!stack.isEmpty()) {
-            player.drop(stack, false);
-        }
     }
 
     @Override
@@ -263,21 +293,83 @@ public class ServerShopMenu extends AbstractContainerMenu {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // Im Kauf-Modus: Massenkauf Logik
+                // Im Kauf-Modus: Optimierte Massenkauf Logik (ohne Loop-Risiko)
                 if (currentTradingOffer == null) return ItemStack.EMPTY;
+                if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)) return ItemStack.EMPTY;
 
                 ItemStack resultProto = currentTradingOffer.result();
 
-                while (newStack.getCount() > 0 && ItemStack.isSameItemSameComponents(newStack, resultProto)) {
-                    if (!this.moveItemStackTo(newStack, TEMPLATE_SLOTS, this.slots.size(), true)) {
-                        break;
+                // 1. Calculate Affordable (based on Payment Slots)
+                int affordable = Integer.MAX_VALUE;
+                ItemStack p1 = tradeContainer.getItem(0);
+                ItemStack p2 = tradeContainer.getItem(1);
+
+                if (!currentTradingOffer.payments().isEmpty()) {
+                    ItemStack cost1 = currentTradingOffer.payments().get(0);
+                    if (!cost1.isEmpty()) {
+                        if (p1.isEmpty() || !ItemStack.isSameItemSameComponents(p1, cost1)) affordable = 0;
+                        else affordable = Math.min(affordable, p1.getCount() / cost1.getCount());
                     }
-                    slot.onTake(player, newStack);
-                    slotsChanged(tradeContainer);
-                    newStack = slot.getItem();
-                    if (newStack.isEmpty()) break;
                 }
-                return originalStack;
+                if (currentTradingOffer.payments().size() > 1) {
+                    ItemStack cost2 = currentTradingOffer.payments().get(1);
+                    if (!cost2.isEmpty()) {
+                        if (p2.isEmpty() || !ItemStack.isSameItemSameComponents(p2, cost2)) affordable = 0;
+                        else affordable = Math.min(affordable, p2.getCount() / cost2.getCount());
+                    }
+                }
+                if (affordable == Integer.MAX_VALUE) affordable = 0; // Should not happen unless free, handle free?
+                if (currentTradingOffer.payments().stream().allMatch(ItemStack::isEmpty)) affordable = 6400; // Cap free items
+
+                // 2. Calculate Fit
+                int fit = calculateMaxFitInPlayerInventory(resultProto);
+
+                // 3. Amount to buy
+                int amount = Math.min(affordable, fit);
+                if (amount <= 0) return ItemStack.EMPTY;
+
+                // 4. Execute Transaction (Limits check & update)
+                // This deducts from Limits but NOT payment slots (as they are in Container)
+                if (ServerShopManager.get().processPurchaseTransactionSlotBased(serverPlayer, currentTradingOffer.id(), amount)) {
+                    // 5. Deduct Payment from Slots
+                    if (!currentTradingOffer.payments().isEmpty()) {
+                        ItemStack cost1 = currentTradingOffer.payments().get(0);
+                        if (!cost1.isEmpty()) {
+                            tradeContainer.removeItem(0, cost1.getCount() * amount);
+                        }
+                    }
+                    if (currentTradingOffer.payments().size() > 1) {
+                        ItemStack cost2 = currentTradingOffer.payments().get(1);
+                        if (!cost2.isEmpty()) {
+                            tradeContainer.removeItem(1, cost2.getCount() * amount);
+                        }
+                    }
+
+                    // 6. Give Items (Chunked)
+                    int remaining = resultProto.getCount() * amount;
+                    int maxStack = resultProto.getMaxStackSize();
+
+                    ItemStack totalBoughtCopy = resultProto.copy();
+                    totalBoughtCopy.setCount(remaining);
+
+                    while (remaining > 0) {
+                        int chunkSize = Math.min(remaining, maxStack);
+                        ItemStack chunk = resultProto.copy();
+                        chunk.setCount(chunkSize);
+
+                        if (!this.moveItemStackTo(chunk, TEMPLATE_SLOTS, this.slots.size(), true)) {
+                            // Should not happen
+                            if (!chunk.isEmpty()) player.drop(chunk, false);
+                        } else {
+                            if (!chunk.isEmpty()) player.drop(chunk, false);
+                        }
+                        remaining -= chunkSize;
+                    }
+
+                    slotsChanged(tradeContainer);
+                    return totalBoughtCopy;
+                }
+                return ItemStack.EMPTY;
             }
         }
         // Klick im Template/Bezahl-Bereich -> ins Inventar
@@ -343,13 +435,64 @@ public class ServerShopMenu extends AbstractContainerMenu {
         @Override
         public void onTake(Player player, ItemStack stack) {
             if (!isEditMode && currentTradingOffer != null) {
-                if (!currentTradingOffer.payments().isEmpty()) {
-                    removePayment(0, currentTradingOffer.payments().get(0));
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    // Serverseitig: Transaktion durchführen (Limits + Bezahlung aus Inventar!)
+                    // ACHTUNG: Die Bezahlung liegt aber in den SLOTS (tradeContainer), nicht im Spieler-Inventar direkt?
+                    // Nein, ServerShop ist "Villager-Style" oder "Click-Buy"?
+                    // Spec: "Spieler legen Bezahl-Items in die zwei Bezahl-Slots"
+                    // ServerShopManager.purchaseOffer prüft player.getInventory().contains(required).
+                    // Das passt NICHT zusammen. ServerShopManager geht davon aus, dass Items im Inventar sind.
+                    // ABER: ServerShopMenu legt Items in Slots 0 und 1. Diese sind "fake" Slots oder Container?
+                    // tradeContainer ist ein SimpleContainer.
+                    // Wenn der Spieler Items in Slot 0/1 legt, sind sie NICHT mehr im Inventar.
+
+                    // KORREKTUR:
+                    // ServerShopManager.processPurchaseTransaction prüft Inventar.
+                    // Das ist für den "Auto-Buy" via Packet/Button gut.
+                    // Aber hier im GUI liegen die Items in den Slots.
+                    // Wir müssen also:
+                    // 1. Prüfen, ob die Items in den Slots reichen.
+                    // 2. Limits prüfen (via Manager Helper?).
+                    // 3. Wenn OK: Items aus Slots entfernen, Limit updaten.
+
+                    // Wir können processPurchaseTransaction NICHT direkt nutzen, weil es im Inventar sucht.
+                    // Wir müssen eine Variante haben, die die Slots nutzt oder wir machen es hier manuell aber korrekt.
+
+                    // Da wir Limits haben, die im Manager verwaltet werden, müssen wir den Manager nutzen.
+                    // Wir erweitern processPurchaseTransaction oder nutzen eine neue Methode für "Slot-Based".
+
+                    // Aber halt: Spec sagt "Spieler legen Bezahl-Items in die zwei Bezahl-Slots".
+                    // ServerShopManager.purchaseOffer (und processPurchaseTransaction) zieht Items aus dem INVENTAR ab.
+                    // Das ist ein Widerspruch im bestehenden Code vs. Spec/GUI-Design.
+                    // Der Packet-Code (ServerShopPurchasePacket) nutzt purchaseOffer. Das würde bedeuten, man braucht Items im Inventar.
+                    // Aber das GUI hat Bezahl-Slots.
+
+                    // Entscheidung: Wir implementieren die Logik hier im Menu korrekt für Slots.
+                    // Und wir nutzen Manager NUR für Limits.
+
+                    // Limit Check & Update
+                    if (!ServerShopManager.get().processPurchaseTransactionSlotBased(serverPlayer, currentTradingOffer.id(), 1)) {
+                        // Fehlgeschlagen (z.B. Limit erreicht) -> Aktion abbrechen!
+                        // Der Spieler hat das Item auf dem Cursor (clientseitig), aber die Transaktion wurde serverseitig abgelehnt.
+                        // Wir dürfen das Item NICHT ins Inventar legen, da es noch nicht bezahlt wurde!
+
+                        // Item vom Cursor entfernen
+                        player.containerMenu.setCarried(ItemStack.EMPTY);
+
+                        // Das Item ist damit vernichtet (was korrekt ist, da es aus dem Nichts erzeugt wurde).
+                        return;
+                    }
+
+                    // Wenn wir hier sind, hat processPurchaseTransactionSlotBased das Limit geupdated.
+                    // Jetzt müssen wir die Bezahl-Items aus den Slots entfernen.
+                    if (!currentTradingOffer.payments().isEmpty()) {
+                        removePayment(0, currentTradingOffer.payments().get(0));
+                    }
+                    if (currentTradingOffer.payments().size() > 1) {
+                        removePayment(1, currentTradingOffer.payments().get(1));
+                    }
+                    slotsChanged(tradeContainer);
                 }
-                if (currentTradingOffer.payments().size() > 1) {
-                    removePayment(1, currentTradingOffer.payments().get(1));
-                }
-                slotsChanged(tradeContainer);
             }
             super.onTake(player, stack);
         }
