@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.serverShop.ServerShopSyncPacket;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
@@ -15,16 +16,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /**
@@ -35,7 +37,11 @@ public final class ServerShopManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final LevelResource SHOP_DIR = new LevelResource("marketblocks");
     private static final String FILE_NAME = "server_shop.json";
+    private static final String BACKUP_FILE_SUFFIX = ".bak";
+    private static final String TEMP_FILE_SUFFIX = ".tmp";
     private static final int AUTO_SAVE_TICKS = 20 * 60;
+    private static final int MAX_PAGE_NAME_LENGTH = 64;
+    private static final int DEMAND_DECAY_PER_DAY = 1;
 
     private static final ServerShopManager INSTANCE = new ServerShopManager();
 
@@ -46,6 +52,7 @@ public final class ServerShopManager {
     private final Object lock = new Object();
     private ServerShopData data = ServerShopData.empty();
     private RegistryAccess registryAccess;
+    private MinecraftServer server;
     private Path configFile;
     private boolean dirty;
     private boolean initialized;
@@ -56,6 +63,7 @@ public final class ServerShopManager {
 
     public void initialize(MinecraftServer server) {
         synchronized (lock) {
+            this.server = server;
             this.registryAccess = server.registryAccess();
             Path dir = server.getWorldPath(SHOP_DIR);
             this.configFile = dir.resolve(FILE_NAME);
@@ -78,6 +86,7 @@ public final class ServerShopManager {
                 saveNow();
                 data = ServerShopData.empty();
                 registryAccess = null;
+                server = null;
                 configFile = null;
                 initialized = false;
             }
@@ -89,6 +98,13 @@ public final class ServerShopManager {
             if (!initialized) {
                 return;
             }
+
+            boolean runtimeChanged = applyRuntimeUpkeepToAllOffers(currentGameTime(), currentDay());
+            if (runtimeChanged) {
+                markDirty();
+                refreshOpenViewersLocked();
+            }
+
             if (dirty) {
                 ticksSinceSave++;
                 if (ticksSinceSave >= AUTO_SAVE_TICKS) {
@@ -105,138 +121,114 @@ public final class ServerShopManager {
     }
 
     /**
-     * Führt die Transaktion durch (Bezahlung abziehen, Limits prüfen & updaten),
-     * gibt aber NICHT das Ergebnis-Item. Das muss der Aufrufer tun (z.B. Slot-Logik).
-     */
-    public boolean processPurchaseTransaction(ServerPlayer player, UUID offerId, int amount) {
-        synchronized (lock) {
-            ensureInitialized();
-            ServerShopOffer offer = findOffer(offerId);
-            if (offer == null || amount <= 0) {
-                return false;
-            }
-
-            // 1. LIMIT PRÜFUNG
-            OfferLimit limit = offer.limits();
-            if (!limit.isUnlimited()) {
-                if (limit.stockLimit().isPresent()) {
-                    int stock = limit.stockLimit().get();
-                    if (stock < amount) {
-                        player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
-                        return false;
-                    }
-                }
-            }
-
-            // 2. ITEM KOSTEN PRÜFUNG
-            List<ItemStack> payments = offer.payments();
-            for (ItemStack payment : payments) {
-                if (payment.isEmpty()) continue;
-                ItemStack required = payment.copy();
-                required.setCount(payment.getCount() * amount);
-                if (!player.getInventory().contains(required)) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.insufficient_stock"));
-                    return false;
-                }
-            }
-
-            // 3. ZAHLUNG ABZIEHEN
-            for (ItemStack payment : payments) {
-                if (payment.isEmpty()) continue;
-                ItemStack toRemove = payment.copy();
-                toRemove.setCount(payment.getCount() * amount);
-                player.getInventory().removeItem(toRemove);
-            }
-
-            // 4. LIMIT AKTUALISIEREN
-            if (!limit.isUnlimited() && limit.stockLimit().isPresent()) {
-                int newStock = limit.stockLimit().get() - amount;
-                OfferLimit newLimit = limit.withStockLimit(newStock);
-                offer.setLimits(newLimit);
-                markDirty();
-                // Wichtig: Syncen, damit alle Clients das neue Limit sehen
-                syncOpenViewers(player);
-            }
-
-            return true;
-        }
-    }
-
-    /**
      * Variante für GUI-basierte Käufe (Items liegen in Slots, nicht im Inventar).
-     * Hier prüfen wir NUR Limits und updaten diese. Die Bezahlung muss vom Caller (Menu) abgezogen werden!
+     * Hier prüfen wir Limits, Restock und Preiszustand; die Bezahlung muss vom Caller (Menu) abgezogen werden.
      */
     public boolean processPurchaseTransactionSlotBased(ServerPlayer player, UUID offerId, int amount) {
         synchronized (lock) {
             ensureInitialized();
             ServerShopOffer offer = findOffer(offerId);
-            if (offer == null || amount <= 0) {
+            if (offer == null || amount <= 0 || player == null) {
                 return false;
             }
 
-            // 1. LIMIT PRÜFUNG
+            long gameTime = currentGameTime();
+            long day = currentDay();
+            boolean runtimeChanged = applyRuntimeUpkeep(offer, gameTime, day);
+
+            int maxPurchasable = getMaximumPurchasableFromLimits(offer, player.getUUID());
+            if (amount > maxPurchasable) {
+                if (runtimeChanged) {
+                    markDirty();
+                }
+                if (!offer.limits().isUnlimited() && offer.limits().dailyLimit().isPresent()
+                        && getPurchasedToday(offer.runtimeState(), player.getUUID()) >= offer.limits().dailyLimit().get()) {
+                    player.sendSystemMessage(Component.translatable("message.marketblocks.server_shop.daily_limit_reached"));
+                } else {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                }
+                return false;
+            }
+
+            ServerShopOfferRuntimeState state = offer.runtimeState();
             OfferLimit limit = offer.limits();
+
             if (!limit.isUnlimited()) {
                 if (limit.stockLimit().isPresent()) {
-                    int stock = limit.stockLimit().get();
-                    if (stock < amount) {
-                        player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
-                        return false;
+                    int remainingStock = state.stockRemaining().orElse(limit.stockLimit().get()) - amount;
+                    state = state.withStockRemaining(Math.max(0, remainingStock));
+                    if (limit.restockSeconds().isPresent()) {
+                        state = state.withLastRestockGameTime(gameTime);
                     }
                 }
-            }
-
-            // 2. LIMIT AKTUALISIEREN
-            if (!limit.isUnlimited() && limit.stockLimit().isPresent()) {
-                int newStock = limit.stockLimit().get() - amount;
-                OfferLimit newLimit = limit.withStockLimit(newStock);
-                offer.setLimits(newLimit);
-                markDirty();
-                // Wichtig: Syncen, damit alle Clients das neue Limit sehen
-                syncOpenViewers(player);
-            }
-
-            return true;
-        }
-    }
-
-    public boolean purchaseOffer(ServerPlayer player, UUID offerId, int amount) {
-        synchronized (lock) {
-            // Führe Transaktion durch
-            if (processPurchaseTransaction(player, offerId, amount)) {
-                // Wenn erfolgreich, Item geben
-                ServerShopOffer offer = findOffer(offerId);
-                // (Offer kann nicht null sein, wenn processPurchaseTransaction true ist, aber sicher ist sicher)
-                if (offer != null) {
-                    ItemStack result = offer.result().copy();
-                    result.setCount(offer.result().getCount() * amount);
-                    player.getInventory().placeItemBackInInventory(result);
-                    return true;
+                if (limit.dailyLimit().isPresent()) {
+                    if (isGlobalDailyLimit()) {
+                        state = state.withPurchasedTodayGlobal(state.purchasedTodayGlobal() + amount);
+                    } else {
+                        state = state.withPurchasedTodayForPlayer(player.getUUID(), state.purchasedTodayForPlayer(player.getUUID()) + amount);
+                    }
+                    state = state.withLastDailyResetDay(day);
                 }
             }
-            return false;
-        }
-    }
 
-    public boolean selectPage(int index) {
-        synchronized (lock) {
-            ensureInitialized();
-            if (data.size() <= 0) return false;
-            if (index < 0 || index >= data.size()) return false;
-            data.setSelectedPage(index);
+            if (offer.pricing().enabled()) {
+                state = state.withDemandPurchases(state.demandPurchases() + amount);
+            }
+
+            offer.setRuntimeState(state);
             markDirty();
+            syncOpenViewers(player);
             return true;
         }
     }
 
-    public boolean renamePage(String oldName, String newName) {
+    public int getMaximumPurchasableNow(UUID offerId, UUID playerId) {
+        synchronized (lock) {
+            ensureInitialized();
+            ServerShopOffer offer = findOffer(offerId);
+            if (offer == null) {
+                return 0;
+            }
+            if (applyRuntimeUpkeep(offer, currentGameTime(), currentDay())) {
+                markDirty();
+            }
+            return getMaximumPurchasableFromLimits(offer, playerId);
+        }
+    }
+
+    public record MutationResult<T>(T value, Component errorMessage) {
+        public static <T> MutationResult<T> success(T value) {
+            return new MutationResult<>(value, null);
+        }
+
+        public static <T> MutationResult<T> failure(Component errorMessage) {
+            return new MutationResult<>(null, Objects.requireNonNull(errorMessage, "errorMessage"));
+        }
+
+        public boolean isSuccess() {
+            return errorMessage == null;
+        }
+    }
+
+    public MutationResult<Void> renamePage(String oldName, String newName) {
         synchronized (lock) {
             ensureInitialized();
             ServerShopPage page = getPage(oldName);
-            if (page == null) return false;
-            page.rename(newName);
-            markDirty();
-            return true;
+            if (page == null) {
+                return MutationResult.failure(Component.translatable("message.marketblocks.server_shop.page_not_found"));
+            }
+
+            MutationResult<String> validation = validatePageName(newName, page.name());
+            if (!validation.isSuccess()) {
+                return MutationResult.failure(validation.errorMessage());
+            }
+
+            String normalizedNewName = validation.value();
+            if (!page.name().equals(normalizedNewName)) {
+                page.rename(normalizedNewName);
+                markDirty();
+            }
+            return MutationResult.success(null);
         }
     }
 
@@ -244,45 +236,69 @@ public final class ServerShopManager {
         return player != null && player.hasPermissions(2);
     }
 
-    public ServerShopPage createPage(String name) {
+    public boolean isOfferOnPage(UUID offerId, int pageIndex) {
         synchronized (lock) {
             ensureInitialized();
-            ServerShopPage page = new ServerShopPage(name, Optional.empty(), Collections.emptyList());
-            data.internalPages().add(page);
-            data.setSelectedPage(data.size() - 1);
-            markDirty();
-            return page.copy();
+            if (offerId == null || pageIndex < 0 || pageIndex >= data.internalPages().size()) {
+                return false;
+            }
+            return data.internalPages().get(pageIndex).findOfferIndex(offerId) >= 0;
         }
     }
 
-    public boolean removePage(String name) {
+    public MutationResult<ServerShopPage> createPage(String name) {
+        synchronized (lock) {
+            ensureInitialized();
+            MutationResult<String> validation = validatePageName(name, null);
+            if (!validation.isSuccess()) {
+                return MutationResult.failure(validation.errorMessage());
+            }
+
+            ServerShopPage page = new ServerShopPage(validation.value(), Optional.empty(), Collections.emptyList());
+            data.internalPages().add(page);
+            markDirty();
+            return MutationResult.success(page.copy());
+        }
+    }
+
+    public MutationResult<Void> removePage(String name) {
         synchronized (lock) {
             ensureInitialized();
             int index = findPageIndex(name);
-            if (index < 0) return false;
+            if (index < 0) {
+                return MutationResult.failure(Component.translatable("message.marketblocks.server_shop.page_not_found"));
+            }
             data.internalPages().remove(index);
-            data.setSelectedPage(Math.min(data.selectedPage(), Math.max(0, data.size() - 1)));
             markDirty();
-            return true;
+            return MutationResult.success(null);
         }
     }
 
-    // --- ANGEBOTS LOGIK (Vereinfacht) ---
-
-    public Optional<ServerShopOffer> addOffer(String pageName, ServerShopOffer offer) {
+    public MutationResult<ServerShopOffer> addOffer(String pageName, ServerShopOffer offer) {
         synchronized (lock) {
             ensureInitialized();
-            ServerShopPage page = getPage(pageName);
-            if (page == null) return Optional.empty();
+            String normalizedPageName = normalizePageName(pageName);
+            if (normalizedPageName.isEmpty()) {
+                return MutationResult.failure(Component.translatable("message.marketblocks.server_shop.page_name_blank"));
+            }
+
+            ServerShopPage page = getPage(normalizedPageName);
+            if (page == null) {
+                return MutationResult.failure(Component.translatable("message.marketblocks.server_shop.page_not_found"));
+            }
+
+            if (offer == null) {
+                return MutationResult.failure(Component.translatable("gui.marketblocks.error.invalid_offer"));
+            }
 
             DataResult<Void> validation = offer.validate();
             if (validation.error().isPresent()) {
                 LOGGER.warn("Ungültiges Angebot: {}", validation.error().get().message());
-                return Optional.empty();
+                return MutationResult.failure(Component.translatable("gui.marketblocks.error.invalid_offer"));
             }
             page.internalOffers().add(offer.copy());
             markDirty();
-            return Optional.of(offer.copy());
+            return MutationResult.success(offer.copy());
         }
     }
 
@@ -291,7 +307,6 @@ public final class ServerShopManager {
             ensureInitialized();
             if (offerId == null) return false;
 
-            // Finde das Angebot und entferne es
             ServerShopPage sourcePage = null;
             ServerShopOffer offer = null;
             int oldIndex = -1;
@@ -306,16 +321,16 @@ public final class ServerShopManager {
                 }
             }
 
-            if (offer == null || sourcePage == null) return false;
-
-            // Wir verschieben nur innerhalb der Seite (einfachheitshalber, oder wie gewünscht)
-            // direction: -1 für hoch, +1 für runter
-            int newIndex = oldIndex + direction;
-            if (newIndex < 0 || newIndex >= sourcePage.internalOffers().size()) {
-                return false; // Geht nicht weiter hoch/runter
+            if (offer == null) return false;
+            if (targetPageName != null && !sourcePage.name().equalsIgnoreCase(targetPageName)) {
+                return false;
             }
 
-            // Swap
+            int newIndex = oldIndex + direction;
+            if (newIndex < 0 || newIndex >= sourcePage.internalOffers().size()) {
+                return false;
+            }
+
             Collections.swap(sourcePage.internalOffers(), oldIndex, newIndex);
             markDirty();
             return true;
@@ -344,6 +359,9 @@ public final class ServerShopManager {
             ServerShopOffer offer = findOffer(offerId);
             if (offer == null) return false;
             offer.setLimits(limit);
+            if (applyRuntimeUpkeep(offer, currentGameTime(), currentDay())) {
+                markDirty();
+            }
             markDirty();
             return true;
         }
@@ -355,23 +373,6 @@ public final class ServerShopManager {
             ServerShopOffer offer = findOffer(offerId);
             if (offer == null) return false;
             offer.setPricing(pricing);
-            markDirty();
-            return true;
-        }
-    }
-
-    public boolean replaceOfferStacks(UUID offerId, ItemStack result, List<ItemStack> payments) {
-        synchronized (lock) {
-            ensureInitialized();
-            ServerShopOffer offer = findOffer(offerId);
-            if (offer == null) return false;
-            offer.setResult(result);
-            if (payments != null) {
-                int max = Math.min(offer.payments().size(), payments.size());
-                for (int i = 0; i < max; i++) {
-                    offer.setPayment(i, payments.get(i));
-                }
-            }
             markDirty();
             return true;
         }
@@ -389,8 +390,12 @@ public final class ServerShopManager {
     }
 
     private ServerShopPage getPage(String name) {
+        String normalizedName = normalizePageName(name);
+        if (normalizedName.isEmpty()) {
+            return null;
+        }
         for (ServerShopPage page : data.internalPages()) {
-            if (page.name().equalsIgnoreCase(name)) {
+            if (page.name().equalsIgnoreCase(normalizedName)) {
                 return page;
             }
         }
@@ -400,35 +405,51 @@ public final class ServerShopManager {
     public void openShop(ServerPlayer player) {
         if (player == null) return;
         ServerShopData snapshot;
+        Map<UUID, ServerShopOfferViewState> offerViewStates;
         boolean editable;
         synchronized (lock) {
             ensureInitialized();
+            long gameTime = currentGameTime();
+            long day = currentDay();
+            if (applyRuntimeUpkeepToAllOffers(gameTime, day)) {
+                markDirty();
+            }
             snapshot = data.copy();
+            offerViewStates = buildOfferViewStates(player, gameTime);
             editable = canEdit(player);
         }
-        ServerShopMenuProvider provider = new ServerShopMenuProvider(editable, snapshot.selectedPage());
-        player.openMenu(provider, (RegistryFriendlyByteBuf buf) -> {
-            buf.writeBoolean(editable);
-            buf.writeVarInt(snapshot.selectedPage());
-        });
-        sendSnapshot(player, snapshot, editable);
+        ServerShopMenuProvider provider = new ServerShopMenuProvider(editable);
+        player.openMenu(provider, (RegistryFriendlyByteBuf buf) -> buf.writeBoolean(editable));
+        sendSnapshot(player, snapshot, offerViewStates, editable);
     }
 
     public void syncOpenViewers(ServerPlayer source) {
         if (source == null) return;
-        ServerShopData snapshot = snapshot();
-        sendSnapshot(source, snapshot, canEdit(source));
-        if (source.server != null) {
+        synchronized (lock) {
+            long gameTime = currentGameTime();
+            long day = currentDay();
+            if (applyRuntimeUpkeepToAllOffers(gameTime, day)) {
+                markDirty();
+            }
+            ServerShopData snapshot = data.copy();
+            int pageCount = snapshot.size();
+            if (source.containerMenu instanceof ServerShopMenu menu) {
+                menu.clampSelectedPage(pageCount);
+                menu.slotsChanged(menu.templateContainer());
+            }
+            sendSnapshot(source, snapshot, buildOfferViewStates(source, gameTime), canEdit(source));
             for (ServerPlayer player : source.server.getPlayerList().getPlayers()) {
                 if (player == source) continue;
-                if (player.containerMenu instanceof ServerShopMenu) {
-                    sendSnapshot(player, snapshot, canEdit(player));
+                if (player.containerMenu instanceof ServerShopMenu menu) {
+                    menu.clampSelectedPage(pageCount);
+                    menu.slotsChanged(menu.templateContainer());
+                    sendSnapshot(player, snapshot, buildOfferViewStates(player, gameTime), canEdit(player));
                 }
             }
         }
     }
 
-    private void sendSnapshot(ServerPlayer player, ServerShopData snapshot, boolean canEditFlag) {
+    private void sendSnapshot(ServerPlayer player, ServerShopData snapshot, Map<UUID, ServerShopOfferViewState> offerViewStates, boolean canEditFlag) {
         if (player == null || snapshot == null || registryAccess == null) return;
         DataResult<CompoundTag> encoded = ServerShopSerialization.encodeData(snapshot, registryAccess);
         if (encoded.error().isPresent()) {
@@ -436,13 +457,17 @@ public final class ServerShopManager {
             return;
         }
         CompoundTag tag = encoded.result().orElseGet(CompoundTag::new);
-        NetworkHandler.sendToPlayer(player, new ServerShopSyncPacket(tag, canEditFlag));
+        NetworkHandler.sendToPlayer(player, new ServerShopSyncPacket(tag, ServerShopSyncPacket.encodeOfferViewStates(offerViewStates), canEditFlag));
     }
 
     private int findPageIndex(String name) {
+        String normalizedName = normalizePageName(name);
+        if (normalizedName.isEmpty()) {
+            return -1;
+        }
         List<ServerShopPage> pages = data.internalPages();
         for (int i = 0; i < pages.size(); i++) {
-            if (pages.get(i).name().equalsIgnoreCase(name)) {
+            if (pages.get(i).name().equalsIgnoreCase(normalizedName)) {
                 return i;
             }
         }
@@ -450,42 +475,118 @@ public final class ServerShopManager {
     }
 
     private void loadFromDisk() {
-        if (configFile == null || registryAccess == null) return;
-        if (!Files.exists(configFile)) {
+        if (configFile == null || registryAccess == null) {
+            return;
+        }
+
+        Path backupFile = backupFile();
+        if (!Files.exists(configFile) && !Files.exists(backupFile)) {
             data = ServerShopData.empty();
             return;
         }
-        try (BufferedReader reader = Files.newBufferedReader(configFile, StandardCharsets.UTF_8)) {
-            JsonElement element = JsonParser.parseReader(reader);
-            RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registryAccess);
-            DataResult<ServerShopData> result = ServerShopData.CODEC.parse(ops, element);
-            data = result.result().orElseGet(() -> {
-                LOGGER.error("Fehler beim Laden der Server-Shop-Konfiguration");
-                return ServerShopData.empty();
-            });
-            dirty = false;
-        } catch (IOException ex) {
-            LOGGER.error("Konnte Server-Shop-Datei {} nicht lesen", configFile, ex);
-            data = ServerShopData.empty();
+
+        if (Files.exists(configFile)) {
+            Optional<ServerShopData> primary = parseDataFile(configFile);
+            if (primary.isPresent()) {
+                data = primary.get();
+                dirty = false;
+                return;
+            }
         }
+
+        if (Files.exists(backupFile)) {
+            Optional<ServerShopData> backup = parseDataFile(backupFile);
+            if (backup.isPresent()) {
+                LOGGER.warn("Primary server-shop file is invalid. Restoring from backup {}", backupFile);
+                data = backup.get();
+                dirty = false;
+                try {
+                    Files.copy(backupFile, configFile, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException ex) {
+                    LOGGER.error("Could not restore backup {} to {}", backupFile, configFile, ex);
+                }
+                return;
+            }
+        }
+
+        LOGGER.error("No valid server-shop data found. Starting with empty data.");
+        data = ServerShopData.empty();
     }
 
     private void saveNow() {
-        if (configFile == null || registryAccess == null) return;
-        try (BufferedWriter writer = Files.newBufferedWriter(configFile, StandardCharsets.UTF_8)) {
+        if (configFile == null || registryAccess == null) {
+            return;
+        }
+
+        Path tempFile = temporaryFile();
+        Path backupFile = backupFile();
+
+        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
             RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registryAccess);
             DataResult<JsonElement> result = ServerShopData.CODEC.encodeStart(ops, data);
             if (result.error().isPresent()) {
                 LOGGER.error("Fehler beim Serialisieren der Server-Shop-Daten: {}", result.error().get().message());
+                safeDelete(tempFile);
                 return;
             }
             JsonElement json = result.result().orElseGet(JsonObject::new);
             GSON.toJson(json, writer);
             writer.flush();
+        } catch (IOException ex) {
+            LOGGER.error("Konnte temporaere Server-Shop-Datei {} nicht schreiben", tempFile, ex);
+            safeDelete(tempFile);
+            return;
+        }
+
+        try {
+            if (Files.exists(configFile)) {
+                Files.copy(configFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            try {
+                Files.move(tempFile, configFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException ignored) {
+                Files.move(tempFile, configFile, StandardCopyOption.REPLACE_EXISTING);
+            }
             dirty = false;
             ticksSinceSave = 0;
         } catch (IOException ex) {
-            LOGGER.error("Konnte Server-Shop-Datei {} nicht speichern", configFile, ex);
+            LOGGER.error("Konnte Server-Shop-Datei {} nicht atomar speichern", configFile, ex);
+            safeDelete(tempFile);
+        }
+    }
+
+    private Optional<ServerShopData> parseDataFile(Path file) {
+        try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+            JsonElement element = JsonParser.parseReader(reader);
+            RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registryAccess);
+            DataResult<ServerShopData> result = ServerShopData.CODEC.parse(ops, element);
+            if (result.result().isPresent()) {
+                return result.result();
+            }
+            LOGGER.error("Fehler beim Laden der Server-Shop-Datei {}: {}", file,
+                    result.error().map(DataResult.Error::message).orElse("unknown parse error"));
+            return Optional.empty();
+        } catch (IOException ex) {
+            LOGGER.error("Konnte Server-Shop-Datei {} nicht lesen", file, ex);
+            return Optional.empty();
+        }
+    }
+
+    private Path backupFile() {
+        return configFile.resolveSibling(FILE_NAME + BACKUP_FILE_SUFFIX);
+    }
+
+    private Path temporaryFile() {
+        return configFile.resolveSibling(FILE_NAME + TEMP_FILE_SUFFIX);
+    }
+
+    private void safeDelete(Path path) {
+        if (path == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException ignored) {
         }
     }
 
@@ -497,6 +598,190 @@ public final class ServerShopManager {
     private void ensureInitialized() {
         if (!initialized) {
             throw new IllegalStateException("Server-Shop wurde noch nicht initialisiert");
+        }
+    }
+
+    private MutationResult<String> validatePageName(String name, String currentNameToIgnore) {
+        String normalizedName = normalizePageName(name);
+        if (normalizedName.isEmpty()) {
+            return MutationResult.failure(Component.translatable("message.marketblocks.server_shop.page_name_blank"));
+        }
+        if (normalizedName.length() > MAX_PAGE_NAME_LENGTH) {
+            return MutationResult.failure(Component.translatable("message.marketblocks.server_shop.page_name_too_long", MAX_PAGE_NAME_LENGTH));
+        }
+        if (currentNameToIgnore == null || !normalizedName.equalsIgnoreCase(normalizePageName(currentNameToIgnore))) {
+            if (findPageIndex(normalizedName) >= 0) {
+                return MutationResult.failure(Component.translatable("message.marketblocks.server_shop.page_name_duplicate", normalizedName));
+            }
+        }
+        return MutationResult.success(normalizedName);
+    }
+
+    private String normalizePageName(String name) {
+        return name == null ? "" : name.trim();
+    }
+
+    private long currentGameTime() {
+        if (server == null) {
+            return 0L;
+        }
+        return server.overworld().getGameTime();
+    }
+
+    private long currentDay() {
+        return currentGameTime() / 24000L;
+    }
+
+    private boolean isGlobalDailyLimit() {
+        return Config.SERVER_SHOP_GLOBAL_DAILY_LIMIT.get();
+    }
+
+    private int getMaximumPurchasableFromLimits(ServerShopOffer offer, UUID playerId) {
+        if (offer == null) {
+            return 0;
+        }
+        return ServerShopRuntimeMath.computeRemainingPurchases(offer.limits(), offer.runtimeState(), playerId, isGlobalDailyLimit());
+    }
+
+    private int getPurchasedToday(ServerShopOfferRuntimeState state, UUID playerId) {
+        return isGlobalDailyLimit() ? state.purchasedTodayGlobal() : state.purchasedTodayForPlayer(playerId);
+    }
+
+    private boolean applyRuntimeUpkeepToAllOffers(long gameTime, long day) {
+        boolean changed = false;
+        for (ServerShopPage page : data.internalPages()) {
+            for (ServerShopOffer offer : page.internalOffers()) {
+                changed |= applyRuntimeUpkeep(offer, gameTime, day);
+            }
+        }
+        return changed;
+    }
+
+    private boolean applyRuntimeUpkeep(ServerShopOffer offer, long gameTime, long day) {
+        if (offer == null) {
+            return false;
+        }
+
+        OfferLimit limit = offer.limits();
+        ServerShopOfferRuntimeState state = offer.runtimeState();
+        ServerShopOfferRuntimeState updated = state;
+
+        if (!limit.isUnlimited() && limit.dailyLimit().isPresent()) {
+            if (updated.lastDailyResetDay() != day) {
+                updated = updated.withPurchasedTodayGlobal(0)
+                        .withClearedPlayerPurchases()
+                        .withLastDailyResetDay(day);
+            }
+        } else if (updated.purchasedTodayGlobal() != 0 || !updated.purchasedTodayByPlayer().isEmpty() || updated.lastDailyResetDay() != 0L) {
+            updated = updated.withPurchasedTodayGlobal(0)
+                    .withClearedPlayerPurchases()
+                    .withLastDailyResetDay(0L);
+        }
+
+        if (!limit.isUnlimited() && limit.stockLimit().isPresent()) {
+            int maxStock = limit.stockLimit().get();
+            int currentStock = updated.stockRemaining().orElse(maxStock);
+            if (currentStock > maxStock) {
+                updated = updated.withStockRemaining(maxStock);
+                currentStock = maxStock;
+            } else if (updated.stockRemaining().isEmpty()) {
+                updated = updated.withStockRemaining(currentStock);
+            }
+
+            if (limit.restockSeconds().isPresent() && currentStock < maxStock) {
+                ServerShopRuntimeMath.RestockResult restockResult = ServerShopRuntimeMath.applyRestock(
+                        currentStock,
+                        maxStock,
+                        updated.lastRestockGameTime(),
+                        gameTime,
+                        limit.restockSeconds().get());
+                if (restockResult.changed()) {
+                    updated = updated.withStockRemaining(restockResult.stockRemaining())
+                            .withLastRestockGameTime(restockResult.lastRestockGameTime());
+                }
+            }
+        } else {
+            if (updated.stockRemaining().isPresent()) {
+                updated = updated.withStockRemaining(null);
+            }
+            if (updated.lastRestockGameTime() != 0L) {
+                updated = updated.withLastRestockGameTime(0L);
+            }
+        }
+
+        if (offer.pricing().enabled()) {
+            int decayedDemand = ServerShopRuntimeMath.computeDemandPurchasesAfterDailyDecay(
+                    updated.demandPurchases(),
+                    updated.lastDemandDecayDay(),
+                    day,
+                    DEMAND_DECAY_PER_DAY);
+            if (decayedDemand != updated.demandPurchases()) {
+                updated = updated.withDemandPurchases(decayedDemand);
+            }
+            if (updated.lastDemandDecayDay() != day) {
+                updated = updated.withLastDemandDecayDay(day);
+            }
+        } else {
+            if (updated.demandPurchases() != 0) {
+                updated = updated.withDemandPurchases(0);
+            }
+            if (updated.lastDemandDecayDay() != 0L) {
+                updated = updated.withLastDemandDecayDay(0L);
+            }
+        }
+
+        if (!updated.equals(state)) {
+            offer.setRuntimeState(updated);
+            return true;
+        }
+        return false;
+    }
+
+    private Map<UUID, ServerShopOfferViewState> buildOfferViewStates(ServerPlayer player, long gameTime) {
+        Map<UUID, ServerShopOfferViewState> states = new HashMap<>();
+        UUID playerId = player == null ? null : player.getUUID();
+        for (ServerShopPage page : data.internalPages()) {
+            for (ServerShopOffer offer : page.internalOffers()) {
+                states.put(offer.id(), buildOfferViewState(offer, playerId, gameTime));
+            }
+        }
+        return states;
+    }
+
+    private ServerShopOfferViewState buildOfferViewState(ServerShopOffer offer, UUID playerId, long gameTime) {
+        if (offer == null) {
+            return ServerShopOfferViewState.empty();
+        }
+        OfferLimit limit = offer.limits();
+        ServerShopOfferRuntimeState state = offer.runtimeState();
+        Optional<Integer> remainingDaily = limit.isUnlimited() || limit.dailyLimit().isEmpty()
+                ? Optional.empty()
+                : Optional.of(ServerShopRuntimeMath.computeRemainingDailyPurchases(limit, state, playerId, isGlobalDailyLimit()));
+        Optional<Integer> remainingStock = limit.isUnlimited() || limit.stockLimit().isEmpty()
+                ? Optional.empty()
+                : Optional.of(state.stockRemaining().orElse(limit.stockLimit().get()));
+        Optional<Integer> restockSecondsRemaining = ServerShopRuntimeMath.computeSecondsUntilNextRestock(limit, state, gameTime);
+        return new ServerShopOfferViewState(
+                getMaximumPurchasableFromLimits(offer, playerId),
+                remainingDaily,
+                remainingStock,
+                restockSecondsRemaining,
+                offer.currentPriceMultiplier());
+    }
+
+    private void refreshOpenViewersLocked() {
+        if (server == null || registryAccess == null) {
+            return;
+        }
+        long gameTime = currentGameTime();
+        ServerShopData snapshot = data.copy();
+        int pageCount = snapshot.size();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.containerMenu instanceof ServerShopMenu menu) {
+                menu.clampSelectedPage(pageCount);
+                menu.slotsChanged(menu.templateContainer());
+                sendSnapshot(player, snapshot, buildOfferViewStates(player, gameTime), canEdit(player));
+            }
         }
     }
 }

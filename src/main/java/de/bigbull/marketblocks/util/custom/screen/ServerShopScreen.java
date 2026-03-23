@@ -1,6 +1,5 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.serverShop.*;
@@ -10,10 +9,10 @@ import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.util.custom.servershop.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.CommonComponents;
@@ -28,8 +27,23 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * Main shop UI orchestration.
+ * Navigation guide:
+ * - Lifecycle/Data sync: init(), containerTick(), rebuildUi()
+ * - Selection/preview state: updatePreview(), findOfferOnSelectedPage(), sanitizeSelectionState()
+ * - Edit controls wiring: buildEditorControls(), createEditorControlsContext(), ScreenEditorCallbacks
+ * - Rendering pipeline: render(), renderModalBackdrop(), renderContent(), renderStaticOverlay()
+ * - Input handling: mouseClicked(), mouseScrolled(), mouseDragged(), mouseReleased()
+ * - Modal entry points: openOfferLimitsEditor(), openOfferPricingEditor(), openTextInput()
+**/
 public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
+    private static final int BACKDROP_MOUSE_OFFSCREEN = -10000;
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/server_shop.png");
+    private static final int STATUS_LINE_HEIGHT = 12;
+    private static final int RIGHT_SIDE_GAP = 2;
+    private static final int RIGHT_BUTTON_SIZE = 20;
+    private static final int RIGHT_BUTTON_GAP = 4;
 
     // List
     private static final int LIST_X_OFFSET = 5;
@@ -41,9 +55,11 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final int MAX_VISIBLE_ROWS = 6;
 
     // Scroller
-    private static final int SCROLLER_X_OFFSET = 96;
+    private static final int SCROLLER_X_OFFSET = 94;
     private static final int SCROLLER_WIDTH = 6;
     private static final int SCROLLER_HEIGHT = 27;
+    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller");
+    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller_disabled");
 
     // Preview
     private static final int PREVIEW_X_OFFSET = 144;
@@ -63,9 +79,20 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final ResourceLocation ADD_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
     private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
+    private static final ResourceLocation ADD_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/add_page.png");
+    private static final ResourceLocation DELETE_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete_page.png");
+    private static final ResourceLocation RENAME_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/rename_page.png");
+    private static final ResourceLocation CLEAR_SELECTION_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/clear_selection.png");
+    private static final ResourceLocation MOVE_UP_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_up.png");
+    private static final ResourceLocation MOVE_DOWN_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_down.png");
+    // Reuse existing icons to avoid missing-texture placeholders when dedicated assets are absent.
+    private static final ResourceLocation LIMITS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/edit_limits.png");
+    private static final ResourceLocation PRICING_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/edit_pricing.png");
     private static final ResourceLocation ARROW_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
+    private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
+    private static final ResourceLocation TRADE_ARROW_DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow_disabled.png");
 
-    private final List<Button> dynamicWidgets = new ArrayList<>();
+    private final List<AbstractWidget> dynamicWidgets = new ArrayList<>();
     private final List<ServerShopOffer> visibleOffers = new ArrayList<>();
 
     private int scrollOffset;
@@ -73,11 +100,18 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private boolean isDragging;
 
     private ServerShopData cachedData = ServerShopClientState.data();
-    private boolean isLocalEditMode = false;
+    private boolean isLocalEditMode;
+    private int lastSelectedPage = -1;
 
     private OfferTemplateButton offerPreviewButton;
     private UUID selectedOfferId = null;
+    private final ServerShopEditorControls editorControls = new ServerShopEditorControls();
+    private final ServerShopEditorControls.Callbacks editorCallbacks = new ScreenEditorCallbacks();
+    private final ServerShopPageSidebar pageSidebar = new ServerShopPageSidebar();
+    private final ServerShopPageSidebar.Callbacks pageSidebarCallbacks = new ScreenPageSidebarCallbacks();
+    private final ServerShopOverlayRenderer overlayRenderer = new ServerShopOverlayRenderer();
 
+    // Lifecycle / bootstrapping
     public ServerShopScreen(ServerShopMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 276;
@@ -85,19 +119,18 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         this.inventoryLabelY = this.imageHeight - 94;
         this.inventoryLabelX = 108;
 
-        // isLocalEditMode defaults to false on first open,
-        // unless player has permission AND last state was true.
-        // But ServerShopMenu defaults to false (View Mode).
-        // So we should sync with menu state OR enforce local state.
-        // Since we want to respect last edit mode if possible:
+        initializeLocalEditMode();
+    }
+
+    private void initializeLocalEditMode() {
         boolean initialMode = menu.hasEditPermission() && ServerShopClientState.getLastEditMode();
         this.isLocalEditMode = initialMode;
-
-        // Ensure menu is in sync with our local decision
-        if (initialMode) {
-             menu.setEditMode(true);
-             NetworkHandler.sendToServer(new ServerShopToggleEditModePacket(true));
+        if (!initialMode) {
+            return;
         }
+
+        menu.setEditMode(true);
+        NetworkHandler.sendToServer(new ServerShopToggleEditModePacket(true));
     }
 
     @Override
@@ -106,369 +139,457 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         rebuildUi();
     }
 
+    // Runtime sync (client cache, permissions, page changes)
     @Override
     public void containerTick() {
         super.containerTick();
         ServerShopData current = ServerShopClientState.data();
         boolean perm = menu.hasEditPermission();
+        boolean dataChanged = current != cachedData;
 
-        // If permission is lost, exit edit mode
         if (!perm && isLocalEditMode) {
             setEditMode(false);
         }
 
-        if (current != cachedData) {
+        if (dataChanged) {
             cachedData = current;
+        }
+
+        boolean pageChanged = menu.selectedPage() != lastSelectedPage;
+        if (dataChanged || pageChanged) {
+            scrollOffset = 0;
             rebuildUi();
+        } else {
+            sanitizeSelectionState();
         }
         updatePreview();
     }
 
+    // Selection + preview state
     private void updatePreview() {
-        if (this.offerPreviewButton == null) return;
+        if (this.offerPreviewButton == null) {
+            return;
+        }
+
+        ServerShopOffer offer = selectedOfferId != null ? findOfferOnSelectedPage(selectedOfferId) : null;
+        if (offer != null) {
+            displayOfferInPreview(offer);
+            return;
+        }
+
+        if (selectedOfferId != null) {
+            clearSelectedOffer();
+        }
 
         if (isLocalEditMode) {
-            if (selectedOfferId != null) {
-                // When an offer is selected in edit mode, we show IT, but we should probably
-                // reflect changes if we were editing it?
-                // Spec says: "Clear-Button im Edit-Mode" appears when offer selected.
-                // It implies we are in a state where we might edit it?
-                // But generally "Edit Mode" + "Selection" means we are viewing/managing that offer.
-                // The "Add Offer" workflow involves putting items in slots WITHOUT selection.
-                // So if selection is active, we show the selected offer.
-                ServerShopOffer offer = findOfferInCache(selectedOfferId);
-                if (offer != null) {
-                    displayOfferInPreview(offer);
-                } else {
-                    // Offer vanished?
-                    this.selectedOfferId = null;
-                    showTemplateSlotsInPreview();
-                }
-            } else {
-                // No selection -> Creating new offer -> Live Preview from Slots
-                showTemplateSlotsInPreview();
-            }
-        } else {
-            // View Mode
-            if (selectedOfferId != null) {
-                ServerShopOffer offer = findOfferInCache(selectedOfferId);
-                if (offer != null) {
-                    displayOfferInPreview(offer);
-                } else {
-                    this.offerPreviewButton.visible = false;
-                }
-            } else {
-                this.offerPreviewButton.visible = false;
-            }
-        }
-    }
-
-    private void displayOfferInPreview(ServerShopOffer offer) {
-        ItemStack p1 = offer.payments().isEmpty() ? ItemStack.EMPTY : offer.payments().get(0);
-        ItemStack p2 = offer.payments().size() > 1 ? offer.payments().get(1) : ItemStack.EMPTY;
-        ItemStack res = offer.result();
-
-        // Dynamic Ordering for display
-        if (p1.isEmpty() && !p2.isEmpty()) {
-            p1 = p2;
-            p2 = ItemStack.EMPTY;
-        }
-
-        this.offerPreviewButton.visible = true;
-        this.offerPreviewButton.update(p1, p2, res, true);
-    }
-
-    private ServerShopOffer findOfferInCache(UUID offerId) {
-        if (offerId == null || cachedData == null) return null;
-        for (ServerShopPage page : cachedData.pages()) {
-            for (ServerShopOffer offer : page.offers()) {
-                if (offer.id().equals(offerId)) {
-                    return offer;
-                }
-            }
-        }
-        return null;
-    }
-
-    private void showTemplateSlotsInPreview() {
-        ItemStack p1 = menu.getTemplateStack(0);
-        ItemStack p2 = menu.getTemplateStack(1);
-        ItemStack res = menu.getTemplateStack(2);
-
-        // Dynamic Ordering for Live Preview
-        if (p1.isEmpty() && !p2.isEmpty()) {
-            p1 = p2;
-            p2 = ItemStack.EMPTY;
-        }
-
-        // Always show preview if ANY item is present in payment or buy slots
-        // Spec: "Payment items must appear immediately", "Buy item must appear immediately"
-        // "Preview must NOT depend on the buy slot being filled"
-        if (!p1.isEmpty() || !p2.isEmpty() || !res.isEmpty()) {
-            this.offerPreviewButton.visible = true;
-            this.offerPreviewButton.update(p1, p2, res, true); // true = valid? actually 'valid' usually checks completeness
-            // OfferTemplateButton.update(p1, p2, out, valid) -> if valid is true, it draws arrow normally?
-            // We want it to look like a preview.
+            showTemplateSlotsInPreview();
         } else {
             this.offerPreviewButton.visible = false;
         }
     }
 
+    private void displayOfferInPreview(ServerShopOffer offer) {
+        ItemStack[] payments = normalizePaymentPair(offer.effectivePayments());
+        ItemStack p1 = payments[0];
+        ItemStack p2 = payments[1];
+
+        this.offerPreviewButton.visible = true;
+        this.offerPreviewButton.update(p1, p2, offer.result(), true);
+    }
+
+    private void showTemplateSlotsInPreview() {
+        ItemStack[] payments = normalizePaymentPair(menu.getTemplateStack(0), menu.getTemplateStack(1));
+        ItemStack p1 = payments[0];
+        ItemStack p2 = payments[1];
+        ItemStack res = menu.getTemplateStack(2);
+
+        if (!p1.isEmpty() || !res.isEmpty()) {
+            this.offerPreviewButton.visible = true;
+            this.offerPreviewButton.update(p1, p2, res, true);
+        } else {
+            this.offerPreviewButton.visible = false;
+        }
+    }
+
+    private ItemStack[] normalizePaymentPair(List<ItemStack> effectivePayments) {
+        ItemStack p1 = effectivePayments.isEmpty() ? ItemStack.EMPTY : effectivePayments.get(0);
+        ItemStack p2 = effectivePayments.size() > 1 ? effectivePayments.get(1) : ItemStack.EMPTY;
+        return normalizePaymentPair(p1, p2);
+    }
+
+    private ItemStack[] normalizePaymentPair(ItemStack p1, ItemStack p2) {
+        if (p1.isEmpty() && !p2.isEmpty()) {
+            return new ItemStack[]{p2, ItemStack.EMPTY};
+        }
+        return new ItemStack[]{p1, p2};
+    }
+
+    private void sanitizeSelectionState() {
+        menu.clampSelectedPage(cachedData.pages().size());
+
+        if (selectedOfferId != null && !hasOfferOnSelectedPage(selectedOfferId)) {
+            clearSelectedOffer();
+        } else if (!isLocalEditMode && selectedOfferId == null) {
+            menu.setCurrentTradingOffer(null);
+        }
+    }
+
+    private void clearSelectedOffer() {
+        this.selectedOfferId = null;
+        if (!isLocalEditMode) {
+            menu.setCurrentTradingOffer(null);
+        }
+    }
+
+    private ServerShopOffer findOfferOnSelectedPage(UUID offerId) {
+        if (offerId == null || cachedData == null) {
+            return null;
+        }
+
+        List<ServerShopPage> pages = cachedData.pages();
+        if (pages.isEmpty()) {
+            return null;
+        }
+
+        int pageIndex = Math.min(Math.max(menu.selectedPage(), 0), pages.size() - 1);
+        for (ServerShopOffer offer : pages.get(pageIndex).offers()) {
+            if (offer.id().equals(offerId)) {
+                return offer;
+            }
+        }
+        return null;
+    }
+
+    private boolean hasOfferOnSelectedPage(UUID offerId) {
+        return findOfferOnSelectedPage(offerId) != null;
+    }
+
+    private static String normalizeTextInput(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    /**
+     * Rebuilds all dynamic widgets for current mode/page/selection.
+     */
     private void setEditMode(boolean active) {
         this.isLocalEditMode = active;
+        menu.setEditMode(active);
         ServerShopClientState.setLastEditMode(active);
-        this.selectedOfferId = null;
+        clearSelectedOffer();
         rebuildUi();
     }
 
     private void rebuildUi() {
-        dynamicWidgets.forEach(this::removeWidget);
-        dynamicWidgets.clear();
-        visibleOffers.clear();
-
-        if (!cachedData.pages().isEmpty()) {
-            ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
-            visibleOffers.addAll(page.offers());
-        }
-
+        resetDynamicUi();
+        sanitizeSelectionState();
+        updateVisibleOffersForSelectedPage();
         buildPageSidebar();
-
-        // Vorschau Button
-        this.offerPreviewButton = new OfferTemplateButton(this.leftPos + PREVIEW_X_OFFSET, this.topPos + PREVIEW_Y_OFFSET, b -> {
-            if (!isLocalEditMode && selectedOfferId != null && minecraft != null && minecraft.player != null) {
-                // FIX: Packet senden statt lokal manipulieren!
-                NetworkHandler.sendToServer(new ServerShopAutoFillPacket(selectedOfferId));
-            }
-        });
-        this.offerPreviewButton.active = !isLocalEditMode;
-        this.offerPreviewButton.visible = false;
-        addDynamic(this.offerPreviewButton);
-
-        // Toggle Mode Button (Oben Rechts)
-        if (menu.hasEditPermission()) {
-            int toggleX = leftPos + imageWidth - 26;
-            int toggleY = topPos + 6;
-            IconButton toggleBtn = new IconButton(toggleX, toggleY, 20, 20, BUTTON_SPRITES, SETTINGS_ICON, b -> {
-                // Send toggle packet to server and update local state
-                NetworkHandler.sendToServer(new ServerShopToggleEditModePacket(!isLocalEditMode));
-                setEditMode(!isLocalEditMode);
-            }, Component.literal(isLocalEditMode ? "View Mode" : "Edit Mode"), () -> isLocalEditMode);
-            addDynamic(toggleBtn);
-        }
+        buildPreviewButton();
+        buildEditModeToggleButton();
 
         if (isLocalEditMode) {
             buildEditorControls();
         }
 
         updateScrollLimits();
+        lastSelectedPage = menu.selectedPage();
     }
 
-    private void buildEditorControls() {
-        // Page Management (Oben Links/Mitte)
-        int headerX = leftPos + 4;
-        int headerY = topPos - 24;
+    private void resetDynamicUi() {
+        dynamicWidgets.forEach(this::removeWidget);
+        dynamicWidgets.clear();
+        visibleOffers.clear();
+        pageSidebar.reset();
+    }
 
-        addDynamic(new IconButton(headerX, headerY, 20, 20, BUTTON_SPRITES, ADD_ICON,
-                b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.add_page"), "",
-                        name -> NetworkHandler.sendToServer(new ServerShopCreatePagePacket(name))),
-                Component.translatable("gui.marketblocks.server_shop.add_page"), () -> false));
-
+    private void updateVisibleOffersForSelectedPage() {
         if (cachedData.pages().isEmpty()) {
             return;
         }
-
         ServerShopPage page = cachedData.pages().get(Math.min(menu.selectedPage(), cachedData.pages().size() - 1));
+        visibleOffers.addAll(page.offers());
+    }
 
-        addDynamic(new IconButton(headerX + 24, headerY, 20, 20, BUTTON_SPRITES, SETTINGS_ICON,
-                b -> openTextInput(Component.translatable("gui.marketblocks.server_shop.rename_page"), page.name(),
-                        name -> NetworkHandler.sendToServer(new ServerShopRenamePagePacket(page.name(), name))),
-                Component.translatable("gui.marketblocks.server_shop.rename_page"), () -> false));
+    private void buildPreviewButton() {
+        this.offerPreviewButton = new OfferTemplateButton(this.leftPos + PREVIEW_X_OFFSET, this.topPos + PREVIEW_Y_OFFSET, ignored -> {
+            if (!isLocalEditMode && selectedOfferId != null && minecraft != null && minecraft.player != null) {
+                NetworkHandler.sendToServer(new ServerShopAutoFillPacket(selectedOfferId));
+            }
+        });
+        this.offerPreviewButton.active = !isLocalEditMode;
+        this.offerPreviewButton.visible = false;
+        addDynamic(this.offerPreviewButton);
+    }
 
-        addDynamic(new IconButton(headerX + 48, headerY, 20, 20, BUTTON_SPRITES, DELETE_ICON,
-                b -> NetworkHandler.sendToServer(new ServerShopDeletePagePacket(page.name())),
-                Component.translatable("gui.marketblocks.server_shop.delete_page"), () -> false));
-
-        // --- OFFER CONTROLS ---
-        // SELECTED OFFER ACTIONS: Unter den Slots
-        if (selectedOfferId != null) {
-            int controlsX = leftPos + CONTROLS_X_START;
-            int controlsY = topPos + CONTROLS_Y_START;
-
-            // DELETE
-            addDynamic(new IconButton(controlsX, controlsY, 20, 20, BUTTON_SPRITES, DELETE_ICON,
-                    b -> {
-                        NetworkHandler.sendToServer(new ServerShopDeleteOfferPacket(selectedOfferId));
-                        selectedOfferId = null;
-                        rebuildUi();
-                    },
-                    Component.translatable("gui.marketblocks.server_shop.delete_offer"), () -> false));
-
-            // UP ARROW
-            addDynamic(Button.builder(Component.literal("↑"),
-                            b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(selectedOfferId, page.name(), -1)))
-                    .bounds(controlsX + 24, controlsY, 15, 20).build());
-
-            // DOWN ARROW
-            addDynamic(Button.builder(Component.literal("↓"),
-                            b -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(selectedOfferId, page.name(), 1)))
-                    .bounds(controlsX + 41, controlsY, 15, 20).build());
-        } else {
-             // ADD OFFER Button: Only visible if NO offer is selected
-            int addOfferX = leftPos + PREVIEW_X_OFFSET + 92; // 88 (Button-Breite) + 4 Abstand
-            int addOfferY = topPos + PREVIEW_Y_OFFSET;
-
-            addDynamic(new IconButton(addOfferX, addOfferY, 20, 20, BUTTON_SPRITES, ADD_ICON,
-                    b -> NetworkHandler.sendToServer(new ServerShopAddOfferPacket(page.name())),
-                    Component.translatable("gui.marketblocks.server_shop.add_offer"), () -> false));
+    private void buildEditModeToggleButton() {
+        if (!menu.hasEditPermission()) {
+            return;
         }
 
-        // "CLEAR" Button - nur wenn ein Angebot ausgewählt ist (Spec: "Clear-Button im Edit-Mode")
-        if (selectedOfferId != null) {
-            int clearX = leftPos + PREVIEW_X_OFFSET + 92;
-            int clearY = topPos + PREVIEW_Y_OFFSET;
+        int toggleX = leftPos + imageWidth - 26;
+        int toggleY = topPos + 6;
+        IconButton toggleBtn = new IconButton(toggleX, toggleY, 20, 20, BUTTON_SPRITES, SETTINGS_ICON, ignored -> {
+            NetworkHandler.sendToServer(new ServerShopToggleEditModePacket(!isLocalEditMode));
+            setEditMode(!isLocalEditMode);
+        }, Component.translatable(isLocalEditMode
+                ? "gui.marketblocks.server_shop.mode.view"
+                : "gui.marketblocks.server_shop.mode.edit"), () -> isLocalEditMode);
+        addDynamic(toggleBtn);
+    }
 
-            addDynamic(Button.builder(Component.literal("X"), b -> {
-                this.selectedOfferId = null;
-                updatePreview();
-                rebuildUi();
-            }).bounds(clearX, clearY, 20, 20).tooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("gui.marketblocks.server_shop.clear_selection"))).build());
+    // Edit controls wiring
+    private void buildEditorControls() {
+        editorControls.build(
+                createEditorControlsContext(),
+                editorCallbacks
+        );
+    }
+
+    private ServerShopEditorControls.Context createEditorControlsContext() {
+        return new ServerShopEditorControls.Context(
+                this.leftPos,
+                this.topPos,
+                menu.selectedPage(),
+                this.cachedData.pages(),
+                this.selectedOfferId,
+                PREVIEW_X_OFFSET,
+                PREVIEW_Y_OFFSET,
+                CONTROLS_X_START,
+                CONTROLS_Y_START,
+                RIGHT_BUTTON_SIZE,
+                RIGHT_BUTTON_GAP,
+                BUTTON_SPRITES,
+                ADD_ICON,
+                DELETE_ICON,
+                ADD_PAGE_ICON,
+                DELETE_PAGE_ICON,
+                RENAME_PAGE_ICON,
+                CLEAR_SELECTION_ICON,
+                MOVE_UP_ICON,
+                MOVE_DOWN_ICON,
+                LIMITS_ICON,
+                PRICING_ICON
+        );
+    }
+
+    private void openOfferLimitsEditor(ServerShopOffer offer) {
+        if (minecraft != null) {
+            minecraft.setScreen(new OfferLimitsEditor(this, offer.id(), offer.limits()));
         }
+    }
+
+    private void openOfferPricingEditor(ServerShopOffer offer) {
+        if (minecraft != null) {
+            minecraft.setScreen(new OfferPricingEditor(this, offer.id(), offer.pricing()));
+        }
+    }
+
+    private int rightEditorButtonsX() {
+        int desiredX = leftPos + imageWidth + RIGHT_SIDE_GAP;
+        return Math.min(desiredX, this.width - RIGHT_BUTTON_SIZE - 8);
+    }
+
+    private int rightEditorButtonsY() {
+        int totalButtonsHeight = (RIGHT_BUTTON_SIZE * 2) + RIGHT_BUTTON_GAP;
+        return topPos + (imageHeight - totalButtonsHeight) / 2 - 16;
     }
 
     private void buildPageSidebar() {
-        List<ServerShopPage> pages = cachedData.pages();
-        int baseX = leftPos - 105;
-        int y = topPos + 10;
-        for (int i = 0; i < pages.size(); i++) {
-            int index = i;
-            ServerShopPage page = pages.get(i);
-            String name = page.name().isEmpty() ? "Page " + (i + 1) : page.name();
-            Button button = Button.builder(Component.literal(name), b -> {
-                if (menu.selectedPage() != index) {
-                    menu.setSelectedPageClient(index);
-                    NetworkHandler.sendToServer(new ServerShopSelectPagePacket(index));
-                    this.selectedOfferId = null;
-                }
-            }).bounds(baseX, y, 100, 20).build();
-            button.active = menu.selectedPage() != index;
-            addDynamic(button);
-            y += 22;
+        pageSidebar.buildButtons(
+                createPageSidebarContext(),
+                pageSidebarCallbacks
+        );
+    }
+
+    private ServerShopPageSidebar.Context createPageSidebarContext() {
+        return new ServerShopPageSidebar.Context(
+                this.leftPos,
+                this.topPos,
+                menu.selectedPage(),
+                this.cachedData.pages(),
+                this.font
+        );
+    }
+
+    private void onPageSelected(int index) {
+        if (menu.selectedPage() == index) {
+            return;
+        }
+
+        menu.setSelectedPageClient(index);
+        menu.setCurrentTradingOffer(null);
+        clearSelectedOffer();
+        scrollOffset = 0;
+        rebuildUi();
+        NetworkHandler.sendToServer(new ServerShopSelectPagePacket(index));
+    }
+
+    private void openTextInput(Component title, String initial, boolean allowEmpty, Consumer<String> onConfirm) {
+        if (minecraft != null) {
+            minecraft.setScreen(new TextInputScreen(this, title, initial, allowEmpty, onConfirm));
         }
     }
 
+    // Render pipeline
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        renderContent(guiGraphics, mouseX, mouseY, partialTick, false);
+        pageSidebar.renderDelayedTooltip(createPageSidebarContext(), guiGraphics, mouseX, mouseY);
+    }
+
+    /**
+     * Renders a static backdrop for modal overlays without using AbstractContainerScreen#render.
+     */
+    public void renderModalBackdrop(GuiGraphics guiGraphics, float partialTick) {
+        // Keep the vanilla menu texture/background so the backdrop matches normal ServerShop visuals.
+        this.renderMenuBackground(guiGraphics);
+        // Keep the exact same visual pipeline as the regular screen, but disable interactions.
+        renderContent(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick, true);
+    }
+
+    /**
+     * Shared render path for normal screen and modal backdrop mode.
+     */
+    private void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, boolean suppressInteractions) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        if (visibleOffers.isEmpty()) {
-            Component noOffersText = Component.translatable("gui.marketblocks.server_shop.no_offers");
-            int textX = leftPos + LIST_X_OFFSET + (LIST_WIDTH - font.width(noOffersText)) / 2;
-            int textY = topPos + LIST_Y_OFFSET + LIST_HEIGHT / 2 - 4;
-            guiGraphics.drawString(font, noOffersText, textX, textY, 0x555555, false);
+        renderStaticOverlay(guiGraphics, mouseX, mouseY, suppressInteractions);
+
+        if (!suppressInteractions) {
+            this.renderTooltip(guiGraphics, mouseX, mouseY);
         }
+    }
 
-        int listStartX = leftPos + LIST_X_OFFSET;
-        int listStartY = topPos + LIST_Y_OFFSET;
-
-        guiGraphics.enableScissor(listStartX, listStartY, listStartX + LIST_WIDTH + 2, listStartY + (MAX_VISIBLE_ROWS * ROW_HEIGHT));
-        int end = Math.min(scrollOffset + maxVisibleRows, visibleOffers.size());
-        int currentY = listStartY;
-
-        for (int i = scrollOffset; i < end; i++) {
-            ServerShopOffer offer = visibleOffers.get(i);
-            boolean isSelected = offer.id().equals(selectedOfferId);
-            renderListButton(guiGraphics, offer, listStartX, currentY, isSelected, mouseX, mouseY);
-            currentY += ROW_HEIGHT;
-        }
-        guiGraphics.disableScissor();
-
+    private void renderStaticOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean suppressInteractions) {
+        overlayRenderer.render(guiGraphics, createOverlayContext(mouseX, mouseY, suppressInteractions));
         renderScroller(guiGraphics);
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
-    private void renderListButton(GuiGraphics graphics, ServerShopOffer offer, int x, int y, boolean isSelected, int mouseX, int mouseY) {
-        boolean hovered = mouseX >= x && mouseX < x + LIST_WIDTH && mouseY >= y && mouseY < y + ROW_HEIGHT;
-
-        ResourceLocation texture;
-        if (isSelected) {
-            texture = BUTTON_SPRITES.get(false, true);
-        } else if (hovered) {
-            texture = BUTTON_SPRITES.get(true, true);
-        } else {
-            texture = BUTTON_SPRITES.get(true, false);
-        }
-
-        RenderSystem.setShaderTexture(0, texture);
-        graphics.blit(texture, x, y, 0, 0, LIST_WIDTH, ROW_HEIGHT - 2, LIST_WIDTH, ROW_HEIGHT - 2);
-
-        int itemY = y + 1;
-        int startX = x + 4;
-
-        // Dynamic Ordering for List
-        ItemStack p1 = offer.payments().isEmpty() ? ItemStack.EMPTY : offer.payments().get(0);
-        ItemStack p2 = offer.payments().size() > 1 ? offer.payments().get(1) : ItemStack.EMPTY;
-        if (p1.isEmpty() && !p2.isEmpty()) {
-            p1 = p2;
-            p2 = ItemStack.EMPTY;
-        }
-
-        if (!p1.isEmpty()) {
-            graphics.renderItem(p1, startX, itemY);
-            graphics.renderItemDecorations(font, p1, startX, itemY);
-        }
-
-        if (!p2.isEmpty()) {
-            graphics.renderItem(p2, startX + 18, itemY);
-            graphics.renderItemDecorations(font, p2, startX + 18, itemY);
-        }
-
-        graphics.blit(ARROW_ICON, startX + 38, itemY + 4, 0, 0, 10, 9, 10, 9);
-
-        int resultX = x + LIST_WIDTH - 20;
-        graphics.renderItem(offer.result(), resultX, itemY);
-        graphics.renderItemDecorations(font, offer.result(), resultX, itemY);
-
-        if (hovered) {
-            if (mouseX >= startX && mouseX <= startX + 16 && !p1.isEmpty())
-                graphics.renderTooltip(font, p1, mouseX, mouseY);
-            else if (mouseX >= startX + 18 && mouseX <= startX + 34 && !p2.isEmpty())
-                graphics.renderTooltip(font, p2, mouseX, mouseY);
-            else if (mouseX >= resultX && mouseX <= resultX + 16 && !offer.result().isEmpty())
-                graphics.renderTooltip(font, offer.result(), mouseX, mouseY);
-        }
+    private ServerShopOverlayRenderer.Context createOverlayContext(int mouseX, int mouseY, boolean suppressInteractions) {
+        return new ServerShopOverlayRenderer.Context(
+                this.font,
+                mouseX,
+                mouseY,
+                suppressInteractions,
+                this.leftPos,
+                this.topPos,
+                !this.cachedData.pages().isEmpty(),
+                LIST_X_OFFSET,
+                LIST_Y_OFFSET,
+                LIST_WIDTH,
+                LIST_HEIGHT,
+                ROW_HEIGHT,
+                MAX_VISIBLE_ROWS,
+                PREVIEW_X_OFFSET,
+                PREVIEW_Y_OFFSET,
+                STATUS_LINE_HEIGHT,
+                this.scrollOffset,
+                this.maxVisibleRows,
+                this.visibleOffers,
+                this.selectedOfferId,
+                BUTTON_SPRITES,
+                ARROW_ICON,
+                this::findOfferOnSelectedPage,
+                this::normalizePaymentPair,
+                this::getUnavailableStateIcon,
+                this::getDisplayRestockSeconds
+        );
     }
 
+    private ResourceLocation getUnavailableStateIcon(ServerShopOfferViewState viewState) {
+        if (viewState.remainingDailyPurchases().isPresent() && viewState.remainingDailyPurchases().get() <= 0) {
+            return TRADE_ARROW_DISABLED_ICON;
+        }
+        if (viewState.remainingStock().isPresent() && viewState.remainingStock().get() <= 0) {
+            return OUT_OF_STOCK_ICON;
+        }
+        if (viewState.maxPurchasable() <= 0) {
+            return TRADE_ARROW_DISABLED_ICON;
+        }
+        return null;
+    }
+
+    private java.util.Optional<Integer> getDisplayRestockSeconds(ServerShopOfferViewState viewState) {
+        if (viewState == null || viewState.restockSecondsRemaining().isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        long elapsedMillis = Math.max(0L, System.currentTimeMillis() - ServerShopClientState.lastSyncTimeMillis());
+        int elapsedSeconds = (int) (elapsedMillis / 1000L);
+        return java.util.Optional.of(Math.max(0, viewState.restockSecondsRemaining().get() - elapsedSeconds));
+    }
+
+    private int listStartX() {
+        return leftPos + LIST_X_OFFSET;
+    }
+
+    private int listStartY() {
+        return topPos + LIST_Y_OFFSET;
+    }
+
+    private int listVisibleHeight() {
+        return MAX_VISIBLE_ROWS * ROW_HEIGHT;
+    }
+
+    private int scrollerX() {
+        return leftPos + SCROLLER_X_OFFSET;
+    }
+
+    private int scrollerY() {
+        return topPos + LIST_Y_OFFSET;
+    }
+
+    private int scrollerHeight() {
+        return listVisibleHeight();
+    }
+
+    private boolean isWithinOfferList(double mouseX, double mouseY) {
+        int listStartX = listStartX();
+        int listStartY = listStartY();
+        return mouseX >= listStartX
+                && mouseX < listStartX + LIST_WIDTH
+                && mouseY >= listStartY
+                && mouseY < listStartY + listVisibleHeight();
+    }
+
+    private int offerIndexAt(double mouseY) {
+        int clickedOffset = (int) ((mouseY - listStartY()) / ROW_HEIGHT);
+        return scrollOffset + clickedOffset;
+    }
+
+    private boolean trySelectOfferAt(double mouseX, double mouseY) {
+        if (!isWithinOfferList(mouseX, mouseY)) {
+            return false;
+        }
+
+        int index = offerIndexAt(mouseY);
+        if (index < 0 || index >= visibleOffers.size()) {
+            return false;
+        }
+
+        ServerShopOffer clickedOffer = visibleOffers.get(index);
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+
+        this.selectedOfferId = clickedOffer.id();
+        if (!isLocalEditMode) {
+            menu.setCurrentTradingOffer(clickedOffer);
+            NetworkHandler.sendToServer(new ServerShopSetOfferPacket(clickedOffer.id()));
+        }
+
+        updatePreview();
+        rebuildUi();
+        return true;
+    }
+
+    // Input handling
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && isScrollBarActive() && isWithinScroller(mouseX, mouseY)) {
             isDragging = true;
             return true;
         }
-
-        int listStartX = leftPos + LIST_X_OFFSET;
-        int listStartY = topPos + LIST_Y_OFFSET;
-        if (mouseX >= listStartX && mouseX < listStartX + LIST_WIDTH && mouseY >= listStartY && mouseY < listStartY + (MAX_VISIBLE_ROWS * ROW_HEIGHT)) {
-            int clickedOffset = (int) ((mouseY - listStartY) / ROW_HEIGHT);
-            int index = scrollOffset + clickedOffset;
-
-            if (index >= 0 && index < visibleOffers.size()) {
-                ServerShopOffer clickedOffer = visibleOffers.get(index);
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
-
-                this.selectedOfferId = clickedOffer.id();
-
-                // WICHTIG: Setze das Angebot im Menu, damit slotsChanged funktioniert
-                if (!isLocalEditMode) {
-                    menu.setCurrentTradingOffer(clickedOffer);
-                    // FIX: Server informieren, welches Angebot aktiv ist!
-                    NetworkHandler.sendToServer(new ServerShopSetOfferPacket(clickedOffer.id()));
-                }
-
-                updatePreview();
-                rebuildUi();
-                return true;
-            }
+        if (trySelectOfferAt(mouseX, mouseY)) {
+            return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -486,13 +607,9 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         scrollOffset = Mth.clamp(newOffset, 0, maxScroll);
     }
 
-    private void addDynamic(Button button) {
-        addRenderableWidget(button);
-        dynamicWidgets.add(button);
-    }
-
-    private void openTextInput(Component title, String initial, Consumer<String> onConfirm) {
-        minecraft.setScreen(new TextInputScreen(this, title, initial, onConfirm));
+    private void addDynamic(AbstractWidget widget) {
+        addRenderableWidget(widget);
+        dynamicWidgets.add(widget);
     }
 
     @Override
@@ -502,35 +619,25 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         guiGraphics.blit(BACKGROUND_TEXTURE, i, j, 0, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
 
         if (isLocalEditMode) {
-            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 180, topPos + 6, 0xFF5555, false);
+            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 166, topPos + 6, 0xFF5555, false);
         }
     }
 
     private void renderScroller(GuiGraphics guiGraphics) {
-        // Spec: "Scrollbar must ALWAYS be visible"
-        int scrollerX = leftPos + SCROLLER_X_OFFSET;
-        int scrollerY = topPos + LIST_Y_OFFSET;
-        int scrollerH = MAX_VISIBLE_ROWS * ROW_HEIGHT;
+        int scrollerX = scrollerX();
+        int scrollerY = scrollerY();
+        int scrollerH = scrollerHeight();
+        int maxScroll = Math.max(0, visibleOffers.size() - MAX_VISIBLE_ROWS);
 
-        // Draw Track (Optional, but looks better if "Always Visible")
-        guiGraphics.fill(scrollerX, scrollerY, scrollerX + SCROLLER_WIDTH, scrollerY + scrollerH, 0xFF000000);
-
-        int maxScroll = visibleOffers.size() - MAX_VISIBLE_ROWS;
-        float progress = 0f;
-        if (maxScroll > 0) {
-            progress = (float) scrollOffset / (float) maxScroll;
+        if (maxScroll <= 0) {
+            guiGraphics.blitSprite(SCROLLER_DISABLED_SPRITE, scrollerX, scrollerY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            return;
         }
 
-        int handleTravel = scrollerH - SCROLLER_HEIGHT;
+        float progress = (float) scrollOffset / (float) maxScroll;
+        int handleTravel = Math.max(0, scrollerH - SCROLLER_HEIGHT);
         int handleY = scrollerY + Mth.floor(progress * handleTravel);
-
-        // Draw Handle
-        // If not active (maxScroll <= 0), handle stays at top or fills?
-        // Typically it stays at top and might be disabled color.
-        boolean active = maxScroll > 0;
-        int color = active ? (isDragging ? 0xFFAAAAAA : 0xFF888888) : 0xFF444444;
-
-        guiGraphics.fill(scrollerX, handleY, scrollerX + SCROLLER_WIDTH, handleY + SCROLLER_HEIGHT, color);
+        guiGraphics.blitSprite(SCROLLER_SPRITE, scrollerX, handleY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
     }
 
     private boolean isScrollBarActive() {
@@ -550,15 +657,13 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (isDragging && isScrollBarActive()) {
-            int scrollerY = topPos + LIST_Y_OFFSET;
-            int handleTravel = (MAX_VISIBLE_ROWS * ROW_HEIGHT) - SCROLLER_HEIGHT;
-            if (handleTravel > 0) {
-                double relative = (mouseY - scrollerY - (SCROLLER_HEIGHT / 2.0D)) / handleTravel;
-                relative = Mth.clamp(relative, 0.0D, 1.0D);
-                int maxScroll = visibleOffers.size() - MAX_VISIBLE_ROWS;
-                int newOffset = Mth.floor(relative * maxScroll + 0.5D);
-                updateScrollOffset(newOffset);
-            }
+            int scrollerY = scrollerY();
+            int handleTravel = scrollerHeight() - SCROLLER_HEIGHT;
+            double relative = (mouseY - scrollerY - (SCROLLER_HEIGHT / 2.0D)) / handleTravel;
+            relative = Mth.clamp(relative, 0.0D, 1.0D);
+            int maxScroll = visibleOffers.size() - MAX_VISIBLE_ROWS;
+            int newOffset = Mth.floor(relative * maxScroll + 0.5D);
+            updateScrollOffset(newOffset);
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -571,47 +676,142 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private boolean isWithinScroller(double mouseX, double mouseY) {
-        int scrollerX = leftPos + SCROLLER_X_OFFSET;
-        int scrollerY = topPos + LIST_Y_OFFSET;
-        int scrollerHeight = MAX_VISIBLE_ROWS * ROW_HEIGHT;
+        int scrollerX = scrollerX();
+        int scrollerY = scrollerY();
+        int scrollerHeight = scrollerHeight();
         return mouseX >= scrollerX && mouseX < scrollerX + SCROLLER_WIDTH && mouseY >= scrollerY && mouseY < scrollerY + scrollerHeight;
     }
 
-    private static class TextInputScreen extends Screen {
-        private final ServerShopScreen parent;
+    // Adapter between screen methods and external editor-controls builder.
+    private final class ScreenEditorCallbacks implements ServerShopEditorControls.Callbacks {
+        @Override
+        public void addWidget(AbstractWidget widget) {
+            addDynamic(widget);
+        }
+
+        @Override
+        public void openTextInput(Component title, String initialValue, boolean allowEmpty, Consumer<String> onConfirm) {
+            ServerShopScreen.this.openTextInput(title, initialValue, allowEmpty, onConfirm);
+        }
+
+        @Override
+        public void openOfferLimitsEditor(ServerShopOffer offer) {
+            ServerShopScreen.this.openOfferLimitsEditor(offer);
+        }
+
+        @Override
+        public void openOfferPricingEditor(ServerShopOffer offer) {
+            ServerShopScreen.this.openOfferPricingEditor(offer);
+        }
+
+        @Override
+        public void clearSelectedOffer() {
+            ServerShopScreen.this.clearSelectedOffer();
+        }
+
+        @Override
+        public void updatePreview() {
+            ServerShopScreen.this.updatePreview();
+        }
+
+        @Override
+        public void rebuildUi() {
+            ServerShopScreen.this.rebuildUi();
+        }
+
+        @Override
+        public ServerShopOffer findOfferOnSelectedPage(UUID offerId) {
+            return ServerShopScreen.this.findOfferOnSelectedPage(offerId);
+        }
+
+        @Override
+        public int rightEditorButtonsX() {
+            return ServerShopScreen.this.rightEditorButtonsX();
+        }
+
+        @Override
+        public int rightEditorButtonsY() {
+            return ServerShopScreen.this.rightEditorButtonsY();
+        }
+    }
+
+    private final class ScreenPageSidebarCallbacks implements ServerShopPageSidebar.Callbacks {
+        @Override
+        public void addWidget(AbstractWidget widget) {
+            addDynamic(widget);
+        }
+
+        @Override
+        public void onPageSelected(int pageIndex) {
+            ServerShopScreen.this.onPageSelected(pageIndex);
+        }
+    }
+
+    // Shared simple text input modal used by page rename/create actions.
+    private static class TextInputScreen extends BaseModalScreen {
+        private static final int PANEL_WIDTH = 236;
+        private static final int PANEL_HEIGHT = 98;
         private final String initialValue;
+        private final boolean allowEmpty;
         private final Consumer<String> onConfirm;
         private EditBox input;
+        private Button confirmButton;
 
-        protected TextInputScreen(ServerShopScreen parent, Component title, String initialValue, Consumer<String> onConfirm) {
-            super(title);
-            this.parent = parent;
+        protected TextInputScreen(ServerShopScreen parent, Component title, String initialValue, boolean allowEmpty, Consumer<String> onConfirm) {
+            super(title, parent, PANEL_WIDTH, PANEL_HEIGHT, -1, -1);
             this.initialValue = initialValue == null ? "" : initialValue;
+            this.allowEmpty = allowEmpty;
             this.onConfirm = onConfirm;
         }
 
         @Override
         protected void init() {
-            this.input = new EditBox(this.font, this.width / 2 - 100, this.height / 2 - 10, 200, 20, Component.empty());
+            initModalBounds();
+
+            int inputX = this.panelLeft + 18;
+            int inputY = this.panelTop + 30;
+            this.input = new EditBox(this.font, inputX, inputY, 200, 20, Component.empty());
             this.input.setMaxLength(64);
             this.input.setValue(initialValue);
+            this.input.setResponder(ignored -> updateConfirmState());
             addRenderableWidget(input);
-            addRenderableWidget(Button.builder(CommonComponents.GUI_OK,
-                            b -> { minecraft.setScreen(parent); onConfirm.accept(input.getValue()); })
-                    .bounds(this.width / 2 - 100, this.height / 2 + 16, 96, 20).build());
-            addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL,
-                    b -> minecraft.setScreen(parent)).bounds(this.width / 2 + 4, this.height / 2 + 16, 96, 20).build());
+            this.confirmButton = Button.builder(CommonComponents.GUI_OK, ignored -> confirmInput())
+                    .bounds(this.panelLeft + 18, this.panelTop + 56, 96, 20).build();
+            addRenderableWidget(confirmButton);
+            addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, ignored -> this.onClose())
+                    .bounds(this.panelLeft + PANEL_WIDTH - 114, this.panelTop + 56, 96, 20).build());
+            updateConfirmState();
             setInitialFocus(input);
         }
 
-        @Override public void onClose() { minecraft.setScreen(parent); }
-        @Override public void render(GuiGraphics g, int x, int y, float p) {
-            renderBackground(g, x, y, p);
-            g.drawString(font, this.title, this.width / 2 - this.font.width(this.title) / 2, this.height / 2 - 40, 0xFFFFFF, false);
-            super.render(g, x, y, p);
+        private void updateConfirmState() {
+            if (confirmButton != null) {
+                confirmButton.active = allowEmpty || !ServerShopScreen.normalizeTextInput(input.getValue()).isEmpty();
+            }
         }
+
+        private void confirmInput() {
+            String normalizedValue = ServerShopScreen.normalizeTextInput(input.getValue());
+            if (normalizedValue.isEmpty() && !allowEmpty) {
+                return;
+            }
+            onConfirm.accept(normalizedValue);
+            this.onClose();
+        }
+
+        @Override
+        protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            // No extra foreground content needed for this modal.
+        }
+
         @Override public boolean keyPressed(int k, int s, int m) {
-            if (k == 257 || k == 335) { minecraft.setScreen(parent); onConfirm.accept(input.getValue()); return true; }
+            if (k == 257 || k == 335) {
+                if (confirmButton != null && confirmButton.active) {
+                    confirmInput();
+                    return true;
+                }
+                return false;
+            }
             return super.keyPressed(k, s, m);
         }
     }

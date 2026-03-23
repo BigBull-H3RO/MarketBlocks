@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.network.packets.serverShop;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
+import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -30,8 +31,12 @@ public record ServerShopSetOfferPacket(UUID offerId) implements CustomPacketPayl
     public static void handle(ServerShopSetOfferPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof ServerShopMenu menu) {
-                // Setzt das Angebot auf dem Server, damit slotsChanged korrekt berechnen kann
-                menu.setSelectedOffer(packet.offerId());
+                if (ServerShopManager.get().isOfferOnPage(packet.offerId(), menu.selectedPage())) {
+                    // Sets the offer server-side so slotsChanged can compute result availability correctly.
+                    menu.setSelectedOffer(packet.offerId());
+                } else {
+                    menu.setCurrentTradingOffer(null);
+                }
             }
         });
     }

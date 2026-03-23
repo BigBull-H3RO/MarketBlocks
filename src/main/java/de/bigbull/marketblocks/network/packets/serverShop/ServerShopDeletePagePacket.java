@@ -27,9 +27,14 @@ public record ServerShopDeletePagePacket(String pageName) implements CustomPacke
 
     public static void handle(ServerShopDeletePagePacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (context.player() instanceof ServerPlayer player && ServerShopManager.get().canEdit(player) &&
-                    ServerShopManager.get().removePage(packet.pageName())) {
+            if (!(context.player() instanceof ServerPlayer player) || !ServerShopManager.get().canEdit(player)) {
+                return;
+            }
+            ServerShopManager.MutationResult<Void> result = ServerShopManager.get().removePage(packet.pageName());
+            if (result.isSuccess()) {
                 ServerShopManager.get().syncOpenViewers(player);
+            } else {
+                player.sendSystemMessage(result.errorMessage());
             }
         });
     }
