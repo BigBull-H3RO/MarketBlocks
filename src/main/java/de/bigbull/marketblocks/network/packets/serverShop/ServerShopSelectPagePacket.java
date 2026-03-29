@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.network.packets.serverShop;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -30,9 +31,15 @@ public record ServerShopSelectPagePacket(int pageIndex) implements CustomPacketP
 
     public static void handle(ServerShopSelectPagePacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (context.player() instanceof ServerPlayer player && ServerShopManager.get().selectPage(packet.pageIndex())) {
-                ServerShopManager.get().syncOpenViewers(player);
+            if (!(context.player() instanceof ServerPlayer player) || !(player.containerMenu instanceof ServerShopMenu menu)) {
+                return;
             }
+            int pageCount = ServerShopManager.get().snapshot().size();
+            if (packet.pageIndex() < 0 || packet.pageIndex() >= pageCount) {
+                return;
+            }
+            menu.setSelectedPageServer(packet.pageIndex());
+            menu.setCurrentTradingOffer(null);
         });
     }
 }

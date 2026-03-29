@@ -7,6 +7,7 @@ import de.bigbull.marketblocks.util.custom.servershop.OfferLimit;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -41,12 +42,24 @@ public record ServerShopAddOfferPacket(String pageName) implements CustomPacketP
             ItemStack payment1 = template.getItem(0).copy();
             ItemStack payment2 = template.getItem(1).copy();
             ItemStack result = template.getItem(2).copy();
-            if (result.isEmpty()) return;
+
+            if (result.isEmpty()) {
+                player.sendSystemMessage(Component.translatable("gui.marketblocks.error.no_result_item"));
+                return;
+            }
+            if (payment1.isEmpty() && payment2.isEmpty()) {
+                player.sendSystemMessage(Component.translatable("gui.marketblocks.error.no_payment_items"));
+                return;
+            }
+
             ServerShopOffer offer = new ServerShopOffer(null, result, List.of(payment1, payment2),
                     OfferLimit.unlimited(), DemandPricing.disabled());
-            if (ServerShopManager.get().addOffer(packet.pageName(), offer).isPresent()) {
+            ServerShopManager.MutationResult<ServerShopOffer> addResult = ServerShopManager.get().addOffer(packet.pageName(), offer);
+            if (addResult.isSuccess()) {
                 returnTemplateItems(player, template);
                 ServerShopManager.get().syncOpenViewers(player);
+            } else {
+                player.sendSystemMessage(addResult.errorMessage());
             }
         });
     }

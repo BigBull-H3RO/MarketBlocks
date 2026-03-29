@@ -13,6 +13,7 @@ group = mod_group_id
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    mavenCentral()
 }
 
 base {
@@ -57,6 +58,7 @@ configurations {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -94,6 +96,17 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
+}
+
+tasks.register('runRuntimeMathSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the ServerShop runtime math self-test harness.'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'de.bigbull.marketblocks.util.custom.servershop.ServerShopRuntimeMathTest'
 }
 
 idea {

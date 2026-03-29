@@ -28,8 +28,12 @@ public record ServerShopCreatePagePacket(String pageName) implements CustomPacke
     public static void handle(ServerShopCreatePagePacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && ServerShopManager.get().canEdit(player)) {
-                ServerShopManager.get().createPage(packet.pageName());
-                ServerShopManager.get().syncOpenViewers(player);
+                ServerShopManager.MutationResult<?> result = ServerShopManager.get().createPage(packet.pageName());
+                if (result.isSuccess()) {
+                    ServerShopManager.get().syncOpenViewers(player);
+                } else {
+                    player.sendSystemMessage(result.errorMessage());
+                }
             }
         });
     }

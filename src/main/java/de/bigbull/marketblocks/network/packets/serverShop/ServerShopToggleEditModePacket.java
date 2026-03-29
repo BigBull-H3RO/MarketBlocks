@@ -28,8 +28,7 @@ public record ServerShopToggleEditModePacket(boolean enable) implements CustomPa
     public static void handle(ServerShopToggleEditModePacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof ServerShopMenu menu) {
-                // Nur wenn der Spieler die Berechtigung hat, darf er umschalten
-                if (menu.hasEditPermission()) {
+                if (menu.canUseEditMode()) {
                     menu.setEditMode(packet.enable());
                 }
             }

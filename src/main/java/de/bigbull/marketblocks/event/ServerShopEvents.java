@@ -1,8 +1,10 @@
 package de.bigbull.marketblocks.event;
 
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -36,12 +38,37 @@ public final class ServerShopEvents {
 
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
-        event.getDispatcher().register(Commands.literal("servershop")
-                .requires(source -> source.getEntity() instanceof ServerPlayer)
-                .executes(context -> {
-                    ServerPlayer player = context.getSource().getPlayerOrException();
-                    ServerShopManager.get().openShop(player);
-                    return 1;
-                }));
+        event.getDispatcher().register(
+                Commands.literal("servershop")
+                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                        .executes(context -> {
+                            ServerPlayer player = context.getSource().getPlayerOrException();
+                            ServerShopManager.get().openShop(player);
+                            return 1;
+                        })
+                        .then(Commands.literal("editmode")
+                                .requires(source -> source.hasPermission(2))
+                                .executes(context -> {
+                                    ServerShopManager manager = ServerShopManager.get();
+                                    boolean enabled = !manager.isGlobalEditModeEnabled();
+                                    manager.setGlobalEditModeEnabled(enabled);
+                                    context.getSource().sendSuccess(
+                                            () -> Component.translatable(enabled
+                                                    ? "message.marketblocks.server_shop.edit_mode_enabled"
+                                                    : "message.marketblocks.server_shop.edit_mode_disabled"),
+                                            true);
+                                    return 1;
+                                })
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(context -> {
+                                            boolean enabled = BoolArgumentType.getBool(context, "enabled");
+                                            ServerShopManager.get().setGlobalEditModeEnabled(enabled);
+                                            context.getSource().sendSuccess(
+                                                    () -> Component.translatable(enabled
+                                                            ? "message.marketblocks.server_shop.edit_mode_enabled"
+                                                            : "message.marketblocks.server_shop.edit_mode_disabled"),
+                                                    true);
+                                            return 1;
+                                        }))));
     }
 }

@@ -16,13 +16,20 @@ import java.util.function.BooleanSupplier;
 public class IconButton extends Button {
     private final WidgetSprites sprites;
     private final ResourceLocation icon;
+    private final ResourceLocation activeIcon;
     private final BooleanSupplier selectedSupplier;
 
     public IconButton(int x, int y, int width, int height, WidgetSprites sprites, ResourceLocation icon, Button.OnPress onPress,
                       Component tooltip, BooleanSupplier selectedSupplier) {
+        this(x, y, width, height, sprites, icon, null, onPress, tooltip, selectedSupplier);
+    }
+
+    public IconButton(int x, int y, int width, int height, WidgetSprites sprites, ResourceLocation icon, ResourceLocation activeIcon,
+                      Button.OnPress onPress, Component tooltip, BooleanSupplier selectedSupplier) {
         super(x, y, width, height, Component.empty(), onPress, DEFAULT_NARRATION);
         this.sprites = sprites;
         this.icon = icon;
+        this.activeIcon = activeIcon;
         this.selectedSupplier = selectedSupplier;
         if (tooltip != null) {
             this.setTooltip(Tooltip.create(tooltip));
@@ -45,9 +52,10 @@ public class IconButton extends Button {
 
         RenderSystem.setShaderTexture(0, background);
         graphics.blit(background, getX(), getY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight());
-        RenderSystem.setShaderTexture(0, icon);
+        ResourceLocation iconToRender = (selected && activeIcon != null) ? activeIcon : icon;
+        RenderSystem.setShaderTexture(0, iconToRender);
         int iconX = getX() + (getWidth() - 18) / 2;
         int iconY = getY() + (getHeight() - 18) / 2;
-        graphics.blit(icon, iconX, iconY, 0, 0, 0, 18, 18, 18, 18);
+        graphics.blit(iconToRender, iconX, iconY, 0, 0, 0, 18, 18, 18, 18);
     }
 }
