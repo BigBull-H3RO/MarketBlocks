@@ -142,28 +142,34 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         }
     }
 
-    private boolean hasSpaceInPlayerInventory(ItemStack stack) {
-        // Iterate over player slots (last 36 slots in this container)
+    private int calculateMaxFitInPlayerInventory(ItemStack stack) {
         int start = TOTAL_SLOTS;
         int end = this.slots.size();
-        int remaining = stack.getCount();
+
+        int totalSpace = 0;
+        // Fix: Use the item's max stack size, which is 1 for non-stackables (tools, etc.)
+        int maxStackSize = Math.min(stack.getMaxStackSize(), 64);
 
         for (int i = start; i < end; i++) {
             Slot s = this.slots.get(i);
             if (!s.hasItem()) {
-                 remaining -= Math.min(s.getMaxStackSize(), stack.getMaxStackSize());
+                 totalSpace += maxStackSize;
             } else {
                 ItemStack invStack = s.getItem();
                 if (ItemStack.isSameItemSameComponents(invStack, stack)) {
-                    int space = invStack.getMaxStackSize() - invStack.getCount();
+                    int space = maxStackSize - invStack.getCount();
                     if (space > 0) {
-                        remaining -= space;
+                        totalSpace += space;
                     }
                 }
             }
-            if (remaining <= 0) return true;
         }
-        return false;
+
+        return totalSpace / stack.getCount();
+    }
+
+    private boolean hasSpaceInPlayerInventory(ItemStack stack) {
+        return calculateMaxFitInPlayerInventory(stack) >= 1;
     }
 
     // --- Tab API ---
@@ -296,36 +302,53 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
             ItemStack result = ItemStack.EMPTY;
 
-            while (blockEntity.isOfferAvailable() && slot.hasItem()) {
-                ItemStack stack = slot.getItem();
+            // NEW: Efficient bulk purchase
+            ItemStack offerResult = blockEntity.getOfferResult();
+            if (offerResult.isEmpty()) return ItemStack.EMPTY;
 
-                // Pre-check: Calculate if we can fit the stack.
-                // If the player inventory cannot accept the FULL offer stack, we must STOP.
-                // Partial moves would cause moveItemStackTo to return true,
-                // which would then trigger processPurchase (full price), leading to item loss.
+            // 1. Calculate how many fit in player inventory
+            int maxPlayerFit = calculateMaxFitInPlayerInventory(offerResult);
+            if (maxPlayerFit <= 0) return ItemStack.EMPTY;
 
-                // Simulate move? AbstractContainerMenu doesn't support simulation easily.
-                // We manually check capacity.
-                ItemStack offerResult = blockEntity.getOfferResult();
-                if (offerResult.isEmpty() || !hasSpaceInPlayerInventory(offerResult)) {
-                    break;
+            // 2. Execute bulk purchase on the server block entity
+            // The BlockEntity handles payment reduction, stock reduction, and output space check.
+            // It returns the actual number of transactions performed.
+            int bought = blockEntity.processBulkPurchase(maxPlayerFit);
+
+            if (bought > 0) {
+                // 3. Give items to player
+                // Split into chunks of maxStackSize to ensure moveItemStackTo handles them correctly.
+                int remaining = offerResult.getCount() * bought;
+                int maxStack = offerResult.getMaxStackSize();
+
+                ItemStack totalBoughtCopy = offerResult.copy();
+                totalBoughtCopy.setCount(remaining);
+
+                while (remaining > 0) {
+                    int chunkSize = Math.min(remaining, maxStack);
+                    ItemStack chunk = offerResult.copy();
+                    chunk.setCount(chunkSize);
+
+                    if (!this.moveItemStackTo(chunk, TOTAL_SLOTS, this.slots.size(), true)) {
+                        // Should not happen if calculateMaxFitInPlayerInventory is correct.
+                        // But if it does, we must drop the rest to avoid voiding paid items.
+                        if (!chunk.isEmpty()) {
+                            player.drop(chunk, false);
+                        }
+                    } else {
+                         // Double check if moveItemStackTo left something in chunk
+                         if (!chunk.isEmpty()) {
+                             player.drop(chunk, false);
+                         }
+                    }
+                    remaining -= chunkSize;
                 }
 
-                if (result.isEmpty()) {
-                    result = stack.copy();
-                }
-
-                if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
-                    break;
-                }
-
-                slot.set(stack);
-                blockEntity.processPurchase();
                 blockEntity.updateOfferSlot();
+                return totalBoughtCopy; // Return full amount for UI/Sound
+            } else {
+                 return ItemStack.EMPTY;
             }
-
-            blockEntity.updateOfferSlot();
-            return result;
         }
 
         Slot slot = this.slots.get(index);

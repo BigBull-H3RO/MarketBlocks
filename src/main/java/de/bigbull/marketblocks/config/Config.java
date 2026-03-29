@@ -11,6 +11,8 @@ public class Config {
     public static final ModConfigSpec.IntValue CHEST_IO_INTERVAL;
     public static final ModConfigSpec.BooleanValue ENABLE_OUTPUT_WARNING;
     public static final ModConfigSpec.IntValue OUTPUT_WARNING_PERCENT;
+    public static final ModConfigSpec.BooleanValue SERVER_SHOP_GLOBAL_DAILY_LIMIT;
+    public static final ModConfigSpec.BooleanValue SERVER_SHOP_EDIT_MODE_ENABLED;
 
     static {
         COMMON_BUILDER.push("General Settings");
@@ -29,6 +31,15 @@ public class Config {
         OUTPUT_WARNING_PERCENT = COMMON_BUILDER
                 .comment("Percentage of output inventory considered (almost) full")
                 .defineInRange("outputWarningPercent", 90, 1, 100);
+        COMMON_BUILDER.pop();
+
+        COMMON_BUILDER.push("Server Shop");
+        SERVER_SHOP_GLOBAL_DAILY_LIMIT = COMMON_BUILDER
+                .comment("If true, ServerShop daily limits are shared globally. If false, they apply per player.")
+                .define("serverShopGlobalDailyLimit", false);
+        SERVER_SHOP_EDIT_MODE_ENABLED = COMMON_BUILDER
+                .comment("If true, the ServerShop edit mode toggle is available for admins. If false, the edit toggle is hidden and disabled globally.")
+                .define("serverShopEditModeEnabled", false);
         COMMON_BUILDER.pop();
 
         COMMON_SPEC = COMMON_BUILDER.build();

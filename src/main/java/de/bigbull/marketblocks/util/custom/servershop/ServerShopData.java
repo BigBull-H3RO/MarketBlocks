@@ -14,21 +14,18 @@ import java.util.stream.Collectors;
  */
 public final class ServerShopData {
     public static final Codec<ServerShopData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            ServerShopPage.CODEC.listOf().fieldOf("pages").orElse(Collections.emptyList()).forGetter(ServerShopData::pages),
-            Codec.INT.fieldOf("selected_page").orElse(0).forGetter(ServerShopData::selectedPage)
+            ServerShopPage.CODEC.listOf().fieldOf("pages").orElse(Collections.emptyList()).forGetter(ServerShopData::pages)
     ).apply(instance, ServerShopData::new));
 
     private final List<ServerShopPage> pages;
-    private int selectedPage;
 
-    public ServerShopData(List<ServerShopPage> pages, int selectedPage) {
+    public ServerShopData(List<ServerShopPage> pages) {
         List<ServerShopPage> pageList = pages == null ? Collections.emptyList() : pages;
         this.pages = new ArrayList<>(pageList.stream().map(ServerShopPage::copy).collect(Collectors.toList()));
-        this.selectedPage = Math.max(0, Math.min(selectedPage, Math.max(0, this.pages.size() - 1)));
     }
 
     public static ServerShopData empty() {
-        return new ServerShopData(Collections.emptyList(), 0);
+        return new ServerShopData(Collections.emptyList());
     }
 
     public List<ServerShopPage> pages() {
@@ -39,29 +36,12 @@ public final class ServerShopData {
         return pages;
     }
 
-    public int selectedPage() {
-        return selectedPage;
-    }
-
-    public void setSelectedPage(int selectedPage) {
-        if (!pages.isEmpty()) {
-            this.selectedPage = Math.max(0, Math.min(selectedPage, pages.size() - 1));
-        } else {
-            this.selectedPage = 0;
-        }
-    }
-
     public void addPage(ServerShopPage page) {
         pages.add(Objects.requireNonNull(page, "page").copy());
     }
 
     public ServerShopPage removePage(int index) {
         ServerShopPage removed = pages.remove(index);
-        if (pages.isEmpty()) {
-            selectedPage = 0;
-        } else if (selectedPage >= pages.size()) {
-            selectedPage = pages.size() - 1;
-        }
         return removed == null ? null : removed.copy();
     }
 
@@ -70,7 +50,7 @@ public final class ServerShopData {
     }
 
     public ServerShopData copy() {
-        return new ServerShopData(pages, selectedPage);
+        return new ServerShopData(pages);
     }
 
     @Override
@@ -81,12 +61,11 @@ public final class ServerShopData {
         if (!(obj instanceof ServerShopData other)) {
             return false;
         }
-        return selectedPage == other.selectedPage
-                && Objects.equals(pages, other.pages);
+        return Objects.equals(pages, other.pages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(pages, selectedPage);
+        return Objects.hash(pages);
     }
 }

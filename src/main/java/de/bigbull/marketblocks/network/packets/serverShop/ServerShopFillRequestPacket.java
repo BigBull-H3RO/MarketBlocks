@@ -12,6 +12,11 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.UUID;
 
+/**
+ * Legacy-Paket des früheren Fill-/Auswahlpfads.
+ * Wird nicht mehr registriert; die aktive Angebotsauswahl läuft über ServerShopSetOfferPacket.
+ */
+@Deprecated(forRemoval = true)
 public record ServerShopFillRequestPacket(UUID offerId) implements CustomPacketPayload {
     public static final Type<ServerShopFillRequestPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "server_shop_fill_request"));

@@ -587,16 +587,134 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void processPurchase() {
+        processBulkPurchase(1);
+    }
+
+    public int processBulkPurchase(int maxAmount) {
+        if (maxAmount <= 0) return 0;
+
         pullFromInputChest();
-        if (!isReadyToPurchase()) {
-            return;
+
+        if (!hasOffer) return 0;
+        ItemStack p1 = getOfferPayment1();
+        ItemStack p2 = getOfferPayment2();
+        ItemStack result = getOfferResult();
+        if (result.isEmpty()) return 0;
+
+        // 1. Calculate how many we can afford
+        int affordable = Integer.MAX_VALUE;
+        if (!p1.isEmpty()) {
+            affordable = Math.min(affordable, countMatchingPayment(p1) / p1.getCount());
+        }
+        if (!p2.isEmpty()) {
+            // Special handling if p1 and p2 are same item type
+            if (!p1.isEmpty() && ItemStack.isSameItemSameComponents(p1, p2)) {
+                int totalReqPerUnit = p1.getCount() + p2.getCount();
+                affordable = countMatchingPayment(p1) / totalReqPerUnit;
+            } else {
+                affordable = Math.min(affordable, countMatchingPayment(p2) / p2.getCount());
+            }
+        }
+        if (p1.isEmpty() && p2.isEmpty()) affordable = maxAmount; // Free
+
+        // 2. Calculate how many we have in stock (Input)
+        int inStock = countMatchingInput(result) / result.getCount();
+
+        // 3. Calculate output space
+        int actualAmount = Math.min(maxAmount, Math.min(affordable, inStock));
+        if (actualAmount <= 0) return 0;
+
+        // Verify Output Space for actualAmount
+        // Optimize: Check maximum possible fit instead of iterating one by one
+        if (!hasOutputSpaceForAmount(actualAmount, p1, p2)) {
+            // Binary search or calculation?
+            // Calculation is hard because stacking depends on existing items.
+            // Binary search is efficient enough (log2(64*27) ~ 11 iterations max)
+            int low = 0;
+            int high = actualAmount - 1;
+            int resultAmount = 0;
+
+            while (low <= high) {
+                int mid = low + (high - low) / 2;
+                if (mid == 0) {
+                    low = 1; continue;
+                }
+                if (hasOutputSpaceForAmount(mid, p1, p2)) {
+                    resultAmount = mid;
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            actualAmount = resultAmount;
         }
 
-        executeTrade();
+        if (actualAmount <= 0) {
+            // Output full
+            updateOutputFullness();
+            return 0;
+        }
+
+        // Execute Trade 'actualAmount' times
+        for (int i = 0; i < actualAmount; i++) {
+            executeTrade();
+        }
 
         sync();
         triggerRedstonePulse();
         needsOfferRefresh = true;
+        return actualAmount;
+    }
+
+    private int countMatchingInput(ItemStack target) {
+        int found = 0;
+        // Check internal inventory
+        for (int i = 0; i < inputHandler.getSlots(); i++) {
+            ItemStack stack = inputHandler.getStackInSlot(i);
+            if (ItemStack.isSameItemSameComponents(stack, target)) {
+                found += stack.getCount();
+            }
+        }
+        // Check neighbor inventories
+        if (level != null) {
+            for (Direction dir : Direction.values()) {
+                if (getModeForSide(dir) == SideMode.INPUT) {
+                    IItemHandler neighbour = getValidNeighborHandler(dir);
+                    if (neighbour != null) {
+                        for (int i = 0; i < neighbour.getSlots(); i++) {
+                            ItemStack stack = neighbour.getStackInSlot(i);
+                            if (ItemStack.isSameItemSameComponents(stack, target)) {
+                                found += stack.getCount();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return found;
+    }
+
+    private boolean hasOutputSpaceForAmount(int amount, ItemStack p1, ItemStack p2) {
+        if (amount <= 0) return true;
+
+        // Clone handler to simulate
+        ItemStackHandler testHandler = new ItemStackHandler(outputHandler.getSlots());
+        for (int i = 0; i < outputHandler.getSlots(); i++) {
+            testHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
+        }
+
+        // Try insert amount * payments
+        if (!p1.isEmpty()) {
+            ItemStack bulkP1 = p1.copy();
+            bulkP1.setCount(p1.getCount() * amount);
+            if (!ItemHandlerHelper.insertItem(testHandler, bulkP1, false).isEmpty()) return false;
+        }
+        if (!p2.isEmpty()) {
+            ItemStack bulkP2 = p2.copy();
+            bulkP2.setCount(p2.getCount() * amount);
+            if (!ItemHandlerHelper.insertItem(testHandler, bulkP2, false).isEmpty()) return false;
+        }
+        return true;
     }
 
     private boolean isReadyToPurchase() {

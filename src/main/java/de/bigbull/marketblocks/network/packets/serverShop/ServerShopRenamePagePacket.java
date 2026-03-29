@@ -29,9 +29,14 @@ public record ServerShopRenamePagePacket(String oldName, String newName) impleme
 
     public static void handle(ServerShopRenamePagePacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (context.player() instanceof ServerPlayer player && ServerShopManager.get().canEdit(player) &&
-                    ServerShopManager.get().renamePage(packet.oldName(), packet.newName())) {
+            if (!(context.player() instanceof ServerPlayer player) || !ServerShopManager.get().canEdit(player)) {
+                return;
+            }
+            ServerShopManager.MutationResult<Void> result = ServerShopManager.get().renamePage(packet.oldName(), packet.newName());
+            if (result.isSuccess()) {
                 ServerShopManager.get().syncOpenViewers(player);
+            } else {
+                player.sendSystemMessage(result.errorMessage());
             }
         });
     }
