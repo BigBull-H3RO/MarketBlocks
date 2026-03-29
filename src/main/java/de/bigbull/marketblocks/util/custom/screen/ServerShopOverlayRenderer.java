@@ -185,6 +185,11 @@ public final class ServerShopOverlayRenderer {
             return;
         }
 
+        int interactiveHeight = context.maxVisibleRows() * context.rowHeight();
+        if (mouseY >= listStartY + interactiveHeight) {
+            return;
+        }
+
         int hoveredRow = (mouseY - listStartY) / context.rowHeight();
         int offerIndex = context.scrollOffset() + hoveredRow;
         if (offerIndex < 0 || offerIndex >= context.visibleOffers().size()) {
@@ -279,7 +284,7 @@ public final class ServerShopOverlayRenderer {
         }
 
         int listVisibleHeight() {
-            return maxVisibleRowsLimit * rowHeight;
+            return listHeight;
         }
 
         int previewX() {

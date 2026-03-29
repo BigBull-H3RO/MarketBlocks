@@ -39,24 +39,26 @@ public class ServerShopMenu extends AbstractContainerMenu {
     };
 
     private boolean hasEditPermission;
+    private boolean globalEditModeEnabled;
     private boolean isEditMode = false;
     private final DataSlot selectedPage;
     private final Inventory inventory;
 
     private ServerShopOffer currentTradingOffer;
 
-    public ServerShopMenu(int containerId, Inventory inventory, boolean canEdit) {
-        this(RegistriesInit.SERVER_SHOP_MENU.get(), containerId, inventory, canEdit);
+    public ServerShopMenu(int containerId, Inventory inventory, boolean canEdit, boolean globalEditModeEnabled) {
+        this(RegistriesInit.SERVER_SHOP_MENU.get(), containerId, inventory, canEdit, globalEditModeEnabled);
     }
 
     public ServerShopMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buf) {
-        this(containerId, inventory, buf.readBoolean());
+        this(containerId, inventory, buf.readBoolean(), buf.readBoolean());
     }
 
-    private ServerShopMenu(MenuType<?> menuType, int containerId, Inventory inventory, boolean canEdit) {
+    private ServerShopMenu(MenuType<?> menuType, int containerId, Inventory inventory, boolean canEdit, boolean globalEditModeEnabled) {
         super(menuType, containerId);
         this.inventory = inventory;
         this.hasEditPermission = canEdit;
+        this.globalEditModeEnabled = globalEditModeEnabled;
         this.selectedPage = new DataSlot() {
             private int value = 0;
             @Override public int get() { return value; }
@@ -137,14 +139,15 @@ public class ServerShopMenu extends AbstractContainerMenu {
     }
 
     public void setEditMode(boolean enable) {
-        if (enable && !hasEditPermission) return;
+        if (enable && !canUseEditMode()) return;
         this.isEditMode = enable;
         slotsChanged(tradeContainer);
     }
 
-    public void setEditPermissionClient(boolean canEdit) {
+    public void setEditPermissionClient(boolean canEdit, boolean globalEnabled) {
         this.hasEditPermission = canEdit;
-        if (!canEdit && isEditMode) {
+        this.globalEditModeEnabled = globalEnabled;
+        if (!canUseEditMode() && isEditMode) {
             setEditMode(false);
         }
     }
@@ -399,6 +402,8 @@ public class ServerShopMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) { return true; }
     public boolean hasEditPermission() { return hasEditPermission; }
+    public boolean isGlobalEditModeEnabled() { return globalEditModeEnabled; }
+    public boolean canUseEditMode() { return hasEditPermission && globalEditModeEnabled; }
     public boolean isEditor() { return isEditMode; }
     public int selectedPage() { return selectedPage.get(); }
     public void setSelectedPageServer(int page) { selectedPage.set(page); broadcastChanges(); }

@@ -128,17 +128,17 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.server_shop.status.daily_short", "D:%s");
         add("gui.marketblocks.server_shop.status.stock_short", "S:%s");
         add("gui.marketblocks.server_shop.status.restock_short", "R:%s");
-        add("gui.marketblocks.server_shop.tooltip.price_multiplier", "Der aktuelle Preisfaktor dieses Angebots. Nachfrage kann ihn erhöhen oder senken.");
-        add("gui.marketblocks.server_shop.tooltip.remaining_stock", "So viele Käufe sind durch den aktuellen Lagerbestand noch möglich.");
-        add("gui.marketblocks.server_shop.tooltip.remaining_stock_empty", "Dieses Angebot ist aktuell leer. Warte auf Restock oder fülle den Bestand wieder auf.");
-        add("gui.marketblocks.server_shop.tooltip.remaining_daily", "So viele Käufe kannst du heute für dieses Angebot noch ausführen.");
-        add("gui.marketblocks.server_shop.tooltip.remaining_daily_empty", "Dein Tageslimit für dieses Angebot ist erreicht.");
-        add("gui.marketblocks.server_shop.tooltip.restock_in", "Zeit bis zur nächsten automatischen Aufstockung.");
-        add("gui.marketblocks.server_shop.tooltip.restock_ready", "Der nächste Restock-Schritt ist jetzt fällig und wird beim nächsten Update sichtbar.");
-        add("gui.marketblocks.server_shop.tooltip.unavailable_daily", "Aktuell nicht kaufbar: Dein Tageslimit ist erreicht.");
-        add("gui.marketblocks.server_shop.tooltip.unavailable_stock", "Aktuell nicht kaufbar: Dieses Angebot ist leer.");
-        add("gui.marketblocks.server_shop.tooltip.unavailable_restock", "Aktuell nicht kaufbar: Dieses Angebot füllt sich gerade wieder auf.");
-        add("gui.marketblocks.server_shop.tooltip.unavailable_generic", "Aktuell nicht kaufbar.");
+        add("gui.marketblocks.server_shop.tooltip.price_multiplier", "Preisfaktor.");
+        add("gui.marketblocks.server_shop.tooltip.remaining_stock", "Verbleibende Käufe aus Bestand.");
+        add("gui.marketblocks.server_shop.tooltip.remaining_stock_empty", "Nicht auf Lager.");
+        add("gui.marketblocks.server_shop.tooltip.remaining_daily", "Deine restlichen Käufe heute.");
+        add("gui.marketblocks.server_shop.tooltip.remaining_daily_empty", "Tageslimit erreicht.");
+        add("gui.marketblocks.server_shop.tooltip.restock_in", "Zeit bis Restock.");
+        add("gui.marketblocks.server_shop.tooltip.restock_ready", "Restock jetzt fällig.");
+        add("gui.marketblocks.server_shop.tooltip.unavailable_daily", "Nicht kaufbar: Tageslimit erreicht.");
+        add("gui.marketblocks.server_shop.tooltip.unavailable_stock", "Nicht kaufbar: kein Bestand.");
+        add("gui.marketblocks.server_shop.tooltip.unavailable_restock", "Nicht kaufbar: Restock läuft.");
+        add("gui.marketblocks.server_shop.tooltip.unavailable_generic", "Nicht kaufbar.");
 
         add("message.marketblocks.small_shop.not_owner", "Nur der Besitzer kann diesen Shop abbauen.");
         add("message.marketblocks.server_shop.page_name_blank", "Der Seitenname darf nicht leer sein.");
@@ -146,6 +146,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.server_shop.page_name_duplicate", "Eine Seite mit dem Namen '%s' existiert bereits.");
         add("message.marketblocks.server_shop.page_not_found", "Die gewählte Shop-Seite wurde nicht gefunden.");
         add("message.marketblocks.server_shop.daily_limit_reached", "Das Tageslimit für dieses Angebot wurde erreicht.");
+        add("message.marketblocks.server_shop.edit_mode_enabled", "ServerShop-Bearbeitungsmodus aktiviert.");
+        add("message.marketblocks.server_shop.edit_mode_disabled", "ServerShop-Bearbeitungsmodus deaktiviert.");
         add("message.marketblocks.server_shop.limits.no_connection", "Limits konnten nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.server_shop.limits.invalid_data", "Limits konnten nicht gespeichert werden: ungültige Daten.");
         add("message.marketblocks.server_shop.limits.invalid_positive_int", "Bitte nur positive ganze Zahlen für Limits eingeben.");

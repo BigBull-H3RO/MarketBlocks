@@ -8,6 +8,7 @@ import de.bigbull.marketblocks.network.packets.serverShop.ServerShopDeletePagePa
 import de.bigbull.marketblocks.network.packets.serverShop.ServerShopMoveOfferPacket;
 import de.bigbull.marketblocks.network.packets.serverShop.ServerShopRenamePagePacket;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
+import de.bigbull.marketblocks.util.custom.screen.gui.VanillaIconButton;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopPage;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -26,9 +27,19 @@ public final class ServerShopEditorControls {
 
     private static final int HEADER_X_OFFSET = 4;
     private static final int HEADER_Y_OFFSET = -24;
-    private static final int OFFER_LIST_CONTROLS_X_OFFSET = -84;
-    private static final int OFFER_LIST_CONTROLS_Y_OFFSET = -98;
     private static final int PREVIEW_ACTION_X_OFFSET = 98;
+    private static final int PREVIEW_WIDTH = 88;
+    private static final int CLEAR_CORNER_BUTTON_SIZE = 8;
+    private static final int CLEAR_CORNER_BUTTON_X_OFFSET = 1;
+    private static final int CLEAR_CORNER_BUTTON_Y_OFFSET = -1;
+    private static final int PREVIEW_MOVE_BUTTON_GAP = 4;
+    private static final int PREVIEW_MOVE_BUTTON_Y_OFFSET = 0;
+    private static final int MOVE_BUTTON_WIDTH = 20;
+    private static final int MOVE_ICON_CONTENT_WIDTH = 9;
+    private static final int MOVE_ICON_CONTENT_HEIGHT = 6;
+    private static final int MOVE_ICON_CONTENT_U = 4;
+    private static final int MOVE_ICON_CONTENT_V = 6;
+    private static final int MOVE_DOWN_ICON_Y_OFFSET = 1;
 
     public void build(Context context, Callbacks callbacks) {
         int headerX = context.leftPos() + HEADER_X_OFFSET;
@@ -65,10 +76,10 @@ public final class ServerShopEditorControls {
 
     private void addOfferListControls(Context context, Callbacks callbacks, ServerShopPage page) {
         if (context.selectedOfferId() != null) {
-            int controlsX = context.controlsX() + OFFER_LIST_CONTROLS_X_OFFSET;
-            int controlsY = context.controlsY() + OFFER_LIST_CONTROLS_Y_OFFSET;
+            int deleteX = context.previewX() + PREVIEW_ACTION_X_OFFSET;
+            int deleteY = context.previewY();
 
-            callbacks.addWidget(new IconButton(controlsX, controlsY, 20, 20, context.buttonSprites(), context.deleteIcon(),
+            callbacks.addWidget(new IconButton(deleteX, deleteY, 20, 20, context.buttonSprites(), context.deleteIcon(),
                     ignored -> {
                         NetworkHandler.sendToServer(new ServerShopDeleteOfferPacket(context.selectedOfferId()));
                         callbacks.clearSelectedOffer();
@@ -76,13 +87,22 @@ public final class ServerShopEditorControls {
                     },
                     Component.translatable("gui.marketblocks.server_shop.delete_offer"), () -> false));
 
-            callbacks.addWidget(new IconButton(controlsX + 22, controlsY, 20, 20, context.buttonSprites(), context.moveUpIcon(),
-                    ignored -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(context.selectedOfferId(), page.name(), -1)),
-                    Component.translatable("gui.marketblocks.server_shop.move_offer_up"), () -> false));
+            int moveButtonHeight = Math.max(1, context.rowHeight() / 2);
+            int moveX = context.previewX() - MOVE_BUTTON_WIDTH - PREVIEW_MOVE_BUTTON_GAP;
+            int moveY = context.previewY() + PREVIEW_MOVE_BUTTON_Y_OFFSET;
 
-            callbacks.addWidget(new IconButton(controlsX + 44, controlsY, 20, 20, context.buttonSprites(), context.moveDownIcon(),
+            callbacks.addWidget(new VanillaIconButton(moveX, moveY, MOVE_BUTTON_WIDTH, moveButtonHeight,
+                    context.moveUpIcon(), moveButtonHeight,
+                    MOVE_ICON_CONTENT_U, MOVE_ICON_CONTENT_V, MOVE_ICON_CONTENT_WIDTH, MOVE_ICON_CONTENT_HEIGHT,
+                    ignored -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(context.selectedOfferId(), page.name(), -1)),
+                    Component.translatable("gui.marketblocks.server_shop.move_offer_up")));
+
+            callbacks.addWidget(new VanillaIconButton(moveX, moveY + moveButtonHeight, MOVE_BUTTON_WIDTH, moveButtonHeight,
+                    context.moveDownIcon(), moveButtonHeight,
+                    MOVE_ICON_CONTENT_U, MOVE_ICON_CONTENT_V, MOVE_ICON_CONTENT_WIDTH, MOVE_ICON_CONTENT_HEIGHT,
+                    MOVE_DOWN_ICON_Y_OFFSET,
                     ignored -> NetworkHandler.sendToServer(new ServerShopMoveOfferPacket(context.selectedOfferId(), page.name(), 1)),
-                    Component.translatable("gui.marketblocks.server_shop.move_offer_down"), () -> false));
+                    Component.translatable("gui.marketblocks.server_shop.move_offer_down")));
         } else {
             int addOfferX = context.previewX() + PREVIEW_ACTION_X_OFFSET;
             int addOfferY = context.previewY();
@@ -93,13 +113,14 @@ public final class ServerShopEditorControls {
         }
     }
 
+
     private void addSelectedOfferControls(Context context, Callbacks callbacks) {
         if (context.selectedOfferId() == null) {
             return;
         }
 
-        int clearX = context.previewX() + PREVIEW_ACTION_X_OFFSET;
-        int clearY = context.previewY();
+        int clearX = context.previewX() + PREVIEW_WIDTH - CLEAR_CORNER_BUTTON_SIZE + CLEAR_CORNER_BUTTON_X_OFFSET;
+        int clearY = context.previewY() + CLEAR_CORNER_BUTTON_Y_OFFSET;
         ServerShopOffer selectedOffer = callbacks.findOfferOnSelectedPage(context.selectedOfferId());
         int controlsX = callbacks.rightEditorButtonsX();
         int controlsY = callbacks.rightEditorButtonsY();
@@ -115,13 +136,14 @@ public final class ServerShopEditorControls {
                     Component.translatable("gui.marketblocks.server_shop.inline.pricing"), () -> false));
         }
 
-        callbacks.addWidget(new IconButton(clearX, clearY, 20, 20, context.buttonSprites(), context.clearSelectionIcon(),
+        callbacks.addWidget(new VanillaIconButton(clearX, clearY, CLEAR_CORNER_BUTTON_SIZE, CLEAR_CORNER_BUTTON_SIZE,
+                context.clearSelectionIcon(), CLEAR_CORNER_BUTTON_SIZE,
                 ignored -> {
                     callbacks.clearSelectedOffer();
                     callbacks.updatePreview();
                     callbacks.rebuildUi();
                 },
-                Component.translatable("gui.marketblocks.server_shop.clear_selection"), () -> false));
+                Component.translatable("gui.marketblocks.server_shop.clear_selection")));
     }
 
     public interface Callbacks {
@@ -152,6 +174,12 @@ public final class ServerShopEditorControls {
             int selectedPage,
             List<ServerShopPage> pages,
             UUID selectedOfferId,
+            int listXOffset,
+            int listYOffset,
+            int listWidth,
+            int rowHeight,
+            int scrollOffset,
+            int maxVisibleRows,
             int previewXOffset,
             int previewYOffset,
             int controlsXStart,
@@ -172,6 +200,14 @@ public final class ServerShopEditorControls {
     ) {
         int previewX() {
             return leftPos + previewXOffset;
+        }
+
+        int listStartX() {
+            return leftPos + listXOffset;
+        }
+
+        int listStartY() {
+            return topPos + listYOffset;
         }
 
         int previewY() {

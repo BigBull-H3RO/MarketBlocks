@@ -141,17 +141,17 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.server_shop.status.daily_short", "D:%s");
         add("gui.marketblocks.server_shop.status.stock_short", "S:%s");
         add("gui.marketblocks.server_shop.status.restock_short", "R:%s");
-        add("gui.marketblocks.server_shop.tooltip.price_multiplier", "The current price factor for this offer. Demand can raise or lower it.");
-        add("gui.marketblocks.server_shop.tooltip.remaining_stock", "How many purchases are still possible with the current stock.");
-        add("gui.marketblocks.server_shop.tooltip.remaining_stock_empty", "This offer is currently out of stock. Wait for a restock or refill it.");
-        add("gui.marketblocks.server_shop.tooltip.remaining_daily", "How many purchases you can still make for this offer today.");
-        add("gui.marketblocks.server_shop.tooltip.remaining_daily_empty", "Your daily limit for this offer has been reached.");
-        add("gui.marketblocks.server_shop.tooltip.restock_in", "Time until the next automatic stock refill.");
-        add("gui.marketblocks.server_shop.tooltip.restock_ready", "The next restock step is due now and will appear on the next update.");
-        add("gui.marketblocks.server_shop.tooltip.unavailable_daily", "Currently unavailable: your daily limit has been reached.");
-        add("gui.marketblocks.server_shop.tooltip.unavailable_stock", "Currently unavailable: this offer is out of stock.");
-        add("gui.marketblocks.server_shop.tooltip.unavailable_restock", "Currently unavailable: this offer is restocking right now.");
-        add("gui.marketblocks.server_shop.tooltip.unavailable_generic", "Currently unavailable.");
+        add("gui.marketblocks.server_shop.tooltip.price_multiplier", "Price factor.");
+        add("gui.marketblocks.server_shop.tooltip.remaining_stock", "Remaining stock purchases.");
+        add("gui.marketblocks.server_shop.tooltip.remaining_stock_empty", "Out of stock.");
+        add("gui.marketblocks.server_shop.tooltip.remaining_daily", "Your remaining purchases today.");
+        add("gui.marketblocks.server_shop.tooltip.remaining_daily_empty", "Daily limit reached.");
+        add("gui.marketblocks.server_shop.tooltip.restock_in", "Time until restock.");
+        add("gui.marketblocks.server_shop.tooltip.restock_ready", "Restock due now.");
+        add("gui.marketblocks.server_shop.tooltip.unavailable_daily", "Unavailable: daily limit reached.");
+        add("gui.marketblocks.server_shop.tooltip.unavailable_stock", "Unavailable: out of stock.");
+        add("gui.marketblocks.server_shop.tooltip.unavailable_restock", "Unavailable: restocking.");
+        add("gui.marketblocks.server_shop.tooltip.unavailable_generic", "Unavailable.");
 
         add("message.marketblocks.small_shop.not_owner", "Only the owner can break this shop.");
         add("message.marketblocks.server_shop.page_name_blank", "The page name must not be empty.");
@@ -159,6 +159,8 @@ public class ModEnLangProvider extends LanguageProvider {
         add("message.marketblocks.server_shop.page_name_duplicate", "A page named '%s' already exists.");
         add("message.marketblocks.server_shop.page_not_found", "The selected shop page could not be found.");
         add("message.marketblocks.server_shop.daily_limit_reached", "The daily limit for this offer has been reached.");
+        add("message.marketblocks.server_shop.edit_mode_enabled", "ServerShop edit mode enabled.");
+        add("message.marketblocks.server_shop.edit_mode_disabled", "ServerShop edit mode disabled.");
         add("message.marketblocks.server_shop.limits.no_connection", "Could not save limits: no server connection.");
         add("message.marketblocks.server_shop.limits.invalid_data", "Could not save limits: invalid data.");
         add("message.marketblocks.server_shop.limits.invalid_positive_int", "Please enter only positive whole numbers for limits.");

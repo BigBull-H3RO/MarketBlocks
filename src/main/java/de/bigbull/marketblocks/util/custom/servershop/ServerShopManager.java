@@ -236,6 +236,29 @@ public final class ServerShopManager {
         return player != null && player.hasPermissions(2);
     }
 
+    public boolean isGlobalEditModeEnabled() {
+        return Config.SERVER_SHOP_EDIT_MODE_ENABLED.get();
+    }
+
+    public void setGlobalEditModeEnabled(boolean enabled) {
+        synchronized (lock) {
+            boolean changed = isGlobalEditModeEnabled() != enabled;
+            Config.SERVER_SHOP_EDIT_MODE_ENABLED.set(enabled);
+            if (!initialized || !changed) {
+                return;
+            }
+
+            if (!enabled && server != null) {
+                for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                    if (player.containerMenu instanceof ServerShopMenu menu && menu.isEditor()) {
+                        menu.setEditMode(false);
+                    }
+                }
+            }
+            refreshOpenViewersLocked();
+        }
+    }
+
     public boolean isOfferOnPage(UUID offerId, int pageIndex) {
         synchronized (lock) {
             ensureInitialized();
@@ -406,7 +429,8 @@ public final class ServerShopManager {
         if (player == null) return;
         ServerShopData snapshot;
         Map<UUID, ServerShopOfferViewState> offerViewStates;
-        boolean editable;
+        boolean playerCanEdit;
+        boolean globalEditModeEnabled;
         synchronized (lock) {
             ensureInitialized();
             long gameTime = currentGameTime();
@@ -416,11 +440,15 @@ public final class ServerShopManager {
             }
             snapshot = data.copy();
             offerViewStates = buildOfferViewStates(player, gameTime);
-            editable = canEdit(player);
+            globalEditModeEnabled = isGlobalEditModeEnabled();
+            playerCanEdit = canEdit(player);
         }
-        ServerShopMenuProvider provider = new ServerShopMenuProvider(editable);
-        player.openMenu(provider, (RegistryFriendlyByteBuf buf) -> buf.writeBoolean(editable));
-        sendSnapshot(player, snapshot, offerViewStates, editable);
+        ServerShopMenuProvider provider = new ServerShopMenuProvider(playerCanEdit, globalEditModeEnabled);
+        player.openMenu(provider, (RegistryFriendlyByteBuf buf) -> {
+            buf.writeBoolean(playerCanEdit);
+            buf.writeBoolean(globalEditModeEnabled);
+        });
+        sendSnapshot(player, snapshot, offerViewStates, playerCanEdit, globalEditModeEnabled);
     }
 
     public void syncOpenViewers(ServerPlayer source) {
@@ -437,19 +465,21 @@ public final class ServerShopManager {
                 menu.clampSelectedPage(pageCount);
                 menu.slotsChanged(menu.templateContainer());
             }
-            sendSnapshot(source, snapshot, buildOfferViewStates(source, gameTime), canEdit(source));
+            boolean globalEditModeEnabled = isGlobalEditModeEnabled();
+            sendSnapshot(source, snapshot, buildOfferViewStates(source, gameTime), canEdit(source), globalEditModeEnabled);
             for (ServerPlayer player : source.server.getPlayerList().getPlayers()) {
                 if (player == source) continue;
                 if (player.containerMenu instanceof ServerShopMenu menu) {
                     menu.clampSelectedPage(pageCount);
                     menu.slotsChanged(menu.templateContainer());
-                    sendSnapshot(player, snapshot, buildOfferViewStates(player, gameTime), canEdit(player));
+                    sendSnapshot(player, snapshot, buildOfferViewStates(player, gameTime), canEdit(player), globalEditModeEnabled);
                 }
             }
         }
     }
 
-    private void sendSnapshot(ServerPlayer player, ServerShopData snapshot, Map<UUID, ServerShopOfferViewState> offerViewStates, boolean canEditFlag) {
+    private void sendSnapshot(ServerPlayer player, ServerShopData snapshot, Map<UUID, ServerShopOfferViewState> offerViewStates,
+                              boolean canEditFlag, boolean globalEditModeEnabled) {
         if (player == null || snapshot == null || registryAccess == null) return;
         DataResult<CompoundTag> encoded = ServerShopSerialization.encodeData(snapshot, registryAccess);
         if (encoded.error().isPresent()) {
@@ -457,7 +487,11 @@ public final class ServerShopManager {
             return;
         }
         CompoundTag tag = encoded.result().orElseGet(CompoundTag::new);
-        NetworkHandler.sendToPlayer(player, new ServerShopSyncPacket(tag, ServerShopSyncPacket.encodeOfferViewStates(offerViewStates), canEditFlag));
+        NetworkHandler.sendToPlayer(player, new ServerShopSyncPacket(
+                tag,
+                ServerShopSyncPacket.encodeOfferViewStates(offerViewStates),
+                canEditFlag,
+                globalEditModeEnabled));
     }
 
     private int findPageIndex(String name) {
@@ -780,7 +814,7 @@ public final class ServerShopManager {
             if (player.containerMenu instanceof ServerShopMenu menu) {
                 menu.clampSelectedPage(pageCount);
                 menu.slotsChanged(menu.templateContainer());
-                sendSnapshot(player, snapshot, buildOfferViewStates(player, gameTime), canEdit(player));
+                sendSnapshot(player, snapshot, buildOfferViewStates(player, gameTime), canEdit(player), isGlobalEditModeEnabled());
             }
         }
     }

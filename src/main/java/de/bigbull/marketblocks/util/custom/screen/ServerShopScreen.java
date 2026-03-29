@@ -2,10 +2,14 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.serverShop.*;
+import de.bigbull.marketblocks.network.packets.serverShop.ServerShopAutoFillPacket;
+import de.bigbull.marketblocks.network.packets.serverShop.ServerShopSelectPagePacket;
+import de.bigbull.marketblocks.network.packets.serverShop.ServerShopSetOfferPacket;
+import de.bigbull.marketblocks.network.packets.serverShop.ServerShopToggleEditModePacket;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
+import de.bigbull.marketblocks.util.custom.screen.gui.VanillaIconButton;
 import de.bigbull.marketblocks.util.custom.servershop.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,18 +50,18 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final int RIGHT_BUTTON_GAP = 4;
 
     // List
+    private static final int ROW_HEIGHT = 20;
+    private static final int MAX_VISIBLE_ROWS = 9;
     private static final int LIST_X_OFFSET = 5;
-    private static final int LIST_Y_OFFSET = 26;
+    private static final int LIST_Y_OFFSET = 19;
     private static final int LIST_WIDTH = 88;
-    private static final int LIST_HEIGHT = 140;
-
-    private static final int ROW_HEIGHT = 22;
-    private static final int MAX_VISIBLE_ROWS = 6;
+    private static final int LIST_HEIGHT = ROW_HEIGHT * MAX_VISIBLE_ROWS + 7;
 
     // Scroller
     private static final int SCROLLER_X_OFFSET = 94;
     private static final int SCROLLER_WIDTH = 6;
     private static final int SCROLLER_HEIGHT = 27;
+    private static final int SCROLLER_BOTTOM_INSET = 7;
     private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller");
     private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller_disabled");
 
@@ -83,8 +87,8 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final ResourceLocation DELETE_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete_page.png");
     private static final ResourceLocation RENAME_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/rename_page.png");
     private static final ResourceLocation CLEAR_SELECTION_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/clear_selection.png");
-    private static final ResourceLocation MOVE_UP_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_up.png");
-    private static final ResourceLocation MOVE_DOWN_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_down.png");
+    private static final ResourceLocation MOVE_UP_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_up_mini.png");
+    private static final ResourceLocation MOVE_DOWN_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_down_mini.png");
     // Reuse existing icons to avoid missing-texture placeholders when dedicated assets are absent.
     private static final ResourceLocation LIMITS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/edit_limits.png");
     private static final ResourceLocation PRICING_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/edit_pricing.png");
@@ -93,6 +97,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private static final ResourceLocation TRADE_ARROW_DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow_disabled.png");
 
     private final List<AbstractWidget> dynamicWidgets = new ArrayList<>();
+    private final List<AbstractWidget> foregroundWidgets = new ArrayList<>();
     private final List<ServerShopOffer> visibleOffers = new ArrayList<>();
 
     private int scrollOffset;
@@ -123,7 +128,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private void initializeLocalEditMode() {
-        boolean initialMode = menu.hasEditPermission() && ServerShopClientState.getLastEditMode();
+        boolean initialMode = menu.canUseEditMode() && ServerShopClientState.getLastEditMode();
         this.isLocalEditMode = initialMode;
         if (!initialMode) {
             return;
@@ -144,10 +149,10 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     public void containerTick() {
         super.containerTick();
         ServerShopData current = ServerShopClientState.data();
-        boolean perm = menu.hasEditPermission();
+        boolean canUseEditMode = menu.canUseEditMode();
         boolean dataChanged = current != cachedData;
 
-        if (!perm && isLocalEditMode) {
+        if (!canUseEditMode && isLocalEditMode) {
             setEditMode(false);
         }
 
@@ -272,6 +277,9 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
      * Rebuilds all dynamic widgets for current mode/page/selection.
      */
     private void setEditMode(boolean active) {
+        if (active && !menu.canUseEditMode()) {
+            return;
+        }
         this.isLocalEditMode = active;
         menu.setEditMode(active);
         ServerShopClientState.setLastEditMode(active);
@@ -298,6 +306,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private void resetDynamicUi() {
         dynamicWidgets.forEach(this::removeWidget);
         dynamicWidgets.clear();
+        foregroundWidgets.clear();
         visibleOffers.clear();
         pageSidebar.reset();
     }
@@ -322,7 +331,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private void buildEditModeToggleButton() {
-        if (!menu.hasEditPermission()) {
+        if (!menu.canUseEditMode()) {
             return;
         }
 
@@ -352,6 +361,12 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
                 menu.selectedPage(),
                 this.cachedData.pages(),
                 this.selectedOfferId,
+                LIST_X_OFFSET,
+                LIST_Y_OFFSET,
+                LIST_WIDTH,
+                ROW_HEIGHT,
+                this.scrollOffset,
+                this.maxVisibleRows,
                 PREVIEW_X_OFFSET,
                 PREVIEW_Y_OFFSET,
                 CONTROLS_X_START,
@@ -455,10 +470,22 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
         renderStaticOverlay(guiGraphics, mouseX, mouseY, suppressInteractions);
+        renderForegroundWidgets(guiGraphics, mouseX, mouseY, partialTick);
 
         if (!suppressInteractions) {
             this.renderTooltip(guiGraphics, mouseX, mouseY);
         }
+    }
+
+    private void renderForegroundWidgets(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0.0F, 0.0F, 200.0F);
+        for (AbstractWidget widget : foregroundWidgets) {
+            if (widget.visible) {
+                widget.render(guiGraphics, mouseX, mouseY, partialTick);
+            }
+        }
+        guiGraphics.pose().popPose();
     }
 
     private void renderStaticOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean suppressInteractions) {
@@ -528,7 +555,11 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private int listVisibleHeight() {
-        return MAX_VISIBLE_ROWS * ROW_HEIGHT;
+        return LIST_HEIGHT;
+    }
+
+    private int listInteractiveHeight() {
+        return maxVisibleRows * ROW_HEIGHT;
     }
 
     private int scrollerX() {
@@ -540,7 +571,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private int scrollerHeight() {
-        return listVisibleHeight();
+        return Math.max(SCROLLER_HEIGHT, listVisibleHeight() - SCROLLER_BOTTOM_INSET);
     }
 
     private boolean isWithinOfferList(double mouseX, double mouseY) {
@@ -549,7 +580,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         return mouseX >= listStartX
                 && mouseX < listStartX + LIST_WIDTH
                 && mouseY >= listStartY
-                && mouseY < listStartY + listVisibleHeight();
+                && mouseY < listStartY + listInteractiveHeight();
     }
 
     private int offerIndexAt(double mouseY) {
@@ -596,7 +627,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
 
     private void updateScrollLimits() {
         int totalRows = visibleOffers.size();
-        maxVisibleRows = MAX_VISIBLE_ROWS;
+        maxVisibleRows = Math.max(1, listVisibleHeight() / ROW_HEIGHT);
         int maxScroll = Math.max(0, totalRows - maxVisibleRows);
         scrollOffset = Mth.clamp(scrollOffset, 0, maxScroll);
     }
@@ -610,6 +641,9 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     private void addDynamic(AbstractWidget widget) {
         addRenderableWidget(widget);
         dynamicWidgets.add(widget);
+        if (widget instanceof VanillaIconButton) {
+            foregroundWidgets.add(widget);
+        }
     }
 
     @Override
@@ -627,7 +661,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         int scrollerX = scrollerX();
         int scrollerY = scrollerY();
         int scrollerH = scrollerHeight();
-        int maxScroll = Math.max(0, visibleOffers.size() - MAX_VISIBLE_ROWS);
+        int maxScroll = Math.max(0, visibleOffers.size() - maxVisibleRows);
 
         if (maxScroll <= 0) {
             guiGraphics.blitSprite(SCROLLER_DISABLED_SPRITE, scrollerX, scrollerY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
@@ -641,7 +675,7 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
     }
 
     private boolean isScrollBarActive() {
-        return visibleOffers.size() > MAX_VISIBLE_ROWS;
+        return visibleOffers.size() > maxVisibleRows;
     }
 
     @Override
@@ -659,9 +693,12 @@ public class ServerShopScreen extends AbstractContainerScreen<ServerShopMenu> {
         if (isDragging && isScrollBarActive()) {
             int scrollerY = scrollerY();
             int handleTravel = scrollerHeight() - SCROLLER_HEIGHT;
+            if (handleTravel <= 0) {
+                return true;
+            }
             double relative = (mouseY - scrollerY - (SCROLLER_HEIGHT / 2.0D)) / handleTravel;
             relative = Mth.clamp(relative, 0.0D, 1.0D);
-            int maxScroll = visibleOffers.size() - MAX_VISIBLE_ROWS;
+            int maxScroll = visibleOffers.size() - maxVisibleRows;
             int newOffset = Mth.floor(relative * maxScroll + 0.5D);
             updateScrollOffset(newOffset);
             return true;

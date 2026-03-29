@@ -25,7 +25,7 @@ import java.util.UUID;
 /**
  * Synchronisiert den vollständigen Datenstand des Server-Shops an den Client.
  */
-public record ServerShopSyncPacket(CompoundTag payload, CompoundTag offerViewStates, boolean canEdit) implements CustomPacketPayload {
+public record ServerShopSyncPacket(CompoundTag payload, CompoundTag offerViewStates, boolean canEdit, boolean globalEditModeEnabled) implements CustomPacketPayload {
     private static final String ENTRIES_KEY = "entries";
     private static final String OFFER_ID_KEY = "offer_id";
     private static final String STATE_KEY = "state";
@@ -39,7 +39,8 @@ public record ServerShopSyncPacket(CompoundTag payload, CompoundTag offerViewSta
             CompoundTag tag = ByteBufCodecs.TRUSTED_COMPOUND_TAG.decode(buf);
             CompoundTag viewStatesTag = ByteBufCodecs.TRUSTED_COMPOUND_TAG.decode(buf);
             boolean canEdit = buf.readBoolean();
-            return new ServerShopSyncPacket(tag, viewStatesTag, canEdit);
+            boolean globalEditModeEnabled = buf.readBoolean();
+            return new ServerShopSyncPacket(tag, viewStatesTag, canEdit, globalEditModeEnabled);
         }
 
         @Override
@@ -47,6 +48,7 @@ public record ServerShopSyncPacket(CompoundTag payload, CompoundTag offerViewSta
             ByteBufCodecs.TRUSTED_COMPOUND_TAG.encode(buf, value.payload() == null ? new CompoundTag() : value.payload());
             ByteBufCodecs.TRUSTED_COMPOUND_TAG.encode(buf, value.offerViewStates() == null ? new CompoundTag() : value.offerViewStates());
             buf.writeBoolean(value.canEdit());
+            buf.writeBoolean(value.globalEditModeEnabled());
         }
     };
 
@@ -64,7 +66,7 @@ public record ServerShopSyncPacket(CompoundTag payload, CompoundTag offerViewSta
             ServerShopSerialization.decodeData(packet.payload(), mc.level.registryAccess()).result().ifPresent(data -> {
                 ServerShopClientState.apply(data, decodeOfferViewStates(packet.offerViewStates()));
                 if (mc.player != null && mc.player.containerMenu instanceof ServerShopMenu menu) {
-                    menu.setEditPermissionClient(packet.canEdit());
+                    menu.setEditPermissionClient(packet.canEdit(), packet.globalEditModeEnabled());
                     menu.clampSelectedPage(data.pages().size());
                 }
             });

@@ -9,7 +9,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 /**
  * MenuProvider für den blocklosen Server-Shop.
  */
-public record ServerShopMenuProvider(boolean canEdit) implements MenuProvider {
+public record ServerShopMenuProvider(boolean canEdit, boolean globalEditModeEnabled) implements MenuProvider {
     private static final Component TITLE = Component.translatable("menu.marketblocks.server_shop");
 
     @Override
@@ -19,6 +19,6 @@ public record ServerShopMenuProvider(boolean canEdit) implements MenuProvider {
 
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        return new ServerShopMenu(containerId, playerInventory, canEdit);
+        return new ServerShopMenu(containerId, playerInventory, canEdit, globalEditModeEnabled);
     }
 }
