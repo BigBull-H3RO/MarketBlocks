@@ -18,6 +18,9 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
  */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public final class ServerShopEvents {
+    private static final String EDIT_MODE_ENABLED_KEY = "message.marketblocks.server_shop.edit_mode_enabled";
+    private static final String EDIT_MODE_DISABLED_KEY = "message.marketblocks.server_shop.edit_mode_disabled";
+
     private ServerShopEvents() {
     }
 
@@ -51,24 +54,21 @@ public final class ServerShopEvents {
                                 .executes(context -> {
                                     ServerShopManager manager = ServerShopManager.get();
                                     boolean enabled = !manager.isGlobalEditModeEnabled();
-                                    manager.setGlobalEditModeEnabled(enabled);
-                                    context.getSource().sendSuccess(
-                                            () -> Component.translatable(enabled
-                                                    ? "message.marketblocks.server_shop.edit_mode_enabled"
-                                                    : "message.marketblocks.server_shop.edit_mode_disabled"),
-                                            true);
+                                    setGlobalEditModeAndNotify(enabled, context.getSource());
                                     return 1;
                                 })
                                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                                         .executes(context -> {
                                             boolean enabled = BoolArgumentType.getBool(context, "enabled");
-                                            ServerShopManager.get().setGlobalEditModeEnabled(enabled);
-                                            context.getSource().sendSuccess(
-                                                    () -> Component.translatable(enabled
-                                                            ? "message.marketblocks.server_shop.edit_mode_enabled"
-                                                            : "message.marketblocks.server_shop.edit_mode_disabled"),
-                                                    true);
+                                            setGlobalEditModeAndNotify(enabled, context.getSource());
                                             return 1;
                                         }))));
+    }
+
+    private static void setGlobalEditModeAndNotify(boolean enabled, net.minecraft.commands.CommandSourceStack source) {
+        ServerShopManager.get().setGlobalEditModeEnabled(enabled);
+        source.sendSuccess(
+                () -> Component.translatable(enabled ? EDIT_MODE_ENABLED_KEY : EDIT_MODE_DISABLED_KEY),
+                true);
     }
 }
