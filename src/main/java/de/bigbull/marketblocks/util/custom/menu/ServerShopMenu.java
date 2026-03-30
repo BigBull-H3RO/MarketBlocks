@@ -25,6 +25,9 @@ import java.util.UUID;
  */
 public class ServerShopMenu extends AbstractContainerMenu {
     public static final int TEMPLATE_SLOTS = 3;
+    private static final int PAYMENT_SLOT_0 = 0;
+    private static final int PAYMENT_SLOT_1 = 1;
+    private static final int PAYMENT_SLOTS_END_EXCLUSIVE = PAYMENT_SLOT_1 + 1;
     private static final int PLAYER_INV_ROWS = 3;
     private static final int PLAYER_INV_COLS = 9;
     private static final int PLAYER_INV_START_Y = 125;
@@ -71,10 +74,10 @@ public class ServerShopMenu extends AbstractContainerMenu {
     }
 
     private void addTemplateSlots() {
-        addSlot(new Slot(tradeContainer, 0, 136, 78) {
+        addSlot(new Slot(tradeContainer, PAYMENT_SLOT_0, 136, 78) {
             @Override public void setChanged() { super.setChanged(); slotsChanged(tradeContainer); }
         });
-        addSlot(new Slot(tradeContainer, 1, 162, 78) {
+        addSlot(new Slot(tradeContainer, PAYMENT_SLOT_1, 162, 78) {
             @Override public void setChanged() { super.setChanged(); slotsChanged(tradeContainer); }
         });
         addSlot(new ServerShopResultSlot(tradeContainer, RESULT_SLOT, 220, 78));
@@ -132,9 +135,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
 
     public void setCurrentTradingOffer(ServerShopOffer offer) {
         this.currentTradingOffer = offer;
-        if (!isEditMode && !tradeContainer.getItem(RESULT_SLOT).isEmpty()) {
-            tradeContainer.setItem(RESULT_SLOT, ItemStack.EMPTY);
-        }
+        clearResultIfNeeded();
         slotsChanged(tradeContainer);
     }
 
@@ -157,9 +158,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
         if (isEditMode) return;
 
         if (currentTradingOffer == null) {
-            if (!container.getItem(RESULT_SLOT).isEmpty()) {
-                container.setItem(RESULT_SLOT, ItemStack.EMPTY);
-            }
+            clearResultIfNeeded();
             return;
         }
 
@@ -186,10 +185,10 @@ public class ServerShopMenu extends AbstractContainerMenu {
 
         List<ItemStack> effectivePayments = offer.effectivePayments();
         if (!effectivePayments.isEmpty()) {
-            transferItemsToSlot(player, effectivePayments.getFirst(), 0);
+            transferItemsToSlot(player, effectivePayments.getFirst(), PAYMENT_SLOT_0);
         }
         if (effectivePayments.size() > 1) {
-            transferItemsToSlot(player, effectivePayments.get(1), 1);
+            transferItemsToSlot(player, effectivePayments.get(1), PAYMENT_SLOT_1);
         }
     }
 
@@ -228,8 +227,8 @@ public class ServerShopMenu extends AbstractContainerMenu {
             }
         }
 
-        ItemStack slot0 = tradeContainer.getItem(0);
-        ItemStack slot1 = tradeContainer.getItem(1);
+        ItemStack slot0 = tradeContainer.getItem(PAYMENT_SLOT_0);
+        ItemStack slot1 = tradeContainer.getItem(PAYMENT_SLOT_1);
 
         if (requiredPayments.isEmpty()) {
             return new PaymentMatch(ItemStack.EMPTY, ItemStack.EMPTY, Integer.MAX_VALUE);
@@ -237,8 +236,8 @@ public class ServerShopMenu extends AbstractContainerMenu {
 
         if (requiredPayments.size() == 1) {
             ItemStack required = requiredPayments.getFirst();
-            PaymentMatch slot0Match = buildSingleSlotMatch(slot0, required, 0);
-            PaymentMatch slot1Match = buildSingleSlotMatch(slot1, required, 1);
+            PaymentMatch slot0Match = buildSingleSlotMatch(slot0, required, PAYMENT_SLOT_0);
+            PaymentMatch slot1Match = buildSingleSlotMatch(slot1, required, PAYMENT_SLOT_1);
             return selectBetterMatch(slot0Match, slot1Match);
         }
 
@@ -252,7 +251,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
                 || slotStack.getCount() < required.getCount()) {
             return null;
         }
-        return slotIndex == 0
+        return slotIndex == PAYMENT_SLOT_0
                 ? new PaymentMatch(required, ItemStack.EMPTY, slotStack.getCount() / required.getCount())
                 : new PaymentMatch(ItemStack.EMPTY, required, slotStack.getCount() / required.getCount());
     }
@@ -288,8 +287,8 @@ public class ServerShopMenu extends AbstractContainerMenu {
         if (match == null || amount <= 0) {
             return;
         }
-        removePayment(0, match.slot0Payment(), amount);
-        removePayment(1, match.slot1Payment(), amount);
+        removePayment(PAYMENT_SLOT_0, match.slot0Payment(), amount);
+        removePayment(PAYMENT_SLOT_1, match.slot1Payment(), amount);
     }
 
     public void clearTemplate(Player player) {
@@ -380,11 +379,11 @@ public class ServerShopMenu extends AbstractContainerMenu {
             }
         } else {
             if (isEditMode) {
-                if (!this.moveItemStackTo(newStack, 0, TEMPLATE_SLOTS, false)) {
+                if (!this.moveItemStackTo(newStack, PAYMENT_SLOT_0, TEMPLATE_SLOTS, false)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                if (!this.moveItemStackTo(newStack, 0, 2, false)) {
+                if (!this.moveItemStackTo(newStack, PAYMENT_SLOT_0, PAYMENT_SLOTS_END_EXCLUSIVE, false)) {
                     return ItemStack.EMPTY;
                 }
             }
@@ -438,6 +437,12 @@ public class ServerShopMenu extends AbstractContainerMenu {
         }
     }
 
+    private void clearResultIfNeeded() {
+        if (!isEditMode && !tradeContainer.getItem(RESULT_SLOT).isEmpty()) {
+            tradeContainer.setItem(RESULT_SLOT, ItemStack.EMPTY);
+        }
+    }
+
     private record PaymentMatch(ItemStack slot0Payment, ItemStack slot1Payment, int maxPurchases) {
     }
 
@@ -473,4 +478,3 @@ public class ServerShopMenu extends AbstractContainerMenu {
         }
     }
 }
-
