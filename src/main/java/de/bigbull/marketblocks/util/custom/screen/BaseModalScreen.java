@@ -7,12 +7,25 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * Gemeinsame Basis fuer modale Dialoge ueber bestehenden Screens.
- * Verhindert Blur und blockiert Hover/Tooltip-Reaktionen des Hintergrunds.
+ * Common base class for modal dialogs rendered over an existing screen.
+ * Suppresses background blur and prevents hover/tooltip interactions from the parent screen.
  */
 public abstract class BaseModalScreen extends Screen {
     private static final int EDGE_PADDING = 8;
     private static final int BACKGROUND_MOUSE_OFFSCREEN = -10000;
+
+    /** Vertical distance in pixels between consecutive input-field rows. */
+    protected static final int ROW_SPACING = 24;
+    /** Standard width of a numeric/text input field. */
+    protected static final int INPUT_WIDTH = 66;
+    /** Standard height of a numeric/text input field. */
+    protected static final int INPUT_HEIGHT = 18;
+    /** Horizontal offset from the panel's left edge to the row labels. */
+    protected static final int LABEL_X_OFFSET = 14;
+    /** Vertical offset from the panel's top edge to the first row label. */
+    protected static final int LABEL_START_Y_OFFSET = 35;
+    /** Vertical offset from the panel's top edge to the first input field. */
+    protected static final int INPUT_START_Y_OFFSET = 30;
 
     protected final Screen parent;
     protected final int panelWidth;
@@ -103,6 +116,17 @@ public abstract class BaseModalScreen extends Screen {
     }
 
     protected abstract void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick);
+
+    /**
+     * Displays a short action-bar message on the local client player.
+     *
+     * @param message the message component to show above the hotbar
+     */
+    protected void notifyClient(Component message) {
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.displayClientMessage(message, true);
+        }
+    }
 
     @Override
     public boolean isPauseScreen() {

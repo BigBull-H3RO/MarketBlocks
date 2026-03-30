@@ -7,7 +7,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Konfigurierbare Limits für Server-Shop-Angebote.
+ * Configurable purchase limits for server shop offers (daily cap, stock cap, restock interval).
+ * <p>All limit values are validated to be {@code > 0}; values {@code ≤ 0} are treated as absent.</p>
  */
 public final class OfferLimit {
     public static final Codec<OfferLimit> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -54,18 +55,34 @@ public final class OfferLimit {
         return restockSeconds;
     }
 
+    /**
+     * Returns a copy with the daily purchase cap set to {@code limit}.
+     * Passing {@code null} removes the daily cap; the unlimited flag is updated accordingly.
+     */
     public OfferLimit withDailyLimit(Integer limit) {
         return new OfferLimit(unlimited && limit == null, limit, stockLimit.orElse(null), restockSeconds.orElse(null));
     }
 
+    /**
+     * Returns a copy with the stock cap set to {@code limit}.
+     * Passing {@code null} removes the stock cap; the unlimited flag is updated accordingly.
+     */
     public OfferLimit withStockLimit(Integer limit) {
         return new OfferLimit(unlimited && limit == null, dailyLimit.orElse(null), limit, restockSeconds.orElse(null));
     }
 
+    /**
+     * Returns a copy with the restock interval set to {@code seconds}.
+     * Passing {@code null} removes the interval; the unlimited flag is updated accordingly.
+     */
     public OfferLimit withRestockSeconds(Integer seconds) {
         return new OfferLimit(unlimited && seconds == null, dailyLimit.orElse(null), stockLimit.orElse(null), seconds);
     }
 
+    /**
+     * Returns this limit as a limited (non-unlimited) variant, preserving existing cap values.
+     * If already limited, returns {@code this}.
+     */
     public OfferLimit asLimited() {
         if (!unlimited) {
             return this;
@@ -73,6 +90,10 @@ public final class OfferLimit {
         return new OfferLimit(false, dailyLimit.orElse(null), stockLimit.orElse(null), restockSeconds.orElse(null));
     }
 
+    /**
+     * Returns a clean unlimited variant with no cap values set.
+     * Equivalent to {@link #unlimited()} unless already in that state.
+     */
     public OfferLimit asUnlimited() {
         if (unlimited && dailyLimit.isEmpty() && stockLimit.isEmpty() && restockSeconds.isEmpty()) {
             return this;

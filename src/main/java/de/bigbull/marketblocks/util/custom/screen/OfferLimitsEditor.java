@@ -16,18 +16,12 @@ import net.minecraft.network.chat.Component;
 import java.util.UUID;
 
 /**
- * Modal-Dialog für die Bearbeitung von Limits eines Angebots (Daily-Limit, Stock-Limit, Restock).
+ * Modal dialog for editing the purchase limits of a single server shop offer.
  */
 public class OfferLimitsEditor extends BaseModalScreen {
     private static final int PANEL_WIDTH = 236;
     private static final int PANEL_HEIGHT = 138;
-    private static final int ROW_SPACING = 24;
-    private static final int INPUT_WIDTH = 66;
-    private static final int INPUT_HEIGHT = 18;
     private static final int INPUT_X_OFFSET = 154;
-    private static final int INPUT_START_Y_OFFSET = 30;
-    private static final int LABEL_X_OFFSET = 14;
-    private static final int LABEL_START_Y_OFFSET = 35;
     private static final String POSITIVE_INT_PATTERN = "\\d{1,9}";
 
     private final UUID offerId;
@@ -123,12 +117,6 @@ public class OfferLimitsEditor extends BaseModalScreen {
         }
         int parsed = Integer.parseInt(value);
         return parsed > 0 ? parsed : null;
-    }
-
-    private void notifyClient(Component message) {
-        if (this.minecraft != null && this.minecraft.player != null) {
-            this.minecraft.player.displayClientMessage(message, true);
-        }
     }
 
     @Override

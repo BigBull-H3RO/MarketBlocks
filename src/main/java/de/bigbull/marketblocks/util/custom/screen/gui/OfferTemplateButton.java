@@ -37,23 +37,19 @@ public class OfferTemplateButton extends Button {
         int itemX = getX() + 2;
         int itemY = getY() + 1;
 
-        // Render Payment 1
         if (!payment1.isEmpty()) {
             graphics.renderItem(payment1, itemX + 2, itemY);
             graphics.renderItemDecorations(Minecraft.getInstance().font, payment1, itemX + 2, itemY);
         }
 
-        // Render Payment 2
         if (!payment2.isEmpty()) {
             graphics.renderItem(payment2, itemX + 26, itemY);
             graphics.renderItemDecorations(Minecraft.getInstance().font, payment2, itemX + 26, itemY);
         }
 
-        // Render Pfeil
         ResourceLocation arrowTexture = arrowActive ? TRADE_ARROW : TRADE_ARROW_DISABLED;
         graphics.blit(arrowTexture, getX() + 52, getY() + 5, 0, 0, 10, 9, 10, 9);
 
-        // Render Result
         if (!result.isEmpty()) {
             graphics.renderItem(result, getX() + 70, itemY);
             graphics.renderItemDecorations(Minecraft.getInstance().font, result, getX() + 70, itemY);
