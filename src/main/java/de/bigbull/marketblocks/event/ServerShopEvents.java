@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.event;
 
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
+import de.bigbull.marketblocks.shop.server.ServerShopManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;

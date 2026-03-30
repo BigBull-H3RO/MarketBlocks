@@ -2,8 +2,8 @@ package de.bigbull.marketblocks.network.packets.serverShop;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
+import de.bigbull.marketblocks.shop.server.ServerShopManager;
+import de.bigbull.marketblocks.shop.server.ServerShopOffer;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

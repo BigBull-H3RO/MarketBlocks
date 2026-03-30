@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.servershop;
+package de.bigbull.marketblocks.shop.server;
 
 import com.google.gson.*;
 import com.mojang.serialization.DataResult;
@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Zentrale Verwaltungsinstanz für den blocklosen Server-Shop.
@@ -401,6 +402,26 @@ public final class ServerShopManager {
         }
     }
 
+    public boolean resetLimitsForPlayer(UUID playerId) {
+        synchronized (lock) {
+            ensureInitialized();
+            boolean changed = false;
+            for (ServerShopPage page : data.internalPages()) {
+                for (ServerShopOffer offer : page.internalOffers()) {
+                    ServerShopOfferRuntimeState state = offer.runtimeState();
+                    if (state.purchasedTodayForPlayer(playerId) > 0) {
+                        offer.setRuntimeState(state.withPurchasedTodayForPlayer(playerId, 0));
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) {
+                markDirty();
+            }
+            return changed;
+        }
+    }
+
     public ServerShopOffer findOffer(UUID offerId) {
         if (offerId == null) return null;
         for (ServerShopPage page : data.internalPages()) {
@@ -508,7 +529,7 @@ public final class ServerShopManager {
         return -1;
     }
 
-    private void loadFromDisk() {
+    public void loadFromDisk() {
         if (configFile == null || registryAccess == null) {
             return;
         }
@@ -552,41 +573,47 @@ public final class ServerShopManager {
             return;
         }
 
-        Path tempFile = temporaryFile();
-        Path backupFile = backupFile();
+        final ServerShopData dataSnapshot = data.copy();
+        final RegistryAccess ra = registryAccess;
+        final Path targetFile = configFile;
+        final Path tempFile = temporaryFile();
+        final Path backupFile = backupFile();
 
-        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
-            RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registryAccess);
-            DataResult<JsonElement> result = ServerShopData.CODEC.encodeStart(ops, data);
-            if (result.error().isPresent()) {
-                LOGGER.error("Fehler beim Serialisieren der Server-Shop-Daten: {}", result.error().get().message());
+        dirty = false;
+        ticksSinceSave = 0;
+
+        CompletableFuture.runAsync(() -> {
+            try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
+                RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, ra);
+                DataResult<JsonElement> result = ServerShopData.CODEC.encodeStart(ops, dataSnapshot);
+                if (result.error().isPresent()) {
+                    LOGGER.error("Fehler beim Serialisieren der Server-Shop-Daten: {}", result.error().get().message());
+                    safeDelete(tempFile);
+                    return;
+                }
+                JsonElement json = result.result().orElseGet(JsonObject::new);
+                GSON.toJson(json, writer);
+                writer.flush();
+            } catch (IOException ex) {
+                LOGGER.error("Konnte temporaere Server-Shop-Datei {} nicht schreiben", tempFile, ex);
                 safeDelete(tempFile);
                 return;
             }
-            JsonElement json = result.result().orElseGet(JsonObject::new);
-            GSON.toJson(json, writer);
-            writer.flush();
-        } catch (IOException ex) {
-            LOGGER.error("Konnte temporaere Server-Shop-Datei {} nicht schreiben", tempFile, ex);
-            safeDelete(tempFile);
-            return;
-        }
 
-        try {
-            if (Files.exists(configFile)) {
-                Files.copy(configFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
-            }
             try {
-                Files.move(tempFile, configFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException ignored) {
-                Files.move(tempFile, configFile, StandardCopyOption.REPLACE_EXISTING);
+                if (Files.exists(targetFile)) {
+                    Files.copy(targetFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+                try {
+                    Files.move(tempFile, targetFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                } catch (AtomicMoveNotSupportedException ignored) {
+                    Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException ex) {
+                LOGGER.error("Konnte Server-Shop-Datei {} nicht atomar speichern", targetFile, ex);
+                safeDelete(tempFile);
             }
-            dirty = false;
-            ticksSinceSave = 0;
-        } catch (IOException ex) {
-            LOGGER.error("Konnte Server-Shop-Datei {} nicht atomar speichern", configFile, ex);
-            safeDelete(tempFile);
-        }
+        });
     }
 
     private Optional<ServerShopData> parseDataFile(Path file) {
@@ -663,7 +690,7 @@ public final class ServerShopManager {
     }
 
     private long currentDay() {
-        return currentGameTime() / 24000L;
+        return System.currentTimeMillis() / 86400000L;
     }
 
     private boolean isGlobalDailyLimit() {
@@ -691,6 +718,12 @@ public final class ServerShopManager {
         return changed;
     }
 
+    /**
+     * Updates an offer's runtime state by processing temporal upkeep mechanics such as
+     * daily purchase limit resets, stock replenishment (restocks), and demand pricing decays.
+     * This method evaluates changes strictly via timestamps/day counters and ensures
+     * idempotency by returning whether changes were actually necessary.
+     */
     private boolean applyRuntimeUpkeep(ServerShopOffer offer, long gameTime, long day) {
         if (offer == null) {
             return false;

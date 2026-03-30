@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.entity;
+package de.bigbull.marketblocks.block.entity;
 
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;

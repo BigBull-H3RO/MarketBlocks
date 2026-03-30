@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.network.packets.serverShop;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopSerialization;
+import de.bigbull.marketblocks.shop.server.ServerShopManager;
+import de.bigbull.marketblocks.shop.server.ServerShopSerialization;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;

@@ -1,10 +1,10 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopClientState;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopOfferViewState;
+import de.bigbull.marketblocks.shop.server.ServerShopClientState;
+import de.bigbull.marketblocks.shop.server.ServerShopManager;
+import de.bigbull.marketblocks.shop.server.ServerShopOffer;
+import de.bigbull.marketblocks.shop.server.ServerShopOfferViewState;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;

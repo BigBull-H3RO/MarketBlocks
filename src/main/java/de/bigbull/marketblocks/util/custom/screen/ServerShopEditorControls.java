@@ -9,8 +9,8 @@ import de.bigbull.marketblocks.network.packets.serverShop.ServerShopMoveOfferPac
 import de.bigbull.marketblocks.network.packets.serverShop.ServerShopRenamePagePacket;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.VanillaIconButton;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopPage;
+import de.bigbull.marketblocks.shop.server.ServerShopOffer;
+import de.bigbull.marketblocks.shop.server.ServerShopPage;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;

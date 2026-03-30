@@ -2,8 +2,8 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.serverShop.ServerShopUpdateOfferPricingPacket;
-import de.bigbull.marketblocks.util.custom.servershop.DemandPricing;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopSerialization;
+import de.bigbull.marketblocks.shop.server.DemandPricing;
+import de.bigbull.marketblocks.shop.server.ServerShopSerialization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
