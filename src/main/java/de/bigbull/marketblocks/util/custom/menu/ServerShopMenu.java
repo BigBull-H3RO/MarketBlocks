@@ -27,6 +27,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
     public static final int TEMPLATE_SLOTS = 3;
     private static final int PAYMENT_SLOT_0 = 0;
     private static final int PAYMENT_SLOT_1 = 1;
+    private static final int PAYMENT_SLOTS_END_EXCLUSIVE = PAYMENT_SLOT_1 + 1;
     private static final int PLAYER_INV_ROWS = 3;
     private static final int PLAYER_INV_COLS = 9;
     private static final int PLAYER_INV_START_Y = 125;
@@ -293,7 +294,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
     public void clearTemplate(Player player) {
         for (int i = 0; i < tradeContainer.getContainerSize(); i++) {
             if (!isEditMode && i == RESULT_SLOT) {
-                clearResultIfNeeded();
+                tradeContainer.setItem(i, ItemStack.EMPTY);
                 continue;
             }
             ItemStack stack = tradeContainer.removeItemNoUpdate(i);
@@ -359,8 +360,9 @@ public class ServerShopMenu extends AbstractContainerMenu {
                         ItemStack chunk = resultProto.copy();
                         chunk.setCount(chunkSize);
 
-                        this.moveItemStackTo(chunk, TEMPLATE_SLOTS, this.slots.size(), true);
-                        if (!chunk.isEmpty()) {
+                        if (!this.moveItemStackTo(chunk, TEMPLATE_SLOTS, this.slots.size(), true) && !chunk.isEmpty()) {
+                            player.drop(chunk, false);
+                        } else if (!chunk.isEmpty()) {
                             player.drop(chunk, false);
                         }
                         remaining -= chunkSize;
@@ -381,7 +383,7 @@ public class ServerShopMenu extends AbstractContainerMenu {
                     return ItemStack.EMPTY;
                 }
             } else {
-                if (!this.moveItemStackTo(newStack, PAYMENT_SLOT_0, RESULT_SLOT, false)) {
+                if (!this.moveItemStackTo(newStack, PAYMENT_SLOT_0, PAYMENT_SLOTS_END_EXCLUSIVE, false)) {
                     return ItemStack.EMPTY;
                 }
             }

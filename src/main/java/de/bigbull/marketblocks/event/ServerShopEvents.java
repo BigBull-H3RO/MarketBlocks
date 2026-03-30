@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.event;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -65,7 +66,7 @@ public final class ServerShopEvents {
                                         }))));
     }
 
-    private static void setGlobalEditModeAndNotify(boolean enabled, net.minecraft.commands.CommandSourceStack source) {
+    private static void setGlobalEditModeAndNotify(boolean enabled, CommandSourceStack source) {
         ServerShopManager.get().setGlobalEditModeEnabled(enabled);
         source.sendSuccess(
                 () -> Component.translatable(enabled ? EDIT_MODE_ENABLED_KEY : EDIT_MODE_DISABLED_KEY),
