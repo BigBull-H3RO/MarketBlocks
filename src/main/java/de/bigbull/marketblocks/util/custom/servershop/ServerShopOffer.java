@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.*;
 
 /**
- * Datenstruktur für ein Angebot innerhalb des Server-Shops.
+ * Represents a single trade offer within the server shop.
  */
 public final class ServerShopOffer {
     public static final Codec<ServerShopOffer> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -76,6 +76,10 @@ public final class ServerShopOffer {
                 .toList();
     }
 
+    /**
+     * Returns the payment items with the current demand multiplier applied to each item's count.
+     * Empty (air) slots are preserved as-is.
+     */
     public List<ItemStack> effectivePayments() {
         double multiplier = ServerShopRuntimeMath.computeDemandMultiplier(pricing, runtimeState.demandPurchases());
         List<ItemStack> effective = new ArrayList<>(payments.size());
@@ -91,6 +95,7 @@ public final class ServerShopOffer {
         return Collections.unmodifiableList(effective);
     }
 
+    /** Returns the current demand-based price multiplier (1.0 when demand pricing is disabled). */
     public double currentPriceMultiplier() {
         return ServerShopRuntimeMath.computeDemandMultiplier(pricing, runtimeState.demandPurchases());
     }
@@ -113,7 +118,7 @@ public final class ServerShopOffer {
 
     public void setPayment(int index, ItemStack payment) {
         if (index < 0 || index >= payments.size()) {
-            throw new IndexOutOfBoundsException("Ungültiger Zahlungsindex: " + index);
+            throw new IndexOutOfBoundsException("Invalid payment index: " + index);
         }
         payments.set(index, sanitiseStack(payment));
     }
@@ -130,12 +135,17 @@ public final class ServerShopOffer {
         this.runtimeState = runtimeState == null ? ServerShopOfferRuntimeState.empty() : runtimeState;
     }
 
+    /**
+     * Validates that this offer has a non-empty result item and at least one non-empty payment item.
+     *
+     * @return success if valid, or an error {@link com.mojang.serialization.DataResult} otherwise
+     */
     public DataResult<Void> validate() {
         if (result.isEmpty()) {
-            return DataResult.error(() -> "Server-Shop-Angebote benötigen ein Ergebnis-Item");
+            return DataResult.error(() -> "A server shop offer must have a result item");
         }
         if (payments.stream().allMatch(ItemStack::isEmpty)) {
-            return DataResult.error(() -> "Server-Shop-Angebote benötigen mindestens ein Zahlungsitem");
+            return DataResult.error(() -> "A server shop offer must have at least one payment item");
         }
         return DataResult.success(null);
     }

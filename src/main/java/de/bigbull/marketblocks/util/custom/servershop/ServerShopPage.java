@@ -7,8 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Beschreibt eine Seite im Server-Shop.
- * Jetzt direkt mit einer Liste von Angeboten (ohne Kategorien).
+ * Represents a single page in the server shop, holding a flat list of trade offers.
  */
 public final class ServerShopPage {
     public static final Codec<ServerShopPage> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -48,7 +47,9 @@ public final class ServerShopPage {
         return offers.stream().map(ServerShopOffer::copy).collect(Collectors.toUnmodifiableList());
     }
 
-    // Zugriff für den Manager (Package-Private)
+    /**
+     * Package-private access to the mutable offer list, used by the shop manager to apply in-place edits.
+     */
     List<ServerShopOffer> internalOffers() {
         return offers;
     }

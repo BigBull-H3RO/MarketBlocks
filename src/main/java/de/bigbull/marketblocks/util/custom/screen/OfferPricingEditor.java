@@ -16,18 +16,12 @@ import net.minecraft.network.chat.Component;
 import java.util.UUID;
 
 /**
- * Modal-Dialog für die Bearbeitung von Demand-Pricing eines Angebots.
+ * Modal dialog for editing the demand-based pricing configuration of a single server shop offer.
  */
 public class OfferPricingEditor extends BaseModalScreen {
     private static final int PANEL_WIDTH = 248;
     private static final int PANEL_HEIGHT = 166;
-    private static final int ROW_SPACING = 24;
-    private static final int INPUT_WIDTH = 66;
-    private static final int INPUT_HEIGHT = 18;
     private static final int INPUT_X_OFFSET = 164;
-    private static final int INPUT_START_Y_OFFSET = 30;
-    private static final int LABEL_X_OFFSET = 14;
-    private static final int LABEL_START_Y_OFFSET = 35;
 
     private final UUID offerId;
     private final DemandPricing currentPricing;
@@ -143,12 +137,6 @@ public class OfferPricingEditor extends BaseModalScreen {
         return Double.parseDouble(value.replace(',', '.'));
     }
 
-    private void notifyClient(Component message) {
-        if (this.minecraft != null && this.minecraft.player != null) {
-            this.minecraft.player.displayClientMessage(message, true);
-        }
-    }
-
     @Override
     protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         int labelX = panelLeft + LABEL_X_OFFSET;
@@ -159,12 +147,4 @@ public class OfferPricingEditor extends BaseModalScreen {
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.server_shop.editor.pricing.max"), labelX, rowStartY + (ROW_SPACING * 3), 0xCFCFCF, false);
     }
 }
-
-
-
-
-
-
-
-
 
