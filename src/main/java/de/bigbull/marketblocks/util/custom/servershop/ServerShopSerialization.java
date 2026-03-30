@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util.custom.servershop;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
@@ -7,87 +8,71 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.RegistryOps;
 
-import java.util.function.Function;
-
 /**
- * Hilfsmethoden für die Serialisierung der Server-Shop-Daten in Netzwerkpayloads.
+ * Utility methods for encoding and decoding server shop data as NBT {@link CompoundTag} payloads.
  */
 public final class ServerShopSerialization {
     private ServerShopSerialization() {
     }
 
+    /** Encodes the full shop data into a {@link CompoundTag} using the provided registry context. */
     public static DataResult<CompoundTag> encodeData(ServerShopData data, RegistryAccess access) {
-        if (data == null) {
-            return DataResult.error(() -> "Daten dürfen nicht null sein");
-        }
-        if (access == null) {
-            return DataResult.error(() -> "RegistryAccess fehlt");
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, access);
-        return ServerShopData.CODEC.encodeStart(ops, data).flatMap(asCompound());
+        return encode(data, "Shop data must not be null", ServerShopData.CODEC, access);
     }
 
+    /** Decodes full shop data from a {@link CompoundTag} using the provided registry context. */
     public static DataResult<ServerShopData> decodeData(CompoundTag tag, RegistryAccess access) {
-        if (tag == null) {
-            return DataResult.error(() -> "CompoundTag fehlt");
-        }
-        if (access == null) {
-            return DataResult.error(() -> "RegistryAccess fehlt");
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, access);
-        return ServerShopData.CODEC.parse(ops, tag);
+        return decode(tag, ServerShopData.CODEC, access);
     }
 
+    /** Encodes an {@link OfferLimit} into a {@link CompoundTag}. */
     public static DataResult<CompoundTag> encodeLimit(OfferLimit limit, RegistryAccess access) {
-        if (limit == null) {
-            return DataResult.error(() -> "Limit darf nicht null sein");
-        }
-        if (access == null) {
-            return DataResult.error(() -> "RegistryAccess fehlt");
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, access);
-        return OfferLimit.CODEC.encodeStart(ops, limit).flatMap(asCompound());
+        return encode(limit, "Offer limit must not be null", OfferLimit.CODEC, access);
     }
 
+    /** Decodes an {@link OfferLimit} from a {@link CompoundTag}. */
     public static DataResult<OfferLimit> decodeLimit(CompoundTag tag, RegistryAccess access) {
-        if (tag == null) {
-            return DataResult.error(() -> "CompoundTag fehlt");
-        }
-        if (access == null) {
-            return DataResult.error(() -> "RegistryAccess fehlt");
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, access);
-        return OfferLimit.CODEC.parse(ops, tag);
+        return decode(tag, OfferLimit.CODEC, access);
     }
 
+    /** Encodes a {@link DemandPricing} configuration into a {@link CompoundTag}. */
     public static DataResult<CompoundTag> encodePricing(DemandPricing pricing, RegistryAccess access) {
-        if (pricing == null) {
-            return DataResult.error(() -> "Pricing darf nicht null sein");
-        }
-        if (access == null) {
-            return DataResult.error(() -> "RegistryAccess fehlt");
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, access);
-        return DemandPricing.CODEC.encodeStart(ops, pricing).flatMap(asCompound());
+        return encode(pricing, "Demand pricing must not be null", DemandPricing.CODEC, access);
     }
 
+    /** Decodes a {@link DemandPricing} configuration from a {@link CompoundTag}. */
     public static DataResult<DemandPricing> decodePricing(CompoundTag tag, RegistryAccess access) {
-        if (tag == null) {
-            return DataResult.error(() -> "CompoundTag fehlt");
-        }
-        if (access == null) {
-            return DataResult.error(() -> "RegistryAccess fehlt");
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, access);
-        return DemandPricing.CODEC.parse(ops, tag);
+        return decode(tag, DemandPricing.CODEC, access);
     }
 
-    private static Function<Tag, DataResult<CompoundTag>> asCompound() {
-        return tag -> {
-            if (tag instanceof CompoundTag compound) {
-                return DataResult.success(compound);
-            }
-            return DataResult.error(() -> "Erwartete CompoundTag, erhielt " + tag.getType().getName());
-        };
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
+
+    private static <T> DataResult<CompoundTag> encode(T value, String nullMessage, Codec<T> codec, RegistryAccess access) {
+        if (value == null) {
+            return DataResult.error(() -> nullMessage);
+        }
+        if (access == null) {
+            return DataResult.error(() -> "RegistryAccess must not be null");
+        }
+        return codec.encodeStart(RegistryOps.create(NbtOps.INSTANCE, access), value).flatMap(ServerShopSerialization::requireCompoundTag);
+    }
+
+    private static <T> DataResult<T> decode(CompoundTag tag, Codec<T> codec, RegistryAccess access) {
+        if (tag == null) {
+            return DataResult.error(() -> "CompoundTag must not be null");
+        }
+        if (access == null) {
+            return DataResult.error(() -> "RegistryAccess must not be null");
+        }
+        return codec.parse(RegistryOps.create(NbtOps.INSTANCE, access), tag);
+    }
+
+    private static DataResult<CompoundTag> requireCompoundTag(Tag tag) {
+        if (tag instanceof CompoundTag compound) {
+            return DataResult.success(compound);
+        }
+        return DataResult.error(() -> "Expected CompoundTag but got " + tag.getType().getName());
     }
 }

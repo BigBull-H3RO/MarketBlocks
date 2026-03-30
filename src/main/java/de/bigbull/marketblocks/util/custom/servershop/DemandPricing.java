@@ -6,7 +6,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.Objects;
 
 /**
- * Konfigurierbare Preissteuerung in Abhängigkeit von der Nachfrage.
+ * Configurable dynamic pricing model that scales payment costs based on purchase demand.
+ * <p>All field values are clamped to valid ranges in the constructor, ensuring
+ * {@code minMultiplier ≤ maxMultiplier} and all multipliers are non-negative.</p>
  */
 public final class DemandPricing {
     public static final Codec<DemandPricing> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -55,14 +57,17 @@ public final class DemandPricing {
         return maxMultiplier;
     }
 
+    /** Returns a copy of this configuration with the {@code enabled} flag set to the given value. */
     public DemandPricing withEnabled(boolean enabled) {
         return new DemandPricing(enabled, baseMultiplier, demandStep, minMultiplier, maxMultiplier);
     }
 
+    /** Returns a copy of this configuration with the demand step per purchase set to {@code step}. */
     public DemandPricing withDemandStep(double step) {
         return new DemandPricing(enabled, baseMultiplier, step, minMultiplier, maxMultiplier);
     }
 
+    /** Returns a copy of this configuration with the multiplier bounds set to {@code min} and {@code max}. */
     public DemandPricing withMinMax(double min, double max) {
         return new DemandPricing(enabled, baseMultiplier, demandStep, min, max);
     }
