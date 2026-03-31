@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.FluidState;
@@ -85,9 +86,40 @@ public class SmallShopBlock extends BaseEntityBlock {
 
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
-            return shopEntity.getAnalogSignal();
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof SmallShopBlockEntity shop) {
+            int maxSignal = 0;
+            boolean foundComparator = false;
+
+            for (Direction dir : Direction.values()) {
+                if (dir.getAxis().isVertical()) continue; // Comparators only connect horizontally
+                BlockPos neighborPos = pos.relative(dir);
+                BlockState neighborState = level.getBlockState(neighborPos);
+
+                // If the neighbor is a comparator reading from this block, its FACING is towards this block.
+                // ComparatorBlock.FACING is the direction the comparator is outputting to, so if it's
+                // at pos.north() and outputs north, it reads from pos.south(). Wait, if a comparator is placed
+                // against the north side of the shop (shop is at 0,0,0, comparator is at 0,0,-1), and reads the shop,
+                // the comparator's back is facing south. In Minecraft, ComparatorBlock.FACING indicates the direction
+                // it points its signal. So a comparator at 0,0,-1 reading 0,0,0 points NORTH.
+                // Thus, its FACING would be dir (Direction.NORTH) or dir.getOpposite()?
+                // Let's just check if it's a comparator and facing away from the block:
+                // If comparator is at dir, its FACING must be dir.
+                if (neighborState.getBlock() instanceof ComparatorBlock) {
+                    if (neighborState.getValue(ComparatorBlock.FACING) == dir) {
+                        int signal = shop.getAnalogSignal(dir);
+                        maxSignal = Math.max(maxSignal, signal);
+                        foundComparator = true;
+                    }
+                }
+            }
+
+            if (!foundComparator) {
+                // Default to the back of the shop block if no comparator is explicitly found
+                Direction back = state.getValue(FACING).getOpposite();
+                return shop.getAnalogSignal(back);
+            }
+            return maxSignal;
         }
         return 0;
     }

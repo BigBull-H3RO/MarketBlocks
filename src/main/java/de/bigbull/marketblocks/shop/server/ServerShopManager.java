@@ -52,7 +52,7 @@ public final class ServerShopManager {
     }
 
     private final Object lock = new Object();
-    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
+    private ExecutorService ioExecutor;
     private ServerShopData data = ServerShopData.empty();
     private RegistryAccess registryAccess;
     private MinecraftServer server;
@@ -66,6 +66,9 @@ public final class ServerShopManager {
 
     public void initialize(MinecraftServer server) {
         synchronized (lock) {
+            if (ioExecutor == null || ioExecutor.isShutdown()) {
+                ioExecutor = Executors.newSingleThreadExecutor();
+            }
             this.server = server;
             this.registryAccess = server.registryAccess();
             Path dir = server.getWorldPath(SHOP_DIR);
@@ -87,7 +90,9 @@ public final class ServerShopManager {
         synchronized (lock) {
             if (initialized) {
                 saveNow();
-                ioExecutor.shutdown();
+                if (ioExecutor != null) {
+                    ioExecutor.shutdown();
+                }
                 data = ServerShopData.empty();
                 registryAccess = null;
                 server = null;

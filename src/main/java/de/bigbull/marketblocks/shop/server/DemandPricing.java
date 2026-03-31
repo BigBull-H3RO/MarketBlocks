@@ -3,8 +3,6 @@ package de.bigbull.marketblocks.shop.server;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import java.util.Objects;
-
 /**
  * Configurable dynamic pricing model that scales payment costs based on purchase demand.
  * <p>All field values are clamped to valid ranges in the constructor, ensuring

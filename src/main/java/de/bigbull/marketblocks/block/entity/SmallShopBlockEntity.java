@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -562,30 +563,35 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    public int getAnalogSignal() {
-        if (!hasOffer) return 0;
-        if (!hasResultItemInInput()) return 15; // Sold out
+    public int getAnalogSignal(Direction readSide) {
+        SideMode mode = getModeForSide(readSide);
+        if (mode == SideMode.OUTPUT) {
+            return calculateComparatorSignal(outputHandler);
+        } else if (mode == SideMode.INPUT) {
+            return calculateComparatorSignal(inputHandler);
+        }
+        return 0;
+    }
 
-        int totalSlots = outputHandler.getSlots();
+    private int calculateComparatorSignal(IItemHandler handler) {
+        if (handler == null) return 0;
+
+        int totalSlots = handler.getSlots();
         if (totalSlots == 0) return 0;
 
-        int totalLimit = 0;
-        int totalCount = 0;
+        float fullness = 0.0F;
+        boolean hasItem = false;
 
         for (int i = 0; i < totalSlots; i++) {
-            ItemStack stack = outputHandler.getStackInSlot(i);
-            int slotLimit = outputHandler.getSlotLimit(i);
+            ItemStack stack = handler.getStackInSlot(i);
             if (!stack.isEmpty()) {
-                slotLimit = Math.min(slotLimit, stack.getMaxStackSize());
+                fullness += (float) stack.getCount() / (float) Math.min(handler.getSlotLimit(i), stack.getMaxStackSize());
+                hasItem = true;
             }
-            totalLimit += slotLimit;
-            totalCount += stack.getCount();
         }
 
-        if (totalLimit == 0) return 0;
-
-        float fullness = (float) totalCount / totalLimit;
-        return (int) (Math.floor(fullness * 14.0F) + (fullness > 0 ? 1 : 0));
+        fullness /= (float) totalSlots;
+        return Mth.floor(fullness * 14.0F) + (hasItem ? 1 : 0);
     }
 
     public void processPurchase() {
