@@ -585,7 +585,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (totalLimit == 0) return 0;
 
         float fullness = (float) totalCount / totalLimit;
-        return (int) (fullness * 14.0f);
+        return (int) (Math.floor(fullness * 14.0F) + (fullness > 0 ? 1 : 0));
     }
 
     public void processPurchase() {
@@ -636,41 +636,33 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (actualAmount <= 0) return 0;
 
         // Verify Output Space for actualAmount
-        // Optimize: Use mathematical calculation to figure out max possible space without cloning arrays
-        int spaceP1 = 0;
-        int spaceP2 = 0;
-
-        if (!p1.isEmpty()) {
-            for (int i = 0; i < outputHandler.getSlots(); i++) {
-                ItemStack stack = outputHandler.getStackInSlot(i);
-                if (stack.isEmpty()) {
-                    spaceP1 += outputHandler.getSlotLimit(i);
-                } else if (ItemStack.isSameItemSameComponents(stack, p1)) {
-                    int maxFit = Math.min(outputHandler.getSlotLimit(i), stack.getMaxStackSize());
-                    spaceP1 += Math.max(0, maxFit - stack.getCount());
-                }
-            }
-        }
-        if (!p2.isEmpty()) {
-            for (int i = 0; i < outputHandler.getSlots(); i++) {
-                ItemStack stack = outputHandler.getStackInSlot(i);
-                if (stack.isEmpty()) {
-                    spaceP2 += outputHandler.getSlotLimit(i);
-                } else if (ItemStack.isSameItemSameComponents(stack, p2)) {
-                    int maxFit = Math.min(outputHandler.getSlotLimit(i), stack.getMaxStackSize());
-                    spaceP2 += Math.max(0, maxFit - stack.getCount());
-                }
-            }
+        // Optimize: Use ItemHandlerHelper with simulate = false on a cloned handler to ensure
+        // empty slots are not double counted when payment 1 and 2 are different items.
+        int validAmount = 0;
+        ItemStackHandler testHandler = new ItemStackHandler(outputHandler.getSlots());
+        for (int i = 0; i < outputHandler.getSlots(); i++) {
+            testHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
         }
 
-        // Handle shared space if p1 and p2 are the exact same item
-        if (!p1.isEmpty() && !p2.isEmpty() && ItemStack.isSameItemSameComponents(p1, p2)) {
-            int totalReqPerTrade = p1.getCount() + p2.getCount();
-            actualAmount = Math.min(actualAmount, spaceP1 / totalReqPerTrade);
-        } else {
-            if (!p1.isEmpty()) actualAmount = Math.min(actualAmount, spaceP1 / p1.getCount());
-            if (!p2.isEmpty()) actualAmount = Math.min(actualAmount, spaceP2 / p2.getCount());
+        for (int i = 0; i < actualAmount; i++) {
+            boolean fits = true;
+            if (!p1.isEmpty()) {
+                if (!ItemHandlerHelper.insertItem(testHandler, p1.copy(), false).isEmpty()) {
+                    fits = false;
+                }
+            }
+            if (fits && !p2.isEmpty()) {
+                if (!ItemHandlerHelper.insertItem(testHandler, p2.copy(), false).isEmpty()) {
+                    fits = false;
+                }
+            }
+            if (fits) {
+                validAmount++;
+            } else {
+                break;
+            }
         }
+        actualAmount = validAmount;
 
         if (actualAmount <= 0) {
             // Output full

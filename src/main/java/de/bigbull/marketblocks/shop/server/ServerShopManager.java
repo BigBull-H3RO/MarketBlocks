@@ -28,7 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Zentrale Verwaltungsinstanz für den blocklosen Server-Shop.
@@ -51,6 +52,7 @@ public final class ServerShopManager {
     }
 
     private final Object lock = new Object();
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
     private ServerShopData data = ServerShopData.empty();
     private RegistryAccess registryAccess;
     private MinecraftServer server;
@@ -85,6 +87,7 @@ public final class ServerShopManager {
         synchronized (lock) {
             if (initialized) {
                 saveNow();
+                ioExecutor.shutdown();
                 data = ServerShopData.empty();
                 registryAccess = null;
                 server = null;
@@ -529,7 +532,14 @@ public final class ServerShopManager {
         return -1;
     }
 
-    public void loadFromDisk() {
+    public void reload() {
+        synchronized (lock) {
+            loadFromDisk();
+            refreshOpenViewersLocked();
+        }
+    }
+
+    private void loadFromDisk() {
         if (configFile == null || registryAccess == null) {
             return;
         }
@@ -573,45 +583,60 @@ public final class ServerShopManager {
             return;
         }
 
-        final ServerShopData dataSnapshot = data.copy();
-        final RegistryAccess ra = registryAccess;
-        final Path targetFile = configFile;
-        final Path tempFile = temporaryFile();
-        final Path backupFile = backupFile();
+        final ServerShopData dataSnapshot;
+        final RegistryAccess ra;
+        final Path targetFile;
+        final Path tempFile;
+        final Path backupFile;
 
-        dirty = false;
-        ticksSinceSave = 0;
+        synchronized (lock) {
+            dataSnapshot = data.copy();
+            ra = registryAccess;
+            targetFile = configFile;
+            tempFile = temporaryFile();
+            backupFile = backupFile();
+            dirty = false;
+            ticksSinceSave = 0;
+        }
 
-        CompletableFuture.runAsync(() -> {
+        ioExecutor.submit(() -> {
+            boolean success = false;
             try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
                 RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, ra);
                 DataResult<JsonElement> result = ServerShopData.CODEC.encodeStart(ops, dataSnapshot);
                 if (result.error().isPresent()) {
                     LOGGER.error("Fehler beim Serialisieren der Server-Shop-Daten: {}", result.error().get().message());
-                    safeDelete(tempFile);
-                    return;
+                } else {
+                    JsonElement json = result.result().orElseGet(JsonObject::new);
+                    GSON.toJson(json, writer);
+                    writer.flush();
+                    success = true;
                 }
-                JsonElement json = result.result().orElseGet(JsonObject::new);
-                GSON.toJson(json, writer);
-                writer.flush();
             } catch (IOException ex) {
                 LOGGER.error("Konnte temporaere Server-Shop-Datei {} nicht schreiben", tempFile, ex);
-                safeDelete(tempFile);
-                return;
             }
 
-            try {
-                if (Files.exists(targetFile)) {
-                    Files.copy(targetFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
-                }
+            if (success) {
                 try {
-                    Files.move(tempFile, targetFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-                } catch (AtomicMoveNotSupportedException ignored) {
-                    Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                    if (Files.exists(targetFile)) {
+                        Files.copy(targetFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                    try {
+                        Files.move(tempFile, targetFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (AtomicMoveNotSupportedException ignored) {
+                        Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (IOException ex) {
+                    LOGGER.error("Konnte Server-Shop-Datei {} nicht atomar speichern", targetFile, ex);
+                    success = false;
                 }
-            } catch (IOException ex) {
-                LOGGER.error("Konnte Server-Shop-Datei {} nicht atomar speichern", targetFile, ex);
+            }
+
+            if (!success) {
                 safeDelete(tempFile);
+                synchronized (lock) {
+                    dirty = true;
+                }
             }
         });
     }
@@ -638,7 +663,7 @@ public final class ServerShopManager {
     }
 
     private Path temporaryFile() {
-        return configFile.resolveSibling(FILE_NAME + TEMP_FILE_SUFFIX);
+        return configFile.resolveSibling(FILE_NAME + TEMP_FILE_SUFFIX + "." + System.currentTimeMillis());
     }
 
     private void safeDelete(Path path) {
