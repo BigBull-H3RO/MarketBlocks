@@ -253,6 +253,7 @@ public final class ServerShopManager {
         synchronized (lock) {
             boolean changed = isGlobalEditModeEnabled() != enabled;
             Config.SERVER_SHOP_EDIT_MODE_ENABLED.set(enabled);
+            Config.SERVER_SHOP_EDIT_MODE_ENABLED.save();
             if (!initialized || !changed) {
                 return;
             }

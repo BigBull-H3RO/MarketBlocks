@@ -24,7 +24,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -42,11 +41,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private static final double MAX_PLAYER_DISTANCE_SQUARED = 64.0;
 
     // NBT Keys
-    private static final String NBT_OWNER_ID = "OwnerId";
-    private static final String NBT_OWNER_NAME = "OwnerName";
-    private static final String NBT_ADDITIONAL_OWNERS = "AdditionalOwners";
-    private static final String NBT_ADDITIONAL_OWNER_ID = "Id";
-    private static final String NBT_ADDITIONAL_OWNER_NAME = "Name";
     private static final String NBT_HAS_OFFER = "HasOffer";
     private static final String NBT_SHOP_NAME = "ShopName";
     private static final String NBT_EMIT_REDSTONE = "EmitRedstone";
@@ -288,7 +282,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     public void sync() {
         setChanged();
         if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            BlockState state = getBlockState();
+            level.sendBlockUpdated(worldPosition, state, state, 3);
+            level.updateNeighbourForOutputSignal(worldPosition, state.getBlock());
         }
     }
 
@@ -311,6 +307,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         ownerManager.setOwner(player);
     }
 
+    @SuppressWarnings("unused")
     public void addOwner(UUID id, String name) {
         ownerManager.addOwner(id, name);
     }
@@ -319,6 +316,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         ownerManager.addOwnerClient(id, name);
     }
 
+    @SuppressWarnings("unused")
     public void removeOwner(UUID id) {
         ownerManager.removeOwner(id);
     }
@@ -509,6 +507,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return hasEnoughPayment(p1) && hasEnoughPayment(p2);
     }
 
+    @SuppressWarnings("unused")
     public boolean hasResultItemInInput() {
         return hasResultItemInInput(false);
     }
@@ -552,6 +551,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return found >= result.getCount();
     }
 
+    @SuppressWarnings("unused")
     public List<String> getTransactionLog() {
         return Collections.unmodifiableList(transactionLog);
     }
@@ -604,7 +604,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
      * 1) Affordability (based on matching items in the payment slots)
      * 2) In-stock limits (based on the output stack count in the input handler)
      * 3) Output space limits (based on space availability in the output handler)
-     *
      * Output space is simulated iteratively to ensure accurate evaluation of max stacking.
      */
     public int processBulkPurchase(int maxAmount) {
@@ -842,6 +841,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return outputAlmostFull;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isOutputFull() {
         return outputFull;
     }
@@ -972,6 +972,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void tick(Level level, BlockPos pos, BlockState state, SmallShopBlockEntity be) {
         if (level.isClientSide) {
             return;

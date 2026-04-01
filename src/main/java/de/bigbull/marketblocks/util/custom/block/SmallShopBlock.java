@@ -76,12 +76,25 @@ public class SmallShopBlock extends BaseEntityBlock {
 
     @Override
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof SmallShopBlockEntity shop) {
+            Direction side = direction.getOpposite();
+            if (hasComparatorReadPath(level, pos, side)) {
+                return shop.getAnalogSignal(side);
+            }
+        }
+
         return state.getValue(POWERED) ? 15 : 0;
     }
 
     @Override
+    public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        return getSignal(state, level, pos, direction);
+    }
+
+    @Override
     public boolean hasAnalogOutputSignal(BlockState state) {
-        return true;
+        return false;
     }
 
     @Override
@@ -91,37 +104,45 @@ public class SmallShopBlock extends BaseEntityBlock {
             int maxSignal = 0;
             boolean foundComparator = false;
 
-            for (Direction dir : Direction.values()) {
-                if (dir.getAxis().isVertical()) continue; // Comparators only connect horizontally
-                BlockPos neighborPos = pos.relative(dir);
-                BlockState neighborState = level.getBlockState(neighborPos);
-
-                // If the neighbor is a comparator reading from this block, its FACING is towards this block.
-                // ComparatorBlock.FACING is the direction the comparator is outputting to, so if it's
-                // at pos.north() and outputs north, it reads from pos.south(). Wait, if a comparator is placed
-                // against the north side of the shop (shop is at 0,0,0, comparator is at 0,0,-1), and reads the shop,
-                // the comparator's back is facing south. In Minecraft, ComparatorBlock.FACING indicates the direction
-                // it points its signal. So a comparator at 0,0,-1 reading 0,0,0 points NORTH.
-                // Thus, its FACING would be dir (Direction.NORTH) or dir.getOpposite()?
-                // Let's just check if it's a comparator and facing away from the block:
-                // If comparator is at dir, its FACING must be dir.
-                if (neighborState.getBlock() instanceof ComparatorBlock) {
-                    if (neighborState.getValue(ComparatorBlock.FACING) == dir) {
-                        int signal = shop.getAnalogSignal(dir);
-                        maxSignal = Math.max(maxSignal, signal);
-                        foundComparator = true;
-                    }
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                if (hasComparatorReadPath(level, pos, dir)) {
+                    int signal = shop.getAnalogSignal(dir);
+                    maxSignal = Math.max(maxSignal, signal);
+                    foundComparator = true;
                 }
             }
 
             if (!foundComparator) {
-                // Default to the back of the shop block if no comparator is explicitly found
                 Direction back = state.getValue(FACING).getOpposite();
                 return shop.getAnalogSignal(back);
             }
             return maxSignal;
         }
         return 0;
+    }
+
+    private static boolean hasComparatorReadPath(BlockGetter level, BlockPos sourcePos, Direction sourceToComparator) {
+        if (sourceToComparator.getAxis().isVertical()) {
+            return false;
+        }
+
+        BlockPos neighborPos = sourcePos.relative(sourceToComparator);
+        BlockState neighborState = level.getBlockState(neighborPos);
+        if (isComparatorReadingFromBlock(neighborState, sourceToComparator)) {
+            return true;
+        }
+
+        if (!neighborState.isRedstoneConductor(level, neighborPos)) {
+            return false;
+        }
+
+        BlockPos comparatorPos = neighborPos.relative(sourceToComparator);
+        BlockState comparatorState = level.getBlockState(comparatorPos);
+        return isComparatorReadingFromBlock(comparatorState, sourceToComparator);
+    }
+
+    private static boolean isComparatorReadingFromBlock(BlockState state, Direction sourceToComparator) {
+        return state.getBlock() instanceof ComparatorBlock && state.getValue(ComparatorBlock.FACING) == sourceToComparator.getOpposite();
     }
 
     @Override
