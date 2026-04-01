@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopPage;
+import de.bigbull.marketblocks.shop.server.ServerShopPage;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

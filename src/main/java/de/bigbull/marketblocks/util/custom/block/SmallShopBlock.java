@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.util.custom.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.FluidState;
@@ -75,7 +76,84 @@ public class SmallShopBlock extends BaseEntityBlock {
 
     @Override
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof SmallShopBlockEntity shop) {
+            Direction side = direction.getOpposite();
+            if (hasComparatorReadPath(level, pos, side)) {
+                return shop.getAnalogSignal(side);
+            }
+        }
+
         return state.getValue(POWERED) ? 15 : 0;
+    }
+
+    @Override
+    public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        return getSignal(state, level, pos, direction);
+    }
+
+    @Override
+    public boolean hasAnalogOutputSignal(BlockState state) {
+        return false;
+    }
+
+    @Override
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof SmallShopBlockEntity shop) {
+            int maxSignal = 0;
+            boolean foundComparator = false;
+
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                if (hasComparatorReadPath(level, pos, dir)) {
+                    int signal = shop.getAnalogSignal(dir);
+                    maxSignal = Math.max(maxSignal, signal);
+                    foundComparator = true;
+                }
+            }
+
+            if (!foundComparator) {
+                Direction back = state.getValue(FACING).getOpposite();
+                return shop.getAnalogSignal(back);
+            }
+            return maxSignal;
+        }
+        return 0;
+    }
+
+    private static boolean hasComparatorReadPath(BlockGetter level, BlockPos sourcePos, Direction sourceToComparator) {
+        if (sourceToComparator.getAxis().isVertical()) {
+            return false;
+        }
+
+        BlockPos neighborPos = sourcePos.relative(sourceToComparator);
+        BlockState neighborState = level.getBlockState(neighborPos);
+        if (isComparatorReadingFromBlock(neighborState, sourceToComparator)) {
+            return true;
+        }
+
+        if (!neighborState.isRedstoneConductor(level, neighborPos)) {
+            return false;
+        }
+
+        BlockPos comparatorPos = neighborPos.relative(sourceToComparator);
+        BlockState comparatorState = level.getBlockState(comparatorPos);
+        return isComparatorReadingFromBlock(comparatorState, sourceToComparator);
+    }
+
+    private static boolean isComparatorReadingFromBlock(BlockState state, Direction sourceToComparator) {
+        return state.getBlock() instanceof ComparatorBlock && state.getValue(ComparatorBlock.FACING) == sourceToComparator.getOpposite();
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        if (!level.isClientSide) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof SmallShopBlockEntity shopEntity) {
+                shopEntity.updateNeighborCache();
+            }
+        }
     }
 
     @Override

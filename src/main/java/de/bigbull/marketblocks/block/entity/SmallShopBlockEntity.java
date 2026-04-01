@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.entity;
+package de.bigbull.marketblocks.block.entity;
 
 import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.util.RegistriesInit;
@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -23,7 +24,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -41,11 +41,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private static final double MAX_PLAYER_DISTANCE_SQUARED = 64.0;
 
     // NBT Keys
-    private static final String NBT_OWNER_ID = "OwnerId";
-    private static final String NBT_OWNER_NAME = "OwnerName";
-    private static final String NBT_ADDITIONAL_OWNERS = "AdditionalOwners";
-    private static final String NBT_ADDITIONAL_OWNER_ID = "Id";
-    private static final String NBT_ADDITIONAL_OWNER_NAME = "Name";
     private static final String NBT_HAS_OFFER = "HasOffer";
     private static final String NBT_SHOP_NAME = "ShopName";
     private static final String NBT_EMIT_REDSTONE = "EmitRedstone";
@@ -75,10 +70,12 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private ItemStack offerResult = ItemStack.EMPTY;
     private boolean hasOffer = false;
 
+    // Transaction Log
+    private final LinkedList<String> transactionLog = new LinkedList<>();
+
     // Owner System
-    private UUID ownerId = null;
-    private String ownerName = "";
-    private final Map<UUID, String> additionalOwners = new HashMap<>();
+    private final ShopOwnerManager ownerManager = new ShopOwnerManager(this);
+    private final ShopInventoryManager inventoryManager = new ShopInventoryManager(this);
 
     // Shop Settings
     private String shopName = "";
@@ -88,6 +85,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     // Side Configuration
     private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
+
+    // --- CORE HANDLERS ---
 
     // --- Inventories ---
     private class TrackedItemStackHandler extends ItemStackHandler {
@@ -283,8 +282,14 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     public void sync() {
         setChanged();
         if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            BlockState state = getBlockState();
+            level.sendBlockUpdated(worldPosition, state, state, 3);
+            level.updateNeighbourForOutputSignal(worldPosition, state.getBlock());
         }
+    }
+
+    public void updateNeighborCache() {
+        inventoryManager.updateNeighborCache();
     }
 
     public boolean stillValid(Player player) {
@@ -299,61 +304,49 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     // --- Owner System ---
     public void setOwner(Player player) {
-        this.ownerId = player.getUUID();
-        this.ownerName = player.getName().getString();
-        setChanged();
+        ownerManager.setOwner(player);
     }
 
+    @SuppressWarnings("unused")
     public void addOwner(UUID id, String name) {
-        additionalOwners.put(id, name);
-        sync();
+        ownerManager.addOwner(id, name);
     }
 
     public void addOwnerClient(UUID id, String name) {
-        additionalOwners.put(id, name);
+        ownerManager.addOwnerClient(id, name);
     }
 
+    @SuppressWarnings("unused")
     public void removeOwner(UUID id) {
-        if (additionalOwners.remove(id) != null) {
-            sync();
-        }
+        ownerManager.removeOwner(id);
     }
 
     public Set<UUID> getOwners() {
-        Set<UUID> owners = new HashSet<>(additionalOwners.keySet());
-        if (ownerId != null) {
-            owners.add(ownerId);
-        }
-        return owners;
+        return ownerManager.getOwners();
     }
 
     public Map<UUID, String> getAdditionalOwners() {
-        return additionalOwners;
+        return ownerManager.getAdditionalOwners();
     }
 
     public void setAdditionalOwners(Map<UUID, String> owners) {
-        additionalOwners.clear();
-        additionalOwners.putAll(owners);
-        sync();
+        ownerManager.setAdditionalOwners(owners);
     }
 
     public boolean isOwner(Player player) {
-        UUID id = player.getUUID();
-        return (ownerId != null && ownerId.equals(id)) || additionalOwners.containsKey(id);
+        return ownerManager.isOwner(player);
     }
 
     public void ensureOwner(Player player) {
-        if (!player.level().isClientSide() && ownerId == null) {
-            setOwner(player);
-        }
+        ownerManager.ensureOwner(player);
     }
 
     public UUID getOwnerId() {
-        return ownerId;
+        return ownerManager.getOwnerId();
     }
 
     public String getOwnerName() {
-        return ownerName;
+        return ownerManager.getOwnerName();
     }
 
     // --- Shop Settings ---
@@ -423,37 +416,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private IItemHandler getValidNeighborHandler(Direction dir) {
-        if (level == null) return null;
-        BlockPos neighbourPos = worldPosition.relative(dir);
-        IItemHandler neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, dir.getOpposite());
-        if (neighbour == null) {
-            neighbour = level.getCapability(Capabilities.ItemHandler.BLOCK, neighbourPos, null);
-        }
-        if (neighbour instanceof LockedChestWrapper locked) {
-            if (locked.getOwnerId() != null && getOwners().contains(locked.getOwnerId())) {
-                return locked.getDelegate();
-            } else {
-                return null;
-            }
-        }
-        return neighbour;
-    }
-
-    private void transferItems(IItemHandler from, IItemHandler to) {
-        for (int i = 0; i < from.getSlots(); i++) {
-            ItemStack stackInSlot = from.getStackInSlot(i);
-            if (stackInSlot.isEmpty()) continue;
-            ItemStack remainderSim = ItemHandlerHelper.insertItem(to, stackInSlot.copy(), true);
-            int transferable = stackInSlot.getCount() - remainderSim.getCount();
-            if (transferable > 0) {
-                ItemStack extracted = from.extractItem(i, transferable, false);
-                ItemStack leftover = ItemHandlerHelper.insertItem(to, extracted, false);
-                if (!leftover.isEmpty()) {
-                    from.insertItem(i, leftover, false);
-                }
-            }
-        }
+    public IItemHandler getValidNeighborHandler(Direction dir) {
+        return inventoryManager.getValidNeighborHandler(dir);
     }
 
     // --- Offer System ---
@@ -543,6 +507,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return hasEnoughPayment(p1) && hasEnoughPayment(p2);
     }
 
+    @SuppressWarnings("unused")
     public boolean hasResultItemInInput() {
         return hasResultItemInInput(false);
     }
@@ -586,14 +551,65 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return found >= result.getCount();
     }
 
+    @SuppressWarnings("unused")
+    public List<String> getTransactionLog() {
+        return Collections.unmodifiableList(transactionLog);
+    }
+
+    private void addLogEntry(String entry) {
+        transactionLog.addFirst(entry);
+        if (transactionLog.size() > 10) {
+            transactionLog.removeLast();
+        }
+    }
+
+    public int getAnalogSignal(Direction readSide) {
+        SideMode mode = getModeForSide(readSide);
+        if (mode == SideMode.OUTPUT) {
+            return calculateComparatorSignal(outputHandler);
+        } else if (mode == SideMode.INPUT) {
+            return calculateComparatorSignal(inputHandler);
+        }
+        return 0;
+    }
+
+    private int calculateComparatorSignal(IItemHandler handler) {
+        if (handler == null) return 0;
+
+        int totalSlots = handler.getSlots();
+        if (totalSlots == 0) return 0;
+
+        float fullness = 0.0F;
+        boolean hasItem = false;
+
+        for (int i = 0; i < totalSlots; i++) {
+            ItemStack stack = handler.getStackInSlot(i);
+            if (!stack.isEmpty()) {
+                fullness += (float) stack.getCount() / (float) Math.min(handler.getSlotLimit(i), stack.getMaxStackSize());
+                hasItem = true;
+            }
+        }
+
+        fullness /= (float) totalSlots;
+        return Mth.floor(fullness * 14.0F) + (hasItem ? 1 : 0);
+    }
+
     public void processPurchase() {
         processBulkPurchase(1);
     }
 
+    /**
+     * Executes the purchase logic for a specified maximum amount of trades.
+     * This logic relies on pre-calculating the exact number of possible trades using three constraints:
+     * 1) Affordability (based on matching items in the payment slots)
+     * 2) In-stock limits (based on the output stack count in the input handler)
+     * 3) Output space limits (based on space availability in the output handler)
+     * Output space is simulated iteratively to ensure accurate evaluation of max stacking.
+     */
     public int processBulkPurchase(int maxAmount) {
         if (maxAmount <= 0) return 0;
 
-        pullFromInputChest();
+        inventoryManager.pullFromInputChest(inputHandler);
 
         if (!hasOffer) return 0;
         ItemStack p1 = getOfferPayment1();
@@ -625,29 +641,33 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         if (actualAmount <= 0) return 0;
 
         // Verify Output Space for actualAmount
-        // Optimize: Check maximum possible fit instead of iterating one by one
-        if (!hasOutputSpaceForAmount(actualAmount, p1, p2)) {
-            // Binary search or calculation?
-            // Calculation is hard because stacking depends on existing items.
-            // Binary search is efficient enough (log2(64*27) ~ 11 iterations max)
-            int low = 0;
-            int high = actualAmount - 1;
-            int resultAmount = 0;
+        // Optimize: Use ItemHandlerHelper with simulate = false on a cloned handler to ensure
+        // empty slots are not double counted when payment 1 and 2 are different items.
+        int validAmount = 0;
+        ItemStackHandler testHandler = new ItemStackHandler(outputHandler.getSlots());
+        for (int i = 0; i < outputHandler.getSlots(); i++) {
+            testHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
+        }
 
-            while (low <= high) {
-                int mid = low + (high - low) / 2;
-                if (mid == 0) {
-                    low = 1; continue;
-                }
-                if (hasOutputSpaceForAmount(mid, p1, p2)) {
-                    resultAmount = mid;
-                    low = mid + 1;
-                } else {
-                    high = mid - 1;
+        for (int i = 0; i < actualAmount; i++) {
+            boolean fits = true;
+            if (!p1.isEmpty()) {
+                if (!ItemHandlerHelper.insertItem(testHandler, p1.copy(), false).isEmpty()) {
+                    fits = false;
                 }
             }
-            actualAmount = resultAmount;
+            if (fits && !p2.isEmpty()) {
+                if (!ItemHandlerHelper.insertItem(testHandler, p2.copy(), false).isEmpty()) {
+                    fits = false;
+                }
+            }
+            if (fits) {
+                validAmount++;
+            } else {
+                break;
+            }
         }
+        actualAmount = validAmount;
 
         if (actualAmount <= 0) {
             // Output full
@@ -659,6 +679,22 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         for (int i = 0; i < actualAmount; i++) {
             executeTrade();
         }
+
+        StringBuilder tradeLog = new StringBuilder();
+        tradeLog.append("Sold ").append(actualAmount * result.getCount()).append("x ").append(result.getHoverName().getString());
+        if (!p1.isEmpty() || !p2.isEmpty()) {
+            tradeLog.append(" for ");
+            if (!p1.isEmpty()) {
+                tradeLog.append(actualAmount * p1.getCount()).append("x ").append(p1.getHoverName().getString());
+            }
+            if (!p2.isEmpty()) {
+                if (!p1.isEmpty()) tradeLog.append(" and ");
+                tradeLog.append(actualAmount * p2.getCount()).append("x ").append(p2.getHoverName().getString());
+            }
+        } else {
+            tradeLog.append(" for free");
+        }
+        addLogEntry(tradeLog.toString());
 
         sync();
         triggerRedstonePulse();
@@ -692,29 +728,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
         return found;
-    }
-
-    private boolean hasOutputSpaceForAmount(int amount, ItemStack p1, ItemStack p2) {
-        if (amount <= 0) return true;
-
-        // Clone handler to simulate
-        ItemStackHandler testHandler = new ItemStackHandler(outputHandler.getSlots());
-        for (int i = 0; i < outputHandler.getSlots(); i++) {
-            testHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
-        }
-
-        // Try insert amount * payments
-        if (!p1.isEmpty()) {
-            ItemStack bulkP1 = p1.copy();
-            bulkP1.setCount(p1.getCount() * amount);
-            if (!ItemHandlerHelper.insertItem(testHandler, bulkP1, false).isEmpty()) return false;
-        }
-        if (!p2.isEmpty()) {
-            ItemStack bulkP2 = p2.copy();
-            bulkP2.setCount(p2.getCount() * amount);
-            if (!ItemHandlerHelper.insertItem(testHandler, bulkP2, false).isEmpty()) return false;
-        }
-        return true;
     }
 
     private boolean isReadyToPurchase() {
@@ -828,6 +841,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return outputAlmostFull;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isOutputFull() {
         return outputFull;
     }
@@ -958,6 +972,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void tick(Level level, BlockPos pos, BlockState state, SmallShopBlockEntity be) {
         if (level.isClientSide) {
             return;
@@ -974,48 +989,39 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
         int chestInterval = Config.CHEST_IO_INTERVAL.get();
         if (chestInterval > 0 && be.tickCounter % chestInterval == 0) {
-            be.pullFromInputChest();
-            be.pushToOutputChest();
+            be.inventoryManager.pullFromInputChest(be.inputHandler);
+            be.inventoryManager.pushToOutputChest(be.outputHandler);
         }
 
         be.updateOutputFullness();
     }
 
-    private void pullFromInputChest() {
-        if (level == null || level.isClientSide) return;
-        for (Direction dir : Direction.values()) {
-            if (getModeForSide(dir) == SideMode.INPUT) {
-                IItemHandler neighbour = getValidNeighborHandler(dir);
-                if (neighbour != null) {
-                    transferItems(neighbour, inputHandler);
-                }
-            }
-        }
+    // --- NBT HANDLING ---
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        updateNeighborCache();
     }
 
-    private void pushToOutputChest() {
-        if (level == null || level.isClientSide) return;
-        for (Direction dir : Direction.values()) {
-            if (getModeForSide(dir) == SideMode.OUTPUT) {
-                IItemHandler neighbour = getValidNeighborHandler(dir);
-                if (neighbour != null) {
-                    transferItems(outputHandler, neighbour);
-                }
-            }
-        }
-    }
-
-    // --- NBT Serialization / Deserialization ---
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         loadHandlers(tag, registries);
-        loadOwner(tag);
+        ownerManager.load(tag);
         loadOffer(tag, registries);
         loadSettings(tag);
         loadSideModes(tag);
         outputAlmostFull = tag.getBoolean(NBT_OUTPUT_WARNING);
         outputFull = tag.getBoolean(NBT_OUTPUT_FULL);
+
+        transactionLog.clear();
+        if (tag.contains("TransactionLog", 9)) {
+            ListTag list = tag.getList("TransactionLog", 8); // 8 is StringTag
+            for (int i = 0; i < list.size(); i++) {
+                transactionLog.add(list.getString(i));
+            }
+        }
 
         lockAdjacentChests();
         invalidateCaps();
@@ -1026,12 +1032,18 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         saveHandlers(tag, registries);
-        saveOwner(tag);
+        ownerManager.save(tag);
         saveOffer(tag, registries);
         saveSettings(tag);
         saveSideModes(tag);
         tag.putBoolean(NBT_OUTPUT_WARNING, outputAlmostFull);
         tag.putBoolean(NBT_OUTPUT_FULL, outputFull);
+
+        ListTag logList = new ListTag();
+        for (String logEntry : transactionLog) {
+            logList.add(net.minecraft.nbt.StringTag.valueOf(logEntry));
+        }
+        tag.put("TransactionLog", logList);
     }
 
     private void loadHandlers(CompoundTag tag, HolderLookup.Provider registries) {
@@ -1044,36 +1056,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     private void saveHandlers(CompoundTag tag, HolderLookup.Provider registries) {
         handlerMap.forEach((name, handler) -> tag.put(name, handler.serializeNBT(registries)));
-    }
-
-    private void loadOwner(CompoundTag tag) {
-        ownerId = tag.hasUUID(NBT_OWNER_ID) ? tag.getUUID(NBT_OWNER_ID) : null;
-        ownerName = tag.getString(NBT_OWNER_NAME);
-        additionalOwners.clear();
-        if (tag.contains(NBT_ADDITIONAL_OWNERS, 9)) { // 9 = ListTag
-            ListTag list = tag.getList(NBT_ADDITIONAL_OWNERS, 10); // 10 = CompoundTag
-            for (int i = 0; i < list.size(); i++) {
-                CompoundTag entry = list.getCompound(i);
-                UUID id = entry.getUUID(NBT_ADDITIONAL_OWNER_ID);
-                String name = entry.getString(NBT_ADDITIONAL_OWNER_NAME);
-                additionalOwners.put(id, name);
-            }
-        }
-    }
-
-    private void saveOwner(CompoundTag tag) {
-        if (ownerId != null) {
-            tag.putUUID(NBT_OWNER_ID, ownerId);
-        }
-        tag.putString(NBT_OWNER_NAME, ownerName);
-        ListTag list = new ListTag();
-        for (Map.Entry<UUID, String> e : additionalOwners.entrySet()) {
-            CompoundTag entry = new CompoundTag();
-            entry.putUUID(NBT_ADDITIONAL_OWNER_ID, e.getKey());
-            entry.putString(NBT_ADDITIONAL_OWNER_NAME, e.getValue());
-            list.add(entry);
-        }
-        tag.put(NBT_ADDITIONAL_OWNERS, list);
     }
 
     private void loadOffer(CompoundTag tag, HolderLookup.Provider registries) {

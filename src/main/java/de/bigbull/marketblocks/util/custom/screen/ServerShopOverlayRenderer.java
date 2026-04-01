@@ -1,10 +1,10 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopClientState;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopOffer;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopOfferViewState;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopRuntimeMath;
+import de.bigbull.marketblocks.shop.server.ServerShopClientState;
+import de.bigbull.marketblocks.shop.server.ServerShopOffer;
+import de.bigbull.marketblocks.shop.server.ServerShopOfferViewState;
+import de.bigbull.marketblocks.shop.server.ServerShopRuntimeMath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
