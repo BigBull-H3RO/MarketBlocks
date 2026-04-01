@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.event;
 
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopManager;
+import de.bigbull.marketblocks.shop.server.ServerShopManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -11,6 +11,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
@@ -63,7 +64,38 @@ public final class ServerShopEvents {
                                             boolean enabled = BoolArgumentType.getBool(context, "enabled");
                                             setGlobalEditModeAndNotify(enabled, context.getSource());
                                             return 1;
-                                        }))));
+                                        })))
+                        .then(Commands.literal("reload")
+                                .requires(source -> source.hasPermission(2))
+                                .executes(context -> {
+                                    CommandSourceStack source = context.getSource();
+                                    ServerShopManager.get().reload();
+                                    source.sendSuccess(() -> Component.literal("Server Shop configuration reloaded from disk."), true);
+                                    return 1;
+                                })
+                        )
+                        .then(Commands.literal("resetlimits")
+                                .requires(source -> source.hasPermission(2))
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(context -> {
+                                            CommandSourceStack source = context.getSource();
+                                            try {
+                                                ServerPlayer player = EntityArgument.getPlayer(context, "player");
+                                                boolean changed = ServerShopManager.get().resetLimitsForPlayer(player.getUUID());
+                                                if (changed) {
+                                                    source.sendSuccess(() -> Component.literal("Reset daily limits for player " + player.getName().getString()), true);
+                                                } else {
+                                                    source.sendSuccess(() -> Component.literal("No limits to reset for player " + player.getName().getString()), true);
+                                                }
+                                            } catch (Exception e) {
+                                                source.sendFailure(Component.literal("Player not found."));
+                                                return 0;
+                                            }
+                                            return 1;
+                                        })
+                                )
+                        )
+        );
     }
 
     private static void setGlobalEditModeAndNotify(boolean enabled, CommandSourceStack source) {

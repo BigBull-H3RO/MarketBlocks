@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.servershop;
+package de.bigbull.marketblocks.shop.server;
 
 import com.google.gson.*;
 import com.mojang.serialization.DataResult;
@@ -28,6 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Zentrale Verwaltungsinstanz für den blocklosen Server-Shop.
@@ -50,6 +52,7 @@ public final class ServerShopManager {
     }
 
     private final Object lock = new Object();
+    private ExecutorService ioExecutor;
     private ServerShopData data = ServerShopData.empty();
     private RegistryAccess registryAccess;
     private MinecraftServer server;
@@ -63,6 +66,9 @@ public final class ServerShopManager {
 
     public void initialize(MinecraftServer server) {
         synchronized (lock) {
+            if (ioExecutor == null || ioExecutor.isShutdown()) {
+                ioExecutor = Executors.newSingleThreadExecutor();
+            }
             this.server = server;
             this.registryAccess = server.registryAccess();
             Path dir = server.getWorldPath(SHOP_DIR);
@@ -84,6 +90,9 @@ public final class ServerShopManager {
         synchronized (lock) {
             if (initialized) {
                 saveNow();
+                if (ioExecutor != null) {
+                    ioExecutor.shutdown();
+                }
                 data = ServerShopData.empty();
                 registryAccess = null;
                 server = null;
@@ -244,6 +253,7 @@ public final class ServerShopManager {
         synchronized (lock) {
             boolean changed = isGlobalEditModeEnabled() != enabled;
             Config.SERVER_SHOP_EDIT_MODE_ENABLED.set(enabled);
+            Config.SERVER_SHOP_EDIT_MODE_ENABLED.save();
             if (!initialized || !changed) {
                 return;
             }
@@ -401,6 +411,26 @@ public final class ServerShopManager {
         }
     }
 
+    public boolean resetLimitsForPlayer(UUID playerId) {
+        synchronized (lock) {
+            ensureInitialized();
+            boolean changed = false;
+            for (ServerShopPage page : data.internalPages()) {
+                for (ServerShopOffer offer : page.internalOffers()) {
+                    ServerShopOfferRuntimeState state = offer.runtimeState();
+                    if (state.purchasedTodayForPlayer(playerId) > 0) {
+                        offer.setRuntimeState(state.withPurchasedTodayForPlayer(playerId, 0));
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) {
+                markDirty();
+            }
+            return changed;
+        }
+    }
+
     public ServerShopOffer findOffer(UUID offerId) {
         if (offerId == null) return null;
         for (ServerShopPage page : data.internalPages()) {
@@ -508,6 +538,13 @@ public final class ServerShopManager {
         return -1;
     }
 
+    public void reload() {
+        synchronized (lock) {
+            loadFromDisk();
+            refreshOpenViewersLocked();
+        }
+    }
+
     private void loadFromDisk() {
         if (configFile == null || registryAccess == null) {
             return;
@@ -552,41 +589,62 @@ public final class ServerShopManager {
             return;
         }
 
-        Path tempFile = temporaryFile();
-        Path backupFile = backupFile();
+        final ServerShopData dataSnapshot;
+        final RegistryAccess ra;
+        final Path targetFile;
+        final Path tempFile;
+        final Path backupFile;
 
-        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
-            RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registryAccess);
-            DataResult<JsonElement> result = ServerShopData.CODEC.encodeStart(ops, data);
-            if (result.error().isPresent()) {
-                LOGGER.error("Fehler beim Serialisieren der Server-Shop-Daten: {}", result.error().get().message());
-                safeDelete(tempFile);
-                return;
-            }
-            JsonElement json = result.result().orElseGet(JsonObject::new);
-            GSON.toJson(json, writer);
-            writer.flush();
-        } catch (IOException ex) {
-            LOGGER.error("Konnte temporaere Server-Shop-Datei {} nicht schreiben", tempFile, ex);
-            safeDelete(tempFile);
-            return;
-        }
-
-        try {
-            if (Files.exists(configFile)) {
-                Files.copy(configFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
-            }
-            try {
-                Files.move(tempFile, configFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException ignored) {
-                Files.move(tempFile, configFile, StandardCopyOption.REPLACE_EXISTING);
-            }
+        synchronized (lock) {
+            dataSnapshot = data.copy();
+            ra = registryAccess;
+            targetFile = configFile;
+            tempFile = temporaryFile();
+            backupFile = backupFile();
             dirty = false;
             ticksSinceSave = 0;
-        } catch (IOException ex) {
-            LOGGER.error("Konnte Server-Shop-Datei {} nicht atomar speichern", configFile, ex);
-            safeDelete(tempFile);
         }
+
+        ioExecutor.submit(() -> {
+            boolean success = false;
+            try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
+                RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, ra);
+                DataResult<JsonElement> result = ServerShopData.CODEC.encodeStart(ops, dataSnapshot);
+                if (result.error().isPresent()) {
+                    LOGGER.error("Fehler beim Serialisieren der Server-Shop-Daten: {}", result.error().get().message());
+                } else {
+                    JsonElement json = result.result().orElseGet(JsonObject::new);
+                    GSON.toJson(json, writer);
+                    writer.flush();
+                    success = true;
+                }
+            } catch (IOException ex) {
+                LOGGER.error("Konnte temporaere Server-Shop-Datei {} nicht schreiben", tempFile, ex);
+            }
+
+            if (success) {
+                try {
+                    if (Files.exists(targetFile)) {
+                        Files.copy(targetFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                    try {
+                        Files.move(tempFile, targetFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (AtomicMoveNotSupportedException ignored) {
+                        Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (IOException ex) {
+                    LOGGER.error("Konnte Server-Shop-Datei {} nicht atomar speichern", targetFile, ex);
+                    success = false;
+                }
+            }
+
+            if (!success) {
+                safeDelete(tempFile);
+                synchronized (lock) {
+                    dirty = true;
+                }
+            }
+        });
     }
 
     private Optional<ServerShopData> parseDataFile(Path file) {
@@ -611,7 +669,7 @@ public final class ServerShopManager {
     }
 
     private Path temporaryFile() {
-        return configFile.resolveSibling(FILE_NAME + TEMP_FILE_SUFFIX);
+        return configFile.resolveSibling(FILE_NAME + TEMP_FILE_SUFFIX + "." + System.currentTimeMillis());
     }
 
     private void safeDelete(Path path) {
@@ -663,7 +721,7 @@ public final class ServerShopManager {
     }
 
     private long currentDay() {
-        return currentGameTime() / 24000L;
+        return System.currentTimeMillis() / 86400000L;
     }
 
     private boolean isGlobalDailyLimit() {
@@ -691,6 +749,12 @@ public final class ServerShopManager {
         return changed;
     }
 
+    /**
+     * Updates an offer's runtime state by processing temporal upkeep mechanics such as
+     * daily purchase limit resets, stock replenishment (restocks), and demand pricing decays.
+     * This method evaluates changes strictly via timestamps/day counters and ensures
+     * idempotency by returning whether changes were actually necessary.
+     */
     private boolean applyRuntimeUpkeep(ServerShopOffer offer, long gameTime, long day) {
         if (offer == null) {
             return false;

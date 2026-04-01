@@ -2,9 +2,9 @@ package de.bigbull.marketblocks.network.packets.serverShop;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopClientState;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopOfferViewState;
-import de.bigbull.marketblocks.util.custom.servershop.ServerShopSerialization;
+import de.bigbull.marketblocks.shop.server.ServerShopClientState;
+import de.bigbull.marketblocks.shop.server.ServerShopOfferViewState;
+import de.bigbull.marketblocks.shop.server.ServerShopSerialization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;

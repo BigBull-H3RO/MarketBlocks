@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.servershop;
+package de.bigbull.marketblocks.shop.server;
 
 import java.util.Collections;
 import java.util.HashMap;
