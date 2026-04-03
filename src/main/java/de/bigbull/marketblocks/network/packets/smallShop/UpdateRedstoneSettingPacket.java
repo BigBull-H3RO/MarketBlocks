@@ -32,7 +32,9 @@ public record UpdateRedstoneSettingPacket(BlockPos pos, boolean enabled) impleme
 
     public static void handle(UpdateRedstoneSettingPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) context.player();
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
             Level level = player.level();
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
                 blockEntity.setEmitRedstone(packet.enabled());

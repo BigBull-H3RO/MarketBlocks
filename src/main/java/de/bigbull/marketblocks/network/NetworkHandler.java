@@ -18,6 +18,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
  */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public class NetworkHandler {
+    private static final String PROTOCOL_VERSION = "1.0.0";
 
     /**
      * Registers all packet handlers for the mod.
@@ -29,8 +30,7 @@ public class NetworkHandler {
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar(MarketBlocks.MODID)
-                .versioned("1.0.0")
-                .optional();
+                .versioned(PROTOCOL_VERSION);
 
         // Client to Server packets
         // Small Shop packets

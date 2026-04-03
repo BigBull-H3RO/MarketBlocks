@@ -70,6 +70,13 @@ public class ShopOwnerManager {
         return (ownerId != null && ownerId.equals(id)) || additionalOwners.containsKey(id);
     }
 
+    public boolean isPrimaryOwner(Player player) {
+        if (player == null) {
+            return false;
+        }
+        return ownerId != null && ownerId.equals(player.getUUID());
+    }
+
     public void ensureOwner(Player player) {
         if (!player.level().isClientSide() && ownerId == null) {
             setOwner(player);

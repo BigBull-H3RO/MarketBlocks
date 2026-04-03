@@ -5,7 +5,6 @@ import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.shop.server.ServerShopClientState;
 import de.bigbull.marketblocks.shop.server.ServerShopOfferViewState;
 import de.bigbull.marketblocks.shop.server.ServerShopSerialization;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -59,13 +58,12 @@ public record ServerShopSyncPacket(CompoundTag payload, CompoundTag offerViewSta
 
     public static void handle(ServerShopSyncPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.level == null) {
+            if (context.player() == null || context.player().level() == null) {
                 return;
             }
-            ServerShopSerialization.decodeData(packet.payload(), mc.level.registryAccess()).result().ifPresent(data -> {
+            ServerShopSerialization.decodeData(packet.payload(), context.player().level().registryAccess()).result().ifPresent(data -> {
                 ServerShopClientState.apply(data, decodeOfferViewStates(packet.offerViewStates()));
-                if (mc.player != null && mc.player.containerMenu instanceof ServerShopMenu menu) {
+                if (context.player().containerMenu instanceof ServerShopMenu menu) {
                     menu.setEditPermissionClient(packet.canEdit(), packet.globalEditModeEnabled());
                     menu.clampSelectedPage(data.pages().size());
                 }

@@ -53,6 +53,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     private static final IconRect STATUS_ICON_RECT = new IconRect(82, 50, 28, 21);
 
     private ShopTab lastTab;
+    private boolean lastHasOffer;
 
     // Offers widgets
     private OfferTemplateButton offerButton;
@@ -67,6 +68,23 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     private String originalName;
 
     // ---- Owner-Liste (mit Scroller) ----
+    /**
+     * Custom scrollable owner selection list.
+     * 
+     * Implementation notes:
+     * - Uses custom scroll handling (mouseClicked/mouseDragged/mouseScrolled) to match
+     *   vanilla Stonecutter scroll behavior
+     * - Renders visible window of OWNER_VISIBLE_ROWS (currently 1 row = 20px height)
+     * - Maintains persistent selection state (ownerSelected map) across scrolling
+     * - Only visible checkboxes are actually rendered (performance optimization)
+     * 
+     * Why custom implementation instead of native widgets?
+     * - Need tight integration with packet sending on checkbox change
+     * - Visual style needs to match shop UI theme
+     * - Space constraints (only 20px height available in settings tab)
+     * 
+     * Future improvement: Could potentially use ScrollPanel widget with custom rendering.
+     */
     // Sichtbare Checkboxen (nur das Fenster)
     private final Map<UUID, Checkbox> ownerCheckboxes = new HashMap<>();
     // vollständige Reihenfolge aller Kandidaten (online zuerst, dann offline gespeicherte)
@@ -96,6 +114,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     protected void init() {
         super.init();
         lastTab = menu.getActiveTab();
+        lastHasOffer = menu.getBlockEntity().hasOffer();
         if (menu.isOwner()) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, lastTab,
                     () -> switchTab(ShopTab.OFFERS),
@@ -109,9 +128,20 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     public void containerTick() {
         super.containerTick();
         ShopTab current = menu.getActiveTab();
+        boolean offerChanged = menu.getBlockEntity().hasOffer() != lastHasOffer;
+
         if (current != lastTab) {
             lastTab = current;
+            lastHasOffer = menu.getBlockEntity().hasOffer();
             rebuildUI();
+            return;
+        }
+
+        if (offerChanged) {
+            lastHasOffer = menu.getBlockEntity().hasOffer();
+            if (current == ShopTab.OFFERS) {
+                rebuildUI();
+            }
         }
     }
 
@@ -125,6 +155,20 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         super.switchTab(tab);
     }
 
+    /**
+     * Rebuilds the UI when tab changes.
+     * 
+     * Optimization: We clear ALL widgets and recreate everything. This is simple but has drawbacks:
+     * - Focus is lost if player is typing in an EditBox
+     * - Tab buttons are recreated unnecessarily (they don't change between tabs)
+     * 
+     * Future improvement: Could track tab-specific widgets separately and only clear/rebuild
+     * those, while keeping tab buttons persistent. However, current implementation is acceptable
+     * because:
+     * 1. Tab switches are infrequent
+     * 2. Only owners have multiple tabs (regular players don't rebuild)
+     * 3. EditBox state is restored by reading from BlockEntity
+     */
     private void rebuildUI() {
         clearWidgets();
         if (menu.isOwner()) {
@@ -199,17 +243,20 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
             be.setModeClient(bottomDir, menu.getMode(bottomDir));
             be.setModeClient(backDir, menu.getMode(backDir));
 
-            // Owners: gesamte (persistente) Auswahl auswerten
-            List<UUID> selectedOwners = new ArrayList<>();
-            be.getAdditionalOwners().clear();
-            Map<UUID, String> stored = menu.getAdditionalOwners();
+            List<UUID> selectedOwners = Collections.emptyList();
+            if (menu.isPrimaryOwner()) {
+                // Owners: gesamte (persistente) Auswahl auswerten (nur Haupt-Owner)
+                selectedOwners = new ArrayList<>();
+                be.getAdditionalOwners().clear();
+                Map<UUID, String> stored = menu.getAdditionalOwners();
 
-            for (Map.Entry<UUID, Boolean> e : ownerSelected.entrySet()) {
-                if (Boolean.TRUE.equals(e.getValue())) {
-                    UUID id = e.getKey();
-                    selectedOwners.add(id);
-                    String n = resolveName(id, stored);
-                    be.addOwnerClient(id, n);
+                for (Map.Entry<UUID, Boolean> e : ownerSelected.entrySet()) {
+                    if (Boolean.TRUE.equals(e.getValue())) {
+                        UUID id = e.getKey();
+                        selectedOwners.add(id);
+                        String n = resolveName(id, stored);
+                        be.addOwnerClient(id, n);
+                    }
                 }
             }
 
@@ -223,7 +270,9 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
                     name,
                     emit
             ));
-            NetworkHandler.sendToServer(new UpdateOwnersPacket(be.getBlockPos(), selectedOwners));
+            if (menu.isPrimaryOwner()) {
+                NetworkHandler.sendToServer(new UpdateOwnersPacket(be.getBlockPos(), selectedOwners));
+            }
             saved = true;
         }).bounds(leftPos + imageWidth - 68, topPos + imageHeight - 28, 60, 20).build());
 
@@ -253,6 +302,12 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         ownerCheckboxes.clear();
         ownerOrder.clear();
         ownerSelected.clear();
+        ownerScrolling = false;
+
+        if (!menu.isPrimaryOwner()) {
+            noPlayers = false;
+            return;
+        }
 
         Map<UUID, String> current = new HashMap<>(menu.getAdditionalOwners());
 
@@ -371,7 +426,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         graphics.blit(SETTINGS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
 
         // Owner-Scrollbar zeichnen (nur wenn Owner & Liste aktiv)
-        if (menu.isOwner() && isOwnerScrollActive() && !noPlayers) {
+        if (menu.isPrimaryOwner() && isOwnerScrollActive() && !noPlayers) {
             int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
             int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
             int barY = this.ownerListBaseY;
@@ -379,7 +434,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
             int knobOffset = (int)(ownerScrollOffs * (float)barFull);
             ResourceLocation sprite = SCROLLER_SPRITE;
             graphics.blitSprite(sprite, barX, barY + knobOffset, SCROLLER_WIDTH, SCROLLER_HEIGHT);
-        } else if (menu.isOwner() && !isOwnerScrollActive() && !noPlayers) {
+        } else if (menu.isPrimaryOwner() && !isOwnerScrollActive() && !noPlayers) {
             // Disabled-Variante anzeigen, wenn Liste nicht scrollt
             int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
             int barY = this.ownerListBaseY;
@@ -430,7 +485,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
             int w = font.width(info);
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
-        } else if (noPlayers) {
+        } else if (menu.isPrimaryOwner() && noPlayers) {
             Component info = Component.translatable("gui.marketblocks.no_players_available");
             int w = font.width(info);
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
@@ -440,7 +495,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     // --- Maus-Events für den Owner-Scroller ---
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (menu.getActiveTab() == ShopTab.SETTINGS && menu.isOwner() && isOwnerScrollActive() && !noPlayers) {
+        if (menu.getActiveTab() == ShopTab.SETTINGS && menu.isPrimaryOwner() && isOwnerScrollActive() && !noPlayers) {
             int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
             int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
             int barY = this.ownerListBaseY;
@@ -455,7 +510,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (ownerScrolling && menu.getActiveTab() == ShopTab.SETTINGS && isOwnerScrollActive() && !noPlayers) {
+        if (ownerScrolling && menu.getActiveTab() == ShopTab.SETTINGS && menu.isPrimaryOwner() && isOwnerScrollActive() && !noPlayers) {
             int top = this.ownerListBaseY;
             int bottom = top + OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
 
@@ -477,7 +532,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (menu.getActiveTab() == ShopTab.SETTINGS && isOwnerScrollActive() && !noPlayers) {
+        if (menu.getActiveTab() == ShopTab.SETTINGS && menu.isPrimaryOwner() && isOwnerScrollActive() && !noPlayers) {
             int offRows = getOwnerOffscreenRows();
             float step = (float)scrollY / (float)Math.max(1, offRows);
             this.ownerScrollOffs = net.minecraft.util.Mth.clamp(this.ownerScrollOffs - step, 0.0F, 1.0F);
@@ -508,9 +563,14 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
             }
             SmallShopBlockEntity be = menu.getBlockEntity();
             NetworkHandler.sendToServer(new CreateOfferPacket(be.getBlockPos(), p1, p2, result));
-            be.setHasOfferClient(true);
+            
+            // NOTE: We do NOT set hasOffer client-side here immediately.
+            // The server will send an OfferStatusPacket if creation succeeds,
+            // which will trigger setHasOfferClient() and rebuildUI() via packet handler.
+            // This ensures client state only updates after server confirmation.
+            
             playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
-            rebuildUI();
+            // rebuildUI() will be called when OfferStatusPacket arrives
         } catch (Exception e) {
             MarketBlocks.LOGGER.error("Error creating offer", e);
             playSound(SoundEvents.ITEM_BREAK);
@@ -520,6 +580,9 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
     private void deleteOffer() {
         SmallShopBlockEntity be = menu.getBlockEntity();
         NetworkHandler.sendToServer(new DeleteOfferPacket(be.getBlockPos()));
+        
+        // NOTE: We set hasOffer=false immediately on delete because it's safe
+        // (worst case: UI shows no offer when there is one, which auto-corrects on next sync)
         be.setHasOfferClient(false);
         playSound(SoundEvents.UI_BUTTON_CLICK);
         rebuildUI();

@@ -2,67 +2,29 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
+import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
-import de.bigbull.marketblocks.block.entity.LockedChestWrapper;
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
-import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-import net.neoforged.neoforge.items.wrapper.InvWrapper;
 
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public class ChestSecurityHandler {
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(
-                Capabilities.ItemHandler.BLOCK,
-                BlockEntityType.CHEST,
-                (chest, side) -> {
-                    SmallShopBlockEntity shop = findShop(chest.getLevel(), chest.getBlockPos());
-                    if (shop != null) {
-                        IItemHandler handler;
-                        BlockState state = chest.getBlockState();
-                        if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get() &&
-                                state.getBlock() instanceof ChestBlock &&
-                                state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
-                            Direction dir = ChestBlock.getConnectedDirection(state);
-                            BlockPos otherPos = chest.getBlockPos().relative(dir);
-                            BlockEntity otherBe = chest.getLevel().getBlockEntity(otherPos);
-                            if (otherBe instanceof ChestBlockEntity otherChest) {
-                                handler = new CombinedInvWrapper(new InvWrapper(chest), new InvWrapper(otherChest));
-                            } else {
-                                handler = new InvWrapper(chest);
-                            }
-                        } else {
-                            handler = new InvWrapper(chest);
-                        }
-                        return new LockedChestWrapper(handler, shop.getOwnerId());
-                    }
-                    return null;
-                }
-        );
-    }
-
     @SubscribeEvent
     public static void onChestPlaced(BlockEvent.EntityPlaceEvent event) {
         if (!(event.getLevel() instanceof Level level)) return;
         if (level.isClientSide()) return;
+        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) return;
 
         BlockState state = event.getPlacedBlock();
         if (!(state.getBlock() instanceof ChestBlock)) return;
@@ -90,10 +52,11 @@ public class ChestSecurityHandler {
 
     @SubscribeEvent
     public static void onRightClick(PlayerInteractEvent.RightClickBlock event) {
+        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) return;
         Level level = event.getLevel();
         BlockPos pos = event.getPos();
         BlockEntity be = level.getBlockEntity(pos);
-        if (be instanceof ChestBlockEntity chest) {
+        if (be instanceof ChestBlockEntity) {
             SmallShopBlockEntity shop = findShop(level, pos);
             if (shop != null && (event.getEntity() == null || !shop.isOwner(event.getEntity()))) {
                 event.setCanceled(true);
@@ -112,6 +75,9 @@ public class ChestSecurityHandler {
     }
 
     private static SmallShopBlockEntity findShop(Level level, BlockPos pos) {
+        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
+            return null;
+        }
         SmallShopBlockEntity shop = findShopSingle(level, pos);
         if (shop != null) {
             return shop;
