@@ -22,11 +22,14 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.function.Supplier;
 
-public class RegistriesInit {
+public final class RegistriesInit {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MarketBlocks.MODID);
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MarketBlocks.MODID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MarketBlocks.MODID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MarketBlocks.MODID);
+
+    private RegistriesInit() {
+    }
 
     public static void register(IEventBus bus) {
         BLOCKS.register(bus);

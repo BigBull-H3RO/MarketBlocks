@@ -60,8 +60,6 @@ public record OfferManager(SmallShopBlockEntity shopEntity) {
         PacketDistributor.sendToPlayersTrackingChunk(player.serverLevel(), new ChunkPos(shopEntity.getBlockPos()),
                 new OfferStatusPacket(shopEntity.getBlockPos(), true));
 
-        shopEntity.sync(); // Sync block entity data
-
         returnStacksToPlayer(player, extractedItems);
 
         MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), shopEntity.getBlockPos());

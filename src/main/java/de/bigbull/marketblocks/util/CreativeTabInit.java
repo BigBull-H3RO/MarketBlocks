@@ -8,8 +8,11 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-public class CreativeTabInit {
+public final class CreativeTabInit {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MarketBlocks.MODID);
+
+    private CreativeTabInit() {
+    }
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MARKETBLOCKS_TAB =
             CREATIVE_MODE_TABS.register("marketblocks_tab", () -> CreativeModeTab.builder()

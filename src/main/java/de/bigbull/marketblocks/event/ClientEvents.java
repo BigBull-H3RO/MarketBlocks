@@ -2,8 +2,6 @@ package de.bigbull.marketblocks.event;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.serverShop.ServerShopOpenRequestPacket;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.entity.renderer.SmallShopBlockEntityRenderer;
 import de.bigbull.marketblocks.util.custom.screen.ServerShopScreen;
@@ -12,7 +10,6 @@ import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -43,10 +40,7 @@ public class ClientEvents {
         event.register(OPEN_SERVER_SHOP);
     }
 
-    @SubscribeEvent
-    public static void handleClientTick(ClientTickEvent.Post event) {
-        while (OPEN_SERVER_SHOP.consumeClick()) {
-            NetworkHandler.sendToServer(new ServerShopOpenRequestPacket());
-        }
+    public static KeyMapping getOpenServerShopKey() {
+        return OPEN_SERVER_SHOP;
     }
 }

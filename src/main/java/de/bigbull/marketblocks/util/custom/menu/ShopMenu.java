@@ -29,4 +29,11 @@ public interface ShopMenu {
     default boolean isOwner() {
         return hasFlag(SmallShopBlockEntity.OWNER_FLAG);
     }
+
+    /**
+     * @return {@code true}, wenn der aktuelle Spieler der Hauptbesitzer des Shops ist.
+     */
+    default boolean isPrimaryOwner() {
+        return hasFlag(SmallShopBlockEntity.PRIMARY_OWNER_FLAG);
+    }
 }

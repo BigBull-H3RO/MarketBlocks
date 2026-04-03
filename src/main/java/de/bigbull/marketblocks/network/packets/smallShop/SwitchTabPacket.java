@@ -39,7 +39,9 @@ public record SwitchTabPacket(BlockPos pos, ShopTab tab) implements CustomPacket
 
     public static void handle(SwitchTabPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) context.player();
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
             Level level = player.level();
             BlockPos pos = packet.pos();
             ShopTab tab = packet.tab();

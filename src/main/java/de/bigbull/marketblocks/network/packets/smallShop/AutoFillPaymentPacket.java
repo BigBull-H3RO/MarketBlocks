@@ -30,7 +30,9 @@ public record AutoFillPaymentPacket(BlockPos pos) implements CustomPacketPayload
 
     public static void handle(AutoFillPaymentPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) context.player();
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
             if (player.containerMenu instanceof SmallShopMenu menu) {
                 SmallShopBlockEntity blockEntity = menu.getBlockEntity();
                 if (blockEntity.getBlockPos().equals(packet.pos())) {

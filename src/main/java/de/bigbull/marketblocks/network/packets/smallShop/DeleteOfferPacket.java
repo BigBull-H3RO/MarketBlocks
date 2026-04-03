@@ -34,7 +34,9 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
 
     public static void handle(DeleteOfferPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) context.player();
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
             Level level = player.level();
 
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity shopEntity) {
@@ -67,10 +69,11 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
                     shopEntity.updateOfferSlot();
 
                     // Sende Status-Update an alle Spieler mit geöffnetem Menü
-                    ServerLevel serverLevel = (ServerLevel) level;
-                    for (ServerPlayer p : serverLevel.players()) {
-                        if (p.containerMenu instanceof SmallShopMenu menu && menu.getBlockEntity() == shopEntity) {
-                            PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), false));
+                    if (level instanceof ServerLevel serverLevel) {
+                        for (ServerPlayer p : serverLevel.players()) {
+                            if (p.containerMenu instanceof SmallShopMenu menu && menu.getBlockEntity() == shopEntity) {
+                                PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), false));
+                            }
                         }
                     }
 

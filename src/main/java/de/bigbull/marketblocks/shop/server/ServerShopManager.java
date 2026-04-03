@@ -42,6 +42,7 @@ public final class ServerShopManager {
     private static final String BACKUP_FILE_SUFFIX = ".bak";
     private static final String TEMP_FILE_SUFFIX = ".tmp";
     private static final int AUTO_SAVE_TICKS = 20 * 60;
+    private static final int RUNTIME_UPKEEP_INTERVAL_TICKS = 20;
     private static final int MAX_PAGE_NAME_LENGTH = 64;
     private static final int DEMAND_DECAY_PER_DAY = 1;
 
@@ -60,6 +61,9 @@ public final class ServerShopManager {
     private boolean dirty;
     private boolean initialized;
     private int ticksSinceSave;
+    private int ticksSinceRuntimeUpkeep;
+    private long lastRuntimeUpkeepGameTime = Long.MIN_VALUE;
+    private long lastRuntimeUpkeepDay = Long.MIN_VALUE;
 
     private ServerShopManager() {
     }
@@ -83,6 +87,8 @@ public final class ServerShopManager {
             loadFromDisk();
             initialized = true;
             ticksSinceSave = 0;
+            ticksSinceRuntimeUpkeep = 0;
+            resetRuntimeUpkeepMarkers();
         }
     }
 
@@ -98,20 +104,28 @@ public final class ServerShopManager {
                 server = null;
                 configFile = null;
                 initialized = false;
+                ticksSinceRuntimeUpkeep = 0;
+                resetRuntimeUpkeepMarkers();
             }
         }
     }
 
     public void tick() {
+        ViewerSyncBatch viewerSyncBatch = ViewerSyncBatch.empty();
         synchronized (lock) {
             if (!initialized) {
                 return;
             }
 
-            boolean runtimeChanged = applyRuntimeUpkeepToAllOffers(currentGameTime(), currentDay());
-            if (runtimeChanged) {
-                markDirty();
-                refreshOpenViewersLocked();
+            ticksSinceRuntimeUpkeep++;
+            if (ticksSinceRuntimeUpkeep >= RUNTIME_UPKEEP_INTERVAL_TICKS) {
+                ticksSinceRuntimeUpkeep = 0;
+                long gameTime = currentGameTime();
+                boolean runtimeChanged = applyRuntimeUpkeepIfNeeded(gameTime, currentDay());
+                if (runtimeChanged) {
+                    markDirty();
+                    viewerSyncBatch = collectOpenViewerSyncBatchLocked(gameTime);
+                }
             }
 
             if (dirty) {
@@ -121,6 +135,7 @@ public final class ServerShopManager {
                 }
             }
         }
+        dispatchViewerSyncBatch(viewerSyncBatch);
     }
 
     public ServerShopData snapshot() {
@@ -134,6 +149,7 @@ public final class ServerShopManager {
      * Hier prüfen wir Limits, Restock und Preiszustand; die Bezahlung muss vom Caller (Menu) abgezogen werden.
      */
     public boolean processPurchaseTransactionSlotBased(ServerPlayer player, UUID offerId, int amount) {
+        boolean shouldSyncViewers = false;
         synchronized (lock) {
             ensureInitialized();
             ServerShopOffer offer = findOffer(offerId);
@@ -186,9 +202,12 @@ public final class ServerShopManager {
 
             offer.setRuntimeState(state);
             markDirty();
-            syncOpenViewers(player);
-            return true;
+            shouldSyncViewers = true;
         }
+        if (shouldSyncViewers) {
+            syncOpenViewers(player);
+        }
+        return shouldSyncViewers;
     }
 
     public int getMaximumPurchasableNow(UUID offerId, UUID playerId) {
@@ -216,6 +235,15 @@ public final class ServerShopManager {
 
         public boolean isSuccess() {
             return errorMessage == null;
+        }
+    }
+
+    private record ViewerSyncTarget(ServerPlayer player, boolean requireOpenMenu, boolean canEdit, CompoundTag encodedOfferViewStates) {
+    }
+
+    private record ViewerSyncBatch(CompoundTag encodedSnapshot, int pageCount, boolean globalEditModeEnabled, List<ViewerSyncTarget> targets) {
+        private static ViewerSyncBatch empty() {
+            return new ViewerSyncBatch(null, 0, false, List.of());
         }
     }
 
@@ -250,6 +278,7 @@ public final class ServerShopManager {
     }
 
     public void setGlobalEditModeEnabled(boolean enabled) {
+        ViewerSyncBatch viewerSyncBatch = ViewerSyncBatch.empty();
         synchronized (lock) {
             boolean changed = isGlobalEditModeEnabled() != enabled;
             Config.SERVER_SHOP_EDIT_MODE_ENABLED.set(enabled);
@@ -265,8 +294,9 @@ public final class ServerShopManager {
                     }
                 }
             }
-            refreshOpenViewersLocked();
+            viewerSyncBatch = collectOpenViewerSyncBatchLocked(currentGameTime());
         }
+        dispatchViewerSyncBatch(viewerSyncBatch);
     }
 
     public boolean isOfferOnPage(UUID offerId, int pageIndex) {
@@ -392,9 +422,7 @@ public final class ServerShopManager {
             ServerShopOffer offer = findOffer(offerId);
             if (offer == null) return false;
             offer.setLimits(limit);
-            if (applyRuntimeUpkeep(offer, currentGameTime(), currentDay())) {
-                markDirty();
-            }
+            applyRuntimeUpkeep(offer, currentGameTime(), currentDay());
             markDirty();
             return true;
         }
@@ -458,6 +486,7 @@ public final class ServerShopManager {
     public void openShop(ServerPlayer player) {
         if (player == null) return;
         ServerShopData snapshot;
+        CompoundTag encodedSnapshot;
         Map<UUID, ServerShopOfferViewState> offerViewStates;
         boolean playerCanEdit;
         boolean globalEditModeEnabled;
@@ -465,11 +494,14 @@ public final class ServerShopManager {
             ensureInitialized();
             long gameTime = currentGameTime();
             long day = currentDay();
-            if (applyRuntimeUpkeepToAllOffers(gameTime, day)) {
+            if (applyRuntimeUpkeepIfNeeded(gameTime, day)) {
                 markDirty();
             }
             snapshot = data.copy();
-            offerViewStates = buildOfferViewStates(player, gameTime);
+            encodedSnapshot = encodeSnapshot(snapshot);
+            offerViewStates = isGlobalDailyLimit()
+                    ? buildOfferViewStates(null, gameTime)
+                    : buildOfferViewStates(player, gameTime);
             globalEditModeEnabled = isGlobalEditModeEnabled();
             playerCanEdit = canEdit(player);
         }
@@ -478,50 +510,172 @@ public final class ServerShopManager {
             buf.writeBoolean(playerCanEdit);
             buf.writeBoolean(globalEditModeEnabled);
         });
-        sendSnapshot(player, snapshot, offerViewStates, playerCanEdit, globalEditModeEnabled);
+        sendSnapshot(player, encodedSnapshot, offerViewStates, playerCanEdit, globalEditModeEnabled);
     }
 
     public void syncOpenViewers(ServerPlayer source) {
         if (source == null) return;
+        ViewerSyncBatch viewerSyncBatch;
         synchronized (lock) {
             long gameTime = currentGameTime();
             long day = currentDay();
-            if (applyRuntimeUpkeepToAllOffers(gameTime, day)) {
+            if (applyRuntimeUpkeepIfNeeded(gameTime, day)) {
                 markDirty();
             }
-            ServerShopData snapshot = data.copy();
-            int pageCount = snapshot.size();
-            if (source.containerMenu instanceof ServerShopMenu menu) {
-                menu.clampSelectedPage(pageCount);
-                menu.slotsChanged(menu.templateContainer());
-            }
-            boolean globalEditModeEnabled = isGlobalEditModeEnabled();
-            sendSnapshot(source, snapshot, buildOfferViewStates(source, gameTime), canEdit(source), globalEditModeEnabled);
-            for (ServerPlayer player : source.server.getPlayerList().getPlayers()) {
-                if (player == source) continue;
-                if (player.containerMenu instanceof ServerShopMenu menu) {
-                    menu.clampSelectedPage(pageCount);
-                    menu.slotsChanged(menu.templateContainer());
-                    sendSnapshot(player, snapshot, buildOfferViewStates(player, gameTime), canEdit(player), globalEditModeEnabled);
-                }
-            }
+            viewerSyncBatch = collectSyncBatchForSourceLocked(source, gameTime);
         }
+        dispatchViewerSyncBatch(viewerSyncBatch);
     }
 
-    private void sendSnapshot(ServerPlayer player, ServerShopData snapshot, Map<UUID, ServerShopOfferViewState> offerViewStates,
-                              boolean canEditFlag, boolean globalEditModeEnabled) {
-        if (player == null || snapshot == null || registryAccess == null) return;
+    private CompoundTag encodeSnapshot(ServerShopData snapshot) {
+        if (snapshot == null || registryAccess == null) {
+            return null;
+        }
         DataResult<CompoundTag> encoded = ServerShopSerialization.encodeData(snapshot, registryAccess);
         if (encoded.error().isPresent()) {
             LOGGER.error("Fehler beim Serialisieren: {}", encoded.error().get().message());
+            return null;
+        }
+        return encoded.result().orElseGet(CompoundTag::new);
+    }
+
+    private void sendSnapshot(ServerPlayer player, CompoundTag encodedSnapshot, Map<UUID, ServerShopOfferViewState> offerViewStates,
+                              boolean canEditFlag, boolean globalEditModeEnabled) {
+        sendSnapshot(player, encodedSnapshot, ServerShopSyncPacket.encodeOfferViewStates(offerViewStates), canEditFlag, globalEditModeEnabled);
+    }
+
+    private void sendSnapshot(ServerPlayer player, CompoundTag encodedSnapshot, CompoundTag encodedOfferViewStates,
+                              boolean canEditFlag, boolean globalEditModeEnabled) {
+        if (player == null || encodedSnapshot == null) {
             return;
         }
-        CompoundTag tag = encoded.result().orElseGet(CompoundTag::new);
         NetworkHandler.sendToPlayer(player, new ServerShopSyncPacket(
-                tag,
-                ServerShopSyncPacket.encodeOfferViewStates(offerViewStates),
+                encodedSnapshot,
+                encodedOfferViewStates == null ? new CompoundTag() : encodedOfferViewStates,
                 canEditFlag,
                 globalEditModeEnabled));
+    }
+
+    private ViewerSyncBatch collectSyncBatchForSourceLocked(ServerPlayer source, long gameTime) {
+        if (source == null || source.server == null || registryAccess == null) {
+            return ViewerSyncBatch.empty();
+        }
+
+        List<ServerPlayer> otherOpenViewers = new ArrayList<>();
+        for (ServerPlayer player : source.server.getPlayerList().getPlayers()) {
+            if (player == source) {
+                continue;
+            }
+            if (player.containerMenu instanceof ServerShopMenu) {
+                otherOpenViewers.add(player);
+            }
+        }
+
+        ServerShopData snapshot = data.copy();
+        CompoundTag encodedSnapshot = encodeSnapshot(snapshot);
+        if (encodedSnapshot == null) {
+            return ViewerSyncBatch.empty();
+        }
+
+        int pageCount = snapshot.size();
+        boolean globalEditModeEnabled = isGlobalEditModeEnabled();
+        Map<UUID, ServerShopOfferViewState> sharedStates = isGlobalDailyLimit()
+                ? buildOfferViewStates(null, gameTime)
+                : null;
+        CompoundTag sharedEncodedStates = sharedStates != null
+                ? ServerShopSyncPacket.encodeOfferViewStates(sharedStates)
+                : null;
+
+        List<ViewerSyncTarget> targets = new ArrayList<>(otherOpenViewers.size() + 1);
+        targets.add(new ViewerSyncTarget(
+                source,
+                false,
+                canEdit(source),
+                sharedEncodedStates != null
+                        ? sharedEncodedStates
+                        : ServerShopSyncPacket.encodeOfferViewStates(buildOfferViewStates(source, gameTime))
+        ));
+
+        for (ServerPlayer viewer : otherOpenViewers) {
+            targets.add(new ViewerSyncTarget(
+                    viewer,
+                    true,
+                    canEdit(viewer),
+                    sharedEncodedStates != null
+                            ? sharedEncodedStates
+                            : ServerShopSyncPacket.encodeOfferViewStates(buildOfferViewStates(viewer, gameTime))
+            ));
+        }
+
+        return new ViewerSyncBatch(encodedSnapshot, pageCount, globalEditModeEnabled, targets);
+    }
+
+    private ViewerSyncBatch collectOpenViewerSyncBatchLocked(long gameTime) {
+        if (server == null || registryAccess == null) {
+            return ViewerSyncBatch.empty();
+        }
+
+        List<ServerPlayer> openViewers = new ArrayList<>();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.containerMenu instanceof ServerShopMenu) {
+                openViewers.add(player);
+            }
+        }
+        if (openViewers.isEmpty()) {
+            return ViewerSyncBatch.empty();
+        }
+
+        ServerShopData snapshot = data.copy();
+        CompoundTag encodedSnapshot = encodeSnapshot(snapshot);
+        if (encodedSnapshot == null) {
+            return ViewerSyncBatch.empty();
+        }
+
+        int pageCount = snapshot.size();
+        boolean globalEditModeEnabled = isGlobalEditModeEnabled();
+        Map<UUID, ServerShopOfferViewState> sharedStates = isGlobalDailyLimit()
+                ? buildOfferViewStates(null, gameTime)
+                : null;
+        CompoundTag sharedEncodedStates = sharedStates != null
+                ? ServerShopSyncPacket.encodeOfferViewStates(sharedStates)
+                : null;
+
+        List<ViewerSyncTarget> targets = new ArrayList<>(openViewers.size());
+        for (ServerPlayer viewer : openViewers) {
+            targets.add(new ViewerSyncTarget(
+                    viewer,
+                    true,
+                    canEdit(viewer),
+                    sharedEncodedStates != null
+                            ? sharedEncodedStates
+                            : ServerShopSyncPacket.encodeOfferViewStates(buildOfferViewStates(viewer, gameTime))
+            ));
+        }
+
+        return new ViewerSyncBatch(encodedSnapshot, pageCount, globalEditModeEnabled, targets);
+    }
+
+    private void dispatchViewerSyncBatch(ViewerSyncBatch batch) {
+        if (batch == null || batch.targets().isEmpty() || batch.encodedSnapshot() == null) {
+            return;
+        }
+        for (ViewerSyncTarget target : batch.targets()) {
+            ServerPlayer player = target.player();
+            if (player == null) {
+                continue;
+            }
+            ServerShopMenu menu = player.containerMenu instanceof ServerShopMenu serverShopMenu
+                    ? serverShopMenu
+                    : null;
+            if (target.requireOpenMenu() && menu == null) {
+                continue;
+            }
+            if (menu != null) {
+                menu.clampSelectedPage(batch.pageCount());
+                menu.slotsChanged(menu.templateContainer());
+            }
+            sendSnapshot(player, batch.encodedSnapshot(), target.encodedOfferViewStates(), target.canEdit(), batch.globalEditModeEnabled());
+        }
     }
 
     private int findPageIndex(String name) {
@@ -539,16 +693,19 @@ public final class ServerShopManager {
     }
 
     public void reload() {
+        ViewerSyncBatch viewerSyncBatch;
         synchronized (lock) {
             loadFromDisk();
-            refreshOpenViewersLocked();
+            viewerSyncBatch = collectOpenViewerSyncBatchLocked(currentGameTime());
         }
+        dispatchViewerSyncBatch(viewerSyncBatch);
     }
 
     private void loadFromDisk() {
         if (configFile == null || registryAccess == null) {
             return;
         }
+        resetRuntimeUpkeepMarkers();
 
         Path backupFile = backupFile();
         if (!Files.exists(configFile) && !Files.exists(backupFile)) {
@@ -724,6 +881,20 @@ public final class ServerShopManager {
         return System.currentTimeMillis() / 86400000L;
     }
 
+    private void resetRuntimeUpkeepMarkers() {
+        lastRuntimeUpkeepGameTime = Long.MIN_VALUE;
+        lastRuntimeUpkeepDay = Long.MIN_VALUE;
+    }
+
+    private boolean applyRuntimeUpkeepIfNeeded(long gameTime, long day) {
+        if (lastRuntimeUpkeepGameTime == gameTime && lastRuntimeUpkeepDay == day) {
+            return false;
+        }
+        lastRuntimeUpkeepGameTime = gameTime;
+        lastRuntimeUpkeepDay = day;
+        return applyRuntimeUpkeepToAllOffers(gameTime, day);
+    }
+
     private boolean isGlobalDailyLimit() {
         return Config.SERVER_SHOP_GLOBAL_DAILY_LIMIT.get();
     }
@@ -836,7 +1007,9 @@ public final class ServerShopManager {
     }
 
     private Map<UUID, ServerShopOfferViewState> buildOfferViewStates(ServerPlayer player, long gameTime) {
-        Map<UUID, ServerShopOfferViewState> states = new HashMap<>();
+        int offerCount = getOfferCount();
+        int initialCapacity = Math.max(16, (int) (offerCount / 0.75f) + 1);
+        Map<UUID, ServerShopOfferViewState> states = new HashMap<>(initialCapacity);
         UUID playerId = player == null ? null : player.getUUID();
         for (ServerShopPage page : data.internalPages()) {
             for (ServerShopOffer offer : page.internalOffers()) {
@@ -844,6 +1017,14 @@ public final class ServerShopManager {
             }
         }
         return states;
+    }
+
+    private int getOfferCount() {
+        int count = 0;
+        for (ServerShopPage page : data.internalPages()) {
+            count += page.internalOffers().size();
+        }
+        return count;
     }
 
     private ServerShopOfferViewState buildOfferViewState(ServerShopOffer offer, UUID playerId, long gameTime) {
@@ -867,19 +1048,4 @@ public final class ServerShopManager {
                 offer.currentPriceMultiplier());
     }
 
-    private void refreshOpenViewersLocked() {
-        if (server == null || registryAccess == null) {
-            return;
-        }
-        long gameTime = currentGameTime();
-        ServerShopData snapshot = data.copy();
-        int pageCount = snapshot.size();
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (player.containerMenu instanceof ServerShopMenu menu) {
-                menu.clampSelectedPage(pageCount);
-                menu.slotsChanged(menu.templateContainer());
-                sendSnapshot(player, snapshot, buildOfferViewStates(player, gameTime), canEdit(player), isGlobalEditModeEnabled());
-            }
-        }
-    }
 }

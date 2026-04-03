@@ -7,6 +7,7 @@ public class Config {
     public static final ModConfigSpec COMMON_SPEC;
 
     public static final ModConfigSpec.BooleanValue ENABLE_DOUBLE_CHEST_SUPPORT;
+    public static final ModConfigSpec.BooleanValue ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL;
     public static final ModConfigSpec.IntValue OFFER_UPDATE_INTERVAL;
     public static final ModConfigSpec.IntValue CHEST_IO_INTERVAL;
     public static final ModConfigSpec.BooleanValue ENABLE_OUTPUT_WARNING;
@@ -19,6 +20,10 @@ public class Config {
         ENABLE_DOUBLE_CHEST_SUPPORT = COMMON_BUILDER
                 .comment("Allow double chests next to Small Shop")
                 .define("enableDoubleChestSupport", false);
+        ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL = COMMON_BUILDER
+                .comment("EXPERIMENTAL: Enable SmallShop Input/Output chest extension and neighbor chest integration",
+                        "Default: false for release stability")
+                .define("enableChestIoExtensionExperimental", false);
         OFFER_UPDATE_INTERVAL = COMMON_BUILDER
                 .comment("Ticks between offer slot updates")
                 .defineInRange("offerUpdateInterval", 5, 1, Integer.MAX_VALUE);

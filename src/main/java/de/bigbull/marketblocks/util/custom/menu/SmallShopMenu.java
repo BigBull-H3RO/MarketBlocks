@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
+import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
@@ -47,6 +48,7 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
     private static final int OUTPUT_SLOTS = 12;
     private static final int TOTAL_SLOTS = PAYMENT_SLOTS + OFFER_SLOTS + INPUT_SLOTS + OUTPUT_SLOTS;
     private static final int OFFER_SLOT_INDEX = PAYMENT_SLOTS; // after payment slots
+    private static final Direction[] DIRECTIONS = Direction.values();
 
     // Server ctor
     public SmallShopMenu(int containerId, Inventory inv, SmallShopBlockEntity be) {
@@ -59,7 +61,7 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         this.outputHandler = be.getOutputHandler();
         this.flags = be.createMenuFlags(player);
 
-        for (Direction dir : Direction.values()) {
+        for (Direction dir : DIRECTIONS) {
             SideMode mode = be.getMode(dir);
             sideModes.put(dir, mode);
             initialModes.put(dir, mode);
@@ -87,7 +89,7 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         this.flags = be != null ? be.createMenuFlags(player) : new SimpleContainerData(1);
 
         if (be != null) {
-            for (Direction dir : Direction.values()) {
+            for (Direction dir : DIRECTIONS) {
                 SideMode mode = be.getMode(dir);
                 sideModes.put(dir, mode);
                 initialModes.put(dir, mode);
@@ -143,33 +145,41 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
     }
 
     private int calculateMaxFitInPlayerInventory(ItemStack stack) {
-        int start = TOTAL_SLOTS;
-        int end = this.slots.size();
+        if (stack.isEmpty()) {
+            return 0;
+        }
+        int perTradeCount = stack.getCount();
+        if (perTradeCount <= 0) {
+            return 0;
+        }
+        int totalCapacity = calculatePlayerTransferCapacity(stack);
+        return totalCapacity / perTradeCount;
+    }
 
+    private int calculatePlayerTransferCapacity(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0;
+        }
         int totalSpace = 0;
-        // Fix: Use the item's max stack size, which is 1 for non-stackables (tools, etc.)
-        int maxStackSize = Math.min(stack.getMaxStackSize(), 64);
-
-        for (int i = start; i < end; i++) {
-            Slot s = this.slots.get(i);
-            if (!s.hasItem()) {
-                 totalSpace += maxStackSize;
-            } else {
-                ItemStack invStack = s.getItem();
-                if (ItemStack.isSameItemSameComponents(invStack, stack)) {
-                    int space = maxStackSize - invStack.getCount();
-                    if (space > 0) {
-                        totalSpace += space;
-                    }
+        for (int i = TOTAL_SLOTS; i < this.slots.size(); i++) {
+            Slot slot = this.slots.get(i);
+            int slotLimit = Math.min(slot.getMaxStackSize(stack), stack.getMaxStackSize());
+            if (slotLimit <= 0) {
+                continue;
+            }
+            if (!slot.hasItem()) {
+                totalSpace += slotLimit;
+                continue;
+            }
+            ItemStack invStack = slot.getItem();
+            if (!invStack.isEmpty() && ItemStack.isSameItemSameComponents(invStack, stack)) {
+                int freeSpace = slotLimit - invStack.getCount();
+                if (freeSpace > 0) {
+                    totalSpace += freeSpace;
                 }
             }
         }
-
-        return totalSpace / stack.getCount();
-    }
-
-    private boolean hasSpaceInPlayerInventory(ItemStack stack) {
-        return calculateMaxFitInPlayerInventory(stack) >= 1;
+        return totalSpace;
     }
 
     // --- Tab API ---
@@ -229,30 +239,51 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
             Slot s = this.slots.get(i);
             ItemStack stack = s.getItem();
             if (!stack.isEmpty() && this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
-                s.set(stack.isEmpty() ? ItemStack.EMPTY : stack);
-                s.setChanged(); // <--
+                s.set(stack); // Stack is already EMPTY if fully moved, no need for ternary
+                s.setChanged();
             }
         }
     }
 
 
+    /**
+     * Transfers required items from player inventory to payment slot.
+     * 
+     * OPTIMIZATION: Early exit when slot is full to avoid unnecessary iteration.
+     * Caches slot references to avoid repeated list lookups.
+     */
     private void transferRequiredItems(ItemStack required, int slotIndex) {
+        if (required == null || required.isEmpty()) return;
+        
+        Slot targetSlot = this.slots.get(slotIndex);
+        ItemStack cur = targetSlot.getItem();
+        int maxTargetStack = Math.min(required.getMaxStackSize(), targetSlot.getMaxStackSize());
+        
+        // Early exit if target slot is already full
+        if (!cur.isEmpty() && cur.getCount() >= maxTargetStack) {
+            return;
+        }
+        
         for (int i = TOTAL_SLOTS; i < this.slots.size(); i++) {
-            ItemStack invStack = this.slots.get(i).getItem();
+            Slot sourceSlot = this.slots.get(i);
+            ItemStack invStack = sourceSlot.getItem();
+            
             if (!invStack.isEmpty() && ItemStack.isSameItemSameComponents(invStack, required)) {
-                ItemStack cur = this.slots.get(slotIndex).getItem();
                 if (cur.isEmpty() || ItemStack.isSameItemSameComponents(invStack, cur)) {
-                    int max = Math.min(invStack.getMaxStackSize(), this.slots.get(slotIndex).getMaxStackSize());
-                    int space = max - cur.getCount();
+                    int space = maxTargetStack - cur.getCount();
+                    if (space <= 0) break; // Slot is full
+                    
                     int move = Math.min(space, invStack.getCount());
                     if (move > 0) {
                         ItemStack newStack = invStack.copy();
                         newStack.setCount(cur.getCount() + move);
                         invStack.shrink(move);
-                        this.slots.get(i).set(invStack.isEmpty() ? ItemStack.EMPTY : invStack);
-                        this.slots.get(slotIndex).set(newStack);
-                        if (newStack.getCount() >= max) {
-                            break;
+                        sourceSlot.set(invStack); // Already EMPTY if fully moved
+                        targetSlot.set(newStack);
+                        cur = newStack; // Update reference for next iteration
+                        
+                        if (cur.getCount() >= maxTargetStack) {
+                            break; // Slot is now full
                         }
                     }
                 }
@@ -273,6 +304,12 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
                 if (stack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
+                
+                // SAFETY: Only owner can remove items from offer slot in template mode
+                if (!isOwner()) {
+                    return ItemStack.EMPTY;
+                }
+                
                 ItemStack ret = stack.copy();
                 if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
@@ -300,13 +337,11 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
                 return ItemStack.EMPTY;
             }
 
-            ItemStack result = ItemStack.EMPTY;
-
-            // NEW: Efficient bulk purchase
+            // NEW: Efficient bulk purchase with atomicity guarantee
             ItemStack offerResult = blockEntity.getOfferResult();
             if (offerResult.isEmpty()) return ItemStack.EMPTY;
 
-            // 1. Calculate how many fit in player inventory
+            // 1. Calculate how many transactions fit in player inventory
             int maxPlayerFit = calculateMaxFitInPlayerInventory(offerResult);
             if (maxPlayerFit <= 0) return ItemStack.EMPTY;
 
@@ -316,32 +351,34 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
             int bought = blockEntity.processBulkPurchase(maxPlayerFit);
 
             if (bought > 0) {
-                // 3. Give items to player
-                // Split into chunks of maxStackSize to ensure moveItemStackTo handles them correctly.
-                int remaining = offerResult.getCount() * bought;
+                // 3. Give items to player (capacity was precomputed from exact slot limits)
+                long remaining = (long) offerResult.getCount() * bought;
+                if (remaining <= 0L) {
+                    return ItemStack.EMPTY;
+                }
                 int maxStack = offerResult.getMaxStackSize();
 
                 ItemStack totalBoughtCopy = offerResult.copy();
-                totalBoughtCopy.setCount(remaining);
+                totalBoughtCopy.setCount((int) Math.min(Integer.MAX_VALUE, remaining));
 
-                while (remaining > 0) {
-                    int chunkSize = Math.min(remaining, maxStack);
+                while (remaining > 0L) {
+                    int chunkSize = (int) Math.min(remaining, maxStack);
                     ItemStack chunk = offerResult.copy();
                     chunk.setCount(chunkSize);
 
                     if (!this.moveItemStackTo(chunk, TOTAL_SLOTS, this.slots.size(), true)) {
-                        // Should not happen if calculateMaxFitInPlayerInventory is correct.
-                        // But if it does, we must drop the rest to avoid voiding paid items.
+                        // This should not happen due to pre-check, but failsafe: drop items
                         if (!chunk.isEmpty()) {
                             player.drop(chunk, false);
+                            MarketBlocks.LOGGER.warn("Had to drop items during bulk purchase - pre-check failed for player {}", player.getName().getString());
                         }
                     } else {
                          // Double check if moveItemStackTo left something in chunk
                          if (!chunk.isEmpty()) {
-                             player.drop(chunk, false);
-                         }
+                              player.drop(chunk, false);
+                          }
                     }
-                    remaining -= chunkSize;
+                    remaining -= (long) chunkSize;
                 }
 
                 blockEntity.updateOfferSlot();
@@ -405,14 +442,42 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         return ret;
     }
 
+    /**
+     * Override clicked to handle special cases for double-click collection (PICKUP_ALL).
+     * 
+     * PICKUP_ALL is blocked for:
+     * 1. Payment slots (0-1): Prevents accidental clearing while player is setting up an offer.
+     *    During offer creation, the player places items in payment slots, and double-clicking
+     *    would collect them all back, which is usually not intended.
+     * 
+     * 2. Offer slot in template mode: When no offer exists, the offer slot is used to preview
+     *    what item will be sold. Double-clicking shouldn't collect this preview item.
+     * 
+     * This improves UX by preventing accidental disruption of the offer creation workflow.
+     */
     @Override
     public void clicked(int slotId, int button, ClickType type, Player player) {
-        if (type == ClickType.PICKUP_ALL) {
-            if (slotId >= 0 && slotId < PAYMENT_SLOTS) {
+        if (!player.level().isClientSide
+                && slotId == OFFER_SLOT_INDEX
+                && type == ClickType.PICKUP
+                && blockEntity.hasOffer()
+                && blockEntity.getOfferHandler().getStackInSlot(0).isEmpty()) {
+            if (!blockEntity.hasResultItemInInput(false)) {
+                player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
                 return;
             }
-            if (slotId == OFFER_SLOT_INDEX && !blockEntity.hasOffer()) {
+            if (blockEntity.isOutputSpaceMissing()) {
+                player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 return;
+            }
+        }
+
+        if (type == ClickType.PICKUP_ALL) {
+            if (slotId >= 0 && slotId < PAYMENT_SLOTS) {
+                return; // Block double-click collect for payment slots
+            }
+            if (slotId == OFFER_SLOT_INDEX && !blockEntity.hasOffer()) {
+                return; // Block double-click collect for offer preview slot
             }
         }
         super.clicked(slotId, button, type, player);
@@ -485,24 +550,29 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
 
         @Override
         public boolean mayPickup(Player player) {
+            if (player.level().isClientSide) {
+                if (!blockEntity.hasOffer()) {
+                    return isOwner();
+                }
+                return true;
+            }
+            
+            // Server-side: Full validation with messages
             if (!blockEntity.hasOffer()) {
                 // Template-Modus: Owner dürfen falsch gelegte Items wieder rausnehmen
                 return isOwner();
             }
 
             if (!blockEntity.hasResultItemInInput(false)) {
-                if (!player.level().isClientSide) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
-                }
+                player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
                 return false;
             }
 
             if (blockEntity.isOutputSpaceMissing()) {
-                if (!player.level().isClientSide) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
-                }
+                player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 return false;
             }
+            
             // Angebots-Modus: Kauf erlaubt, wenn verfügbar (Owner darf auch kaufen)
             return blockEntity.isOfferAvailable();
         }
@@ -514,6 +584,9 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
                 return super.remove(amount);
             }
             // Angebots-Modus: nur wenn verfügbar
+            if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) {
+                return super.remove(amount);
+            }
             return blockEntity.isOfferAvailable() ? super.remove(amount) : ItemStack.EMPTY;
         }
 

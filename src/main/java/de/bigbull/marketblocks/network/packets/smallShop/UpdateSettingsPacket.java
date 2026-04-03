@@ -31,10 +31,10 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
             },
             buf -> {
                 BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
-                SideMode left = SideMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode right = SideMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode bottom = SideMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode back = SideMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
+                SideMode left = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
+                SideMode right = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
+                SideMode bottom = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
+                SideMode back = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
                 String name = ByteBufCodecs.STRING_UTF8.decode(buf);
                 boolean redstone = ByteBufCodecs.BOOL.decode(buf);
                 return new UpdateSettingsPacket(pos, left, right, bottom, back, name, redstone);
@@ -45,19 +45,34 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
         return TYPE;
     }
 
+    private static SideMode parseSideMode(String value) {
+        try {
+            return SideMode.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            MarketBlocks.LOGGER.warn("Received invalid side mode '{}' in UpdateSettingsPacket, defaulting to DISABLED", value);
+            return SideMode.DISABLED;
+        }
+    }
+
     public static void handle(UpdateSettingsPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) context.player();
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
             Level level = player.level();
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
                 Direction facing = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
-                blockEntity.setMode(facing.getCounterClockWise(), packet.left());
-                blockEntity.setMode(facing.getClockWise(), packet.right());
-                blockEntity.setMode(Direction.DOWN, packet.bottom());
-                blockEntity.setMode(facing.getOpposite(), packet.back());
+                
+                // Sanitize shop name
                 String name = packet.name().strip().replaceAll("[^A-Za-z0-9 _-]", "");
-                blockEntity.setShopName(name);
-                blockEntity.setEmitRedstone(packet.redstone());
+
+                blockEntity.updateSettingsBatch(
+                        facing.getCounterClockWise(), packet.left(),
+                        facing.getClockWise(), packet.right(),
+                        Direction.DOWN, packet.bottom(),
+                        facing.getOpposite(), packet.back(),
+                        name, packet.redstone()
+                );
             }
         });
     }
