@@ -34,6 +34,7 @@ import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -207,6 +208,7 @@ public class SmallShopBlock extends BaseEntityBlock {
                         pos
                 );
             } else {
+                serverPlayer.displayClientMessage(Component.translatable("message.marketblocks.small_shop.no_offer"), true);
                 return InteractionResult.FAIL;
             }
         }
@@ -259,6 +261,11 @@ public class SmallShopBlock extends BaseEntityBlock {
     @Override
     protected MapCodec<? extends SmallShopBlock> codec() {
         return CODEC;
+    }
+
+    @Override
+    public PushReaction getPistonPushReaction(BlockState state) {
+        return PushReaction.BLOCK;
     }
 
     @Override

@@ -4,7 +4,6 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
@@ -65,13 +64,7 @@ public class ChestSecurityHandler {
     }
 
     private static boolean isAdjacentToShop(Level level, BlockPos pos) {
-        for (Direction dir : Direction.values()) {
-            BlockPos neighbor = pos.relative(dir);
-            if (level.getBlockState(neighbor).getBlock() instanceof SmallShopBlock) {
-                return true;
-            }
-        }
-        return false;
+        return findShopSingle(level, pos) != null;
     }
 
     private static SmallShopBlockEntity findShop(Level level, BlockPos pos) {

@@ -44,7 +44,7 @@ public final class RegistriesInit {
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
                     .instrument(NoteBlockInstrument.BASS)
-                    .strength(2.5F, 3.0F)
+                    .strength(2.5F, 3600000.0F)
                     .sound(SoundType.WOOD)));
 
     // BlockEntity Registrierung

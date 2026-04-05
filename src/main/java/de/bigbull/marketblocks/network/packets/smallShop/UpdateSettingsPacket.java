@@ -64,7 +64,7 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
                 Direction facing = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
                 
                 // Sanitize shop name
-                String name = packet.name().strip().replaceAll("[^A-Za-z0-9 _-]", "");
+                String name = packet.name().strip().replaceAll("[^\\p{L}\\p{N} _-]", "");
 
                 blockEntity.updateSettingsBatch(
                         facing.getCounterClockWise(), packet.left(),

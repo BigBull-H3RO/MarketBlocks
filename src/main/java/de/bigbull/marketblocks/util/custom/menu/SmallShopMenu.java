@@ -4,6 +4,7 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -15,7 +16,6 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 import java.util.EnumMap;
@@ -50,6 +50,10 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
     private static final int OFFER_SLOT_INDEX = PAYMENT_SLOTS; // after payment slots
     private static final Direction[] DIRECTIONS = Direction.values();
 
+    private static SmallShopBlockEntity createClientFallbackBlockEntity() {
+        return new SmallShopBlockEntity(BlockPos.ZERO, RegistriesInit.SMALL_SHOP_BLOCK.get().defaultBlockState());
+    }
+
     // Server ctor
     public SmallShopMenu(int containerId, Inventory inv, SmallShopBlockEntity be) {
         super(RegistriesInit.SMALL_SHOP_MENU.get(), containerId);
@@ -79,28 +83,25 @@ public class SmallShopMenu extends AbstractSmallShopMenu implements ShopMenu {
         SmallShopBlockEntity be = readBlockEntity(inv, buf);
         if (be == null) {
             inv.player.closeContainer();
+            be = createClientFallbackBlockEntity();
         }
         this.blockEntity = be;
         this.player = inv.player;
-        this.paymentHandler = be != null ? be.getPaymentHandler() : new ItemStackHandler(PAYMENT_SLOTS);
-        this.offerHandler = be != null ? be.getOfferHandler() : new ItemStackHandler(OFFER_SLOTS);
-        this.inputHandler = be != null ? be.getInputHandler() : new ItemStackHandler(INPUT_SLOTS);
-        this.outputHandler = be != null ? be.getOutputHandler() : new ItemStackHandler(OUTPUT_SLOTS);
-        this.flags = be != null ? be.createMenuFlags(player) : new SimpleContainerData(1);
+        this.paymentHandler = be.getPaymentHandler();
+        this.offerHandler = be.getOfferHandler();
+        this.inputHandler = be.getInputHandler();
+        this.outputHandler = be.getOutputHandler();
+        this.flags = be.createMenuFlags(player);
 
-        if (be != null) {
-            for (Direction dir : DIRECTIONS) {
-                SideMode mode = be.getMode(dir);
-                sideModes.put(dir, mode);
-                initialModes.put(dir, mode);
-            }
+        for (Direction dir : DIRECTIONS) {
+            SideMode mode = be.getMode(dir);
+            sideModes.put(dir, mode);
+            initialModes.put(dir, mode);
         }
 
         addDataSlots(this.flags);
         addDataSlots(this.tabData);
-        if (be != null) {
-            be.ensureOwner(player);
-        }
+        be.ensureOwner(player);
         initSlots(inv);
     }
 
