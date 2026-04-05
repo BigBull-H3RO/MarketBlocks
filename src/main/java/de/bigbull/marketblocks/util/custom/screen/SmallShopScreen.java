@@ -196,10 +196,10 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
         offerButton.active = be.hasOffer();
         if (isOwner) {
             if (!be.hasOffer()) {
-                addRenderableWidget(new IconButton(leftPos + 148, topPos + 17, 20, 20, BUTTON_SPRITES, CREATE_ICON,
+                addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, CREATE_ICON,
                         b -> createOffer(), Component.translatable("gui.marketblocks.create_offer"), () -> false));
             } else {
-                addRenderableWidget(new IconButton(leftPos + 148, topPos + 17, 20, 20, BUTTON_SPRITES, DELETE_ICON,
+                addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, DELETE_ICON,
                         b -> deleteOffer(), Component.translatable("gui.marketblocks.delete_offer"), () -> false));
             }
         }

@@ -106,7 +106,6 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.server_shop.editor.pricing.step", "Nachfrage-Schritt");
         add("gui.marketblocks.server_shop.editor.pricing.min", "Minimaler Multiplikator");
         add("gui.marketblocks.server_shop.editor.pricing.max", "Maximaler Multiplikator");
-        add("gui.marketblocks.server_shop.replace_offer", "Angebot aktualisieren");
         add("gui.marketblocks.server_shop.move_offer", "Angebot verschieben");
         add("gui.marketblocks.server_shop.move_offer_up", "Angebot nach oben verschieben");
         add("gui.marketblocks.server_shop.move_offer_down", "Angebot nach unten verschieben");
@@ -141,6 +140,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.server_shop.tooltip.unavailable_generic", "Nicht kaufbar.");
 
         add("message.marketblocks.small_shop.not_owner", "Nur der Besitzer kann diesen Shop abbauen.");
+        add("message.marketblocks.small_shop.no_offer", "Dieser Shop hat aktuell kein aktives Angebot.");
         add("message.marketblocks.server_shop.page_name_blank", "Der Seitenname darf nicht leer sein.");
         add("message.marketblocks.server_shop.page_name_too_long", "Der Seitenname darf maximal %s Zeichen lang sein.");
         add("message.marketblocks.server_shop.page_name_duplicate", "Eine Seite mit dem Namen '%s' existiert bereits.");

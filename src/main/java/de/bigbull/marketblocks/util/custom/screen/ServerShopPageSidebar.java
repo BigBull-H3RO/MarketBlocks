@@ -16,7 +16,7 @@ import java.util.List;
  */
 public final class ServerShopPageSidebar {
 
-    private static final int SIDEBAR_X_OFFSET = -105;
+    private static final int SIDEBAR_X_OFFSET = -102;
     private static final int SIDEBAR_Y_OFFSET = 10;
     private static final int BUTTON_SPACING_Y = 22;
     private static final int BUTTON_WIDTH = 100;

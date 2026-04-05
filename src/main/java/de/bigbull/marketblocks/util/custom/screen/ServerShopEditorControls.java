@@ -26,13 +26,13 @@ import java.util.function.Consumer;
 public final class ServerShopEditorControls {
 
     private static final int HEADER_X_OFFSET = 4;
-    private static final int HEADER_Y_OFFSET = -24;
-    private static final int PREVIEW_ACTION_X_OFFSET = 98;
+    private static final int HEADER_Y_OFFSET = -22;
+    private static final int PREVIEW_ACTION_X_OFFSET = 99;
     private static final int PREVIEW_WIDTH = 88;
     private static final int CLEAR_CORNER_BUTTON_SIZE = 8;
     private static final int CLEAR_CORNER_BUTTON_X_OFFSET = 1;
     private static final int CLEAR_CORNER_BUTTON_Y_OFFSET = -1;
-    private static final int PREVIEW_MOVE_BUTTON_GAP = 4;
+    private static final int PREVIEW_MOVE_BUTTON_GAP = 12;
     private static final int PREVIEW_MOVE_BUTTON_Y_OFFSET = 0;
     private static final int MOVE_BUTTON_WIDTH = 20;
     private static final int MOVE_ICON_CONTENT_WIDTH = 9;

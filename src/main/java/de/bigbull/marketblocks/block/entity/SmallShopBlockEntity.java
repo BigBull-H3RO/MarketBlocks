@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.*;
 
@@ -308,6 +309,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         ownerManager.addOwner(id, name);
     }
 
+    @ApiStatus.Internal
     public void addOwnerClient(UUID id, String name) {
         ownerManager.addOwnerClient(id, name);
     }
@@ -366,6 +368,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
      * Sets the shop name on the client side.
      * Client setters should ONLY update state, no side effects.
      */
+    @ApiStatus.Internal
     public void setShopNameClient(String name) {
         this.shopName = name;
     }
@@ -383,6 +386,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
      * Sets the redstone emit flag on the client side.
      * Client setters should ONLY update state, no side effects.
      */
+    @ApiStatus.Internal
     public void setEmitRedstoneClient(boolean emitRedstone) {
         this.emitRedstone = emitRedstone;
     }
@@ -470,6 +474,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
      * Sets the side mode on the client side.
      * Client setters should ONLY update state, no side effects.
      */
+    @ApiStatus.Internal
     public void setModeClient(Direction dir, SideMode mode) {
         sideModes.put(dir, mode);
     }
@@ -876,8 +881,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             removeFromInput(totalResult);
         }
 
-        addToOutputRepeated(p1, tradeCount);
-        addToOutputRepeated(p2, tradeCount);
+        addToOutputBatched(p1, tradeCount);
+        addToOutputBatched(p2, tradeCount);
     }
 
     private ItemStack multiplyStackForTrades(ItemStack stack, int tradeCount) {
@@ -893,12 +898,22 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         return multiplied;
     }
 
-    private void addToOutputRepeated(ItemStack stack, int times) {
+    private void addToOutputBatched(ItemStack stack, int times) {
         if (stack == null || stack.isEmpty() || times <= 0) {
             return;
         }
-        for (int i = 0; i < times; i++) {
-            addToOutput(stack.copy());
+
+        long total = (long) stack.getCount() * times;
+        if (total <= 0L) {
+            return;
+        }
+
+        int maxStack = stack.getMaxStackSize();
+        while (total > 0L) {
+            ItemStack chunk = stack.copy();
+            chunk.setCount((int) Math.min(total, maxStack));
+            addToOutput(chunk);
+            total -= chunk.getCount();
         }
     }
 
@@ -1100,7 +1115,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void dropContents(Level level, BlockPos pos) {
-        handlerMap.values().forEach(handler -> dropItems(level, pos, handler));
+        dropItems(level, pos, inputHandler);
+        dropItems(level, pos, outputHandler);
+        dropItems(level, pos, paymentHandler);
     }
 
     public void unlockAdjacentChests() {

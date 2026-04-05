@@ -119,7 +119,6 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.server_shop.editor.pricing.step", "Demand Step");
         add("gui.marketblocks.server_shop.editor.pricing.min", "Min Multiplier");
         add("gui.marketblocks.server_shop.editor.pricing.max", "Max Multiplier");
-        add("gui.marketblocks.server_shop.replace_offer", "Update Offer Items");
         add("gui.marketblocks.server_shop.move_offer", "Move Offer");
         add("gui.marketblocks.server_shop.move_offer_up", "Move offer up");
         add("gui.marketblocks.server_shop.move_offer_down", "Move offer down");
@@ -154,6 +153,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.server_shop.tooltip.unavailable_generic", "Unavailable.");
 
         add("message.marketblocks.small_shop.not_owner", "Only the owner can break this shop.");
+        add("message.marketblocks.small_shop.no_offer", "This shop currently has no active offer.");
         add("message.marketblocks.server_shop.page_name_blank", "The page name must not be empty.");
         add("message.marketblocks.server_shop.page_name_too_long", "The page name must be at most %s characters long.");
         add("message.marketblocks.server_shop.page_name_duplicate", "A page named '%s' already exists.");
