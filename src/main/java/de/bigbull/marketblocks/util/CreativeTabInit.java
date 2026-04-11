@@ -21,6 +21,7 @@ public final class CreativeTabInit {
                     .displayItems((parameters, output) -> {
                         // Füge alle Items des Mods hinzu
                         output.accept(RegistriesInit.SMALL_SHOP_BLOCK.get());
+                        output.accept(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get());
                     })
                     .build());
 }

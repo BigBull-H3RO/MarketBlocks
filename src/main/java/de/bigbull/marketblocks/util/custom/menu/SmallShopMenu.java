@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.util.custom.menu;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;

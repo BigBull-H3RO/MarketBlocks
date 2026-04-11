@@ -16,6 +16,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     @Override
     protected void generate() {
         dropSelf(RegistriesInit.SMALL_SHOP_BLOCK.get());
+        dropSelf(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get());
+        add(RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get(), noDrop());
     }
 
     @Override

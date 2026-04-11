@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 
 /**
  * Interface für Small-Shop-Menüs.

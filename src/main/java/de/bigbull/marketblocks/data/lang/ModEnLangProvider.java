@@ -171,5 +171,6 @@ public class ModEnLangProvider extends LanguageProvider {
 
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Small Shop");
+        addBlock(RegistriesInit.SMALL_SHOP_BLOCK_NEU, "Small Shop (New Design)");
     }
 }

@@ -2,7 +2,9 @@ package de.bigbull.marketblocks.util;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeu;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeuTop;
+import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.registries.Registries;
@@ -47,10 +49,27 @@ public final class RegistriesInit {
                     .strength(2.5F, 3600000.0F)
                     .sound(SoundType.WOOD)));
 
+    // SmallShopBlock Neu (Tall Showcase Design)
+    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_NEU = registerBlock("small_shop_neu",
+            () -> new SmallShopBlockNeu(BlockBehaviour.Properties.of()
+                    .noOcclusion()
+                    .mapColor(MapColor.PODZOL)
+                    .instrument(NoteBlockInstrument.BASS)
+                    .strength(2.5F, 3600000.0F)
+                    .sound(SoundType.WOOD)));
+
+    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_NEU_TOP = registerInternalBlock("small_shop_neu_top",
+            () -> new SmallShopBlockNeuTop(BlockBehaviour.Properties.of()
+                    .noOcclusion()
+                    .mapColor(MapColor.PODZOL)
+                    .instrument(NoteBlockInstrument.BASS)
+                    .strength(2.5F, 3600000.0F)
+                    .sound(SoundType.WOOD)));
+
     // BlockEntity Registrierung
     public static final Supplier<BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(
-                    SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get()).build(null));
+                    SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get(), SMALL_SHOP_BLOCK_NEU.get()).build(null));
 
     // Menu Registrierungen
     public static final Supplier<MenuType<SmallShopMenu>> SMALL_SHOP_MENU =
@@ -64,6 +83,10 @@ public final class RegistriesInit {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);
         registerBlockItem(name, toReturn);
         return toReturn;
+    }
+
+    public static <T extends Block> DeferredBlock<T> registerInternalBlock(String name, Supplier<T> block) {
+        return BLOCKS.register(name, block);
     }
 
     public static <T extends Block> void registerBlockItem(String name, DeferredBlock<T> block) {

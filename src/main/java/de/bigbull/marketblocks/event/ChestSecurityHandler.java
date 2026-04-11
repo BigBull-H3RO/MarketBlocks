@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

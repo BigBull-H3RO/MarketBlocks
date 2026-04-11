@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.block.entity;
+package de.bigbull.marketblocks.util.block.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.packets.smallShop.OfferStatusPacket;

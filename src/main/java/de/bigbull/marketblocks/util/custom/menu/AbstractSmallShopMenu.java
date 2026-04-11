@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;

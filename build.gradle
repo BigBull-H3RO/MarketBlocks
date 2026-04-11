@@ -106,7 +106,7 @@ tasks.register('runRuntimeMathSelfTest', JavaExec) {
     group = 'verification'
     description = 'Runs the ServerShop runtime math self-test harness.'
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'de.bigbull.marketblocks.util.custom.servershop.ServerShopRuntimeMathTest'
+    mainClass = 'de.bigbull.marketblocks.shop.server.ServerShopRuntimeMathTest'
 }
 
 idea {

@@ -1,9 +1,9 @@
 package de.bigbull.marketblocks.network.packets.smallShop;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.util.block.BaseShopBlock;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -61,7 +61,7 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
             }
             Level level = player.level();
             if (level.getBlockEntity(packet.pos()) instanceof SmallShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
-                Direction facing = blockEntity.getBlockState().getValue(SmallShopBlock.FACING);
+                Direction facing = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
                 
                 // Sanitize shop name
                 String name = packet.name().strip().replaceAll("[^\\p{L}\\p{N} _-]", "");
