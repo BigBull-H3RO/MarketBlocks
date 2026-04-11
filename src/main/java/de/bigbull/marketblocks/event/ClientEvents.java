@@ -7,9 +7,12 @@ import de.bigbull.marketblocks.util.custom.entity.renderer.SmallShopBlockEntityR
 import de.bigbull.marketblocks.util.custom.screen.ServerShopScreen;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopScreen;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -38,6 +41,13 @@ public class ClientEvents {
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(OPEN_SERVER_SHOP);
+    }
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get(), RenderType.cutout());
+        });
     }
 
     public static KeyMapping getOpenServerShopKey() {

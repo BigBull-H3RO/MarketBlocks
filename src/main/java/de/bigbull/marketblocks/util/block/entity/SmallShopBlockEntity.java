@@ -1,10 +1,11 @@
-package de.bigbull.marketblocks.block.entity;
+package de.bigbull.marketblocks.util.block.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.util.block.BaseShopBlock;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -922,8 +923,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
         BlockState state = level.getBlockState(worldPosition);
-        if (state.getBlock() instanceof SmallShopBlock block) {
-            level.setBlock(worldPosition, state.setValue(SmallShopBlock.POWERED, true), 3);
+        if (state.getBlock() instanceof BaseShopBlock block) {
+            level.setBlock(worldPosition, state.setValue(BaseShopBlock.POWERED, true), 3);
             level.updateNeighborsAt(worldPosition, block);
             level.scheduleTick(worldPosition, block, 20);
         }
@@ -1118,6 +1119,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         dropItems(level, pos, inputHandler);
         dropItems(level, pos, outputHandler);
         dropItems(level, pos, paymentHandler);
+        if (!hasOffer) {
+            dropItems(level, pos, offerHandler);
+        }
     }
 
     public void unlockAdjacentChests() {
@@ -1150,6 +1154,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         be.tickCounter++;
+        if (be.tickCounter % 20 == 0 && state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
+            SmallShopBlockNeu.ensureTopBlock(level, pos);
+        }
         boolean chestExtensionEnabled = Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get();
 
         int offerInterval = Config.OFFER_UPDATE_INTERVAL.get();
@@ -1196,6 +1203,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public void onLoad() {
         super.onLoad();
+        if (level != null && !level.isClientSide && getBlockState().is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
+            SmallShopBlockNeu.ensureTopBlock(level, worldPosition);
+        }
         updateNeighborCache();
         
         // Perform chunk-dependent operations here instead of in loadAdditional()

@@ -2,10 +2,10 @@ package de.bigbull.marketblocks.util.custom.screen;
 
 import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.util.block.BaseShopBlock;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.smallShop.*;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.ShopTab;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
@@ -211,7 +211,7 @@ public class SmallShopScreen extends AbstractSmallShopScreen<SmallShopMenu> {
 
     private void buildSettingsUI() {
         SmallShopBlockEntity be = menu.getBlockEntity();
-        Direction facing = be.getBlockState().getValue(SmallShopBlock.FACING);
+        Direction facing = be.getBlockState().getValue(BaseShopBlock.FACING);
         leftDir = facing.getCounterClockWise();
         rightDir = facing.getClockWise();
         bottomDir = Direction.DOWN;

@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.network.packets.smallShop;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.block.entity.OfferManager;
-import de.bigbull.marketblocks.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.OfferManager;
+import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

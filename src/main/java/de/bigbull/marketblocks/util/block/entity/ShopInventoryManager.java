@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.block.entity;
+package de.bigbull.marketblocks.util.block.entity;
 
 import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.util.custom.block.SideMode;

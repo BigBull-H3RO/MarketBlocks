@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.block.entity;
+package de.bigbull.marketblocks.util.block.entity;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
