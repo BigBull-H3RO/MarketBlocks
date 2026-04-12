@@ -18,17 +18,29 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+/**
+ * Unsichtbarer Hilfsblock der die obere Hälfte der Glasvitrine (Y=16..25) abdeckt.
+ *
+ * Dieser Block:
+ * - Ist nicht direkt platzierbar (kein BlockItem, kein Crafting-Rezept)
+ * - Wird automatisch von SmallShopBlockNeu gesetzt wenn HAS_SHOWCASE=true
+ * - Ist unsichtbar (RenderShape.INVISIBLE) – das Modell wird vom Base-Block gerendert
+ * - Leitet alle Interaktionen an den darunterliegenden SmallShopBlockNeu weiter
+ * - Entfernt sich selbst wenn der Base-Block nicht mehr vorhanden ist (canSurvive)
+ *
+ * Shapes:
+ * - getShape() → für Raycast (Anvisieren) und Outline – volle Breite (0..16), Y=0..9
+ * - getCollisionShape() → Kollision – identisch mit getShape()
+ *
+ * NOTE: Die Outline-Darstellung wird von BlockOutlineHandler übernommen, der eine
+ * durchgehende Box (Y=0..25) vom Base-Block aus zeichnet und so die Nahtlinie
+ * bei der Blockgrenze Y=16 eliminiert.
+ */
 public class SmallShopBlockNeuTop extends Block {
     public static final MapCodec<SmallShopBlockNeuTop> CODEC = simpleCodec(SmallShopBlockNeuTop::new);
 
-    /**
-     * WICHTIG: Gleiche X/Z-Grenzen (0..16) wie der Base-Block!
-     * Dadurch liegt die Nahtlinie bei Y=16 exakt auf der Kante beider Shapes
-     * und ist kaum sichtbar – statt einer sichtbaren Stufe entsteht nur
-     * eine dünne gemeinsame Linie.
-     *
-     * Y=0..9 entspricht Welt-Y+16 bis Welt-Y+25 (obere 9 Pixel der Vitrine).
-     */
+    // Volle Breite (0..16), Y=0..9 entspricht Welt-Y+16 bis Welt-Y+25.
+    // Keine negativen Y-Werte – Minecraft-VoxelShapes sind zuverlässig nur in [0,16].
     private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 9, 16);
 
     public SmallShopBlockNeuTop(BlockBehaviour.Properties properties) {
@@ -40,10 +52,14 @@ public class SmallShopBlockNeuTop extends Block {
         return CODEC;
     }
 
+    // -------------------------------------------------------------------------
+    // Shapes
+    // -------------------------------------------------------------------------
+
     /**
-     * MUSS eine echte Shape zurückgeben – Minecraft nutzt getShape() sowohl
-     * für die Outline-Darstellung als auch für den Raycast (Anvisieren).
-     * Shapes.empty() würde die Interaktion im Y=16..25 Bereich komplett deaktivieren.
+     * Muss eine echte Shape zurückgeben – Minecraft nutzt getShape() für den Raycast
+     * (Anvisieren). Shapes.empty() würde die Interaktion im Y=16..25-Bereich deaktivieren.
+     * Die Outline-Darstellung übernimmt BlockOutlineHandler separat.
      */
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
@@ -65,6 +81,15 @@ public class SmallShopBlockNeuTop extends Block {
         return RenderShape.INVISIBLE;
     }
 
+    // -------------------------------------------------------------------------
+    // Überlebensbedingung
+    // -------------------------------------------------------------------------
+
+    /**
+     * Dieser Block kann nur überleben wenn direkt darunter ein SmallShopBlockNeu liegt.
+     * Zusammen mit neighborChanged entfernt sich der Top-Block automatisch wenn der
+     * Base-Block entfernt wird – ohne dass SmallShopBlockNeu neighborChanged überschreiben muss.
+     */
     @Override
     protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         return level.getBlockState(pos.below()).is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get());
@@ -86,9 +111,11 @@ public class SmallShopBlockNeuTop extends Block {
         }
     }
 
-    /**
-     * Klick auf oberen Teil → Interaktion wird an den Base-Block weitergeleitet.
-     */
+    // -------------------------------------------------------------------------
+    // Interaktion → Weiterleitung an Base-Block
+    // -------------------------------------------------------------------------
+
+    /** Klick auf den Top-Block → Interaktion wird an den Base-Block weitergeleitet. */
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         BlockPos basePos = pos.below();
@@ -96,19 +123,12 @@ public class SmallShopBlockNeuTop extends Block {
         if (!baseState.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
             return InteractionResult.PASS;
         }
-
         BlockHitResult redirectedHit = new BlockHitResult(
-                hitResult.getLocation(),
-                hitResult.getDirection(),
-                basePos,
-                hitResult.isInside()
-        );
+                hitResult.getLocation(), hitResult.getDirection(), basePos, hitResult.isInside());
         return baseState.useWithoutItem(level, player, redirectedHit);
     }
 
-    /**
-     * Abbau des Top-Blocks → Base-Block wird abgebaut (mit Owner-Check).
-     */
+    /** Abbau des Top-Blocks → Base-Block wird abgebaut (mit Owner-Check im Base-Block). */
     @Override
     public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
         BlockPos basePos = pos.below();
@@ -119,16 +139,12 @@ public class SmallShopBlockNeuTop extends Block {
         return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
     }
 
-    /**
-     * Top-Block entfernt → wir tun NICHTS mit dem Base-Block.
-     * Der Base-Block kümmert sich selbst um das Entfernen des Top-Blocks (SmallShopBlockNeu.onRemove).
-     * Player-seitiges Abbauen läuft über onDestroyedByPlayer (Redirect zum Base-Block).
-     * Ein destroyBlock hier würde Shop-Inhalte doppelt droppen und Callbacks doppelt auslösen.
-     */
-    @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        super.onRemove(state, level, pos, newState, movedByPiston);
-    }
+    // onRemove: KEIN Override nötig.
+    // Der Base-Block (SmallShopBlockNeu.onRemove) entfernt den Top-Block wenn er selbst
+    // abgebaut wird. Und falls der Top-Block direkt entfernt wird (z.B. /setblock),
+    // reicht super.onRemove() – kein zusätzliches Verhalten nötig.
+
+    // -------------------------------------------------------------------------
 
     @Override
     public PushReaction getPistonPushReaction(BlockState state) {

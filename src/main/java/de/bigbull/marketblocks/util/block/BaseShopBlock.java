@@ -38,7 +38,8 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Base class for all shop blocks.
  * Contains common shop logic like ownership, redstone signals, interaction handling.
- * Subclasses only need to provide their specific configuration via getShopConfig().
+ * Shape- und Render-Konfiguration sind getrennt, damit Anzeige-Offsets je Variante
+ * unabhaengig von Collision/Interaction-Shape gepflegt werden koennen.
  */
 public abstract class BaseShopBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
@@ -56,6 +57,14 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
      * Must be implemented by subclasses to define their specific properties.
      */
     public abstract ShopBlockConfig getShopConfig();
+
+    /**
+     * Render-Konfiguration fuer Offer/Payment-Item und Mengen-Text.
+     * Kann in Subklassen state-aware ueberschrieben werden (z.B. HAS_SHOWCASE).
+     */
+    public ShopRenderConfig getRenderConfig(BlockState state) {
+        return ShopRenderConfig.SMALL_SHOP_DEFAULT;
+    }
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
