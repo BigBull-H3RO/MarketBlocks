@@ -1154,9 +1154,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         be.tickCounter++;
-        if (be.tickCounter % 20 == 0 && state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
-            SmallShopBlockNeu.ensureTopBlock(level, pos);
-        }
         boolean chestExtensionEnabled = Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get();
 
         int offerInterval = Config.OFFER_UPDATE_INTERVAL.get();
