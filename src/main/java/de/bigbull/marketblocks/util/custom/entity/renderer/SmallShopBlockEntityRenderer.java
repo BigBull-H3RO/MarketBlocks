@@ -50,8 +50,22 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
                     blockEntity.getLevel(), 0);
             poseStack.popPose();
 
-            renderCountText(font, poseStack, bufferSource, packedLight, result.getCount(),
-                    config.getOfferCountText(), blockEntity.getBlockState().getValue(BaseShopBlock.FACING), false);
+            if (result.getCount() > 1) {
+                ShopRenderConfig.SlotRenderConfig countText = config.getOfferCountText();
+                poseStack.pushPose();
+                poseStack.translate(countText.x(), countText.y(), countText.z());
+                applySlotRotation(poseStack, countText);
+                poseStack.scale(countText.scale(), -countText.scale(), countText.scale());
+
+                String countStr = Integer.toString(result.getCount());
+                int textWidth = font.width(countStr);
+                for (int i = 0; i < 4; i++) {
+                    font.drawInBatch(countStr, -textWidth / 2f, 0, 0xFFFFFF, true,
+                            poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0x80000000, packedLight);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(90));
+                }
+                poseStack.popPose();
+            }
         }
 
         // Bezahl-Items vor dem Block rendern

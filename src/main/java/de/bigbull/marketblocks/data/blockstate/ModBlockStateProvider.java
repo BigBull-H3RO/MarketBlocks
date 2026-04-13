@@ -53,8 +53,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
                     boolean hasShowcase = state.getValue(SmallShopBlockNeu.HAS_SHOWCASE);
 
                     int baseRotation = switch (facing) {
-                        case NORTH -> 180;
+                        case NORTH -> 0;
                         case EAST -> 90;
+                        case SOUTH -> 180;
                         case WEST -> 270;
                         default -> 0;
                     };

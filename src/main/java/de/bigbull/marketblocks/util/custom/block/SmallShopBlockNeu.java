@@ -33,7 +33,6 @@ public class SmallShopBlockNeu extends BaseShopBlock {
     // NICHT verwendet – getShape/getCollisionShape/getInteractionShape werden komplett
     // überschrieben, weil sie vom HAS_SHOWCASE-Zustand abhängen.
     private static final VoxelShape SHAPE_NO_SHOWCASE   = Block.box(0, 0, 0, 16, 11, 16);
-    private static final VoxelShape SHAPE_WITH_SHOWCASE = Block.box(0, 0, 0, 16, 16, 16);
 
     public SmallShopBlockNeu(BlockBehaviour.Properties properties) {
         super(properties);
@@ -71,17 +70,17 @@ public class SmallShopBlockNeu extends BaseShopBlock {
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return hasShowcase(state) ? SHAPE_WITH_SHOWCASE : SHAPE_NO_SHOWCASE;
+        return SHAPE_NO_SHOWCASE;
     }
 
     @Override
     protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return hasShowcase(state) ? SHAPE_WITH_SHOWCASE : SHAPE_NO_SHOWCASE;
+        return SHAPE_NO_SHOWCASE;
     }
 
     @Override
     protected VoxelShape getInteractionShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return hasShowcase(state) ? SHAPE_WITH_SHOWCASE : SHAPE_NO_SHOWCASE;
+        return SHAPE_NO_SHOWCASE;
     }
 
     // -------------------------------------------------------------------------
