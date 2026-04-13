@@ -101,18 +101,18 @@ public class ShopRenderConfig {
     public static final ShopRenderConfig SMALL_SHOP_NEU = builder()
             .applyProfile(COMPACT_FRONT_LAYOUT)
             // Preset-spezifisches Payment-Layout (SmallShopNeu)
-            // X = seitlich, Y = Hoehe, Z = Abstand nach vorne
-            .payment1ItemX(0.35D).payment1ItemY(0.60D).payment1ItemZ(0.10D).payment1ItemScale(0.4F)
-            .payment1ItemYaw(12.0F).payment1ItemPitch(0.0F).payment1ItemRoll(0.0F)
-            .payment2ItemX(0.35D).payment2ItemY(0.20D).payment2ItemZ(0.10D).payment2ItemScale(0.4F)
-            .payment2ItemYaw(12.0F).payment2ItemPitch(0.0F).payment2ItemRoll(0.0F)
+            // X = seitlich, Y = Höhe, Z = Abstand nach vorne
+            .payment1ItemX(0.657D).payment1ItemY(0.465D).payment1ItemZ(0.568D).payment1ItemScale(0.22F)
+            .payment1ItemYaw(0.0F).payment1ItemPitch(-23.65F).payment1ItemRoll(0.0F)
+            .payment2ItemX(0.657D).payment2ItemY(0.153D).payment2ItemZ(0.568D).payment2ItemScale(0.22F)
+            .payment2ItemYaw(0.0F).payment2ItemPitch(-23.65F).payment2ItemRoll(0.0F)
             // Count-Text sitzt i.d.R. leicht rechts/unter dem jeweiligen Item
-            .payment1CountTextX(0.50D).payment1CountTextY(0.45D).payment1CountTextZ(0.10D).payment1CountTextScale(0.015F)
+            .payment1CountTextX(0.8D).payment1CountTextY(0.6D).payment1CountTextZ(0.55D).payment1CountTextScale(0.015F)
             .payment1CountTextYaw(8.0F).payment1CountTextPitch(0.0F).payment1CountTextRoll(0.0F)
-            .payment2CountTextX(0.50D).payment2CountTextY(0.05D).payment2CountTextZ(0.10D).payment2CountTextScale(0.015F)
+            .payment2CountTextX(0.50D).payment2CountTextY(0.05D).payment2CountTextZ(0.55D).payment2CountTextScale(0.015F)
             .payment2CountTextYaw(8.0F).payment2CountTextPitch(0.0F).payment2CountTextRoll(0.0F)
             // Offer-Item zentral ueber dem Block
-            .offerItemX(0.5D).offerItemY(1.1D).offerItemZ(0.5D).offerItemScale(0.8F)
+            .offerItemX(0.5D).offerItemY(1.1D).offerItemZ(0.5D).offerItemScale(0.75F)
             // Offer-Count-Text unter/nahe Offer-Item
             .offerCountTextX(0.5D).offerCountTextY(0.95D).offerCountTextZ(0.5D).offerCountTextScale(0.015F)
             .build();
