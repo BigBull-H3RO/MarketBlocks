@@ -59,18 +59,18 @@ public class ShopRenderConfig {
 
     public static final ShopRenderConfig SMALL_SHOP_NEU = builder()
             .applyProfile(COMPACT_FRONT_LAYOUT)
-            .payment1ItemX(0.657D).payment1ItemY(0.465D).payment1ItemZ(0.568D).payment1ItemScale(0.22F)
+            .payment1ItemX(0.657D).payment1ItemY(0.465D).payment1ItemZ(0.568D).payment1ItemScale(0.26F)
             .payment1ItemYaw(0.0F).payment1ItemPitch(-22.5F).payment1ItemRoll(0.0F)
-            .payment2ItemX(0.657D).payment2ItemY(0.153D).payment2ItemZ(0.568D).payment2ItemScale(0.22F)
+            .payment2ItemX(0.657D).payment2ItemY(0.153D).payment2ItemZ(0.568D).payment2ItemScale(0.26F)
             .payment2ItemYaw(0.0F).payment2ItemPitch(-22.5F).payment2ItemRoll(0.0F)
-            .payment1CountTextX(0.34D).payment1CountTextY(0.51D).payment1CountTextZ(0.545D).payment1CountTextScale(0.015F)
+            .payment1CountTextX(0.36D).payment1CountTextY(0.525D).payment1CountTextZ(0.54D).payment1CountTextScale(0.020F)
             .payment1CountTextYaw(0.0F).payment1CountTextPitch(-22.5F).payment1CountTextRoll(0.0F)
-            .payment2CountTextX(0.34D).payment2CountTextY(0.20D).payment2CountTextZ(0.545D).payment2CountTextScale(0.015F)
+            .payment2CountTextX(0.36D).payment2CountTextY(0.21D).payment2CountTextZ(0.54D).payment2CountTextScale(0.020F)
             .payment2CountTextYaw(0.0F).payment2CountTextPitch(-22.5F).payment2CountTextRoll(0.0F)
-            .offerItemX(0.5D).offerItemY(1.1D).offerItemZ(0.5D).offerItemScale(0.75F)
+            .offerItemX(0.5D).offerItemY(1.1D).offerItemZ(0.5D).offerItemScale(0.70F)
             .offerItemYaw(0.0F).offerItemPitch(0.0F).offerItemRoll(0.0F)
-            .offerCountTextX(0.5D).offerCountTextY(0.95D).offerCountTextZ(0.5D).offerCountTextScale(0.015F)
-            .offerCountTextYaw(0.0F).offerCountTextPitch(0.0F).offerCountTextRoll(0.0F)
+            .offerCountTextX(0.5D).offerCountTextY(0.69D).offerCountTextZ(0.215D).offerCountTextScale(0.020F)
+            .offerCountTextYaw(0.0F).offerCountTextPitch(-90.0F).offerCountTextRoll(0.0F)
             .build();
 
     public static Builder builder() { return new Builder(); }
