@@ -37,99 +37,54 @@ public class ShopRenderConfig {
     public SlotRenderConfig getPayment2Item() { return payment2Item; }
     public SlotRenderConfig getPayment2CountText() { return payment2CountText; }
 
-    // Legacy-Bridge fuer bestehende Aufrufer
-    @Deprecated public double getOfferItemX() { return offerItem.x(); }
-    @Deprecated public double getOfferItemY() { return offerItem.y(); }
-    @Deprecated public double getOfferItemZ() { return offerItem.z(); }
-    @Deprecated public float getOfferItemScale() { return offerItem.scale(); }
-    @Deprecated public double getPaymentItemX() { return payment1Item.x(); }
-    @Deprecated public double getPaymentItemY() { return payment1Item.y(); }
-    @Deprecated public double getPaymentItemZ() { return payment1Item.z(); }
-    @Deprecated public float getPaymentItemScale() { return payment1Item.scale(); }
-    /**
-     * @deprecated Gibt payment1Item.y - payment2Item.y zurück.
-     * Hinweis: Der Wert kann je nach Design-Config variieren und stimmt nicht
-     * zwangsläufig mit dem alten "spacing=0.4" überein (z.B. SMALL_SHOP_DEFAULT: 0.36).
-     * Direkt payment1Item().y() und payment2Item().y() verwenden.
-     */
-    @Deprecated public double getPaymentItemSpacing() { return payment1Item.y() - payment2Item.y(); }
-    @Deprecated public double getCountTextOffsetX() { return payment1CountText.x() - payment1Item.x(); }
-    @Deprecated public double getCountTextOffsetY() { return payment1Item.y() - payment1CountText.y(); }
-    @Deprecated public float getCountTextScale() { return payment1CountText.scale(); }
-
     /**
      * Gemeinsames Tuning-Profil fuer Front-Payment-Layout.
-     *
      * x: seitlicher Slot-Offset im lokalen Front-Koordinatensystem
      * z: Abstand vor dem Block
      * yTop/yBottom: vertikale Slot-Position fuer Payment1/Payment2
-     *
-     * Schnellhilfe fuers Feintuning:
-     * - Item weiter nach links/rechts: X aendern
-     * - Item weiter nach vorne/hinten: Z aendern
-     * - Item hoeher/tiefer: Y aendern
-     * - Groesse: Scale aendern
      */
     private static final RenderTuningProfile COMPACT_FRONT_LAYOUT = new RenderTuningProfile(
-            0.35D,
-            0.1D,
-            0.6D,
-            0.2D,
-            0.4F,
-            0.5D,
-            0.1D,
-            0.45D,
-            0.05D,
-            0.015F
+            0.35D, 0.1D, 0.6D, 0.2D, 0.4F, 0.5D, 0.1D, 0.45D, 0.05D, 0.015F
     );
 
     public static final ShopRenderConfig SMALL_SHOP_DEFAULT = builder()
             .applyProfile(COMPACT_FRONT_LAYOUT)
-            // Preset-spezifisches Payment-Layout (klassischer SmallShop)
-            // X = seitlich, Y = Hoehe, Z = Abstand nach vorne
             .payment1ItemX(0.30D).payment1ItemY(0.62D).payment1ItemZ(0.08D).payment1ItemScale(0.4F)
             .payment2ItemX(0.30D).payment2ItemY(0.26D).payment2ItemZ(0.08D).payment2ItemScale(0.4F)
-            // Count-Text sitzt i.d.R. leicht rechts/unter dem jeweiligen Item
             .payment1CountTextX(0.46D).payment1CountTextY(0.47D).payment1CountTextZ(0.08D).payment1CountTextScale(0.015F)
             .payment2CountTextX(0.46D).payment2CountTextY(0.11D).payment2CountTextZ(0.08D).payment2CountTextScale(0.015F)
-            // Offer-Item zentral ueber dem Block
             .offerItemX(0.5D).offerItemY(1.3D).offerItemZ(0.5D).offerItemScale(0.8F)
-            // Offer-Count-Text unter/nahe Offer-Item
             .offerCountTextX(0.5D).offerCountTextY(1.15D).offerCountTextZ(0.5D).offerCountTextScale(0.015F)
             .build();
 
     public static final ShopRenderConfig SMALL_SHOP_NEU = builder()
             .applyProfile(COMPACT_FRONT_LAYOUT)
-            // Preset-spezifisches Payment-Layout (SmallShopNeu)
-            // X = seitlich, Y = Höhe, Z = Abstand nach vorne
+            // Payment 1
             .payment1ItemX(0.657D).payment1ItemY(0.465D).payment1ItemZ(0.568D).payment1ItemScale(0.22F)
             .payment1ItemYaw(0.0F).payment1ItemPitch(-23.65F).payment1ItemRoll(0.0F)
+            // Payment 2
             .payment2ItemX(0.657D).payment2ItemY(0.153D).payment2ItemZ(0.568D).payment2ItemScale(0.22F)
             .payment2ItemYaw(0.0F).payment2ItemPitch(-23.65F).payment2ItemRoll(0.0F)
-            // Count-Text sitzt i.d.R. leicht rechts/unter dem jeweiligen Item
+            // Texts
             .payment1CountTextX(0.8D).payment1CountTextY(0.6D).payment1CountTextZ(0.55D).payment1CountTextScale(0.015F)
-            .payment1CountTextYaw(8.0F).payment1CountTextPitch(0.0F).payment1CountTextRoll(0.0F)
+            .payment1CountTextYaw(0.0F).payment1CountTextPitch(0.0F).payment1CountTextRoll(0.0F)
             .payment2CountTextX(0.50D).payment2CountTextY(0.05D).payment2CountTextZ(0.55D).payment2CountTextScale(0.015F)
-            .payment2CountTextYaw(8.0F).payment2CountTextPitch(0.0F).payment2CountTextRoll(0.0F)
-            // Offer-Item zentral ueber dem Block
+            .payment2CountTextYaw(0.0F).payment2CountTextPitch(0.0F).payment2CountTextRoll(0.0F)
+
+            // Offer-Item
             .offerItemX(0.5D).offerItemY(1.1D).offerItemZ(0.5D).offerItemScale(0.75F)
-            // Offer-Count-Text unter/nahe Offer-Item
+            .offerItemYaw(0.0F).offerItemPitch(0.0F).offerItemRoll(0.0F)
+            // Offer-Count-Text
             .offerCountTextX(0.5D).offerCountTextY(0.95D).offerCountTextZ(0.5D).offerCountTextScale(0.015F)
+            .offerCountTextYaw(0.0F).offerCountTextPitch(0.0F).offerCountTextRoll(0.0F)
             .build();
 
     public static Builder builder() { return new Builder(); }
 
     private record RenderTuningProfile(
-            double paymentItemX,
-            double paymentItemZ,
-            double payment1ItemY,
-            double payment2ItemY,
-            float paymentItemScale,
-            double countTextX,
-            double countTextZ,
-            double payment1CountTextY,
-            double payment2CountTextY,
-            float countTextScale
+            double paymentItemX, double paymentItemZ, double payment1ItemY, double payment2ItemY,
+            float paymentItemScale, double countTextX, double countTextZ,
+            double payment1CountTextY, double payment2CountTextY, float countTextScale
     ) {}
 
     public record SlotRenderConfig(double x, double y, double z, float scale, float yaw, float pitch, float roll) {
@@ -142,6 +97,7 @@ public class ShopRenderConfig {
         private double offerItemX = 0.5D, offerItemY = 1.3D, offerItemZ = 0.5D;
         private float offerItemScale = 0.8F;
         private float offerItemYaw = 0.0F, offerItemPitch = 0.0F, offerItemRoll = 0.0F;
+
         private double offerCountTextX = 0.5D, offerCountTextY = 1.15D, offerCountTextZ = 0.5D;
         private float offerCountTextScale = 0.015F;
         private float offerCountTextYaw = 0.0F, offerCountTextPitch = 0.0F, offerCountTextRoll = 0.0F;
@@ -149,6 +105,7 @@ public class ShopRenderConfig {
         private double payment1ItemX = 0.35D, payment1ItemY = 0.6D, payment1ItemZ = 0.1D;
         private float payment1ItemScale = 0.4F;
         private float payment1ItemYaw = 0.0F, payment1ItemPitch = 0.0F, payment1ItemRoll = 0.0F;
+
         private double payment1CountTextX = 0.5D, payment1CountTextY = 0.45D, payment1CountTextZ = 0.1D;
         private float payment1CountTextScale = 0.015F;
         private float payment1CountTextYaw = 0.0F, payment1CountTextPitch = 0.0F, payment1CountTextRoll = 0.0F;
@@ -156,51 +113,22 @@ public class ShopRenderConfig {
         private double payment2ItemX = 0.35D, payment2ItemY = 0.2D, payment2ItemZ = 0.1D;
         private float payment2ItemScale = 0.4F;
         private float payment2ItemYaw = 0.0F, payment2ItemPitch = 0.0F, payment2ItemRoll = 0.0F;
+
         private double payment2CountTextX = 0.5D, payment2CountTextY = 0.05D, payment2CountTextZ = 0.1D;
         private float payment2CountTextScale = 0.015F;
         private float payment2CountTextYaw = 0.0F, payment2CountTextPitch = 0.0F, payment2CountTextRoll = 0.0F;
 
-        /**
-         * Setzt ein komplettes Basis-Layout fuer Payment1/Payment2 plus Count-Texte.
-         * Danach koennen einzelne Werte gezielt ueberschrieben werden.
-         *
-         * Feintuning-Template (Reihenfolge):
-         * 1) applyProfile(...)
-         * 2) payment1Item* / payment2Item* anpassen
-         * 3) payment1CountText* / payment2CountText* anpassen
-         * 4) offerItem* / offerCountText* anpassen
-         */
-        /**
-         * Setzt ein komplettes Basis-Layout fuer Payment1/Payment2 plus Count-Texte
-         * und setzt dabei alle Rotationswerte (yaw/pitch/roll) defensiv auf 0 zurück.
-         *
-         * FIX: Rotationen werden zurückgesetzt damit keine versehentlich gesetzten
-         * Rotationswerte aus einem früheren Builder-Call erhalten bleiben.
-         * Danach können Rotationen gezielt pro Slot überschrieben werden.
-         */
         public Builder applyProfile(RenderTuningProfile profile) {
-            // Rotationen explizit zurücksetzen bevor das Profil angewendet wird
             this.payment1ItemYaw = 0.0F; this.payment1ItemPitch = 0.0F; this.payment1ItemRoll = 0.0F;
             this.payment2ItemYaw = 0.0F; this.payment2ItemPitch = 0.0F; this.payment2ItemRoll = 0.0F;
             this.payment1CountTextYaw = 0.0F; this.payment1CountTextPitch = 0.0F; this.payment1CountTextRoll = 0.0F;
             this.payment2CountTextYaw = 0.0F; this.payment2CountTextPitch = 0.0F; this.payment2CountTextRoll = 0.0F;
+
             return this
-                    .payment1ItemX(profile.paymentItemX)
-                    .payment1ItemY(profile.payment1ItemY)
-                    .payment1ItemZ(profile.paymentItemZ)
-                    .payment1ItemScale(profile.paymentItemScale)
-                    .payment2ItemX(profile.paymentItemX)
-                    .payment2ItemY(profile.payment2ItemY)
-                    .payment2ItemZ(profile.paymentItemZ)
-                    .payment2ItemScale(profile.paymentItemScale)
-                    .payment1CountTextX(profile.countTextX)
-                    .payment1CountTextY(profile.payment1CountTextY)
-                    .payment1CountTextZ(profile.countTextZ)
-                    .payment1CountTextScale(profile.countTextScale)
-                    .payment2CountTextX(profile.countTextX)
-                    .payment2CountTextY(profile.payment2CountTextY)
-                    .payment2CountTextZ(profile.countTextZ)
-                    .payment2CountTextScale(profile.countTextScale);
+                    .payment1ItemX(profile.paymentItemX).payment1ItemY(profile.payment1ItemY).payment1ItemZ(profile.paymentItemZ).payment1ItemScale(profile.paymentItemScale)
+                    .payment2ItemX(profile.paymentItemX).payment2ItemY(profile.payment2ItemY).payment2ItemZ(profile.paymentItemZ).payment2ItemScale(profile.paymentItemScale)
+                    .payment1CountTextX(profile.countTextX).payment1CountTextY(profile.payment1CountTextY).payment1CountTextZ(profile.countTextZ).payment1CountTextScale(profile.countTextScale)
+                    .payment2CountTextX(profile.countTextX).payment2CountTextY(profile.payment2CountTextY).payment2CountTextZ(profile.countTextZ).payment2CountTextScale(profile.countTextScale);
         }
 
         public Builder offerItemX(double v) { this.offerItemX = v; return this; }
@@ -250,34 +178,6 @@ public class ShopRenderConfig {
         public Builder payment2CountTextYaw(float v) { this.payment2CountTextYaw = v; return this; }
         public Builder payment2CountTextPitch(float v) { this.payment2CountTextPitch = v; return this; }
         public Builder payment2CountTextRoll(float v) { this.payment2CountTextRoll = v; return this; }
-
-        // Legacy-Bridge fuer bestehende Builder-Aufrufe
-        @Deprecated public Builder paymentItemX(double v) { this.payment1ItemX = v; this.payment2ItemX = v; return this; }
-        @Deprecated public Builder paymentItemY(double v) { this.payment1ItemY = v; return this; }
-        @Deprecated public Builder paymentItemZ(double v) { this.payment1ItemZ = v; this.payment2ItemZ = v; return this; }
-        @Deprecated public Builder paymentItemScale(float v) { this.payment1ItemScale = v; this.payment2ItemScale = v; return this; }
-        /**
-         * @deprecated Reihenfolge-sensitiv: Muss NACH payment1ItemY() bzw. paymentItemY()
-         * aufgerufen werden, da payment2ItemY relativ zu this.payment1ItemY berechnet wird.
-         * Falsche Reihenfolge führt zu falscher payment2-Position.
-         * Verwende stattdessen payment2ItemY(...) direkt.
-         */
-        @Deprecated public Builder paymentItemSpacing(double v) { this.payment2ItemY = this.payment1ItemY - v; return this; }
-        @Deprecated public Builder countTextOffsetX(double v) {
-            this.payment1CountTextX = this.payment1ItemX + v;
-            this.payment2CountTextX = this.payment2ItemX + v;
-            return this;
-        }
-        @Deprecated public Builder countTextOffsetY(double v) {
-            this.payment1CountTextY = this.payment1ItemY - v;
-            this.payment2CountTextY = this.payment2ItemY - v;
-            return this;
-        }
-        @Deprecated public Builder countTextScale(float v) {
-            this.payment1CountTextScale = v;
-            this.payment2CountTextScale = v;
-            return this;
-        }
 
         public ShopRenderConfig build() { return new ShopRenderConfig(this); }
     }

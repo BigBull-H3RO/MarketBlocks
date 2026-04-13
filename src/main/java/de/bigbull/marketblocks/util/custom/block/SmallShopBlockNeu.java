@@ -29,19 +29,13 @@ public class SmallShopBlockNeu extends BaseShopBlock {
     public static final MapCodec<SmallShopBlockNeu> CODEC = simpleCodec(SmallShopBlockNeu::new);
     public static final BooleanProperty HAS_SHOWCASE = BooleanProperty.create("has_showcase");
 
-    // Shapes: Kollision und Outline. Shape aus ShopBlockConfig wird für diese Klasse
-    // NICHT verwendet – getShape/getCollisionShape/getInteractionShape werden komplett
-    // überschrieben, weil sie vom HAS_SHOWCASE-Zustand abhängen.
-    private static final VoxelShape SHAPE_NO_SHOWCASE   = Block.box(0, 0, 0, 16, 11, 16);
+    // Feste Shape ohne Vitrine (Y geht nur bis 11)
+    private static final VoxelShape SHAPE_NO_SHOWCASE = Block.box(0, 0, 0, 16, 11, 16);
 
     public SmallShopBlockNeu(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.defaultBlockState().setValue(HAS_SHOWCASE, false));
     }
-
-    // -------------------------------------------------------------------------
-    // ShopBlockConfig
-    // -------------------------------------------------------------------------
 
     @Override
     public ShopBlockConfig getShopConfig() {
@@ -53,20 +47,11 @@ public class SmallShopBlockNeu extends BaseShopBlock {
         return ShopRenderConfig.SMALL_SHOP_NEU;
     }
 
-    // -------------------------------------------------------------------------
-    // BlockState-Helfer
-    // -------------------------------------------------------------------------
-
-    /** Gibt true zurück wenn der Block eine Glasvitrine hat. */
+    /** * Hilfsmethode: Prüft, ob der übergebene BlockState dieser Shop ist und eine Vitrine hat.
+     */
     public static boolean hasShowcase(BlockState state) {
-        return state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())
-                && state.hasProperty(HAS_SHOWCASE)
-                && state.getValue(HAS_SHOWCASE);
+        return state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) && state.getValue(HAS_SHOWCASE);
     }
-
-    // -------------------------------------------------------------------------
-    // Shapes (state-abhängig)
-    // -------------------------------------------------------------------------
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
@@ -83,69 +68,46 @@ public class SmallShopBlockNeu extends BaseShopBlock {
         return SHAPE_NO_SHOWCASE;
     }
 
-    // -------------------------------------------------------------------------
-    // BlockState-Definition
-    // -------------------------------------------------------------------------
-
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(HAS_SHOWCASE);
     }
 
-    // -------------------------------------------------------------------------
-    // Platzierung
-    // -------------------------------------------------------------------------
-
-    /**
-     * FIX: Der frühere canBeReplaced-Check für pos.above() wurde entfernt.
-     *
-     * Früher platzierte dieser Block beim Setzen IMMER einen Top-Block → check war nötig.
-     * Seit HAS_SHOWCASE eingeführt wurde, startet der Block ohne Vitrine (HAS_SHOWCASE=false),
-     * daher braucht pos.above() beim Platzieren keinen freien Platz.
-     * Der Top-Block wird erst bei tryEnableShowcase() per Shift+Klick mit Glasblock gesetzt.
-     */
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
-        if (state == null) return null;
-        return state.setValue(HAS_SHOWCASE, false);
+        return state != null ? state.setValue(HAS_SHOWCASE, false) : null;
     }
 
-    // -------------------------------------------------------------------------
-    // Vitrine aktivieren / deaktivieren (aufgerufen von ModGameEvents)
-    // -------------------------------------------------------------------------
-
     /**
-     * Vitrine hinzufügen: Spieler Shift+klickt mit Glasblock auf den Shop.
-     * Prüft Owner-Berechtigung, setzt HAS_SHOWCASE=true und platziert den Top-Block.
+     * Versucht, dem Shop eine Vitrine hinzuzufügen.
+     * Aufgerufen durch ein Event (Shift-Rechtsklick mit Glas).
      */
     public static InteractionResult tryEnableShowcase(Level level, BlockPos pos, BlockState state, Player player, ItemStack stack) {
-        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) || hasShowcase(state)) {
+        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) || state.getValue(HAS_SHOWCASE)) {
             return InteractionResult.PASS;
         }
 
-        // Owner-Check nur server-seitig
-        if (!level.isClientSide) {
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof SmallShopBlockEntity shop && !shop.isOwner(player)) {
-                return InteractionResult.FAIL;
-            }
-        }
-
         BlockPos topPos = pos.above();
-        Block topBlock = RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get();
         BlockState topState = level.getBlockState(topPos);
+        Block topBlock = RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get();
         boolean topAlreadyPresent = topState.is(topBlock);
 
-        // Top-Block-Platz prüfen
-        if (!topAlreadyPresent && !(topState.isAir() || topState.canBeReplaced())) {
+        // Prüfen, ob Platz für den Top-Block ist
+        if (!topAlreadyPresent && !topState.canBeReplaced()) {
             return InteractionResult.FAIL;
         }
 
         if (!level.isClientSide) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof SmallShopBlockEntity shop && !shop.isOwner(player)) {
+                return InteractionResult.FAIL; // Nur der Besitzer darf das
+            }
+
             level.setBlock(pos, state.setValue(HAS_SHOWCASE, true), 3);
             ensureTopBlock(level, pos);
+
             if (!topAlreadyPresent && !player.getAbilities().instabuild) {
                 stack.shrink(1);
             }
@@ -155,21 +117,21 @@ public class SmallShopBlockNeu extends BaseShopBlock {
     }
 
     /**
-     * Vitrine entfernen: Spieler Shift+klickt mit Axt auf den Shop.
-     * Prüft Owner-Berechtigung, setzt HAS_SHOWCASE=false, entfernt Top-Block,
-     * gibt einen Glasblock zurück.
+     * Versucht, die Vitrine des Shops zu entfernen.
+     * Aufgerufen durch ein Event (Shift-Rechtsklick mit Axt).
      */
     public static InteractionResult tryDisableShowcase(Level level, BlockPos pos, BlockState state, Player player) {
-        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) || !hasShowcase(state)) {
+        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) || !state.getValue(HAS_SHOWCASE)) {
             return InteractionResult.PASS;
         }
 
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SmallShopBlockEntity shop && !shop.isOwner(player)) {
-                return InteractionResult.FAIL;
+                return InteractionResult.FAIL; // Nur der Besitzer darf das
             }
 
+            // Status zurücksetzen und Glas droppen
             level.setBlock(pos, state.setValue(HAS_SHOWCASE, false), 3);
 
             BlockPos topPos = pos.above();
@@ -183,34 +145,14 @@ public class SmallShopBlockNeu extends BaseShopBlock {
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
-    // -------------------------------------------------------------------------
-    // Block-Lifecycle
-    // -------------------------------------------------------------------------
-
-    /**
-     * Top-Block sicherstellen wenn der Block gesetzt wird.
-     * Guard: nur wenn HAS_SHOWCASE bereits true ist (z.B. durch Welt-Migration oder /setblock).
-     * Beim normalen Platzieren ist HAS_SHOWCASE=false → kein Top-Block nötig.
-     */
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);
-        if (!level.isClientSide && !state.is(oldState.getBlock()) && hasShowcase(state)) {
+        if (!level.isClientSide && !state.is(oldState.getBlock()) && state.getValue(HAS_SHOWCASE)) {
             ensureTopBlock(level, pos);
         }
     }
 
-    /**
-     * NOTE: neighborChanged wird NICHT überschrieben.
-     *
-     * SmallShopBlockNeuTop überschreibt bereits neighborChanged + canSurvive.
-     * Falls der Top-Block ohne den Base-Block existiert, entfernt er sich selbst.
-     * Eine zusätzliche Überschreibung hier wäre redundant.
-     */
-
-    /**
-     * Wenn der Base-Block entfernt wird → Top-Block mitentfernen.
-     */
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
@@ -222,50 +164,33 @@ public class SmallShopBlockNeu extends BaseShopBlock {
         super.onRemove(state, level, pos, newState, movedByPiston);
     }
 
-    // -------------------------------------------------------------------------
-    // Top-Block-Verwaltung
-    // -------------------------------------------------------------------------
-
     /**
-     * Stellt sicher dass der Top-Block existiert wenn HAS_SHOWCASE=true.
-     * Enthält auch einen Migrationspfad für Welten die vor Einführung von HAS_SHOWCASE
-     * erstellt wurden (Top-Block vorhanden aber Property noch false).
-     *
-     * Aufrufstellen:
-     * - onPlace (bei HAS_SHOWCASE=true)
-     * - tryEnableShowcase (nach Setzen von HAS_SHOWCASE=true)
-     * - SmallShopBlockEntity.onLoad (Chunk-Load-Sicherheit)
-     *
-     * NOT needed in: neighborChanged (→ canSurvive in Top), tick (→ canSurvive in Top)
+     * Garantiert, dass der Top-Block existiert, sofern HAS_SHOWCASE aktiv ist.
+     * Repariert auch Migrationsprobleme (Block existiert, aber State ist falsch).
      */
     public static void ensureTopBlock(Level level, BlockPos basePos) {
         if (level.isClientSide) return;
 
         BlockState baseState = level.getBlockState(basePos);
-        if (!baseState.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) || !baseState.hasProperty(HAS_SHOWCASE)) {
-            return;
-        }
+        if (!baseState.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) return;
 
         BlockPos topPos = basePos.above();
-        Block topBlock = RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get();
         BlockState topState = level.getBlockState(topPos);
+        Block topBlock = RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get();
 
-        // Migrationspfad: Top-Block existiert, aber HAS_SHOWCASE ist noch false
-        // (Welt wurde vor Einführung von HAS_SHOWCASE erstellt)
+        // Migrationspfad: Top-Block ist da, aber der Base-Block weiß nichts davon
         if (!baseState.getValue(HAS_SHOWCASE) && topState.is(topBlock)) {
             level.setBlock(basePos, baseState.setValue(HAS_SHOWCASE, true), 3);
             return;
         }
 
-        if (!baseState.getValue(HAS_SHOWCASE)) return;
-        if (topState.is(topBlock)) return;
-
-        if (topState.isAir() || topState.canBeReplaced()) {
-            level.setBlock(topPos, topBlock.defaultBlockState(), 3);
+        // Reguläres Verhalten: Top-Block platzieren, falls noch nicht vorhanden
+        if (baseState.getValue(HAS_SHOWCASE) && !topState.is(topBlock)) {
+            if (topState.canBeReplaced()) {
+                level.setBlock(topPos, topBlock.defaultBlockState(), 3);
+            }
         }
     }
-
-    // -------------------------------------------------------------------------
 
     @Override
     protected MapCodec<? extends BaseShopBlock> codec() {
