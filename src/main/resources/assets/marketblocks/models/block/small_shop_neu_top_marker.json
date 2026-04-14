@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "marketblocks:block/small_shop_1",
-    "particle": "marketblocks:block/small_shop_1"
-  }
-}

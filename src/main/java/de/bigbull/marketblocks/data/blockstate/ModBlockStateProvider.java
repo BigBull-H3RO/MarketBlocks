@@ -19,9 +19,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        registerShopBlock(RegistriesInit.SMALL_SHOP_BLOCK.get(), "small_shop", 0);
-        registerSmallShopNeuBlock(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get(), 0);
-        simpleBlock(RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get(), models().getExistingFile(modLoc("block/small_shop_neu_top_marker")));
+        registerShopBlock(RegistriesInit.SMALL_SHOP_BLOCK_TEST.get(), "small_shop_test", 0);
+        registerSmallShopNeuBlock(RegistriesInit.SMALL_SHOP_BLOCK.get(), 0);
+        simpleBlock(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get(), models().getExistingFile(modLoc("block/small_shop_neu_top")));
     }
 
     private void registerShopBlock(Block block, String modelName, int rotationOffset) {

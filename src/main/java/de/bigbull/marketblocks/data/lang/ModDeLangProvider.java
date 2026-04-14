@@ -158,6 +158,6 @@ public class ModDeLangProvider extends LanguageProvider {
 
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Kleiner Laden");
-        addBlock(RegistriesInit.SMALL_SHOP_BLOCK_NEU, "Kleiner Laden (Neues Design)");
+        addBlock(RegistriesInit.SMALL_SHOP_BLOCK_TEST, "Kleiner Laden (Test)");
     }
 }

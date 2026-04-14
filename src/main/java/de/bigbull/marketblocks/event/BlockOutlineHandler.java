@@ -44,11 +44,11 @@ public class BlockOutlineHandler {
         BlockState state = level.getBlockState(pos);
 
         BlockPos outlineOrigin;
-        if (state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
+        if (state.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
             outlineOrigin = pos;
-        } else if (state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get())) {
+        } else if (state.is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get())) {
             outlineOrigin = pos.below();
-            if (!level.getBlockState(outlineOrigin).is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
+            if (!level.getBlockState(outlineOrigin).is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
                 return;
             }
         } else {
@@ -64,7 +64,7 @@ public class BlockOutlineHandler {
 
         BlockState baseState = level.getBlockState(outlineOrigin);
         boolean hasShowcase = SmallShopBlockNeu.hasShowcase(baseState)
-                || level.getBlockState(outlineOrigin.above()).is(RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get());
+                || level.getBlockState(outlineOrigin.above()).is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get());
         VoxelShape outline = hasShowcase ? FULL_SHOWCASE_OUTLINE : BASE_OUTLINE;
 
         poseStack.pushPose();

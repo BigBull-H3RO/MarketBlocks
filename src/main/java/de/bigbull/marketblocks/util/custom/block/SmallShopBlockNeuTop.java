@@ -62,7 +62,7 @@ public class SmallShopBlockNeuTop extends Block {
      */
     @Override
     protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        return level.getBlockState(pos.below()).is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get());
+        return level.getBlockState(pos.below()).is(RegistriesInit.SMALL_SHOP_BLOCK.get());
     }
 
     @Override
@@ -88,7 +88,7 @@ public class SmallShopBlockNeuTop extends Block {
         BlockPos basePos = pos.below();
         BlockState baseState = level.getBlockState(basePos);
 
-        if (!baseState.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
+        if (!baseState.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
             return InteractionResult.PASS;
         }
 
@@ -105,7 +105,7 @@ public class SmallShopBlockNeuTop extends Block {
         BlockPos basePos = pos.below();
         BlockState baseState = level.getBlockState(basePos);
 
-        if (baseState.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
+        if (baseState.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
             return baseState.onDestroyedByPlayer(level, basePos, player, willHarvest, level.getFluidState(basePos));
         }
         return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);

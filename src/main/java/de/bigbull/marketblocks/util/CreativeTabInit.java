@@ -20,8 +20,8 @@ public final class CreativeTabInit {
                     .icon(() -> new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK.get()))
                     .displayItems((parameters, output) -> {
                         // Füge alle Items des Mods hinzu
+                        output.accept(RegistriesInit.SMALL_SHOP_BLOCK_TEST.get());
                         output.accept(RegistriesInit.SMALL_SHOP_BLOCK.get());
-                        output.accept(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get());
                     })
                     .build());
 }

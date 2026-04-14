@@ -29,7 +29,7 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('R', Items.RED_WOOL)
                 .define('E', Items.EMERALD)
                 .unlockedBy("has_oak_planks", has(Items.OAK_PLANKS))
-                .save(recipeOutput, getModId("small_shop_block"));
+                .save(recipeOutput, getModId("small_shop_block_test"));
     }
 
     public ResourceLocation getModId(String path) {
