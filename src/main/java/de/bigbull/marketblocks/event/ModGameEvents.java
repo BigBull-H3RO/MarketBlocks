@@ -33,7 +33,7 @@ public class ModGameEvents {
 
         BlockPos basePos = clickedPos;
         BlockState baseState = clickedState;
-        if (clickedState.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get())) {
+        if (clickedState.is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get())) {
             basePos = clickedPos.below();
             baseState = level.getBlockState(basePos);
         }

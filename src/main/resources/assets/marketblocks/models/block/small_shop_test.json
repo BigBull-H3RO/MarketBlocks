@@ -1,8 +1,8 @@
 {
 	"texture_size": [64, 64],
 	"textures": {
-		"6": "marketblocks:block/small_shop",
-        "particle": "marketblocks:block/small_shop"
+		"6": "marketblocks:block/small_shop_test",
+        "particle": "marketblocks:block/small_shop_test"
 	},
 	"elements": [
 		{

@@ -50,7 +50,7 @@ public class SmallShopBlockNeu extends BaseShopBlock {
     /** * Hilfsmethode: Prüft, ob der übergebene BlockState dieser Shop ist und eine Vitrine hat.
      */
     public static boolean hasShowcase(BlockState state) {
-        return state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) && state.getValue(HAS_SHOWCASE);
+        return state.is(RegistriesInit.SMALL_SHOP_BLOCK.get()) && state.getValue(HAS_SHOWCASE);
     }
 
     @Override
@@ -85,13 +85,13 @@ public class SmallShopBlockNeu extends BaseShopBlock {
      * Aufgerufen durch ein Event (Shift-Rechtsklick mit Glas).
      */
     public static InteractionResult tryEnableShowcase(Level level, BlockPos pos, BlockState state, Player player, ItemStack stack) {
-        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) || state.getValue(HAS_SHOWCASE)) {
+        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK.get()) || state.getValue(HAS_SHOWCASE)) {
             return InteractionResult.PASS;
         }
 
         BlockPos topPos = pos.above();
         BlockState topState = level.getBlockState(topPos);
-        Block topBlock = RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get();
+        Block topBlock = RegistriesInit.SMALL_SHOP_BLOCK_TOP.get();
         boolean topAlreadyPresent = topState.is(topBlock);
 
         // Prüfen, ob Platz für den Top-Block ist
@@ -121,7 +121,7 @@ public class SmallShopBlockNeu extends BaseShopBlock {
      * Aufgerufen durch ein Event (Shift-Rechtsklick mit Axt).
      */
     public static InteractionResult tryDisableShowcase(Level level, BlockPos pos, BlockState state, Player player) {
-        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get()) || !state.getValue(HAS_SHOWCASE)) {
+        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK.get()) || !state.getValue(HAS_SHOWCASE)) {
             return InteractionResult.PASS;
         }
 
@@ -135,7 +135,7 @@ public class SmallShopBlockNeu extends BaseShopBlock {
             level.setBlock(pos, state.setValue(HAS_SHOWCASE, false), 3);
 
             BlockPos topPos = pos.above();
-            if (level.getBlockState(topPos).is(RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get())) {
+            if (level.getBlockState(topPos).is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get())) {
                 level.setBlock(topPos, Blocks.AIR.defaultBlockState(), 3);
             }
 
@@ -157,7 +157,7 @@ public class SmallShopBlockNeu extends BaseShopBlock {
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
             BlockPos topPos = pos.above();
-            if (level.getBlockState(topPos).is(RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get())) {
+            if (level.getBlockState(topPos).is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get())) {
                 level.setBlock(topPos, Blocks.AIR.defaultBlockState(), 3);
             }
         }
@@ -172,11 +172,11 @@ public class SmallShopBlockNeu extends BaseShopBlock {
         if (level.isClientSide) return;
 
         BlockState baseState = level.getBlockState(basePos);
-        if (!baseState.is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) return;
+        if (!baseState.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) return;
 
         BlockPos topPos = basePos.above();
         BlockState topState = level.getBlockState(topPos);
-        Block topBlock = RegistriesInit.SMALL_SHOP_BLOCK_NEU_TOP.get();
+        Block topBlock = RegistriesInit.SMALL_SHOP_BLOCK_TOP.get();
 
         // Migrationspfad: Top-Block ist da, aber der Base-Block weiß nichts davon
         if (!baseState.getValue(HAS_SHOWCASE) && topState.is(topBlock)) {

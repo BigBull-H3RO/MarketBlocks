@@ -41,7 +41,7 @@ public final class RegistriesInit {
     }
 
     // Block Registrierung
-    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK = registerBlock("small_shop",
+    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_TEST = registerBlock("small_shop_test",
             () -> new SmallShopBlock(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
@@ -50,7 +50,7 @@ public final class RegistriesInit {
                     .sound(SoundType.WOOD)));
 
     // SmallShopBlock Neu (Tall Showcase Design)
-    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_NEU = registerBlock("small_shop_neu",
+    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK = registerBlock("small_shop",
             () -> new SmallShopBlockNeu(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
@@ -58,7 +58,7 @@ public final class RegistriesInit {
                     .strength(2.5F, 3600000.0F)
                     .sound(SoundType.WOOD)));
 
-    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_NEU_TOP = registerInternalBlock("small_shop_neu_top",
+    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_TOP = registerInternalBlock("small_shop_top",
             () -> new SmallShopBlockNeuTop(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
@@ -69,7 +69,7 @@ public final class RegistriesInit {
     // BlockEntity Registrierung
     public static final Supplier<BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(
-                    SmallShopBlockEntity::new, SMALL_SHOP_BLOCK.get(), SMALL_SHOP_BLOCK_NEU.get()).build(null));
+                    SmallShopBlockEntity::new, SMALL_SHOP_BLOCK_TEST.get(), SMALL_SHOP_BLOCK.get()).build(null));
 
     // Menu Registrierungen
     public static final Supplier<MenuType<SmallShopMenu>> SMALL_SHOP_MENU =

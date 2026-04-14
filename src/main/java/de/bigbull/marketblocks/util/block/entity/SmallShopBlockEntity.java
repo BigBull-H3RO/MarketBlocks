@@ -1200,7 +1200,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null && !level.isClientSide && getBlockState().is(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get())) {
+        if (level != null && !level.isClientSide && getBlockState().is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
             SmallShopBlockNeu.ensureTopBlock(level, worldPosition);
         }
         updateNeighborCache();

@@ -46,7 +46,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.SMALL_SHOP_BLOCK_NEU.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.SMALL_SHOP_BLOCK.get(), RenderType.cutout());
         });
     }
 
