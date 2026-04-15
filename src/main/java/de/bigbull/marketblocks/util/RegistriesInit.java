@@ -1,9 +1,9 @@
 package de.bigbull.marketblocks.util;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlockTest;
 import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeu;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeuTop;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlockTop;
 import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
@@ -42,7 +42,7 @@ public final class RegistriesInit {
 
     // Block Registrierung
     public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_TEST = registerBlock("small_shop_test",
-            () -> new SmallShopBlock(BlockBehaviour.Properties.of()
+            () -> new SmallShopBlockTest(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
                     .instrument(NoteBlockInstrument.BASS)
@@ -51,7 +51,7 @@ public final class RegistriesInit {
 
     // SmallShopBlock Neu (Tall Showcase Design)
     public static final DeferredBlock<Block> SMALL_SHOP_BLOCK = registerBlock("small_shop",
-            () -> new SmallShopBlockNeu(BlockBehaviour.Properties.of()
+            () -> new SmallShopBlock(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
                     .instrument(NoteBlockInstrument.BASS)
@@ -59,7 +59,7 @@ public final class RegistriesInit {
                     .sound(SoundType.WOOD)));
 
     public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_TOP = registerInternalBlock("small_shop_top",
-            () -> new SmallShopBlockNeuTop(BlockBehaviour.Properties.of()
+            () -> new SmallShopBlockTop(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
                     .instrument(NoteBlockInstrument.BASS)

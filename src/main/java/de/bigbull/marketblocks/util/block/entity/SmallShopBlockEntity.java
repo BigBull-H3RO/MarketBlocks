@@ -5,7 +5,7 @@ import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.block.BaseShopBlock;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeu;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -1201,7 +1201,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide && getBlockState().is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
-            SmallShopBlockNeu.ensureTopBlock(level, worldPosition);
+            SmallShopBlock.ensureTopBlock(level, worldPosition);
         }
         updateNeighborCache();
         

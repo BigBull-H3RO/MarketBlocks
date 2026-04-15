@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.event;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeu;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
@@ -42,12 +42,12 @@ public class ModGameEvents {
         InteractionResult result = InteractionResult.PASS;
 
         if (stack.getItem() instanceof AxeItem) {
-            result = SmallShopBlockNeu.tryDisableShowcase(level, basePos, baseState, event.getEntity());
+            result = SmallShopBlock.tryDisableShowcase(level, basePos, baseState, event.getEntity());
             if (result == InteractionResult.FAIL && !level.isClientSide && event.getEntity() instanceof ServerPlayer player) {
                 player.displayClientMessage(Component.translatable("message.marketblocks.small_shop.not_owner"), true);
             }
         } else if (stack.is(Items.GLASS)) {
-            result = SmallShopBlockNeu.tryEnableShowcase(level, basePos, baseState, event.getEntity(), stack);
+            result = SmallShopBlock.tryEnableShowcase(level, basePos, baseState, event.getEntity(), stack);
             if (result == InteractionResult.FAIL && !level.isClientSide && event.getEntity() instanceof ServerPlayer player) {
                 player.displayClientMessage(Component.translatable("message.marketblocks.small_shop.not_owner"), true);
             }
