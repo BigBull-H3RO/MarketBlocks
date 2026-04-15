@@ -69,7 +69,7 @@ public class ShopRenderConfig {
             .payment2CountTextYaw(0.0F).payment2CountTextPitch(-22.5F).payment2CountTextRoll(0.0F)
             .offerItemX(0.5D).offerItemY(1.1D).offerItemZ(0.5D).offerItemScale(0.70F)
             .offerItemYaw(0.0F).offerItemPitch(0.0F).offerItemRoll(0.0F)
-            .offerCountTextX(0.492D).offerCountTextY(0.794D).offerCountTextZ(0.27D).offerCountTextScale(0.016F)
+            .offerCountTextX(0.492D).offerCountTextY(0.794D).offerCountTextZ(0.278D).offerCountTextScale(0.016F)
             .offerCountTextYaw(0.0F).offerCountTextPitch(-45.0F).offerCountTextRoll(0.0F)
             .build();
 
