@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.data.blockstate;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.block.BaseShopBlock;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeu;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.level.block.Block;
@@ -50,7 +50,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         getVariantBuilder(block)
                 .forAllStates(state -> {
                     Direction facing = state.getValue(BaseShopBlock.FACING);
-                    boolean hasShowcase = state.getValue(SmallShopBlockNeu.HAS_SHOWCASE);
+                    boolean hasShowcase = state.getValue(SmallShopBlock.HAS_SHOWCASE);
 
                     int baseRotation = switch (facing) {
                         case NORTH -> 0;

@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlockNeu;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -63,7 +63,7 @@ public class BlockOutlineHandler {
         VertexConsumer consumer = event.getMultiBufferSource().getBuffer(RenderType.lines());
 
         BlockState baseState = level.getBlockState(outlineOrigin);
-        boolean hasShowcase = SmallShopBlockNeu.hasShowcase(baseState)
+        boolean hasShowcase = SmallShopBlock.hasShowcase(baseState)
                 || level.getBlockState(outlineOrigin.above()).is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get());
         VoxelShape outline = hasShowcase ? FULL_SHOWCASE_OUTLINE : BASE_OUTLINE;
 

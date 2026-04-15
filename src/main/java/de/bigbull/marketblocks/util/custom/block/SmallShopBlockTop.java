@@ -23,13 +23,13 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * Unsichtbarer Hilfsblock für die Glasvitrine (Y=16..25).
  * Leitet alle Klicks/Abbau-Events an den darunterliegenden Hauptblock weiter.
  */
-public class SmallShopBlockNeuTop extends Block {
-    public static final MapCodec<SmallShopBlockNeuTop> CODEC = simpleCodec(SmallShopBlockNeuTop::new);
+public class SmallShopBlockTop extends Block {
+    public static final MapCodec<SmallShopBlockTop> CODEC = simpleCodec(SmallShopBlockTop::new);
 
     // Hitbox für die Vitrine
-    private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 9, 16);
+    private static final VoxelShape SHAPE = Block.box(0, 0, 0, 15, 9, 15);
 
-    public SmallShopBlockNeuTop(BlockBehaviour.Properties properties) {
+    public SmallShopBlockTop(BlockBehaviour.Properties properties) {
         super(properties);
     }
 
