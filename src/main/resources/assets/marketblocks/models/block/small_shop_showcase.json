@@ -64,9 +64,9 @@
 		},
 		{
 			"name": "OfferCountText",
-			"from": [5.5, 9.3, 3],
-			"to": [10.5, 12.3, 6],
-			"rotation": {"angle": -45, "axis": "x", "origin": [8, 10.4315, 4.05558]},
+			"from": [5.5, 9.3, 2.9],
+			"to": [10.5, 12.3, 5.9],
+			"rotation": {"angle": -45, "axis": "x", "origin": [8, 10.4315, 3.95558]},
 			"faces": {
 				"east": {"uv": [5.25, 8.75, 6, 9.5], "texture": "#1"},
 				"south": {"uv": [4, 9.5, 5.25, 10.25], "texture": "#1"},
