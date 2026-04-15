@@ -5,7 +5,7 @@
 	"textures": {
 		"1": "marketblocks:block/small_shop_base",
 		"2": "marketblocks:block/small_shop_glass",
-		"particle": "marketblocks:block/small_shop"
+		"particle": "marketblocks:block/small_shop_particle"
 	},
 	"elements": [
 		{
@@ -64,14 +64,14 @@
 		},
 		{
 			"name": "OfferCountText",
-			"from": [6, 9.5, 2.20711],
-			"to": [10, 12.5, 5.20711],
-			"rotation": {"angle": -45, "axis": "x", "origin": [7, 11, 4.1]},
+			"from": [5.5, 9.3, 3],
+			"to": [10.5, 12.3, 6],
+			"rotation": {"angle": -45, "axis": "x", "origin": [8, 10.4315, 4.05558]},
 			"faces": {
-				"east": {"uv": [5, 8.75, 5.75, 9.5], "texture": "#1"},
-				"south": {"uv": [4, 9.5, 5, 10.25], "texture": "#1"},
-				"west": {"uv": [5.75, 8.75, 6.5, 9.5], "texture": "#1"},
-				"up": {"uv": [5, 9.5, 4, 8.75], "texture": "#1"}
+				"east": {"uv": [5.25, 8.75, 6, 9.5], "texture": "#1"},
+				"south": {"uv": [4, 9.5, 5.25, 10.25], "texture": "#1"},
+				"west": {"uv": [6, 8.75, 6.75, 9.5], "texture": "#1"},
+				"up": {"uv": [5.25, 9.5, 4, 8.75], "texture": "#1"}
 			}
 		},
 		{
