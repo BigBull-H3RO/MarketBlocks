@@ -1,63 +1,63 @@
 {
   "variants": {
     "facing=east,has_showcase=false,powered=false": {
-      "model": "marketblocks:block/small_shop_neu_no_showcase",
+      "model": "marketblocks:block/small_shop_no_showcase",
       "y": 90
     },
     "facing=east,has_showcase=false,powered=true": {
-      "model": "marketblocks:block/small_shop_neu_no_showcase",
+      "model": "marketblocks:block/small_shop_no_showcase",
       "y": 90
     },
     "facing=east,has_showcase=true,powered=false": {
-      "model": "marketblocks:block/small_shop_neu",
+      "model": "marketblocks:block/small_shop_showcase",
       "y": 90
     },
     "facing=east,has_showcase=true,powered=true": {
-      "model": "marketblocks:block/small_shop_neu",
+      "model": "marketblocks:block/small_shop_showcase",
       "y": 90
     },
     "facing=north,has_showcase=false,powered=false": {
-      "model": "marketblocks:block/small_shop_neu_no_showcase"
+      "model": "marketblocks:block/small_shop_no_showcase"
     },
     "facing=north,has_showcase=false,powered=true": {
-      "model": "marketblocks:block/small_shop_neu_no_showcase"
+      "model": "marketblocks:block/small_shop_no_showcase"
     },
     "facing=north,has_showcase=true,powered=false": {
-      "model": "marketblocks:block/small_shop_neu"
+      "model": "marketblocks:block/small_shop_showcase"
     },
     "facing=north,has_showcase=true,powered=true": {
-      "model": "marketblocks:block/small_shop_neu"
+      "model": "marketblocks:block/small_shop_showcase"
     },
     "facing=south,has_showcase=false,powered=false": {
-      "model": "marketblocks:block/small_shop_neu_no_showcase",
+      "model": "marketblocks:block/small_shop_no_showcase",
       "y": 180
     },
     "facing=south,has_showcase=false,powered=true": {
-      "model": "marketblocks:block/small_shop_neu_no_showcase",
+      "model": "marketblocks:block/small_shop_no_showcase",
       "y": 180
     },
     "facing=south,has_showcase=true,powered=false": {
-      "model": "marketblocks:block/small_shop_neu",
+      "model": "marketblocks:block/small_shop_showcase",
       "y": 180
     },
     "facing=south,has_showcase=true,powered=true": {
-      "model": "marketblocks:block/small_shop_neu",
+      "model": "marketblocks:block/small_shop_showcase",
       "y": 180
     },
     "facing=west,has_showcase=false,powered=false": {
-      "model": "marketblocks:block/small_shop_neu_no_showcase",
+      "model": "marketblocks:block/small_shop_no_showcase",
       "y": 270
     },
     "facing=west,has_showcase=false,powered=true": {
-      "model": "marketblocks:block/small_shop_neu_no_showcase",
+      "model": "marketblocks:block/small_shop_no_showcase",
       "y": 270
     },
     "facing=west,has_showcase=true,powered=false": {
-      "model": "marketblocks:block/small_shop_neu",
+      "model": "marketblocks:block/small_shop_showcase",
       "y": 270
     },
     "facing=west,has_showcase=true,powered=true": {
-      "model": "marketblocks:block/small_shop_neu",
+      "model": "marketblocks:block/small_shop_showcase",
       "y": 270
     }
   }
