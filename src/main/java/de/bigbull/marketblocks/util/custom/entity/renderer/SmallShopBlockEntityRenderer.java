@@ -13,8 +13,15 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ProjectileWeaponItem;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.TieredItem;
+import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.item.MaceItem;
 
 public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallShopBlockEntity> {
 
@@ -37,7 +44,7 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         Font font = Minecraft.getInstance().font;
         Direction dir = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
 
-        // --- Offer-Item schwebend über dem Block ---
+        // --- 1. Offer-Item schwebend über dem Block ---
         ItemStack result = blockEntity.getOfferResult();
         if (!result.isEmpty()) {
             poseStack.pushPose();
@@ -46,7 +53,13 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
             float time = (blockEntity.getLevel().getGameTime() + partialTick) * 2.0f;
             poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
             applySlotRotation(poseStack, offerItem);
-            poseStack.scale(offerItem.scale(), offerItem.scale(), offerItem.scale());
+
+            BakedModel offerModel = itemRenderer.getModel(result, blockEntity.getLevel(), null, 0);
+            float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result);
+            // 3D-Blöcke ignorieren die if-Abfrage und behalten ihre normale Scale!
+
+            poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
+
             itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, packedLight, packedOverlay,
                     poseStack, bufferSource, blockEntity.getLevel(), 0);
             poseStack.popPose();
@@ -69,6 +82,25 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         }
     }
 
+    private static float getFinalOfferScale(BakedModel offerModel, ShopRenderConfig.SlotRenderConfig offerItem, ItemStack result) {
+        boolean isOffer3D = offerModel != null && offerModel.isGui3d();
+
+        float finalOfferScale = offerItem.scale();
+
+        // NEUE LOGIK FÜR DAS SCHWEBENDE ITEM:
+        if (!isOffer3D) {
+            if (isToolOrWeapon(result)) {
+                // Tools/Schwerter um 80% verkleinern (also auf 20% -> 0.2f)
+                // Falls du "auf 80%" meintest, ändere dies einfach zu 0.8f
+                finalOfferScale *= 0.8f;
+            } else {
+                // Normale flache Items auf 70%
+                finalOfferScale *= 0.7f;
+            }
+        }
+        return finalOfferScale;
+    }
+
     private void renderPaymentItem(ItemRenderer itemRenderer, Font font, PoseStack poseStack,
                                    MultiBufferSource bufferSource, int packedLight, int packedOverlay,
                                    ItemStack stack, Direction dir,
@@ -87,13 +119,26 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         poseStack.translate(xOff, itemConfig.y(), zOff);
         poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
         applySlotRotation(poseStack, itemConfig);
-        poseStack.scale(itemConfig.scale(), itemConfig.scale(), itemConfig.scale());
 
         BakedModel bakedModel = Minecraft.getInstance().getItemRenderer()
                 .getItemModelShaper().getItemModel(stack);
-        ItemDisplayContext displayContext = (bakedModel != null && bakedModel.isGui3d())
-                ? ItemDisplayContext.FIXED
-                : ItemDisplayContext.GUI;
+
+        boolean is3D = bakedModel != null && bakedModel.isGui3d();
+        ItemDisplayContext displayContext = is3D ? ItemDisplayContext.FIXED : ItemDisplayContext.GUI;
+
+        if (is3D) {
+            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+        }
+
+        // --- 2. NEUE LOGIK FÜR DIE PAYMENT-ITEMS ---
+        float finalPaymentScale = itemConfig.scale();
+
+        if (is3D) {
+            // NUR 3D-Blöcke vergrößern (hier um +30%)
+            finalPaymentScale *= 1.3f;
+        }
+
+        poseStack.scale(finalPaymentScale, finalPaymentScale, finalPaymentScale);
 
         itemRenderer.renderStatic(stack, displayContext, packedLight, packedOverlay,
                 poseStack, bufferSource, null, 0);
@@ -102,9 +147,6 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         renderCountText(font, poseStack, bufferSource, packedLight, stack.getCount(), countConfig, dir);
     }
 
-    /**
-     * Rendert einen Count-Text auf der Frontseite relativ zur Blockausrichtung.
-     */
     private void renderCountText(Font font, PoseStack poseStack, MultiBufferSource bufferSource,
                                  int packedLight, int count,
                                  ShopRenderConfig.SlotRenderConfig countConfig, Direction dir) {
@@ -133,5 +175,18 @@ public class SmallShopBlockEntityRenderer implements BlockEntityRenderer<SmallSh
         if (slot.yaw() != 0.0F)   poseStack.mulPose(Axis.YP.rotationDegrees(slot.yaw()));
         if (slot.pitch() != 0.0F) poseStack.mulPose(Axis.XP.rotationDegrees(slot.pitch()));
         if (slot.roll() != 0.0F)  poseStack.mulPose(Axis.ZP.rotationDegrees(slot.roll()));
+    }
+
+    /**
+     * Prüft, ob ein Item ein Werkzeug oder eine Waffe ist.
+     */
+    private static boolean isToolOrWeapon(ItemStack stack) {
+        Item item = stack.getItem();
+        return item instanceof TieredItem ||
+                item instanceof SwordItem ||
+                item instanceof TridentItem ||
+                item instanceof ProjectileWeaponItem ||
+                item instanceof ShieldItem ||
+                item instanceof MaceItem;
     }
 }
