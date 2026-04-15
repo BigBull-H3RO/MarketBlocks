@@ -17,9 +17,6 @@ public class SmallShopBlock extends BaseShopBlock {
         return ShopBlockConfig.SMALL_SHOP_DEFAULT_SHAPE;
     }
 
-    // getRenderConfig() nicht überschrieben – BaseShopBlock gibt bereits
-    // ShopRenderConfig.SMALL_SHOP_DEFAULT als Default zurück.
-
     @Override
     protected MapCodec<? extends BaseShopBlock> codec() {
         return CODEC;
