@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util.block;
 
+import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
@@ -203,9 +204,16 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             return InteractionResult.FAIL;
         }
 
-        // Automatische Besitzer-Reparatur
+        // Owner-Recovery nur mit administrativen Rechten erlauben
         if (shopEntity.getOwnerId() == null) {
-            shopEntity.setOwner(player);
+            if (canRepairMissingOwner(level, player)) {
+                shopEntity.setOwner(player);
+                MarketBlocks.LOGGER.warn("Recovered missing shop owner at {} in {} by {}",
+                        pos, level.dimension().location(), player.getGameProfile().getName());
+            } else {
+                MarketBlocks.LOGGER.warn("Blocked missing-owner recovery attempt at {} in {} by {}",
+                        pos, level.dimension().location(), player.getGameProfile().getName());
+            }
         }
 
         if (player instanceof ServerPlayer serverPlayer) {
@@ -234,6 +242,14 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             );
         }
         return null;
+    }
+
+    private static boolean canRepairMissingOwner(Level level, Player player) {
+        if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
+            return false;
+        }
+        return serverPlayer.hasPermissions(2) ||
+                serverLevel.getServer().isSingleplayerOwner(serverPlayer.getGameProfile());
     }
 
     @Override

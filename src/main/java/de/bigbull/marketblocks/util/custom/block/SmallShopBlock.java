@@ -7,14 +7,17 @@ import de.bigbull.marketblocks.util.block.ShopBlockConfig;
 import de.bigbull.marketblocks.util.block.ShopRenderConfig;
 import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -90,6 +93,19 @@ public class SmallShopBlock extends BaseShopBlock {
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState state = super.getStateForPlacement(context);
         return state != null ? state.setValue(HAS_SHOWCASE, false) : null;
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+        return createCloneStack(state);
+    }
+
+    public static ItemStack createCloneStack(BlockState state) {
+        ItemStack stack = new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK.get());
+        if (state.is(RegistriesInit.SMALL_SHOP_BLOCK.get()) && state.getValue(HAS_SHOWCASE)) {
+            stack.set(DataComponents.BLOCK_STATE, BlockItemStateProperties.EMPTY.with(HAS_SHOWCASE, true));
+        }
+        return stack;
     }
 
     public static InteractionResult tryEnableShowcase(Level level, BlockPos pos, BlockState state, Player player, ItemStack stack) {

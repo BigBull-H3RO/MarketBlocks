@@ -169,6 +169,8 @@ public class ModEnLangProvider extends LanguageProvider {
         add("message.marketblocks.server_shop.pricing.invalid_data", "Could not save pricing: invalid data.");
         add("message.marketblocks.server_shop.pricing.invalid_number_format", "Please use numbers only (dot or comma allowed).");
 
+        add("item.marketblocks.small_shop.with_showcase", "Small Shop (With Showcase)");
+
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Small Shop");
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK_TEST, "Small Shop (Test)");

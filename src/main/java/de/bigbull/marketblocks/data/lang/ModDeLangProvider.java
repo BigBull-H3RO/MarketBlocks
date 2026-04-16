@@ -156,6 +156,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.server_shop.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
         add("message.marketblocks.server_shop.pricing.invalid_number_format", "Bitte nur Zahlen eingeben (Punkt oder Komma erlaubt).");
 
+        add("item.marketblocks.small_shop.with_showcase", "Kleiner Laden (mit Vitrine)");
+
         // Blocks
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK, "Kleiner Laden");
         addBlock(RegistriesInit.SMALL_SHOP_BLOCK_TEST, "Kleiner Laden (Test)");
