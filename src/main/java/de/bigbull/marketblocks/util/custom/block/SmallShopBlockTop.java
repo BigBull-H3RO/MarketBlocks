@@ -11,6 +11,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -19,15 +20,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-/**
- * Unsichtbarer Hilfsblock für die Glasvitrine (Y=16..25).
- * Leitet alle Klicks/Abbau-Events an den darunterliegenden Hauptblock weiter.
- */
 public class SmallShopBlockTop extends Block {
     public static final MapCodec<SmallShopBlockTop> CODEC = simpleCodec(SmallShopBlockTop::new);
-
-    // Hitbox für die Vitrine
-    private static final VoxelShape SHAPE = Block.box(0, 0, 0, 15, 9, 15);
+    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 9, 15);
 
     public SmallShopBlockTop(BlockBehaviour.Properties properties) {
         super(properties);
@@ -44,22 +39,10 @@ public class SmallShopBlockTop extends Block {
     }
 
     @Override
-    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return SHAPE;
-    }
-
-    @Override
-    protected VoxelShape getInteractionShape(BlockState state, BlockGetter level, BlockPos pos) {
-        return SHAPE;
-    }
-
-    @Override
     protected RenderShape getRenderShape(BlockState state) {
-        return RenderShape.INVISIBLE;
+        return RenderShape.MODEL;
     }
 
-    /** * Überlebensbedingung: Muss auf einem SmallShopBlockNeu stehen.
-     */
     @Override
     protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         return level.getBlockState(pos.below()).is(RegistriesInit.SMALL_SHOP_BLOCK.get());
@@ -81,8 +64,6 @@ public class SmallShopBlockTop extends Block {
         }
     }
 
-    /** * Leitet Rechtsklick an den Base-Block weiter.
-     */
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         BlockPos basePos = pos.below();
@@ -92,23 +73,45 @@ public class SmallShopBlockTop extends Block {
             return InteractionResult.PASS;
         }
 
-        BlockHitResult redirectedHit = new BlockHitResult(
-                hitResult.getLocation(), hitResult.getDirection(), basePos, hitResult.isInside()
-        );
+        BlockHitResult redirectedHit = new BlockHitResult(hitResult.getLocation(), hitResult.getDirection(), basePos, hitResult.isInside());
         return baseState.useWithoutItem(level, player, redirectedHit);
     }
 
-    /** * Leitet Linksklick/Abbauen an den Base-Block weiter.
-     */
     @Override
     public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
         BlockPos basePos = pos.below();
         BlockState baseState = level.getBlockState(basePos);
 
         if (baseState.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
-            return baseState.onDestroyedByPlayer(level, basePos, player, willHarvest, level.getFluidState(basePos));
+            return baseState.onDestroyedByPlayer(level, basePos, player, willHarvest, fluid);
         }
+
         return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
+    }
+
+    // Leitet den eigentlichen Abbau inklusive Loot/Enchantment-Verhalten auf den Basisblock um.
+    @Override
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        BlockPos basePos = pos.below();
+        BlockState baseState = level.getBlockState(basePos);
+
+        if (baseState.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
+            baseState.getBlock().playerWillDestroy(level, basePos, baseState, player);
+
+            // Zeigt Partikel/Sound des Shop-Basisblocks statt des Top-Helferblocks.
+            level.levelEvent(player, 2001, basePos, Block.getId(baseState));
+
+            if (!level.isClientSide()) {
+                if (player.isCreative()) {
+                    level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 35);
+                } else {
+                    BlockEntity blockEntity = level.getBlockEntity(basePos);
+                    baseState.getBlock().playerDestroy(level, player, basePos, baseState, blockEntity, player.getMainHandItem());
+                    level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        }
+        return super.playerWillDestroy(level, pos, state, player);
     }
 
     @Override

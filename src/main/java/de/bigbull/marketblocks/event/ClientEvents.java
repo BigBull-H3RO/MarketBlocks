@@ -3,12 +3,17 @@ package de.bigbull.marketblocks.event;
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
 import de.bigbull.marketblocks.util.custom.entity.renderer.SmallShopBlockEntityRenderer;
 import de.bigbull.marketblocks.util.custom.screen.ServerShopScreen;
 import de.bigbull.marketblocks.util.custom.screen.SmallShopScreen;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -47,6 +52,17 @@ public class ClientEvents {
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             ItemBlockRenderTypes.setRenderLayer(RegistriesInit.SMALL_SHOP_BLOCK.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get(), RenderType.cutout());
+
+            ItemProperties.register(RegistriesInit.SMALL_SHOP_BLOCK.get().asItem(),
+                    ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "has_showcase"),
+                    (stack, level, entity, seed) -> {
+                        BlockItemStateProperties properties = stack.get(DataComponents.BLOCK_STATE);
+                        if (properties != null && Boolean.TRUE.equals(properties.get(SmallShopBlock.HAS_SHOWCASE))) {
+                            return 1.0F;
+                        }
+                        return 0.0F;
+                    });
         });
     }
 

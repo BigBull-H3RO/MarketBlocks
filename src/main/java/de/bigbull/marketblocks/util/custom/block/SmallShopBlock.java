@@ -204,6 +204,25 @@ public class SmallShopBlock extends BaseShopBlock {
     }
 
     @Override
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        if (!level.isClientSide() && state.getValue(HAS_SHOWCASE)) {
+            // Check auf Behutsamkeit (Silk Touch) in 1.21.1
+            var registry = level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT);
+            var silkTouch = registry.getHolder(net.minecraft.world.item.enchantment.Enchantments.SILK_TOUCH);
+
+            boolean hasSilkTouch = silkTouch.isPresent() &&
+                    player.getMainHandItem().getEnchantments().getLevel(silkTouch.get()) > 0;
+
+            if (!hasSilkTouch && !player.isCreative()) {
+                // Nur wenn KEINE Behutsamkeit und NICHT im Creative Mode -> Glas Sound abspielen
+                level.playSound(null, pos, net.minecraft.sounds.SoundEvents.GLASS_BREAK,
+                        net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+            }
+        }
+        return super.playerWillDestroy(level, pos, state, player);
+    }
+
+    @Override
     protected MapCodec<? extends BaseShopBlock> codec() {
         return CODEC;
     }
