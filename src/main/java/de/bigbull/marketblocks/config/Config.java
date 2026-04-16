@@ -14,6 +14,7 @@ public class Config {
     public static final ModConfigSpec.IntValue OUTPUT_WARNING_PERCENT;
     public static final ModConfigSpec.BooleanValue SERVER_SHOP_GLOBAL_DAILY_LIMIT;
     public static final ModConfigSpec.BooleanValue SERVER_SHOP_EDIT_MODE_ENABLED;
+    public static final ModConfigSpec.BooleanValue ENABLE_MIXIN_DESYNC_LOGGING;
 
     static {
         COMMON_BUILDER.push("General Settings");
@@ -45,6 +46,12 @@ public class Config {
         SERVER_SHOP_EDIT_MODE_ENABLED = COMMON_BUILDER
                 .comment("If true, the ServerShop edit mode toggle is available for admins. If false, the edit toggle is hidden and disabled globally.")
                 .define("serverShopEditModeEnabled", false);
+        COMMON_BUILDER.pop();
+
+        COMMON_BUILDER.push("Debug Settings");
+        ENABLE_MIXIN_DESYNC_LOGGING = COMMON_BUILDER
+                .comment("Enable debug logs for client-side mining target fallback in SmallShop mixins")
+                .define("enableMixinDesyncLogging", false);
         COMMON_BUILDER.pop();
 
         COMMON_SPEC = COMMON_BUILDER.build();
