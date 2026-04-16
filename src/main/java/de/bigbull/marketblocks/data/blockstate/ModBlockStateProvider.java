@@ -21,7 +21,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
     protected void registerStatesAndModels() {
         registerShopBlock(RegistriesInit.SMALL_SHOP_BLOCK_TEST.get(), "small_shop_test", 0);
         registerSmallShopNeuBlock(RegistriesInit.SMALL_SHOP_BLOCK.get(), 0);
-        simpleBlock(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get(), models().getExistingFile(modLoc("block/small_shop_showcase")));
+
+        ModelFile topModel = models().getExistingFile(modLoc("block/small_shop_block_top"));
+        simpleBlock(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get(), topModel);
     }
 
     private void registerShopBlock(Block block, String modelName, int rotationOffset) {
@@ -44,8 +46,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
     }
 
     private void registerSmallShopNeuBlock(Block block, int rotationOffset) {
-        ModelFile withoutShowcase = models().getExistingFile(modLoc("block/small_shop_no_showcase"));
-        ModelFile withShowcase = models().getExistingFile(modLoc("block/small_shop_showcase"));
+        ModelFile withoutShowcase = models().getExistingFile(modLoc("block/small_shop_block_base"));
+        ModelFile withShowcase = models().getExistingFile(modLoc("block/small_shop_block_showcase"));
 
         getVariantBuilder(block)
                 .forAllStates(state -> {

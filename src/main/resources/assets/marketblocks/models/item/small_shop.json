@@ -1,4 +1,11 @@
 {
-  "parent": "marketblocks:block/small_shop_no_showcase"
+  "parent": "marketblocks:block/small_shop_block_base",
+  "overrides": [
+    {
+      "predicate": {
+        "marketblocks:has_showcase": 1.0
+      },
+      "model": "marketblocks:block/small_shop_item_with_showcase"
+    }
+  ]
 }
-

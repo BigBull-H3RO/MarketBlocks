@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=east,powered=false": {
+      "model": "marketblocks:block/small_shop_test",
+      "y": 90
+    },
+    "facing=east,powered=true": {
+      "model": "marketblocks:block/small_shop_test",
+      "y": 90
+    },
+    "facing=north,powered=false": {
+      "model": "marketblocks:block/small_shop_test",
+      "y": 180
+    },
+    "facing=north,powered=true": {
+      "model": "marketblocks:block/small_shop_test",
+      "y": 180
+    },
+    "facing=south,powered=false": {
+      "model": "marketblocks:block/small_shop_test"
+    },
+    "facing=south,powered=true": {
+      "model": "marketblocks:block/small_shop_test"
+    },
+    "facing=west,powered=false": {
+      "model": "marketblocks:block/small_shop_test",
+      "y": 270
+    },
+    "facing=west,powered=true": {
+      "model": "marketblocks:block/small_shop_test",
+      "y": 270
+    }
+  }
+}
