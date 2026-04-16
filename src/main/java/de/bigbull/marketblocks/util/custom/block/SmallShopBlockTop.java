@@ -5,6 +5,7 @@ import de.bigbull.marketblocks.util.RegistriesInit;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -75,6 +76,18 @@ public class SmallShopBlockTop extends Block {
 
         BlockHitResult redirectedHit = new BlockHitResult(hitResult.getLocation(), hitResult.getDirection(), basePos, hitResult.isInside());
         return baseState.useWithoutItem(level, player, redirectedHit);
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+        BlockPos basePos = pos.below();
+        BlockState baseState = level.getBlockState(basePos);
+
+        if (baseState.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
+            return SmallShopBlock.createCloneStack(baseState);
+        }
+
+        return ItemStack.EMPTY;
     }
 
     @Override

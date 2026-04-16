@@ -41,7 +41,7 @@ import java.util.*;
 public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     // Constants
     private static final int MAX_SHOP_NAME_LENGTH = 32;
-    private static final double MAX_PLAYER_DISTANCE_SQUARED = 64.0;
+    private static final double MAX_PLAYER_DISTANCE_SQUARED = 64.0; // 8 blocks
     private static final Direction[] DIRECTIONS = Direction.values();
 
     // NBT Keys
@@ -76,7 +76,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private boolean hasOffer = false;
 
     // Transaction Log
-    private final LinkedList<String> transactionLog = new LinkedList<>();
+    private final ArrayDeque<String> transactionLog = new ArrayDeque<>(10);
 
     // Owner System
     private final ShopOwnerManager ownerManager = new ShopOwnerManager(this);
@@ -122,6 +122,9 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     private final ItemStackHandler paymentHandler = new TrackedItemStackHandler(2);
 
+    // Reused snapshot handler to avoid per-call allocations during output-space simulations.
+    private final ItemStackHandler outputSimulationHandler = new ItemStackHandler(outputHandler.getSlots());
+
     private final ItemStackHandler offerHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -130,9 +133,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            // Fix Item Loss Bug: Ensure we only allow extraction of the FULL offer amount
-            // ONLY when an offer is active. In creation mode, normal rules apply.
-            if (hasOffer()) {
+            boolean offerActive = hasOffer();
+
+            // Ensure we only allow extraction of the FULL offer amount while an offer is active.
+            if (offerActive) {
                 ItemStack currentOffer = getOfferResult();
                 if (currentOffer.isEmpty()) return ItemStack.EMPTY;
 
@@ -147,7 +151,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
 
             // Purchase logic only applies if an offer exists
-            if (hasOffer()) {
+            if (offerActive) {
                 if (!isReadyToPurchase()) {
                     updateOfferSlot();
                     return ItemStack.EMPTY;
@@ -156,7 +160,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
             ItemStack result = super.extractItem(slot, amount, false);
 
-            if (hasOffer() && !result.isEmpty()) {
+            if (offerActive && !result.isEmpty()) {
                 processPurchase();
             }
 
@@ -177,7 +181,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     private final OfferManager offerManager = new OfferManager(this);
 
     private int tickCounter = 0;
-    private volatile boolean needsOfferRefresh = false;
+    private boolean needsOfferRefresh = false;
 
 
     public SmallShopBlockEntity(BlockPos pos, BlockState state) {
@@ -649,7 +653,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
 
     @SuppressWarnings("unused")
     public List<String> getTransactionLog() {
-        return Collections.unmodifiableList(transactionLog);
+        return List.copyOf(transactionLog);
     }
 
     private void addLogEntry(String entry) {
@@ -739,11 +743,10 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         int actualAmount = Math.min(maxAmount, Math.min(affordable, inStock));
         if (actualAmount <= 0) return 0;
 
-        // Verify Output Space for actualAmount
-        // NOTE: We simulate insertions on a cloned handler to ensure accurate space calculation
-        // when payment1 and payment2 might share slots. The testHandler is method-local and
-        // will be garbage-collected automatically after this method exits.
-        int validAmount = simulateOutputSpace(p1, p2, actualAmount);
+        // Fast path for single transactions; run iterative simulation only for bulk purchases.
+        int validAmount = actualAmount == 1
+                ? (hasOutputSpace(p1, p2) ? 1 : 0)
+                : simulateOutputSpace(p1, p2, actualAmount);
         actualAmount = validAmount;
 
         if (actualAmount <= 0) {
@@ -785,11 +788,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
      * @return Number of transactions that actually fit (may be less than maxTransactions)
      */
     private int simulateOutputSpace(ItemStack p1, ItemStack p2, int maxTransactions) {
-        // Create temporary handler for simulation
-        ItemStackHandler testHandler = new ItemStackHandler(outputHandler.getSlots());
-        for (int i = 0; i < outputHandler.getSlots(); i++) {
-            testHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
-        }
+        ItemStackHandler testHandler = prepareOutputSimulationHandler();
 
         int validAmount = 0;
         for (int i = 0; i < maxTransactions; i++) {
@@ -987,10 +986,7 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private boolean hasOutputSpace(ItemStack... stacks) {
-        ItemStackHandler testHandler = new ItemStackHandler(outputHandler.getSlots());
-        for (int i = 0; i < outputHandler.getSlots(); i++) {
-            testHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
-        }
+        ItemStackHandler testHandler = prepareOutputSimulationHandler();
 
         for (ItemStack stack : stacks) {
             if (stack == null || stack.isEmpty()) continue;
@@ -1000,6 +996,13 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
         return true;
+    }
+
+    private ItemStackHandler prepareOutputSimulationHandler() {
+        for (int i = 0; i < outputHandler.getSlots(); i++) {
+            outputSimulationHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
+        }
+        return outputSimulationHandler;
     }
 
     private void addToOutput(ItemStack toAdd) {
@@ -1119,6 +1122,8 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         dropItems(level, pos, inputHandler);
         dropItems(level, pos, outputHandler);
         dropItems(level, pos, paymentHandler);
+        // During an active offer, slot 0 contains only a UI copy of the offer result.
+        // The real stock item remains in inputHandler and is dropped above.
         if (!hasOffer) {
             dropItems(level, pos, offerHandler);
         }
@@ -1147,7 +1152,6 @@ public class SmallShopBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    @SuppressWarnings("unused")
     public static void tick(Level level, BlockPos pos, BlockState state, SmallShopBlockEntity be) {
         if (level.isClientSide) {
             return;
