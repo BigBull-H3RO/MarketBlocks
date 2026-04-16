@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "de.bigbull.marketblocks.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "client.ClientLevelMixin",
+    "client.MultiPlayerGameModeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+
