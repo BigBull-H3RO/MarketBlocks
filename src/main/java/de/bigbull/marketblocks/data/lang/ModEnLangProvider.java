@@ -13,7 +13,7 @@ public class ModEnLangProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         // Creative Tab
-        add("itemGroup.marketblocks", "Market Blocks");
+        add("itemGroup.marketblocks", "MarketBlocks");
 
         // Container Titles
         add("container.marketblocks.trade_stand", "Trade Stand");
@@ -24,7 +24,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("menu.marketblocks.marketplace", "Marketplace");
 
         // Keybindings
-        add("key.categories.marketblocks", "Market Blocks");
+        add("key.categories.marketblocks", "MarketBlocks");
         add("key.marketblocks.open_marketplace", "Open Marketplace");
 
         // GUI Titles
@@ -173,6 +173,6 @@ public class ModEnLangProvider extends LanguageProvider {
 
         // Blocks
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Trade Stand");
-        addBlock(RegistriesInit.TRADE_STAND_CLASSIC_BLOCK, "Trade Stand (Classic)");
+        addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

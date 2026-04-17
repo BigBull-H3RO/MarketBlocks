@@ -41,7 +41,7 @@ public final class RegistriesInit {
     }
 
     // Block Registrierung
-    public static final DeferredBlock<Block> TRADE_STAND_CLASSIC_BLOCK = registerBlock("trade_stand_classic",
+    public static final DeferredBlock<Block> SHOP_BLOCK_TEST = registerBlock("shop_block_test",
             () -> new TradeStandClassicBlock(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
@@ -69,7 +69,7 @@ public final class RegistriesInit {
     // BlockEntity Registrierung
     public static final Supplier<BlockEntityType<SingleOfferShopBlockEntity>> SINGLE_OFFER_SHOP_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("single_offer_shop", () -> BlockEntityType.Builder.of(
-                    SingleOfferShopBlockEntity::new, TRADE_STAND_CLASSIC_BLOCK.get(), TRADE_STAND_BLOCK.get()).build(null));
+                    SingleOfferShopBlockEntity::new, SHOP_BLOCK_TEST.get(), TRADE_STAND_BLOCK.get()).build(null));
 
     // Menu Registrierungen
     public static final Supplier<MenuType<SingleOfferShopMenu>> SINGLE_OFFER_SHOP_MENU =

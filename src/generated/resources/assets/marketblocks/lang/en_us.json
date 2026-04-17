@@ -1,6 +1,6 @@
 {
+  "block.marketblocks.shop_block_test": "Shop Block Test",
   "block.marketblocks.trade_stand": "Trade Stand",
-  "block.marketblocks.trade_stand_classic": "Trade Stand (Classic)",
   "container.marketblocks.trade_stand": "Trade Stand",
   "container.marketblocks.trade_stand_inventory": "Trade Stand - Inventory",
   "container.marketblocks.trade_stand_offers": "Trade Stand - Offers",
@@ -105,8 +105,8 @@
   "gui.marketblocks.trade_available": "Trade Available",
   "gui.marketblocks.trade_unavailable": "Trade Unavailable",
   "item.marketblocks.trade_stand.with_showcase": "Trade Stand (With Showcase)",
-  "itemGroup.marketblocks": "Market Blocks",
-  "key.categories.marketblocks": "Market Blocks",
+  "itemGroup.marketblocks": "MarketBlocks",
+  "key.categories.marketblocks": "MarketBlocks",
   "key.marketblocks.open_marketplace": "Open Marketplace",
   "menu.marketblocks.marketplace": "Marketplace",
   "message.marketblocks.marketplace.daily_limit_reached": "The daily limit for this offer has been reached.",

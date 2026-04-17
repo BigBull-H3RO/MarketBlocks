@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "marketblocks:trade_stand_classic"
+          "name": "marketblocks:shop_block_test"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "marketblocks:blocks/trade_stand_classic"
+  "random_sequence": "marketblocks:blocks/shop_block_test"
 }
