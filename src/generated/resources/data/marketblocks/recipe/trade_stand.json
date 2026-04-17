@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "tag": "minecraft:planks"
+    },
+    "D": {
+      "item": "minecraft:deepslate_tile_slab"
+    },
+    "E": {
+      "item": "minecraft:emerald"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "tag": "minecraft:signs"
+    }
+  },
+  "pattern": [
+    "#D#",
+    "IEI",
+    "#S#"
+  ],
+  "result": {
+    "count": 1,
+    "id": "marketblocks:trade_stand"
+  }
+}

@@ -99,8 +99,8 @@ public abstract class BaseModalScreen extends Screen {
     }
 
     private void renderParentBackdrop(GuiGraphics guiGraphics, float partialTick) {
-        if (this.parent instanceof ServerShopScreen serverShopScreen) {
-            serverShopScreen.renderModalBackdrop(guiGraphics, partialTick);
+        if (this.parent instanceof MarketplaceScreen marketplaceScreen) {
+            marketplaceScreen.renderModalBackdrop(guiGraphics, partialTick);
         } else if (this.parent != null) {
             this.parent.render(guiGraphics, BACKGROUND_MOUSE_OFFSCREEN, BACKGROUND_MOUSE_OFFSCREEN, partialTick);
         } else {

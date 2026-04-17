@@ -18,10 +18,10 @@ public class ShopInventoryManager {
 
     private static final Direction[] DIRECTIONS = Direction.values();
 
-    private final SmallShopBlockEntity blockEntity;
+    private final SingleOfferShopBlockEntity blockEntity;
     private final Map<Direction, IItemHandler> cachedNeighbors = new EnumMap<>(Direction.class);
 
-    public ShopInventoryManager(SmallShopBlockEntity blockEntity) {
+    public ShopInventoryManager(SingleOfferShopBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
     }
 

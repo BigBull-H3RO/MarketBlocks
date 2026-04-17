@@ -1,9 +1,9 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.serverShop.ServerShopUpdateOfferLimitsPacket;
-import de.bigbull.marketblocks.shop.server.OfferLimit;
-import de.bigbull.marketblocks.shop.server.ServerShopSerialization;
+import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceUpdateOfferLimitsPacket;
+import de.bigbull.marketblocks.shop.marketplace.OfferLimit;
+import de.bigbull.marketblocks.shop.marketplace.MarketplaceSerialization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component;
 import java.util.UUID;
 
 /**
- * Modal dialog for editing the purchase limits of a single server shop offer.
+ * Modal dialog for editing the purchase limits of a single marketplace offer.
  */
 public class OfferLimitsEditor extends BaseModalScreen {
     private static final int PANEL_WIDTH = 236;
@@ -36,7 +36,7 @@ public class OfferLimitsEditor extends BaseModalScreen {
     }
 
     public OfferLimitsEditor(Screen parent, UUID offerId, OfferLimit currentLimit, int preferredLeft, int preferredCenterY) {
-        super(Component.translatable("gui.marketblocks.server_shop.editor.limits.title"), parent, PANEL_WIDTH, PANEL_HEIGHT, preferredLeft, preferredCenterY);
+        super(Component.translatable("gui.marketblocks.marketplace.editor.limits.title"), parent, PANEL_WIDTH, PANEL_HEIGHT, preferredLeft, preferredCenterY);
         this.offerId = offerId;
         this.currentLimit = currentLimit != null ? currentLimit : OfferLimit.unlimited();
     }
@@ -85,19 +85,19 @@ public class OfferLimitsEditor extends BaseModalScreen {
             OfferLimit newLimit = buildUpdatedLimit();
             var connection = Minecraft.getInstance().getConnection();
             if (connection == null) {
-                notifyClient(Component.translatable("message.marketblocks.server_shop.limits.no_connection"));
+                notifyClient(Component.translatable("message.marketblocks.marketplace.limits.no_connection"));
                 return;
             }
-            var encodeResult = ServerShopSerialization.encodeLimit(newLimit, connection.registryAccess());
+            var encodeResult = MarketplaceSerialization.encodeLimit(newLimit, connection.registryAccess());
             if (encodeResult.error().isEmpty()) {
                 CompoundTag encoded = encodeResult.result().orElseThrow();
-                NetworkHandler.sendToServer(new ServerShopUpdateOfferLimitsPacket(offerId, encoded));
+                NetworkHandler.sendToServer(new MarketplaceUpdateOfferLimitsPacket(offerId, encoded));
                 this.onClose();
             } else {
-                notifyClient(Component.translatable("message.marketblocks.server_shop.limits.invalid_data"));
+                notifyClient(Component.translatable("message.marketblocks.marketplace.limits.invalid_data"));
             }
         } catch (NumberFormatException e) {
-            notifyClient(Component.translatable("message.marketblocks.server_shop.limits.invalid_positive_int"));
+            notifyClient(Component.translatable("message.marketblocks.marketplace.limits.invalid_positive_int"));
         }
     }
 
@@ -123,9 +123,9 @@ public class OfferLimitsEditor extends BaseModalScreen {
     protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         int labelX = panelLeft + LABEL_X_OFFSET;
         int rowStartY = panelTop + LABEL_START_Y_OFFSET;
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.server_shop.editor.limits.daily"), labelX, rowStartY, 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.server_shop.editor.limits.stock"), labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.server_shop.editor.limits.restock"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.daily"), labelX, rowStartY, 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.stock"), labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.restock"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
     }
 }
 

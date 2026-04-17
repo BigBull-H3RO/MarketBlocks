@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
+import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -44,11 +44,11 @@ public class BlockOutlineHandler {
         BlockState state = level.getBlockState(pos);
 
         BlockPos outlineOrigin;
-        if (state.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
+        if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             outlineOrigin = pos;
-        } else if (state.is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get())) {
+        } else if (state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
             outlineOrigin = pos.below();
-            if (!level.getBlockState(outlineOrigin).is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
+            if (!level.getBlockState(outlineOrigin).is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
                 return;
             }
         } else {
@@ -63,8 +63,8 @@ public class BlockOutlineHandler {
         VertexConsumer consumer = event.getMultiBufferSource().getBuffer(RenderType.lines());
 
         BlockState baseState = level.getBlockState(outlineOrigin);
-        boolean hasShowcase = SmallShopBlock.hasShowcase(baseState)
-                || level.getBlockState(outlineOrigin.above()).is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get());
+        boolean hasShowcase = TradeStandBlock.hasShowcase(baseState)
+                || level.getBlockState(outlineOrigin.above()).is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get());
         VoxelShape outline = hasShowcase ? FULL_SHOWCASE_OUTLINE : BASE_OUTLINE;
 
         poseStack.pushPose();

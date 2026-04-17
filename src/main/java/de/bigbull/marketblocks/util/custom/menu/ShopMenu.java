@@ -1,39 +1,39 @@
 package de.bigbull.marketblocks.util.custom.menu;
 
-import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
 
 /**
- * Interface für Small-Shop-Menüs.
+ * Shared contract for single-offer shop menus.
  */
 public interface ShopMenu {
     /**
-     * Gibt die zugehörige Block-Entity des Shops zurück.
+     * Returns the backing shop block entity.
      */
-    SmallShopBlockEntity getBlockEntity();
+    SingleOfferShopBlockEntity getBlockEntity();
 
     /**
-     * Liefert die Bitmaske der Flags dieses Menüs.
+     * Returns the bitmask of menu flags.
      */
     int getFlags();
 
     /**
-     * Prüft, ob ein bestimmtes Flag gesetzt ist.
+     * Checks whether a specific flag is set.
      */
     default boolean hasFlag(int flag) {
         return (getFlags() & flag) != 0;
     }
 
     /**
-     * @return {@code true}, wenn der aktuelle Spieler Eigentümer des Shops ist.
+     * @return true if the current player is an owner of the shop.
      */
     default boolean isOwner() {
-        return hasFlag(SmallShopBlockEntity.OWNER_FLAG);
+        return hasFlag(SingleOfferShopBlockEntity.OWNER_FLAG);
     }
 
     /**
-     * @return {@code true}, wenn der aktuelle Spieler der Hauptbesitzer des Shops ist.
+     * @return true if the current player is the primary owner of the shop.
      */
     default boolean isPrimaryOwner() {
-        return hasFlag(SmallShopBlockEntity.PRIMARY_OWNER_FLAG);
+        return hasFlag(SingleOfferShopBlockEntity.PRIMARY_OWNER_FLAG);
     }
 }

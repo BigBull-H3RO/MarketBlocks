@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
-import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -56,7 +56,7 @@ public class ChestSecurityHandler {
         BlockPos pos = event.getPos();
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof ChestBlockEntity) {
-            SmallShopBlockEntity shop = findShop(level, pos);
+            SingleOfferShopBlockEntity shop = findShop(level, pos);
             if (shop != null && (event.getEntity() == null || !shop.isOwner(event.getEntity()))) {
                 event.setCanceled(true);
             }
@@ -67,11 +67,11 @@ public class ChestSecurityHandler {
         return findShopSingle(level, pos) != null;
     }
 
-    private static SmallShopBlockEntity findShop(Level level, BlockPos pos) {
+    private static SingleOfferShopBlockEntity findShop(Level level, BlockPos pos) {
         if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
             return null;
         }
-        SmallShopBlockEntity shop = findShopSingle(level, pos);
+        SingleOfferShopBlockEntity shop = findShopSingle(level, pos);
         if (shop != null) {
             return shop;
         }
@@ -88,11 +88,11 @@ public class ChestSecurityHandler {
         return null;
     }
 
-    private static SmallShopBlockEntity findShopSingle(Level level, BlockPos pos) {
+    private static SingleOfferShopBlockEntity findShopSingle(Level level, BlockPos pos) {
         for (Direction dir : Direction.values()) {
             BlockPos neighbor = pos.relative(dir);
             BlockEntity be = level.getBlockEntity(neighbor);
-            if (be instanceof SmallShopBlockEntity shop) {
+            if (be instanceof SingleOfferShopBlockEntity shop) {
                 SideMode mode = shop.getModeForSide(dir.getOpposite());
                 if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
                     return shop;

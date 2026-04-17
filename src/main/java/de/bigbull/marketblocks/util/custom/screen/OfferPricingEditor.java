@@ -1,9 +1,9 @@
 package de.bigbull.marketblocks.util.custom.screen;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.serverShop.ServerShopUpdateOfferPricingPacket;
-import de.bigbull.marketblocks.shop.server.DemandPricing;
-import de.bigbull.marketblocks.shop.server.ServerShopSerialization;
+import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceUpdateOfferPricingPacket;
+import de.bigbull.marketblocks.shop.marketplace.DemandPricing;
+import de.bigbull.marketblocks.shop.marketplace.MarketplaceSerialization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component;
 import java.util.UUID;
 
 /**
- * Modal dialog for editing the demand-based pricing configuration of a single server shop offer.
+ * Modal dialog for editing the demand-based pricing configuration of a single marketplace offer.
  */
 public class OfferPricingEditor extends BaseModalScreen {
     private static final int PANEL_WIDTH = 248;
@@ -36,7 +36,7 @@ public class OfferPricingEditor extends BaseModalScreen {
     }
 
     public OfferPricingEditor(Screen parent, UUID offerId, DemandPricing currentPricing, int preferredLeft, int preferredCenterY) {
-        super(Component.translatable("gui.marketblocks.server_shop.editor.pricing.title"), parent, PANEL_WIDTH, PANEL_HEIGHT, preferredLeft, preferredCenterY);
+        super(Component.translatable("gui.marketblocks.marketplace.editor.pricing.title"), parent, PANEL_WIDTH, PANEL_HEIGHT, preferredLeft, preferredCenterY);
         this.offerId = offerId;
         this.currentPricing = currentPricing != null ? currentPricing : DemandPricing.disabled();
         this.enablePricing = this.currentPricing.enabled();
@@ -78,8 +78,8 @@ public class OfferPricingEditor extends BaseModalScreen {
 
     private Component pricingToggleMessage() {
         return Component.translatable(enablePricing
-                ? "gui.marketblocks.server_shop.editor.pricing.enabled"
-                : "gui.marketblocks.server_shop.editor.pricing.disabled");
+                ? "gui.marketblocks.marketplace.editor.pricing.enabled"
+                : "gui.marketblocks.marketplace.editor.pricing.disabled");
     }
 
     private void createActionButtons() {
@@ -101,7 +101,7 @@ public class OfferPricingEditor extends BaseModalScreen {
             double maxMultiplier = parseLocalizedDoubleOrDefault(maxMultiplierInput.getValue(), currentPricing.maxMultiplier());
 
             if (!Double.isFinite(demandStep) || !Double.isFinite(minMultiplier) || !Double.isFinite(maxMultiplier)) {
-                notifyClient(Component.translatable("message.marketblocks.server_shop.pricing.invalid_finite"));
+                notifyClient(Component.translatable("message.marketblocks.marketplace.pricing.invalid_finite"));
                 return;
             }
 
@@ -109,19 +109,19 @@ public class OfferPricingEditor extends BaseModalScreen {
 
             var connection = Minecraft.getInstance().getConnection();
             if (connection == null) {
-                notifyClient(Component.translatable("message.marketblocks.server_shop.pricing.no_connection"));
+                notifyClient(Component.translatable("message.marketblocks.marketplace.pricing.no_connection"));
                 return;
             }
-            var encodeResult = ServerShopSerialization.encodePricing(newPricing, connection.registryAccess());
+            var encodeResult = MarketplaceSerialization.encodePricing(newPricing, connection.registryAccess());
             if (encodeResult.error().isEmpty()) {
                 CompoundTag encoded = encodeResult.result().orElseThrow();
-                NetworkHandler.sendToServer(new ServerShopUpdateOfferPricingPacket(offerId, encoded));
+                NetworkHandler.sendToServer(new MarketplaceUpdateOfferPricingPacket(offerId, encoded));
                 this.onClose();
             } else {
-                notifyClient(Component.translatable("message.marketblocks.server_shop.pricing.invalid_data"));
+                notifyClient(Component.translatable("message.marketblocks.marketplace.pricing.invalid_data"));
             }
         } catch (NumberFormatException e) {
-            notifyClient(Component.translatable("message.marketblocks.server_shop.pricing.invalid_number_format"));
+            notifyClient(Component.translatable("message.marketblocks.marketplace.pricing.invalid_number_format"));
         }
     }
 
@@ -141,10 +141,10 @@ public class OfferPricingEditor extends BaseModalScreen {
     protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         int labelX = panelLeft + LABEL_X_OFFSET;
         int rowStartY = panelTop + LABEL_START_Y_OFFSET;
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.server_shop.editor.pricing.label"), labelX, rowStartY, 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.server_shop.editor.pricing.step"), labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.server_shop.editor.pricing.min"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.server_shop.editor.pricing.max"), labelX, rowStartY + (ROW_SPACING * 3), 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.label"), labelX, rowStartY, 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.step"), labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.min"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.max"), labelX, rowStartY + (ROW_SPACING * 3), 0xCFCFCF, false);
     }
 }
 

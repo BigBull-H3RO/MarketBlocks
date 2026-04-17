@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.event;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.custom.block.SideMode;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
+import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
@@ -22,7 +22,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public class ModGameEvents {
     @SubscribeEvent
-    public static void onSmallShopShowcaseUse(PlayerInteractEvent.RightClickBlock event) {
+    public static void onTradeStandShowcaseUse(PlayerInteractEvent.RightClickBlock event) {
         if (!event.getEntity().isShiftKeyDown()) {
             return;
         }
@@ -33,7 +33,7 @@ public class ModGameEvents {
 
         BlockPos basePos = clickedPos;
         BlockState baseState = clickedState;
-        if (clickedState.is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get())) {
+        if (clickedState.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
             basePos = clickedPos.below();
             baseState = level.getBlockState(basePos);
         }
@@ -42,14 +42,14 @@ public class ModGameEvents {
         InteractionResult result = InteractionResult.PASS;
 
         if (stack.getItem() instanceof AxeItem) {
-            result = SmallShopBlock.tryDisableShowcase(level, basePos, baseState, event.getEntity());
+            result = TradeStandBlock.tryDisableShowcase(level, basePos, baseState, event.getEntity());
             if (result == InteractionResult.FAIL && !level.isClientSide && event.getEntity() instanceof ServerPlayer player) {
-                player.displayClientMessage(Component.translatable("message.marketblocks.small_shop.not_owner"), true);
+                player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
             }
         } else if (stack.is(Items.GLASS)) {
-            result = SmallShopBlock.tryEnableShowcase(level, basePos, baseState, event.getEntity(), stack);
+            result = TradeStandBlock.tryEnableShowcase(level, basePos, baseState, event.getEntity(), stack);
             if (result == InteractionResult.FAIL && !level.isClientSide && event.getEntity() instanceof ServerPlayer player) {
-                player.displayClientMessage(Component.translatable("message.marketblocks.small_shop.not_owner"), true);
+                player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
             }
         }
 
@@ -63,7 +63,7 @@ public class ModGameEvents {
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(
                 Capabilities.ItemHandler.BLOCK,
-                RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(),
+                RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(),
                 (be, side) -> {
                     if (side == null) return null;
                     SideMode mode = be.getModeForSide(side);

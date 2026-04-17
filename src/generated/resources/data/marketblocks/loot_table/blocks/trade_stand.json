@@ -1,0 +1,63 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:alternatives",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "conditions": [
+                {
+                  "condition": "minecraft:match_tool",
+                  "predicate": {
+                    "predicates": {
+                      "minecraft:enchantments": [
+                        {
+                          "enchantments": "minecraft:silk_touch",
+                          "levels": {
+                            "min": 1
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "block": "marketblocks:trade_stand",
+                  "condition": "minecraft:block_state_property",
+                  "properties": {
+                    "has_showcase": "true"
+                  }
+                }
+              ],
+              "functions": [
+                {
+                  "block": "marketblocks:trade_stand",
+                  "function": "minecraft:copy_state",
+                  "properties": [
+                    "has_showcase"
+                  ]
+                }
+              ],
+              "name": "marketblocks:trade_stand"
+            },
+            {
+              "type": "minecraft:item",
+              "name": "marketblocks:trade_stand"
+            }
+          ],
+          "conditions": [
+            {
+              "condition": "minecraft:survives_explosion"
+            }
+          ]
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "marketblocks:blocks/trade_stand"
+}

@@ -61,14 +61,14 @@ public abstract class ClientLevelMixin {
     private static BlockPos marketblocks$resolveMirrorTarget(ClientLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
 
-        if (state.is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
+        if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             BlockPos topPos = pos.above();
-            return level.getBlockState(topPos).is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get()) ? topPos : null;
+            return level.getBlockState(topPos).is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get()) ? topPos : null;
         }
 
-        if (state.is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get())) {
+        if (state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
             BlockPos basePos = pos.below();
-            return level.getBlockState(basePos).is(RegistriesInit.SMALL_SHOP_BLOCK.get()) ? basePos : null;
+            return level.getBlockState(basePos).is(RegistriesInit.TRADE_STAND_BLOCK.get()) ? basePos : null;
         }
 
         return null;

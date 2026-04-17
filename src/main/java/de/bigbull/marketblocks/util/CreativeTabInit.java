@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.util;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
+import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -20,15 +20,15 @@ public final class CreativeTabInit {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MARKETBLOCKS_TAB =
             CREATIVE_MODE_TABS.register("marketblocks_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.marketblocks"))
-                    .icon(() -> new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK.get()))
+                    .icon(() -> new ItemStack(RegistriesInit.TRADE_STAND_BLOCK.get()))
                     .displayItems((parameters, output) -> {
-                        output.accept(RegistriesInit.SMALL_SHOP_BLOCK.get());
+                        output.accept(RegistriesInit.TRADE_STAND_BLOCK.get());
 
-                        ItemStack showcaseStack = new ItemStack(RegistriesInit.SMALL_SHOP_BLOCK.get());
+                        ItemStack showcaseStack = new ItemStack(RegistriesInit.TRADE_STAND_BLOCK.get());
                         showcaseStack.set(DataComponents.BLOCK_STATE,
-                                BlockItemStateProperties.EMPTY.with(SmallShopBlock.HAS_SHOWCASE, true));
+                                BlockItemStateProperties.EMPTY.with(TradeStandBlock.HAS_SHOWCASE, true));
                         showcaseStack.set(DataComponents.CUSTOM_NAME,
-                                Component.translatable("item.marketblocks.small_shop.with_showcase"));
+                                Component.translatable("item.marketblocks.trade_stand.with_showcase"));
                         output.accept(showcaseStack);
                     })
                     .build());

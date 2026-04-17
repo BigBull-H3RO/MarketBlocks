@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.network;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.packets.serverShop.*;
-import de.bigbull.marketblocks.network.packets.smallShop.*;
+import de.bigbull.marketblocks.network.packets.marketplace.*;
+import de.bigbull.marketblocks.network.packets.singleOfferShop.*;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -33,7 +33,7 @@ public class NetworkHandler {
                 .versioned(PROTOCOL_VERSION);
 
         // Client to Server packets
-        // Small Shop packets
+        // Trade Stand packets
         registrar.playToServer(CreateOfferPacket.TYPE, CreateOfferPacket.CODEC, CreateOfferPacket::handle);
         registrar.playToServer(DeleteOfferPacket.TYPE, DeleteOfferPacket.CODEC, DeleteOfferPacket::handle);
         registrar.playToServer(SwitchTabPacket.TYPE, SwitchTabPacket.CODEC, SwitchTabPacket::handle);
@@ -42,27 +42,27 @@ public class NetworkHandler {
         registrar.playToServer(UpdateSettingsPacket.TYPE, UpdateSettingsPacket.CODEC, UpdateSettingsPacket::handle);
         registrar.playToServer(UpdateOwnersPacket.TYPE, UpdateOwnersPacket.CODEC, UpdateOwnersPacket::handle);
 
-        // Server Shop packets
-        registrar.playToServer(ServerShopOpenRequestPacket.TYPE, ServerShopOpenRequestPacket.CODEC, ServerShopOpenRequestPacket::handle);
-        registrar.playToServer(ServerShopToggleEditModePacket.TYPE, ServerShopToggleEditModePacket.CODEC, ServerShopToggleEditModePacket::handle);
-        registrar.playToServer(ServerShopSelectPagePacket.TYPE, ServerShopSelectPagePacket.CODEC, ServerShopSelectPagePacket::handle);
-        registrar.playToServer(ServerShopCreatePagePacket.TYPE, ServerShopCreatePagePacket.CODEC, ServerShopCreatePagePacket::handle);
-        registrar.playToServer(ServerShopRenamePagePacket.TYPE, ServerShopRenamePagePacket.CODEC, ServerShopRenamePagePacket::handle);
-        registrar.playToServer(ServerShopDeletePagePacket.TYPE, ServerShopDeletePagePacket.CODEC, ServerShopDeletePagePacket::handle);
-        registrar.playToServer(ServerShopAddOfferPacket.TYPE, ServerShopAddOfferPacket.CODEC, ServerShopAddOfferPacket::handle);
-        registrar.playToServer(ServerShopMoveOfferPacket.TYPE, ServerShopMoveOfferPacket.CODEC, ServerShopMoveOfferPacket::handle);
-        registrar.playToServer(ServerShopDeleteOfferPacket.TYPE, ServerShopDeleteOfferPacket.CODEC, ServerShopDeleteOfferPacket::handle);
-        registrar.playToServer(ServerShopUpdateOfferLimitsPacket.TYPE, ServerShopUpdateOfferLimitsPacket.CODEC, ServerShopUpdateOfferLimitsPacket::handle);
-        registrar.playToServer(ServerShopUpdateOfferPricingPacket.TYPE, ServerShopUpdateOfferPricingPacket.CODEC, ServerShopUpdateOfferPricingPacket::handle);
-        registrar.playToServer(ServerShopAutoFillPacket.TYPE, ServerShopAutoFillPacket.CODEC, ServerShopAutoFillPacket::handle);
-        registrar.playToServer(ServerShopSetOfferPacket.TYPE, ServerShopSetOfferPacket.CODEC, ServerShopSetOfferPacket::handle);
+        // Marketplace packets
+        registrar.playToServer(MarketplaceOpenRequestPacket.TYPE, MarketplaceOpenRequestPacket.CODEC, MarketplaceOpenRequestPacket::handle);
+        registrar.playToServer(MarketplaceToggleEditModePacket.TYPE, MarketplaceToggleEditModePacket.CODEC, MarketplaceToggleEditModePacket::handle);
+        registrar.playToServer(MarketplaceSelectPagePacket.TYPE, MarketplaceSelectPagePacket.CODEC, MarketplaceSelectPagePacket::handle);
+        registrar.playToServer(MarketplaceCreatePagePacket.TYPE, MarketplaceCreatePagePacket.CODEC, MarketplaceCreatePagePacket::handle);
+        registrar.playToServer(MarketplaceRenamePagePacket.TYPE, MarketplaceRenamePagePacket.CODEC, MarketplaceRenamePagePacket::handle);
+        registrar.playToServer(MarketplaceDeletePagePacket.TYPE, MarketplaceDeletePagePacket.CODEC, MarketplaceDeletePagePacket::handle);
+        registrar.playToServer(MarketplaceAddOfferPacket.TYPE, MarketplaceAddOfferPacket.CODEC, MarketplaceAddOfferPacket::handle);
+        registrar.playToServer(MarketplaceMoveOfferPacket.TYPE, MarketplaceMoveOfferPacket.CODEC, MarketplaceMoveOfferPacket::handle);
+        registrar.playToServer(MarketplaceDeleteOfferPacket.TYPE, MarketplaceDeleteOfferPacket.CODEC, MarketplaceDeleteOfferPacket::handle);
+        registrar.playToServer(MarketplaceUpdateOfferLimitsPacket.TYPE, MarketplaceUpdateOfferLimitsPacket.CODEC, MarketplaceUpdateOfferLimitsPacket::handle);
+        registrar.playToServer(MarketplaceUpdateOfferPricingPacket.TYPE, MarketplaceUpdateOfferPricingPacket.CODEC, MarketplaceUpdateOfferPricingPacket::handle);
+        registrar.playToServer(MarketplaceAutoFillPacket.TYPE, MarketplaceAutoFillPacket.CODEC, MarketplaceAutoFillPacket::handle);
+        registrar.playToServer(MarketplaceSetOfferPacket.TYPE, MarketplaceSetOfferPacket.CODEC, MarketplaceSetOfferPacket::handle);
 
         // Server to Client packets
-        // Small Shop packets
+        // Trade Stand packets
         registrar.playToClient(OfferStatusPacket.TYPE, OfferStatusPacket.CODEC, OfferStatusPacket::handle);
 
-        // Server Shop packets
-        registrar.playToClient(ServerShopSyncPacket.TYPE, ServerShopSyncPacket.CODEC, ServerShopSyncPacket::handle);
+        // Marketplace packets
+        registrar.playToClient(MarketplaceSyncPacket.TYPE, MarketplaceSyncPacket.CODEC, MarketplaceSyncPacket::handle);
     }
 
     /**
