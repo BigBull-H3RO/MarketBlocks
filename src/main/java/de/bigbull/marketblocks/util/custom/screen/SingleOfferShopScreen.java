@@ -60,7 +60,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     // Settings widgets
     private EditBox nameField;
-    private Checkbox emitRedstoneCheckbox;
+    private Button emitRedstoneToggleButton;
+    private boolean emitRedstoneEnabled;
     private SideModeButton leftButton, rightButton, bottomButton, backButton;
     private Direction leftDir, rightDir, bottomDir, backDir;
     private boolean saved;
@@ -92,7 +93,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     // persistente Auswahl über Scroll hinweg
     private final Map<UUID, Boolean> ownerSelected = new HashMap<>();
     // Fenster-Layout
-    private static final int OWNER_VISIBLE_ROWS = 1;  // Anzahl sichtbarer Zeilen (CheckBox-Höhe inkl. Abstand: 20 px)
+    private static final int OWNER_VISIBLE_ROWS = 2;  // Zwei Einträge direkt sichtbar, danach Scroller
     private static final int OWNER_ROW_HEIGHT = 20;
     // Scrollbar-Position (X relativ zum linken Screen-Rand)
     private static final int OWNER_SCROLLBAR_X_OFFSET = 130; // ggf. bei Bedarf optisch anpassen
@@ -224,16 +225,17 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         nameField.setValue(originalName);
         nameField.setResponder(s -> saved = false);
 
-        emitRedstoneCheckbox = addRenderableWidget(Checkbox.builder(Component.translatable("gui.marketblocks.emit_redstone"), font)
-                .pos(leftPos + 8, topPos + 50)
-                .selected(be.isEmitRedstone())
-                .tooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")))
-                .onValueChange((btn, val) -> saved = false)
-                .build());
+        emitRedstoneEnabled = be.isEmitRedstone();
+        emitRedstoneToggleButton = addRenderableWidget(Button.builder(getEmitRedstoneToggleLabel(), b -> {
+            emitRedstoneEnabled = !emitRedstoneEnabled;
+            b.setMessage(getEmitRedstoneToggleLabel());
+            saved = false;
+        }).bounds(leftPos + 8, topPos + 45, 24, 16).build());
+        emitRedstoneToggleButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")));
 
         addRenderableWidget(Button.builder(Component.translatable("gui.marketblocks.save"), b -> {
             String name = nameField.getValue();
-            boolean emit = emitRedstoneCheckbox.selected();
+            boolean emit = emitRedstoneEnabled;
 
             // Clientseitig UI-State anwenden
             be.setShopNameClient(name);
@@ -276,29 +278,31 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             saved = true;
         }).bounds(leftPos + imageWidth - 68, topPos + imageHeight - 28, 60, 20).build());
 
-        int y = topPos + 80;
-        leftButton = addRenderableWidget(new SideModeButton(leftPos + 8, y, 16, 16, menu.getMode(leftDir), m -> {
+        int sideCenterX = leftPos + 28;
+        int sideBaseY = topPos + 65;
+
+        leftButton = addRenderableWidget(new SideModeButton(sideCenterX - 20, sideBaseY, 16, 16, menu.getMode(leftDir), m -> {
             menu.setMode(leftDir, m); saved = false; }));
         leftButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.left")));
         leftButton.setMessage(Component.translatable("gui.marketblocks.side.left"));
 
-        rightButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 22, 16, 16, menu.getMode(rightDir), m -> {
-            menu.setMode(rightDir, m); saved = false; }));
-        rightButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.right")));
-        rightButton.setMessage(Component.translatable("gui.marketblocks.side.right"));
-
-        bottomButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 44, 16, 16, menu.getMode(bottomDir), m -> {
+        bottomButton = addRenderableWidget(new SideModeButton(sideCenterX, sideBaseY, 16, 16, menu.getMode(bottomDir), m -> {
             menu.setMode(bottomDir, m); saved = false; }));
         bottomButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.bottom")));
         bottomButton.setMessage(Component.translatable("gui.marketblocks.side.bottom"));
 
-        backButton = addRenderableWidget(new SideModeButton(leftPos + 8, y + 66, 16, 16, menu.getMode(backDir), m -> {
+        rightButton = addRenderableWidget(new SideModeButton(sideCenterX + 20, sideBaseY, 16, 16, menu.getMode(rightDir), m -> {
+            menu.setMode(rightDir, m); saved = false; }));
+        rightButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.right")));
+        rightButton.setMessage(Component.translatable("gui.marketblocks.side.right"));
+
+        backButton = addRenderableWidget(new SideModeButton(sideCenterX, sideBaseY + 20, 16, 16, menu.getMode(backDir), m -> {
             menu.setMode(backDir, m); saved = false; }));
         backButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.back")));
         backButton.setMessage(Component.translatable("gui.marketblocks.side.back"));
 
         // --- Owner-Liste mit Scroller vorbereiten ---
-        ownerListBaseY = y + 88; // Start-Y der Liste
+        ownerListBaseY = topPos + 100; // Start-Y der Liste
         ownerCheckboxes.clear();
         ownerOrder.clear();
         ownerSelected.clear();
@@ -351,8 +355,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX, mouseY);
                 } else if (be.isOutputSpaceMissing()) {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_full"), mouseX, mouseY);
-                } else if (be.hasOffer() && be.isOfferAvailable() && be.isOutputAlmostFull()) {
-                    graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_almost_full"), mouseX, mouseY);
                 }
             }
         }
@@ -481,14 +483,14 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         graphics.drawString(font, Component.translatable("gui.marketblocks.settings_title"), 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
+        graphics.drawString(font, Component.translatable("gui.marketblocks.emit_redstone"), 38, 49, 4210752, false);
         if (!menu.isOwner()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
             int w = font.width(info);
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
         } else if (menu.isPrimaryOwner() && noPlayers) {
             Component info = Component.translatable("gui.marketblocks.no_players_available");
-            int w = font.width(info);
-            graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
+            graphics.drawString(font, info, 8, ownerListBaseY - topPos + 6, 0x808080, false);
         }
     }
 
@@ -666,6 +668,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             ownerCheckboxes.put(id, cb);
             addRenderableWidget(cb);
         }
+    }
+
+    private Component getEmitRedstoneToggleLabel() {
+        return Component.literal(emitRedstoneEnabled ? "ON" : "OFF");
     }
 
     private String resolveName(UUID id, Map<UUID, String> stored) {
