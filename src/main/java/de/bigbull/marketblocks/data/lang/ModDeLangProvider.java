@@ -12,7 +12,7 @@ public class ModDeLangProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
-        add("itemGroup.marketblocks", "Market Blocks");
+        add("itemGroup.marketblocks", "MarketBlocks");
 
         // Container-Titel
         add("container.marketblocks.trade_stand", "Handelsstand");
@@ -23,7 +23,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("menu.marketblocks.marketplace", "Marktplatz");
 
         // Tastenkürzel
-        add("key.categories.marketblocks", "Market Blocks");
+        add("key.categories.marketblocks", "MarketBlocks");
         add("key.marketblocks.open_marketplace", "Marktplatz öffnen");
 
         add("gui.marketblocks.shop_title", "Handelsstand");
@@ -160,6 +160,6 @@ public class ModDeLangProvider extends LanguageProvider {
 
         // Blocks
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Handelsstand");
-        addBlock(RegistriesInit.TRADE_STAND_CLASSIC_BLOCK, "Handelsstand (Klassisch)");
+        addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

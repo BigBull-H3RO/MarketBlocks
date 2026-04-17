@@ -1,8 +1,8 @@
 {
 	"texture_size": [64, 64],
 	"textures": {
-		"6": "marketblocks:block/trade_stand_classic",
-        "particle": "marketblocks:block/trade_stand_classic"
+		"6": "marketblocks:block/shop_block_test",
+        "particle": "marketblocks:block/shop_block_test"
 	},
 	"elements": [
 		{
