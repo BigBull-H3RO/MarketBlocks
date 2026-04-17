@@ -104,6 +104,7 @@
   "gui.marketblocks.success.offer_deleted": "Angebot erfolgreich gelöscht",
   "gui.marketblocks.trade_available": "Handel verfügbar",
   "gui.marketblocks.trade_unavailable": "Handel nicht verfügbar",
+  "item.marketblocks.small_shop.with_showcase": "Kleiner Laden (mit Vitrine)",
   "itemGroup.marketblocks": "Market Blocks",
   "key.categories.marketblocks": "Market Blocks",
   "key.marketblocks.open_server_shop": "Server-Shop öffnen",

@@ -104,6 +104,7 @@
   "gui.marketblocks.success.offer_deleted": "Offer successfully deleted",
   "gui.marketblocks.trade_available": "Trade Available",
   "gui.marketblocks.trade_unavailable": "Trade Unavailable",
+  "item.marketblocks.small_shop.with_showcase": "Small Shop (With Showcase)",
   "itemGroup.marketblocks": "Market Blocks",
   "key.categories.marketblocks": "Market Blocks",
   "key.marketblocks.open_server_shop": "Open Server Shop",
