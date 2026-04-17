@@ -86,7 +86,6 @@
   "gui.marketblocks.offers_tab": "Angebote anzeigen",
   "gui.marketblocks.out_of_stock": "Nicht auf Lager",
   "gui.marketblocks.output": "Ausgang",
-  "gui.marketblocks.output_almost_full": "Ausgabe fast voll",
   "gui.marketblocks.output_full": "Ausgabeinventar voll",
   "gui.marketblocks.output_inventory": "Ausgabe",
   "gui.marketblocks.owner": "Besitzer: %s",
