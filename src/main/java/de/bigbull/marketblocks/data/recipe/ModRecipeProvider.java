@@ -21,15 +21,18 @@ public class ModRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.SMALL_SHOP_BLOCK_TEST.get(), 1)
-                .pattern("#R#")
-                .pattern("#E#")
-                .pattern("###")
+        // Aktueller Shop-Block (small_shop)
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.SMALL_SHOP_BLOCK.get(), 1)
+                .pattern("#D#")
+                .pattern("IEI")
+                .pattern("#S#")
                 .define('#', ItemTags.PLANKS)
-                .define('R', Items.RED_WOOL)
+                .define('D', Items.DEEPSLATE_TILE_SLAB)
                 .define('E', Items.EMERALD)
+                .define('I', Items.IRON_INGOT)
+                .define('S', ItemTags.SIGNS)
                 .unlockedBy("has_oak_planks", has(Items.OAK_PLANKS))
-                .save(recipeOutput, getModId("small_shop_block_test"));
+                .save(recipeOutput, getModId("small_shop"));
     }
 
     public ResourceLocation getModId(String path) {
