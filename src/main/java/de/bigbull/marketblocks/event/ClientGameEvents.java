@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.packets.serverShop.ServerShopOpenRequestPacket;
+import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceOpenRequestPacket;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -15,8 +15,8 @@ public final class ClientGameEvents {
 
     @SubscribeEvent
     public static void handleClientTick(ClientTickEvent.Post event) {
-        while (ClientEvents.getOpenServerShopKey().consumeClick()) {
-            NetworkHandler.sendToServer(new ServerShopOpenRequestPacket());
+        while (ClientEvents.getOpenMarketplaceKey().consumeClick()) {
+            NetworkHandler.sendToServer(new MarketplaceOpenRequestPacket());
         }
     }
 }

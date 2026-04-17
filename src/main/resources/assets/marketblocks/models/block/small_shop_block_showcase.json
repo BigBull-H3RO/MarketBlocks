@@ -1,7 +1,0 @@
-{
-  "parent": "marketblocks:block/small_shop_block_base",
-  "textures": {
-    "particle": "marketblocks:block/small_shop_particle"
-  }
-}
-

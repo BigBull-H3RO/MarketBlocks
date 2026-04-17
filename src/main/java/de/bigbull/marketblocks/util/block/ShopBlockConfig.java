@@ -28,36 +28,36 @@ public class ShopBlockConfig {
     // Vordefinierte Konfigurationen
     // -------------------------------------------------------------------------
 
-    /** SmallShopBlock (1 Block hoch, klassisches Design). */
-    public static final ShopBlockConfig SMALL_SHOP_DEFAULT_SHAPE = builder()
+    /** TradeStandBlock (1 Block hoch, klassisches Design). */
+    public static final ShopBlockConfig TRADE_STAND_DEFAULT_SHAPE = builder()
             .shape(Block.box(0, 0, 0, 16, 13, 16))
             .build();
 
     /**
-     * SmallShopBlockNeu – gemeinsame Shape-Config fuer den Basissockel.
+     * TradeStandBlockNeu – gemeinsame Shape-Config fuer den Basissockel.
      *
-     * Hinweis: SmallShopBlockNeu ueberschreibt getShape/getCollisionShape/getInteractionShape
+     * Hinweis: TradeStandBlockNeu ueberschreibt getShape/getCollisionShape/getInteractionShape
      * state-abhaengig selbst, daher ist diese Config dort nur ein konsistenter Fallback.
      */
-    public static final ShopBlockConfig SMALL_SHOP_SHAPE = builder()
+    public static final ShopBlockConfig TRADE_STAND_SHAPE = builder()
             .shape(Block.box(0, 0, 0, 16, 11, 16))
             .build();
 
     /**
-     * @deprecated Verwende stattdessen SMALL_SHOP_NEU_SHAPE.
+     * @deprecated Verwende stattdessen TRADE_STAND_NEU_SHAPE.
      *
      * Altname bleibt nur fuer Kompatibilitaet mit aelteren Referenzen erhalten.
      */
     @Deprecated
-    public static final ShopBlockConfig SMALL_SHOP_NO_SHOWCASE_SHAPE = SMALL_SHOP_SHAPE;
+    public static final ShopBlockConfig TRADE_STAND_NO_SHOWCASE_SHAPE = TRADE_STAND_SHAPE;
 
     /**
-     * @deprecated Verwende stattdessen SMALL_SHOP_NEU_SHAPE.
+     * @deprecated Verwende stattdessen TRADE_STAND_NEU_SHAPE.
      *
      * Altname bleibt nur fuer Kompatibilitaet mit aelteren Referenzen erhalten.
      */
     @Deprecated
-    public static final ShopBlockConfig SMALL_SHOP_WITH_SHOWCASE_SHAPE = SMALL_SHOP_SHAPE;
+    public static final ShopBlockConfig TRADE_STAND_WITH_SHOWCASE_SHAPE = TRADE_STAND_SHAPE;
 
     // -------------------------------------------------------------------------
     // Builder

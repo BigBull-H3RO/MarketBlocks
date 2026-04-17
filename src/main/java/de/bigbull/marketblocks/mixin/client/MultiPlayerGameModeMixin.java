@@ -38,12 +38,12 @@ public abstract class MultiPlayerGameModeMixin {
         }
 
         BlockState state = minecraft.level.getBlockState(pos);
-        if (!state.is(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get())) {
+        if (!state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
             return pos;
         }
 
         BlockPos basePos = pos.below();
-        if (minecraft.level.getBlockState(basePos).is(RegistriesInit.SMALL_SHOP_BLOCK.get())) {
+        if (minecraft.level.getBlockState(basePos).is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             return basePos;
         }
 

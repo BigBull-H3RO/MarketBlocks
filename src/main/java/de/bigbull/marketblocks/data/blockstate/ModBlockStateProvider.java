@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.data.blockstate;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.block.BaseShopBlock;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
+import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.level.block.Block;
@@ -19,11 +19,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        registerShopBlock(RegistriesInit.SMALL_SHOP_BLOCK_TEST.get(), "small_shop_test", 0);
-        registerSmallShopNeuBlock(RegistriesInit.SMALL_SHOP_BLOCK.get(), 0);
+        registerShopBlock(RegistriesInit.TRADE_STAND_CLASSIC_BLOCK.get(), "trade_stand_classic", 0);
+        registerTradeStandBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), 0);
 
-        ModelFile topModel = models().getExistingFile(modLoc("block/small_shop_block_top"));
-        simpleBlock(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get(), topModel);
+        ModelFile topModel = models().getExistingFile(modLoc("block/trade_stand_block_top"));
+        simpleBlock(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), topModel);
     }
 
     private void registerShopBlock(Block block, String modelName, int rotationOffset) {
@@ -45,14 +45,14 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 });
     }
 
-    private void registerSmallShopNeuBlock(Block block, int rotationOffset) {
-        ModelFile withoutShowcase = models().getExistingFile(modLoc("block/small_shop_block_base"));
-        ModelFile withShowcase = models().getExistingFile(modLoc("block/small_shop_block_showcase"));
+    private void registerTradeStandBlock(Block block, int rotationOffset) {
+        ModelFile withoutShowcase = models().getExistingFile(modLoc("block/trade_stand_block_base"));
+        ModelFile withShowcase = models().getExistingFile(modLoc("block/trade_stand_block_showcase"));
 
         getVariantBuilder(block)
                 .forAllStates(state -> {
                     Direction facing = state.getValue(BaseShopBlock.FACING);
-                    boolean hasShowcase = state.getValue(SmallShopBlock.HAS_SHOWCASE);
+                    boolean hasShowcase = state.getValue(TradeStandBlock.HAS_SHOWCASE);
 
                     int baseRotation = switch (facing) {
                         case NORTH -> 0;

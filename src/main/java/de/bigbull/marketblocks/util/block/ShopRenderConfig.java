@@ -47,7 +47,7 @@ public class ShopRenderConfig {
             0.35D, 0.1D, 0.6D, 0.2D, 0.4F, 0.5D, 0.1D, 0.45D, 0.05D, 0.015F
     );
 
-    public static final ShopRenderConfig SMALL_SHOP_DEFAULT = builder()
+    public static final ShopRenderConfig TRADE_STAND_DEFAULT = builder()
             .applyProfile(COMPACT_FRONT_LAYOUT)
             .payment1ItemX(0.30D).payment1ItemY(0.62D).payment1ItemZ(0.08D).payment1ItemScale(0.4F)
             .payment2ItemX(0.30D).payment2ItemY(0.26D).payment2ItemZ(0.08D).payment2ItemScale(0.4F)
@@ -57,7 +57,7 @@ public class ShopRenderConfig {
             .offerCountTextX(0.5D).offerCountTextY(1.15D).offerCountTextZ(0.5D).offerCountTextScale(0.015F)
             .build();
 
-    public static final ShopRenderConfig SMALL_SHOP = builder()
+    public static final ShopRenderConfig TRADE_STAND = builder()
             .applyProfile(COMPACT_FRONT_LAYOUT)
             .payment1ItemX(0.657D).payment1ItemY(0.465D).payment1ItemZ(0.568D).payment1ItemScale(0.26F)
             .payment1ItemYaw(0.0F).payment1ItemPitch(-22.5F).payment1ItemRoll(0.0F)

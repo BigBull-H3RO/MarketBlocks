@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.data.loot;
 
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
+import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.loot.BlockLootSubProvider;
@@ -23,13 +23,13 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
-        dropSelf(RegistriesInit.SMALL_SHOP_BLOCK_TEST.get());
+        dropSelf(RegistriesInit.TRADE_STAND_CLASSIC_BLOCK.get());
 
         // 1. Top-Block droppt überhaupt nichts (das Item wird vom Base-Block gemanagt)
-        this.add(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get(), noDrop());
+        this.add(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), noDrop());
 
-        // 2. Custom Loot-Logik für den Small Shop Block
-        this.add(RegistriesInit.SMALL_SHOP_BLOCK.get(), block -> LootTable.lootTable()
+        // 2. Custom Loot-Logik für den Trade Stand Block
+        this.add(RegistriesInit.TRADE_STAND_BLOCK.get(), block -> LootTable.lootTable()
                 .withPool(LootPool.lootPool()
                         .setRolls(ConstantValue.exactly(1.0F))
                         .add(
@@ -40,8 +40,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                                                 .when(this.hasSilkTouch())
                                                 .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(block)
                                                         .setProperties(StatePropertiesPredicate.Builder.properties()
-                                                                .hasProperty(SmallShopBlock.HAS_SHOWCASE, true)))
-                                                .apply(CopyBlockState.copyState(block).copy(SmallShopBlock.HAS_SHOWCASE))
+                                                                .hasProperty(TradeStandBlock.HAS_SHOWCASE, true)))
+                                                .apply(CopyBlockState.copyState(block).copy(TradeStandBlock.HAS_SHOWCASE))
 
                                                 // ANSONSTEN: Standard-Drop (ohne NBT/Vitrine)
                                                 .otherwise(LootItem.lootTableItem(block))

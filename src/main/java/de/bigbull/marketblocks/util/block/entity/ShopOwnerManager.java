@@ -17,12 +17,12 @@ public class ShopOwnerManager {
     private static final String NBT_ADDITIONAL_OWNER_ID = "Id";
     private static final String NBT_ADDITIONAL_OWNER_NAME = "Name";
 
-    private final SmallShopBlockEntity blockEntity;
+    private final SingleOfferShopBlockEntity blockEntity;
     private UUID ownerId = null;
     private String ownerName = "";
     private final Map<UUID, String> additionalOwners = new HashMap<>();
 
-    public ShopOwnerManager(SmallShopBlockEntity blockEntity) {
+    public ShopOwnerManager(SingleOfferShopBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
     }
 

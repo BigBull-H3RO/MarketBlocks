@@ -1,0 +1,11 @@
+{
+  "parent": "marketblocks:block/trade_stand_block_base",
+  "overrides": [
+    {
+      "predicate": {
+        "marketblocks:has_showcase": 1.0
+      },
+      "model": "marketblocks:block/trade_stand_item_with_showcase"
+    }
+  ]
+}

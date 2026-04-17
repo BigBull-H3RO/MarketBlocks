@@ -3,10 +3,10 @@ package de.bigbull.marketblocks.event;
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
-import de.bigbull.marketblocks.util.custom.entity.renderer.SmallShopBlockEntityRenderer;
-import de.bigbull.marketblocks.util.custom.screen.ServerShopScreen;
-import de.bigbull.marketblocks.util.custom.screen.SmallShopScreen;
+import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
+import de.bigbull.marketblocks.util.custom.entity.renderer.SingleOfferShopBlockEntityRenderer;
+import de.bigbull.marketblocks.util.custom.screen.MarketplaceScreen;
+import de.bigbull.marketblocks.util.custom.screen.SingleOfferShopScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -25,8 +25,8 @@ import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(modid = MarketBlocks.MODID, value = Dist.CLIENT)
 public class ClientEvents {
-    private static final KeyMapping OPEN_SERVER_SHOP = new KeyMapping(
-            "key.marketblocks.open_server_shop",
+    private static final KeyMapping OPEN_MARKETPLACE = new KeyMapping(
+            "key.marketblocks.open_marketplace",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_O,
             "key.categories.marketblocks");
@@ -34,31 +34,31 @@ public class ClientEvents {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         // New unified screen
-        event.register(RegistriesInit.SMALL_SHOP_MENU.get(), SmallShopScreen::new);
-        event.register(RegistriesInit.SERVER_SHOP_MENU.get(), ServerShopScreen::new);
+        event.register(RegistriesInit.SINGLE_OFFER_SHOP_MENU.get(), SingleOfferShopScreen::new);
+        event.register(RegistriesInit.MARKETPLACE_MENU.get(), MarketplaceScreen::new);
     }
 
     @SubscribeEvent
     public static void registerBlockEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerBlockEntityRenderer(RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), SmallShopBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntityRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        event.register(OPEN_SERVER_SHOP);
+        event.register(OPEN_MARKETPLACE);
     }
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.SMALL_SHOP_BLOCK.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.SMALL_SHOP_BLOCK_TOP.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), RenderType.cutout());
 
-            ItemProperties.register(RegistriesInit.SMALL_SHOP_BLOCK.get().asItem(),
+            ItemProperties.register(RegistriesInit.TRADE_STAND_BLOCK.get().asItem(),
                     ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "has_showcase"),
                     (stack, level, entity, seed) -> {
                         BlockItemStateProperties properties = stack.get(DataComponents.BLOCK_STATE);
-                        if (properties != null && Boolean.TRUE.equals(properties.get(SmallShopBlock.HAS_SHOWCASE))) {
+                        if (properties != null && Boolean.TRUE.equals(properties.get(TradeStandBlock.HAS_SHOWCASE))) {
                             return 1.0F;
                         }
                         return 0.0F;
@@ -66,7 +66,7 @@ public class ClientEvents {
         });
     }
 
-    public static KeyMapping getOpenServerShopKey() {
-        return OPEN_SERVER_SHOP;
+    public static KeyMapping getOpenMarketplaceKey() {
+        return OPEN_MARKETPLACE;
     }
 }

@@ -1,9 +1,9 @@
 package de.bigbull.marketblocks.util.block;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
+import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
+import de.bigbull.marketblocks.util.custom.menu.SingleOfferShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -63,7 +63,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
      * Render-Konfiguration für Offer/Payment-Item und Mengen-Text.
      */
     public ShopRenderConfig getRenderConfig(BlockState state) {
-        return ShopRenderConfig.SMALL_SHOP_DEFAULT;
+        return ShopRenderConfig.TRADE_STAND_DEFAULT;
     }
 
     @Override
@@ -102,7 +102,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity shop) {
+        if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
             Direction side = direction.getOpposite();
             if (hasComparatorReadPath(level, pos, side)) {
                 return shop.getAnalogSignal(side);
@@ -123,7 +123,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity shop) {
+        if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
             int maxSignal = 0;
             boolean foundComparator = false;
 
@@ -167,7 +167,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof SmallShopBlockEntity shopEntity) {
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
             shopEntity.updateNeighborCache();
         }
     }
@@ -184,7 +184,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
         if (!level.isClientSide && placer instanceof Player player) {
-            if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity shopEntity) {
+            if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
                 shopEntity.setOwner(player);
                 shopEntity.lockAdjacentChests();
             }
@@ -200,7 +200,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (level.isClientSide) return InteractionResult.SUCCESS;
 
-        if (!(level.getBlockEntity(pos) instanceof SmallShopBlockEntity shopEntity)) {
+        if (!(level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity)) {
             return InteractionResult.FAIL;
         }
 
@@ -220,12 +220,12 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             if (shopEntity.hasOffer() || shopEntity.isOwner(player)) {
                 serverPlayer.openMenu(
                         new SimpleMenuProvider(
-                                (id, inv, p) -> new SmallShopMenu(id, inv, shopEntity),
-                                Component.translatable("container.marketblocks.small_shop")
+                                (id, inv, p) -> new SingleOfferShopMenu(id, inv, shopEntity),
+                                Component.translatable("container.marketblocks.trade_stand")
                         ), pos
                 );
             } else {
-                serverPlayer.displayClientMessage(Component.translatable("message.marketblocks.small_shop.no_offer"), true);
+                serverPlayer.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.no_offer"), true);
                 return InteractionResult.FAIL;
             }
         }
@@ -235,10 +235,10 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity shop) {
+        if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
             return new SimpleMenuProvider(
-                    (id, inv, p) -> new SmallShopMenu(id, inv, shop),
-                    Component.translatable("container.marketblocks.small_shop")
+                    (id, inv, p) -> new SingleOfferShopMenu(id, inv, shop),
+                    Component.translatable("container.marketblocks.trade_stand")
             );
         }
         return null;
@@ -254,10 +254,10 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof SmallShopBlockEntity shop) {
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
             if (!shop.isOwner(player)) {
                 if (player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("message.marketblocks.small_shop.not_owner"), true);
+                    sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
                 }
                 level.sendBlockUpdated(pos, state, state, 3); // Resync für den Client
                 return false;
@@ -269,7 +269,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
-            if (level.getBlockEntity(pos) instanceof SmallShopBlockEntity shopEntity) {
+            if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
                 shopEntity.dropContents(level, pos);
                 shopEntity.unlockAdjacentChests();
             }
@@ -284,12 +284,12 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new SmallShopBlockEntity(pos, state);
+        return new SingleOfferShopBlockEntity(pos, state);
     }
 
     @Override
     public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         if (level.isClientSide) return null;
-        return createTickerHelper(type, RegistriesInit.SMALL_SHOP_BLOCK_ENTITY.get(), SmallShopBlockEntity::tick);
+        return createTickerHelper(type, RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntity::tick);
     }
 }

@@ -12,17 +12,17 @@ public class Config {
     public static final ModConfigSpec.IntValue CHEST_IO_INTERVAL;
     public static final ModConfigSpec.BooleanValue ENABLE_OUTPUT_WARNING;
     public static final ModConfigSpec.IntValue OUTPUT_WARNING_PERCENT;
-    public static final ModConfigSpec.BooleanValue SERVER_SHOP_GLOBAL_DAILY_LIMIT;
-    public static final ModConfigSpec.BooleanValue SERVER_SHOP_EDIT_MODE_ENABLED;
+    public static final ModConfigSpec.BooleanValue MARKETPLACE_GLOBAL_DAILY_LIMIT;
+    public static final ModConfigSpec.BooleanValue MARKETPLACE_EDIT_MODE_ENABLED;
     public static final ModConfigSpec.BooleanValue ENABLE_MIXIN_DESYNC_LOGGING;
 
     static {
         COMMON_BUILDER.push("General Settings");
         ENABLE_DOUBLE_CHEST_SUPPORT = COMMON_BUILDER
-                .comment("Allow double chests next to Small Shop")
+                .comment("Allow double chests next to Trade Stand")
                 .define("enableDoubleChestSupport", false);
         ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL = COMMON_BUILDER
-                .comment("EXPERIMENTAL: Enable SmallShop Input/Output chest extension and neighbor chest integration",
+                .comment("EXPERIMENTAL: Enable Trade Stand input/output chest extension and neighbor chest integration",
                         "Default: false for release stability")
                 .define("enableChestIoExtensionExperimental", false);
         OFFER_UPDATE_INTERVAL = COMMON_BUILDER
@@ -39,18 +39,18 @@ public class Config {
                 .defineInRange("outputWarningPercent", 90, 1, 100);
         COMMON_BUILDER.pop();
 
-        COMMON_BUILDER.push("Server Shop");
-        SERVER_SHOP_GLOBAL_DAILY_LIMIT = COMMON_BUILDER
-                .comment("If true, ServerShop daily limits are shared globally. If false, they apply per player.")
-                .define("serverShopGlobalDailyLimit", false);
-        SERVER_SHOP_EDIT_MODE_ENABLED = COMMON_BUILDER
-                .comment("If true, the ServerShop edit mode toggle is available for admins. If false, the edit toggle is hidden and disabled globally.")
-                .define("serverShopEditModeEnabled", false);
+        COMMON_BUILDER.push("Marketplace");
+        MARKETPLACE_GLOBAL_DAILY_LIMIT = COMMON_BUILDER
+                .comment("If true, Marketplace daily limits are shared globally. If false, they apply per player.")
+                .define("marketplaceGlobalDailyLimit", false);
+        MARKETPLACE_EDIT_MODE_ENABLED = COMMON_BUILDER
+                .comment("If true, the Marketplace edit mode toggle is available for admins. If false, the edit toggle is hidden and disabled globally.")
+                .define("marketplaceEditModeEnabled", false);
         COMMON_BUILDER.pop();
 
         COMMON_BUILDER.push("Debug Settings");
         ENABLE_MIXIN_DESYNC_LOGGING = COMMON_BUILDER
-                .comment("Enable debug logs for client-side mining target fallback in SmallShop mixins")
+                .comment("Enable debug logs for client-side mining target fallback in Trade Stand mixins")
                 .define("enableMixinDesyncLogging", false);
         COMMON_BUILDER.pop();
 

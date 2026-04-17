@@ -21,8 +21,8 @@ public class ModRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
-        // Aktueller Shop-Block (small_shop)
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.SMALL_SHOP_BLOCK.get(), 1)
+        // Aktueller Shop-Block (trade_stand)
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.TRADE_STAND_BLOCK.get(), 1)
                 .pattern("#D#")
                 .pattern("IEI")
                 .pattern("#S#")
@@ -32,7 +32,7 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('I', Items.IRON_INGOT)
                 .define('S', ItemTags.SIGNS)
                 .unlockedBy("has_oak_planks", has(Items.OAK_PLANKS))
-                .save(recipeOutput, getModId("small_shop"));
+                .save(recipeOutput, getModId("trade_stand"));
     }
 
     public ResourceLocation getModId(String path) {

@@ -1,12 +1,12 @@
 package de.bigbull.marketblocks.util;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlockTest;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlock;
-import de.bigbull.marketblocks.util.custom.block.SmallShopBlockTop;
-import de.bigbull.marketblocks.util.block.entity.SmallShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.ServerShopMenu;
-import de.bigbull.marketblocks.util.custom.menu.SmallShopMenu;
+import de.bigbull.marketblocks.util.custom.block.TradeStandClassicBlock;
+import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
+import de.bigbull.marketblocks.util.custom.block.TradeStandTopBlock;
+import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.util.custom.menu.MarketplaceMenu;
+import de.bigbull.marketblocks.util.custom.menu.SingleOfferShopMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
@@ -41,25 +41,25 @@ public final class RegistriesInit {
     }
 
     // Block Registrierung
-    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_TEST = registerBlock("small_shop_test",
-            () -> new SmallShopBlockTest(BlockBehaviour.Properties.of()
+    public static final DeferredBlock<Block> TRADE_STAND_CLASSIC_BLOCK = registerBlock("trade_stand_classic",
+            () -> new TradeStandClassicBlock(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
                     .instrument(NoteBlockInstrument.BASS)
                     .strength(2.5F, 3600000.0F)
                     .sound(SoundType.WOOD)));
 
-    // SmallShopBlock Neu (Tall Showcase Design)
-    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK = registerBlock("small_shop",
-            () -> new SmallShopBlock(BlockBehaviour.Properties.of()
+    // TradeStandBlock Neu (Tall Showcase Design)
+    public static final DeferredBlock<Block> TRADE_STAND_BLOCK = registerBlock("trade_stand",
+            () -> new TradeStandBlock(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
                     .instrument(NoteBlockInstrument.BASS)
                     .strength(2.5F, 3600000.0F)
                     .sound(SoundType.WOOD)));
 
-    public static final DeferredBlock<Block> SMALL_SHOP_BLOCK_TOP = registerInternalBlock("small_shop_top",
-            () -> new SmallShopBlockTop(BlockBehaviour.Properties.of()
+    public static final DeferredBlock<Block> TRADE_STAND_BLOCK_TOP = registerInternalBlock("trade_stand_top",
+            () -> new TradeStandTopBlock(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
                     .instrument(NoteBlockInstrument.BASS)
@@ -67,16 +67,16 @@ public final class RegistriesInit {
                     .sound(SoundType.WOOD)));
 
     // BlockEntity Registrierung
-    public static final Supplier<BlockEntityType<SmallShopBlockEntity>> SMALL_SHOP_BLOCK_ENTITY =
-            BLOCK_ENTITIES.register("small_shop", () -> BlockEntityType.Builder.of(
-                    SmallShopBlockEntity::new, SMALL_SHOP_BLOCK_TEST.get(), SMALL_SHOP_BLOCK.get()).build(null));
+    public static final Supplier<BlockEntityType<SingleOfferShopBlockEntity>> SINGLE_OFFER_SHOP_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("single_offer_shop", () -> BlockEntityType.Builder.of(
+                    SingleOfferShopBlockEntity::new, TRADE_STAND_CLASSIC_BLOCK.get(), TRADE_STAND_BLOCK.get()).build(null));
 
     // Menu Registrierungen
-    public static final Supplier<MenuType<SmallShopMenu>> SMALL_SHOP_MENU =
-            MENU_TYPES.register("small_shop_menu", () -> IMenuTypeExtension.create(SmallShopMenu::new));
+    public static final Supplier<MenuType<SingleOfferShopMenu>> SINGLE_OFFER_SHOP_MENU =
+            MENU_TYPES.register("single_offer_shop_menu", () -> IMenuTypeExtension.create(SingleOfferShopMenu::new));
 
-    public static final Supplier<MenuType<ServerShopMenu>> SERVER_SHOP_MENU =
-            MENU_TYPES.register("server_shop_menu", () -> IMenuTypeExtension.create(ServerShopMenu::new));
+    public static final Supplier<MenuType<MarketplaceMenu>> MARKETPLACE_MENU =
+            MENU_TYPES.register("marketplace_menu", () -> IMenuTypeExtension.create(MarketplaceMenu::new));
 
 
     public static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {

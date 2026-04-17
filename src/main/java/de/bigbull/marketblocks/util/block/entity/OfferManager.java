@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.util.block.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.packets.smallShop.OfferStatusPacket;
+import de.bigbull.marketblocks.network.packets.singleOfferShop.OfferStatusPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -14,13 +14,13 @@ import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
 /**
- * Manages the logic for creating and validating trade offers within a {@link SmallShopBlockEntity}.
+ * Manages the logic for creating and validating trade offers within a {@link SingleOfferShopBlockEntity}.
  * This class performs server-side validation of the items used to create an offer,
  * extracts them from the shop's temporary slots, and returns any leftovers to the player.
  *
  * @param shopEntity The block entity this manager belongs to.
  */
-public record OfferManager(SmallShopBlockEntity shopEntity) {
+public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     private static final int PAYMENT_SLOT_COUNT = 2;
     private static final int RESULT_SLOT_INDEX = 2;
     private static final int TOTAL_OFFER_SLOTS = 3;
