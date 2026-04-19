@@ -3,7 +3,7 @@ package de.bigbull.marketblocks;
 import com.mojang.logging.LogUtils;
 import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.data.DataGenerators;
-import de.bigbull.marketblocks.util.CreativeTabInit;
+import de.bigbull.marketblocks.init.CreativeTabInit;
 import de.bigbull.marketblocks.init.RegistriesInit;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
