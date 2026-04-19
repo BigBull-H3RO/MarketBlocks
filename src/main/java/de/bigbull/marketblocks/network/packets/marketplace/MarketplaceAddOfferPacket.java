@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.network.packets.marketplace;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.menu.MarketplaceMenu;
+import de.bigbull.marketblocks.shop.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.shop.marketplace.DemandPricing;
 import de.bigbull.marketblocks.shop.marketplace.OfferLimit;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceManager;
