@@ -6,7 +6,7 @@ import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceAutoFillPa
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceSelectPagePacket;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceSetOfferPacket;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceToggleEditModePacket;
-import de.bigbull.marketblocks.util.custom.menu.MarketplaceMenu;
+import de.bigbull.marketblocks.shop.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.VanillaIconButton;
