@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.data.recipe;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;

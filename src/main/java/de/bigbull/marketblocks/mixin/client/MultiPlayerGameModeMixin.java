@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.mixin.client;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.core.BlockPos;

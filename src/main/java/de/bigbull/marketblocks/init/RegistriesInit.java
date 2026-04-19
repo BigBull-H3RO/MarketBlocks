@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util;
+package de.bigbull.marketblocks.init;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
@@ -93,3 +93,4 @@ public final class RegistriesInit {
         ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
     }
 }
+

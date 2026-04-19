@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.mixin.client;
 
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;

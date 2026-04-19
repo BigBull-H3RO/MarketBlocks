@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.data.loot;
 
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.core.HolderLookup;

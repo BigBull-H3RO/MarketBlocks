@@ -9,7 +9,7 @@ import de.bigbull.marketblocks.shop.singleoffer.block.entity.OfferManager;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.ShopInventoryManager;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.ShopOwnerManager;
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -1415,5 +1415,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         updateOfferSlot();
     }
 }
+
 
 

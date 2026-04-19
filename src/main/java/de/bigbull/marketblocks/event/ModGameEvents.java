@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.shop.singleoffer.SideMode;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
 import net.minecraft.network.chat.Component;

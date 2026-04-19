@@ -1,11 +1,9 @@
 package de.bigbull.marketblocks.shop.singleoffer.menu;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.shop.singleoffer.SideMode;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.shop.singleoffer.menu.ShopMenu;
-import de.bigbull.marketblocks.shop.singleoffer.menu.ShopTab;
-import de.bigbull.marketblocks.util.RegistriesInit;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -632,5 +630,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         }
     }
 }
+
 
 

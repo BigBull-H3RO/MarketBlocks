@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.shop.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.util.block.ShopBlockConfig;
 import de.bigbull.marketblocks.util.block.ShopRenderConfig;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
@@ -242,3 +242,4 @@ public class TradeStandBlock extends BaseShopBlock {
         return CODEC;
     }
 }
+

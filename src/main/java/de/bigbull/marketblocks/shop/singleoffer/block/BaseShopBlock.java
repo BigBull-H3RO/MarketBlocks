@@ -1,9 +1,9 @@
 package de.bigbull.marketblocks.shop.singleoffer.block;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.util.block.ShopBlockConfig;
 import de.bigbull.marketblocks.util.block.ShopRenderConfig;
 import net.minecraft.core.BlockPos;
@@ -295,4 +295,5 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         return createTickerHelper(type, RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntity::tick);
     }
 }
+
 

@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.shop.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -132,3 +132,4 @@ public class TradeStandTopBlock extends Block {
         return PushReaction.BLOCK;
     }
 }
+
