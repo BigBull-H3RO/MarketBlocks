@@ -1,9 +1,11 @@
-package de.bigbull.marketblocks.util.block;
+package de.bigbull.marketblocks.shop.singleoffer.block;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.util.block.ShopBlockConfig;
+import de.bigbull.marketblocks.util.block.ShopRenderConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -293,3 +295,4 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         return createTickerHelper(type, RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntity::tick);
     }
 }
+

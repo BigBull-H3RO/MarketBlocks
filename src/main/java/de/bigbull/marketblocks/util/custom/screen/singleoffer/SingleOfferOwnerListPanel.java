@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.util.custom.screen.singleoffer;
 
-import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Checkbox;

@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.util.custom.screen.singleoffer;
 
-import de.bigbull.marketblocks.util.custom.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.SideModeButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;

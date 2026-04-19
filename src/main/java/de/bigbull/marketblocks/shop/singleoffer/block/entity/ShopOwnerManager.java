@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.block.entity;
+package de.bigbull.marketblocks.shop.singleoffer.block.entity;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -121,3 +121,4 @@ public class ShopOwnerManager {
         tag.put(NBT_ADDITIONAL_OWNERS, list);
     }
 }
+

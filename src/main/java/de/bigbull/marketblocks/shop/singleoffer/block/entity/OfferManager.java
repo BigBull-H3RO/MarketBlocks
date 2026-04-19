@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.block.entity;
+package de.bigbull.marketblocks.shop.singleoffer.block.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.packets.singleOfferShop.OfferStatusPacket;
@@ -199,3 +199,4 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         }
     }
 }
+

@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.block;
+package de.bigbull.marketblocks.shop.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.util.RegistriesInit;

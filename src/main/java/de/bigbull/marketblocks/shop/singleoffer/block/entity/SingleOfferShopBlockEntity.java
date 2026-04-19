@@ -1,12 +1,15 @@
-package de.bigbull.marketblocks.util.block.entity;
+package de.bigbull.marketblocks.shop.singleoffer.block.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
+import de.bigbull.marketblocks.shop.singleoffer.SideMode;
+import de.bigbull.marketblocks.shop.singleoffer.block.BaseShopBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.OfferManager;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.ShopInventoryManager;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.ShopOwnerManager;
+import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.block.BaseShopBlock;
-import de.bigbull.marketblocks.util.custom.block.SideMode;
-import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
-import de.bigbull.marketblocks.util.custom.menu.SingleOfferShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -455,7 +458,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         updateNeighborCache();
         sync();
     }
-    
+
     /**
      * Sets the shop name without triggering sync().
      * Used internally for batch updates.
@@ -466,7 +469,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
         this.shopName = name;
     }
-    
+
     /**
      * Sets the redstone emit flag without triggering sync().
      * Used internally for batch updates.
@@ -552,13 +555,13 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     /**
      * Counts matching payment items in payment slots.
-     * 
+     *
      * @param target The target ItemStack to match (must not be null)
      * @return Total count of matching items, or 0 if target is null/empty
      */
     private int countMatchingPayment(ItemStack target) {
         if (target == null || target.isEmpty()) return 0;
-        
+
         int total = 0;
         for (int i = 0; i < paymentHandler.getSlots(); i++) {
             ItemStack stack = paymentHandler.getStackInSlot(i);
@@ -781,7 +784,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     /**
      * Simulates how many transactions can fit in output inventory.
-     * 
+     *
      * @param p1 First payment item (can be empty)
      * @param p2 Second payment item (can be empty)
      * @param maxTransactions Maximum number of transactions to simulate
@@ -793,38 +796,38 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         int validAmount = 0;
         for (int i = 0; i < maxTransactions; i++) {
             boolean fits = true;
-            
+
             if (!p1.isEmpty()) {
                 if (!ItemHandlerHelper.insertItem(testHandler, p1.copy(), false).isEmpty()) {
                     fits = false;
                 }
             }
-            
+
             if (fits && !p2.isEmpty()) {
                 if (!ItemHandlerHelper.insertItem(testHandler, p2.copy(), false).isEmpty()) {
                     fits = false;
                 }
             }
-            
+
             if (fits) {
                 validAmount++;
             } else {
                 break; // No more space
             }
         }
-        
+
         return validAmount;
     }
 
     /**
      * Counts how many items of the target type exist in input inventory and neighbor chests.
-     * 
+     *
      * SAFETY: Creates defensive copies when reading from neighbor inventories to prevent
      * ConcurrentModificationException if neighbor inventory is modified during iteration.
      */
     private int countMatchingInput(ItemStack target) {
         if (target == null || target.isEmpty()) return 0;
-        
+
         int found = 0;
         // Check internal inventory
         for (int i = 0; i < inputHandler.getSlots(); i++) {
@@ -931,7 +934,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     private void removeFromInput(ItemStack toRemove) {
         if (toRemove == null || toRemove.isEmpty()) return;
-        
+
         int remaining = toRemove.getCount();
         if (remaining <= 0) return;
 
@@ -968,7 +971,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     private void removePayment(ItemStack required) {
         if (required == null || required.isEmpty()) return;
-        
+
         int remaining = required.getCount();
         if (remaining <= 0) {
             return;
@@ -1208,7 +1211,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             TradeStandBlock.ensureTopBlock(level, worldPosition);
         }
         updateNeighborCache();
-        
+
         // Perform chunk-dependent operations here instead of in loadAdditional()
         // At this point, the level is guaranteed to be set and neighbors are accessible
         lockAdjacentChests();
@@ -1234,7 +1237,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             // Validate transaction log size (max 10 entries)
             int maxEntries = Math.min(list.size(), 10);
             if (list.size() > 10) {
-                MarketBlocks.LOGGER.warn("Transaction log exceeds max size at {}, truncating from {} to 10 entries", 
+                MarketBlocks.LOGGER.warn("Transaction log exceeds max size at {}, truncating from {} to 10 entries",
                         worldPosition, list.size());
             }
             for (int i = 0; i < maxEntries; i++) {
@@ -1300,7 +1303,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         String name = tag.getString(NBT_SHOP_NAME);
         // Validate shop name length
         if (name.length() > MAX_SHOP_NAME_LENGTH) {
-            MarketBlocks.LOGGER.warn("Shop name exceeds max length at {}, truncating from {} to {} chars", 
+            MarketBlocks.LOGGER.warn("Shop name exceeds max length at {}, truncating from {} to {} chars",
                     worldPosition, name.length(), MAX_SHOP_NAME_LENGTH);
             name = name.substring(0, MAX_SHOP_NAME_LENGTH);
         }
@@ -1354,7 +1357,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         // SECURITY: Only send client-relevant data, not full inventory contents
         CompoundTag tag = new CompoundTag();
-        
+
         // Offer data (needed for rendering)
         tag.putBoolean(NBT_HAS_OFFER, hasOffer);
         if (hasOffer) {
@@ -1362,24 +1365,24 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             if (!offerPayment2.isEmpty()) tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
             if (!offerResult.isEmpty()) tag.put(KEY_RESULT, offerResult.save(registries));
         }
-        
+
         // Shop settings (needed for UI)
         tag.putString(NBT_SHOP_NAME, shopName);
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
-        
+
         // Owner info (needed for permissions check)
         ownerManager.save(tag);
-        
+
         // Side modes (needed for rendering/capabilities)
         saveSideModes(tag);
-        
+
         // Output status flags (needed for UI indicators)
         tag.putBoolean(NBT_OUTPUT_WARNING, outputAlmostFull);
         tag.putBoolean(NBT_OUTPUT_FULL, outputFull);
-        
+
         // Note: Inventory handlers (input/output/payment) are NOT sent to clients
         // for security reasons - they contain owner's items
-        
+
         return tag;
     }
 
@@ -1387,28 +1390,30 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
         // CRITICAL: Only load the data that was sent via getUpdateTag()
         // Do NOT call loadAdditional() as it expects full NBT data!
-        
+
         // Offer data
         offerPayment1 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT1));
         offerPayment2 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT2));
         offerResult = ItemStack.parseOptional(registries, tag.getCompound(KEY_RESULT));
         hasOffer = tag.getBoolean(NBT_HAS_OFFER);
-        
+
         // Shop settings
         shopName = tag.getString(NBT_SHOP_NAME);
         emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
-        
+
         // Owner info
         ownerManager.load(tag);
-        
+
         // Side modes
         loadSideModes(tag);
-        
+
         // Output status
         outputAlmostFull = tag.getBoolean(NBT_OUTPUT_WARNING);
         outputFull = tag.getBoolean(NBT_OUTPUT_FULL);
-        
+
         // Update client-side state
         updateOfferSlot();
     }
 }
+
+
