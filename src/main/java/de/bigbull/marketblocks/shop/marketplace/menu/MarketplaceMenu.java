@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.shop.marketplace.menu;
 
-import de.bigbull.marketblocks.util.RegistriesInit;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceClientState;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceManager;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceOffer;
@@ -478,4 +478,5 @@ public class MarketplaceMenu extends AbstractContainerMenu {
         }
     }
 }
+
 

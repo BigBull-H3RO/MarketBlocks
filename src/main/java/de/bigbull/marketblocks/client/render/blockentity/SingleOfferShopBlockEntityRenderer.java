@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.entity.renderer;
+package de.bigbull.marketblocks.client.render.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;

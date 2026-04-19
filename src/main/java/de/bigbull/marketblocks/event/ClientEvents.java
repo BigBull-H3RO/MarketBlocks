@@ -1,10 +1,10 @@
 package de.bigbull.marketblocks.event;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import de.bigbull.marketblocks.client.render.blockentity.SingleOfferShopBlockEntityRenderer;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.RegistriesInit;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
-import de.bigbull.marketblocks.util.custom.entity.renderer.SingleOfferShopBlockEntityRenderer;
 import de.bigbull.marketblocks.util.custom.screen.marketplace.MarketplaceScreen;
 import de.bigbull.marketblocks.util.custom.screen.singleoffer.SingleOfferShopScreen;
 import net.minecraft.client.KeyMapping;
