@@ -64,6 +64,9 @@ public class ModEnLangProvider extends LanguageProvider {
 
         // Settings
         add("gui.marketblocks.settings_title", "Shop Settings");
+        add("gui.marketblocks.settings.category.general", "General");
+        add("gui.marketblocks.settings.category.io", "I/O");
+        add("gui.marketblocks.settings.category.access", "Access");
         add("gui.marketblocks.save", "Save");
         add("gui.marketblocks.shop_name", "Shop Name");
         add("gui.marketblocks.emit_redstone", "Emit Redstone");

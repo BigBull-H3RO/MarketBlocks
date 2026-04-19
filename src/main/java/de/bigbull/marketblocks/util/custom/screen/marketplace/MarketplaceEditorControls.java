@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen;
+package de.bigbull.marketblocks.util.custom.screen.marketplace;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceAddOfferPacket;
@@ -223,3 +223,4 @@ public final class MarketplaceEditorControls {
         }
     }
 }
+
