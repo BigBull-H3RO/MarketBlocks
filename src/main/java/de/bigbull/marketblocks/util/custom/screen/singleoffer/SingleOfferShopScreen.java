@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen;
+package de.bigbull.marketblocks.util.custom.screen.singleoffer;
 
 import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
@@ -11,15 +11,11 @@ import de.bigbull.marketblocks.util.custom.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
-import de.bigbull.marketblocks.util.custom.screen.gui.SideModeButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -27,7 +23,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Unified screen for the Trade Stand. Rebuilds its UI dynamically when the tab
@@ -37,6 +37,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private static final ResourceLocation OFFERS_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_stand_offers.png");
     private static final ResourceLocation INVENTORY_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_stand_inventory.png");
     private static final ResourceLocation SETTINGS_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_stand_settings.png");
+    private static final ResourceLocation OWNER_LIST_PANEL_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_stand/owner_list_panel.png");
     private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
     private static final ResourceLocation OUTPUT_FULL_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/output_full.png");
     private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
@@ -46,63 +47,26 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     // Stonecutter-Scroller-Sprites wiederverwenden
     private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller");
     private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller_disabled");
-    private static final int SCROLLER_WIDTH = 12;
-    private static final int SCROLLER_HEIGHT = 15;
-
     private record IconRect(int x, int y, int width, int height) { }
     private static final IconRect STATUS_ICON_RECT = new IconRect(82, 50, 28, 21);
 
     private ShopTab lastTab;
     private boolean lastHasOffer;
+    private SettingsCategory activeSettingsCategory = SettingsCategory.GENERAL;
 
     // Offers widgets
     private OfferTemplateButton offerButton;
 
     // Settings widgets
     private EditBox nameField;
-    private Button emitRedstoneToggleButton;
     private boolean emitRedstoneEnabled;
-    private SideModeButton leftButton, rightButton, bottomButton, backButton;
     private Direction leftDir, rightDir, bottomDir, backDir;
     private boolean saved;
-    private boolean noPlayers;
     private String originalName;
+    private String draftShopName;
+    private Boolean draftEmitRedstone;
 
-    // ---- Owner-Liste (mit Scroller) ----
-    /**
-     * Custom scrollable owner selection list.
-     * 
-     * Implementation notes:
-     * - Uses custom scroll handling (mouseClicked/mouseDragged/mouseScrolled) to match
-     *   vanilla Stonecutter scroll behavior
-     * - Renders visible window of OWNER_VISIBLE_ROWS (currently 1 row = 20px height)
-     * - Maintains persistent selection state (ownerSelected map) across scrolling
-     * - Only visible checkboxes are actually rendered (performance optimization)
-     * 
-     * Why custom implementation instead of native widgets?
-     * - Need tight integration with packet sending on checkbox change
-     * - Visual style needs to match shop UI theme
-     * - Space constraints (only 20px height available in settings tab)
-     * 
-     * Future improvement: Could potentially use ScrollPanel widget with custom rendering.
-     */
-    // Sichtbare Checkboxen (nur das Fenster)
-    private final Map<UUID, Checkbox> ownerCheckboxes = new HashMap<>();
-    // vollständige Reihenfolge aller Kandidaten (online zuerst, dann offline gespeicherte)
-    private final List<UUID> ownerOrder = new ArrayList<>();
-    // persistente Auswahl über Scroll hinweg
-    private final Map<UUID, Boolean> ownerSelected = new HashMap<>();
-    // Fenster-Layout
-    private static final int OWNER_VISIBLE_ROWS = 2;  // Zwei Einträge direkt sichtbar, danach Scroller
-    private static final int OWNER_ROW_HEIGHT = 20;
-    // Scrollbar-Position (X relativ zum linken Screen-Rand)
-    private static final int OWNER_SCROLLBAR_X_OFFSET = 130; // ggf. bei Bedarf optisch anpassen
-    // Scroll-Zustand
-    private float ownerScrollOffs = 0.0F;   // 0..1
-    private boolean ownerScrolling = false;
-    private int ownerStartIndex = 0;        // Index der ersten sichtbaren Zeile
-    // Baseline Y der Liste im Settings-Tab (wird beim UI-Aufbau gesetzt)
-    private int ownerListBaseY = 0;
+    private final SingleOfferOwnerListPanel ownerListPanel = new SingleOfferOwnerListPanel();
 
     public SingleOfferShopScreen(SingleOfferShopMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -158,11 +122,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     /**
      * Rebuilds the UI when tab changes.
-     * 
+     *
      * Optimization: We clear ALL widgets and recreate everything. This is simple but has drawbacks:
      * - Focus is lost if player is typing in an EditBox
      * - Tab buttons are recreated unnecessarily (they don't change between tabs)
-     * 
+     *
      * Future improvement: Could track tab-specific widgets separately and only clear/rebuild
      * those, while keeping tab buttons persistent. However, current implementation is acceptable
      * because:
@@ -218,23 +182,54 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         bottomDir = Direction.DOWN;
         backDir = facing.getOpposite();
 
-        nameField = addRenderableWidget(new EditBox(font, leftPos + 8, topPos + 20, 120, 20,
-                Component.translatable("gui.marketblocks.shop_name")));
-        nameField.setMaxLength(32);
-        originalName = be.getShopName();
-        nameField.setValue(originalName);
-        nameField.setResponder(s -> saved = false);
+        if (originalName == null) {
+            originalName = be.getShopName();
+        }
+        if (draftShopName == null) {
+            draftShopName = be.getShopName();
+        }
+        if (draftEmitRedstone == null) {
+            draftEmitRedstone = be.isEmitRedstone();
+        }
+        emitRedstoneEnabled = draftEmitRedstone;
 
-        emitRedstoneEnabled = be.isEmitRedstone();
-        emitRedstoneToggleButton = addRenderableWidget(Button.builder(getEmitRedstoneToggleLabel(), b -> {
-            emitRedstoneEnabled = !emitRedstoneEnabled;
-            b.setMessage(getEmitRedstoneToggleLabel());
-            saved = false;
-        }).bounds(leftPos + 8, topPos + 45, 24, 16).build());
-        emitRedstoneToggleButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")));
+        SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory, this::switchSettingsCategory);
+        buildSaveButton(be);
 
+        switch (activeSettingsCategory) {
+            case GENERAL -> nameField = SingleOfferSettingsSections.buildGeneralSection(
+                    this,
+                    draftShopName,
+                    this::getEmitRedstoneToggleLabel,
+                    () -> {
+                        emitRedstoneEnabled = !emitRedstoneEnabled;
+                        draftEmitRedstone = emitRedstoneEnabled;
+                        saved = false;
+                    },
+                    s -> {
+                        draftShopName = s;
+                        saved = false;
+                    }
+            );
+            case IO -> SingleOfferSettingsSections.buildIoSection(
+                    this,
+                    menu,
+                    leftDir,
+                    rightDir,
+                    bottomDir,
+                    backDir,
+                    () -> saved = false
+            );
+            case ACCESS -> buildSettingsAccessSection(be);
+        }
+    }
+
+    private void buildSaveButton(SingleOfferShopBlockEntity be) {
         addRenderableWidget(Button.builder(Component.translatable("gui.marketblocks.save"), b -> {
-            String name = nameField.getValue();
+            if (nameField != null) {
+                draftShopName = nameField.getValue();
+            }
+            String name = draftShopName != null ? draftShopName : "";
             boolean emit = emitRedstoneEnabled;
 
             // Clientseitig UI-State anwenden
@@ -252,13 +247,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 be.getAdditionalOwners().clear();
                 Map<UUID, String> stored = menu.getAdditionalOwners();
 
-                for (Map.Entry<UUID, Boolean> e : ownerSelected.entrySet()) {
-                    if (Boolean.TRUE.equals(e.getValue())) {
-                        UUID id = e.getKey();
-                        selectedOwners.add(id);
-                        String n = resolveName(id, stored);
-                        be.addOwnerClient(id, n);
-                    }
+                for (UUID id : ownerListPanel.collectSelectedOwners()) {
+                    selectedOwners.add(id);
+                    String n = ownerListPanel.resolveName(id, stored);
+                    be.addOwnerClient(id, n);
                 }
             }
 
@@ -275,71 +267,30 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             if (menu.isPrimaryOwner()) {
                 NetworkHandler.sendToServer(new UpdateOwnersPacket(be.getBlockPos(), selectedOwners));
             }
+
+            originalName = name;
+            draftShopName = name;
+            draftEmitRedstone = emit;
             saved = true;
-        }).bounds(leftPos + imageWidth - 68, topPos + imageHeight - 28, 60, 20).build());
+        }).bounds(leftPos + imageWidth - 52, topPos + imageHeight - 22, 44, 18).build());
+    }
 
-        int sideCenterX = leftPos + 28;
-        int sideBaseY = topPos + 65;
+    private void buildSettingsAccessSection(SingleOfferShopBlockEntity be) {
+        ownerListPanel.prepareAndRender(this, menu, be, topPos + 100, menu.isPrimaryOwner(), () -> saved = false);
+    }
 
-        leftButton = addRenderableWidget(new SideModeButton(sideCenterX - 20, sideBaseY, 16, 16, menu.getMode(leftDir), m -> {
-            menu.setMode(leftDir, m); saved = false; }));
-        leftButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.left")));
-        leftButton.setMessage(Component.translatable("gui.marketblocks.side.left"));
-
-        bottomButton = addRenderableWidget(new SideModeButton(sideCenterX, sideBaseY, 16, 16, menu.getMode(bottomDir), m -> {
-            menu.setMode(bottomDir, m); saved = false; }));
-        bottomButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.bottom")));
-        bottomButton.setMessage(Component.translatable("gui.marketblocks.side.bottom"));
-
-        rightButton = addRenderableWidget(new SideModeButton(sideCenterX + 20, sideBaseY, 16, 16, menu.getMode(rightDir), m -> {
-            menu.setMode(rightDir, m); saved = false; }));
-        rightButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.right")));
-        rightButton.setMessage(Component.translatable("gui.marketblocks.side.right"));
-
-        backButton = addRenderableWidget(new SideModeButton(sideCenterX, sideBaseY + 20, 16, 16, menu.getMode(backDir), m -> {
-            menu.setMode(backDir, m); saved = false; }));
-        backButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.back")));
-        backButton.setMessage(Component.translatable("gui.marketblocks.side.back"));
-
-        // --- Owner-Liste mit Scroller vorbereiten ---
-        ownerListBaseY = topPos + 100; // Start-Y der Liste
-        ownerCheckboxes.clear();
-        ownerOrder.clear();
-        ownerSelected.clear();
-        ownerScrolling = false;
-
-        if (!menu.isPrimaryOwner()) {
-            noPlayers = false;
+    private void switchSettingsCategory(SettingsCategory category) {
+        if (activeSettingsCategory == category) {
             return;
         }
-
-        Map<UUID, String> current = new HashMap<>(menu.getAdditionalOwners());
-
-        // Online-Spieler zuerst (ohne den eigentlichen Owner)
-        if (Minecraft.getInstance().getConnection() != null) {
-            Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();
-            for (PlayerInfo info : players) {
-                UUID id = info.getProfile().getId();
-                if (id.equals(be.getOwnerId())) continue;
-                ownerOrder.add(id);
-                ownerSelected.put(id, current.containsKey(id)); // vorselektieren, wenn bereits hinterlegt
-                current.remove(id);
-            }
+        if (nameField != null) {
+            draftShopName = nameField.getValue();
         }
-        // Danach gespeicherte Offline-Owner
-        for (Map.Entry<UUID, String> entry : current.entrySet()) {
-            UUID id = entry.getKey();
-            ownerOrder.add(id);
-            ownerSelected.put(id, true);
-        }
-
-        // Scroll zurücksetzen und Fenster rendern
-        ownerScrollOffs = 0.0F;
-        ownerStartIndex = 0;
-        renderOwnerWindow(ownerListBaseY);
-
-        noPlayers = ownerOrder.isEmpty();
+        draftEmitRedstone = emitRedstoneEnabled;
+        activeSettingsCategory = category;
+        rebuildUI();
     }
+
 
     // --- Rendering ---
     @Override
@@ -427,20 +378,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private void renderSettingsBg(GuiGraphics graphics) {
         graphics.blit(SETTINGS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
 
-        // Owner-Scrollbar zeichnen (nur wenn Owner & Liste aktiv)
-        if (menu.isPrimaryOwner() && isOwnerScrollActive() && !noPlayers) {
-            int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
-            int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
-            int barY = this.ownerListBaseY;
-            int barFull = Math.max(0, listHeight - SCROLLER_HEIGHT);
-            int knobOffset = (int)(ownerScrollOffs * (float)barFull);
-            ResourceLocation sprite = SCROLLER_SPRITE;
-            graphics.blitSprite(sprite, barX, barY + knobOffset, SCROLLER_WIDTH, SCROLLER_HEIGHT);
-        } else if (menu.isPrimaryOwner() && !isOwnerScrollActive() && !noPlayers) {
-            // Disabled-Variante anzeigen, wenn Liste nicht scrollt
-            int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
-            int barY = this.ownerListBaseY;
-            graphics.blitSprite(SCROLLER_DISABLED_SPRITE, barX, barY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+        if (menu.isPrimaryOwner() && activeSettingsCategory == SettingsCategory.ACCESS) {
+            ownerListPanel.renderBackground(graphics, leftPos, OWNER_LIST_PANEL_BG, SCROLLER_SPRITE, SCROLLER_DISABLED_SPRITE);
         }
     }
 
@@ -483,28 +422,25 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         graphics.drawString(font, Component.translatable("gui.marketblocks.settings_title"), 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
-        graphics.drawString(font, Component.translatable("gui.marketblocks.emit_redstone"), 38, 49, 4210752, false);
+        if (activeSettingsCategory == SettingsCategory.GENERAL) {
+            graphics.drawString(font, Component.translatable("gui.marketblocks.emit_redstone"), 38, 49, 4210752, false);
+        }
         if (!menu.isOwner()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
             int w = font.width(info);
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
-        } else if (menu.isPrimaryOwner() && noPlayers) {
+        } else if (activeSettingsCategory == SettingsCategory.ACCESS && menu.isPrimaryOwner() && ownerListPanel.noPlayers()) {
             Component info = Component.translatable("gui.marketblocks.no_players_available");
-            graphics.drawString(font, info, 8, ownerListBaseY - topPos + 6, 0x808080, false);
+            graphics.drawString(font, info, 8, ownerListPanel.listBaseY() - topPos + 6, 0x808080, false);
         }
     }
 
     // --- Maus-Events für den Owner-Scroller ---
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (menu.getActiveTab() == ShopTab.SETTINGS && menu.isPrimaryOwner() && isOwnerScrollActive() && !noPlayers) {
-            int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
-            int barX = this.leftPos + OWNER_SCROLLBAR_X_OFFSET;
-            int barY = this.ownerListBaseY;
-
-            if (mouseX >= barX && mouseX < barX + SCROLLER_WIDTH && mouseY >= barY && mouseY < barY + listHeight) {
-                this.ownerScrolling = true;
-                return true; // Klick konsumieren (wie Stonecutter)
+        if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS && menu.isPrimaryOwner()) {
+            if (ownerListPanel.onMouseClicked(mouseX, mouseY, leftPos)) {
+                return true;
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -512,34 +448,26 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (ownerScrolling && menu.getActiveTab() == ShopTab.SETTINGS && menu.isPrimaryOwner() && isOwnerScrollActive() && !noPlayers) {
-            int top = this.ownerListBaseY;
-            int bottom = top + OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
-
-            this.ownerScrollOffs = ((float)mouseY - (float)top - (SCROLLER_HEIGHT / 2.0F))
-                    / ((float)(bottom - top) - (float)SCROLLER_HEIGHT);
-            this.ownerScrollOffs = net.minecraft.util.Mth.clamp(this.ownerScrollOffs, 0.0F, 1.0F);
-
-            setOwnerScrollFromOffs();
-            return true;
+        if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS && menu.isPrimaryOwner()) {
+            if (ownerListPanel.onMouseDragged(mouseY)) {
+                return true;
+            }
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        this.ownerScrolling = false;
+        ownerListPanel.onMouseReleased();
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (menu.getActiveTab() == ShopTab.SETTINGS && menu.isPrimaryOwner() && isOwnerScrollActive() && !noPlayers) {
-            int offRows = getOwnerOffscreenRows();
-            float step = (float)scrollY / (float)Math.max(1, offRows);
-            this.ownerScrollOffs = net.minecraft.util.Mth.clamp(this.ownerScrollOffs - step, 0.0F, 1.0F);
-            setOwnerScrollFromOffs();
-            return true;
+        if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS && menu.isPrimaryOwner()) {
+            if (ownerListPanel.onMouseScrolled(scrollY)) {
+                return true;
+            }
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
@@ -565,12 +493,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
             SingleOfferShopBlockEntity be = menu.getBlockEntity();
             NetworkHandler.sendToServer(new CreateOfferPacket(be.getBlockPos(), p1, p2, result));
-            
+
             // NOTE: We do NOT set hasOffer client-side here immediately.
             // The server will send an OfferStatusPacket if creation succeeds,
             // which will trigger setHasOfferClient() and rebuildUI() via packet handler.
             // This ensures client state only updates after server confirmation.
-            
+
             playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
             // rebuildUI() will be called when OfferStatusPacket arrives
         } catch (Exception e) {
@@ -582,7 +510,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private void deleteOffer() {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         NetworkHandler.sendToServer(new DeleteOfferPacket(be.getBlockPos()));
-        
+
         // NOTE: We set hasOffer=false immediately on delete because it's safe
         // (worst case: UI shows no offer when there is one, which auto-corrects on next sync)
         be.setHasOfferClient(false);
@@ -622,66 +550,35 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (!saved && menu.getActiveTab() == ShopTab.SETTINGS) {
             menu.resetModes();
         }
-        if (menu.getActiveTab() == ShopTab.SETTINGS && nameField != null && nameField.getValue().trim().isEmpty()) {
+        String shopNameDraft = nameField != null ? nameField.getValue() : (draftShopName != null ? draftShopName : "");
+        if (menu.getActiveTab() == ShopTab.SETTINGS && shopNameDraft.trim().isEmpty()) {
             menu.getBlockEntity().setShopNameClient(originalName);
         }
         super.onClose();
-    }
-
-    // ---------- Owner-Scroller: interne Helfer ----------
-
-    private boolean isOwnerScrollActive() {
-        return ownerOrder.size() > OWNER_VISIBLE_ROWS;
-    }
-
-    private int getOwnerOffscreenRows() {
-        // Anzahl "verdeckter" Zeilen oberhalb/unterhalb
-        return Math.max(0, ownerOrder.size() - OWNER_VISIBLE_ROWS);
-    }
-
-    private void setOwnerScrollFromOffs() {
-        int offRows = getOwnerOffscreenRows();
-        this.ownerStartIndex = (int)((double)(this.ownerScrollOffs * (float)offRows) + 0.5);
-        renderOwnerWindow(this.ownerListBaseY);
-    }
-
-    private void renderOwnerWindow(int baseY) {
-        // aktuelle sichtbare Checkboxen entfernen
-        ownerCheckboxes.values().forEach(this::removeWidget);
-        ownerCheckboxes.clear();
-
-        int visible = Math.min(OWNER_VISIBLE_ROWS, ownerOrder.size());
-        for (int row = 0; row < visible; row++) {
-            int idx = ownerStartIndex + row;
-            if (idx >= ownerOrder.size()) break;
-
-            UUID id = ownerOrder.get(idx);
-            String name = resolveName(id, menu.getAdditionalOwners());
-            boolean sel = ownerSelected.getOrDefault(id, false);
-
-            Checkbox cb = Checkbox.builder(Component.literal(name), font)
-                    .pos(leftPos + 8, baseY + row * OWNER_ROW_HEIGHT)
-                    .selected(sel)
-                    .onValueChange((btn, val) -> { ownerSelected.put(id, val); saved = false; })
-                    .build();
-
-            ownerCheckboxes.put(id, cb);
-            addRenderableWidget(cb);
-        }
     }
 
     private Component getEmitRedstoneToggleLabel() {
         return Component.literal(emitRedstoneEnabled ? "ON" : "OFF");
     }
 
-    private String resolveName(UUID id, Map<UUID, String> stored) {
-        var con = Minecraft.getInstance().getConnection();
-        if (con != null) {
-            PlayerInfo info = con.getPlayerInfo(id);
-            if (info != null) {
-                return info.getProfile().getName();
-            }
-        }
-        return stored.getOrDefault(id, "");
+    <T extends net.minecraft.client.gui.components.AbstractWidget> T addSettingsWidget(T widget) {
+        return addRenderableWidget(widget);
+    }
+
+    void removeSettingsWidget(net.minecraft.client.gui.components.AbstractWidget widget) {
+        removeWidget(widget);
+    }
+
+    int settingsLeftPos() {
+        return leftPos;
+    }
+
+    int settingsTopPos() {
+        return topPos;
+    }
+
+    net.minecraft.client.gui.Font settingsFont() {
+        return font;
     }
 }
+

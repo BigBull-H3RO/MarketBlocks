@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen;
+package de.bigbull.marketblocks.util.custom.screen.marketplace;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
@@ -853,3 +853,4 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
     }
 }
+

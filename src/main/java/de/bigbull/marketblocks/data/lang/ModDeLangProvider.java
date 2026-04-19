@@ -52,6 +52,9 @@ public class ModDeLangProvider extends LanguageProvider {
 
         // Einstellungen
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");
+        add("gui.marketblocks.settings.category.general", "Allgemein");
+        add("gui.marketblocks.settings.category.io", "I/O");
+        add("gui.marketblocks.settings.category.access", "Zugriff");
         add("gui.marketblocks.save", "Speichern");
         add("gui.marketblocks.shop_name", "Shopname");
         add("gui.marketblocks.emit_redstone", "Redstone-Signal ausgeben");

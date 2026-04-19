@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen;
+package de.bigbull.marketblocks.util.custom.screen.marketplace;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
@@ -133,4 +133,5 @@ public abstract class BaseModalScreen extends Screen {
         return false;
     }
 }
+
 

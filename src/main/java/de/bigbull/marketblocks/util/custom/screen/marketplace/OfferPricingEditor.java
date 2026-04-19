@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen;
+package de.bigbull.marketblocks.util.custom.screen.marketplace;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceUpdateOfferPricingPacket;
@@ -25,7 +25,7 @@ public class OfferPricingEditor extends BaseModalScreen {
 
     private final UUID offerId;
     private final DemandPricing currentPricing;
-    
+
     private boolean enablePricing;
     private EditBox demandStepInput;
     private EditBox minMultiplierInput;
@@ -147,4 +147,5 @@ public class OfferPricingEditor extends BaseModalScreen {
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.max"), labelX, rowStartY + (ROW_SPACING * 3), 0xCFCFCF, false);
     }
 }
+
 

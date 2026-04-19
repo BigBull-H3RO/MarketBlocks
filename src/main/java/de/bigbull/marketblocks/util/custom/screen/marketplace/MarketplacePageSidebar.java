@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen;
+package de.bigbull.marketblocks.util.custom.screen.marketplace;
 
 import de.bigbull.marketblocks.shop.marketplace.MarketplacePage;
 import net.minecraft.Util;
@@ -140,3 +140,4 @@ public final class MarketplacePageSidebar {
         }
     }
 }
+

@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen;
+package de.bigbull.marketblocks.util.custom.screen.singleoffer;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
@@ -74,16 +74,16 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
 
     /**
      * Switches the active tab and notifies the server.
-     * 
+     *
      * NOTE: Tab switching requires server notification for the following reasons:
      * 1. Container sync: The server needs to know which tab is active to properly
      *    handle slot visibility and validation (e.g., OwnerGatedSlot checks)
      * 2. State consistency: If a player closes and reopens the menu, the server
      *    remembers the last active tab
      * 3. Multi-player: Other players viewing the same shop see consistent state
-     * 
+     *
      * The client optimistically updates the tab immediately for responsiveness.
-     * If the server rejects the tab switch (e.g., permission check fails), 
+     * If the server rejects the tab switch (e.g., permission check fails),
      * the next container sync will revert the client state.
      */
     protected void switchTab(ShopTab tab) {
