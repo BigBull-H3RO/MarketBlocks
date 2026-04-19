@@ -1,7 +1,6 @@
 package de.bigbull.marketblocks.init;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
