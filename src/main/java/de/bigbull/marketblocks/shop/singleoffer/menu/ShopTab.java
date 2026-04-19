@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.menu;
+package de.bigbull.marketblocks.shop.singleoffer.menu;
 
 public enum ShopTab {
     OFFERS,

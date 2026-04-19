@@ -1,9 +1,9 @@
 package de.bigbull.marketblocks.data.blockstate;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.block.BaseShopBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.level.block.Block;

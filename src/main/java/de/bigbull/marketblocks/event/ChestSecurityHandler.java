@@ -2,8 +2,8 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
-import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.block.SideMode;
+import de.bigbull.marketblocks.shop.singleoffer.SideMode;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;

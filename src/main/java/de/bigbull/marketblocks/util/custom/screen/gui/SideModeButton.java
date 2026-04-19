@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.util.custom.screen.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.block.SideMode;
+import de.bigbull.marketblocks.shop.singleoffer.SideMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

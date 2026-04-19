@@ -1,7 +1,8 @@
-package de.bigbull.marketblocks.util.block.entity;
+package de.bigbull.marketblocks.shop.singleoffer.block.entity;
 
 import de.bigbull.marketblocks.config.Config;
-import de.bigbull.marketblocks.util.custom.block.SideMode;
+import de.bigbull.marketblocks.shop.singleoffer.SideMode;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.LockedChestWrapper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -97,10 +98,10 @@ public class ShopInventoryManager {
 
     /**
      * Pulls items from connected neighbor input chests into the shop's input inventory.
-     * 
+     *
      * SIDE EFFECTS: This method MODIFIES neighbor inventories by extracting items.
      * Should only be called on the server side to prevent desync.
-     * 
+     *
      * @param inputHandler The shop's input inventory to insert items into
      */
     public void pullFromInputChest(ItemStackHandler inputHandler) {
@@ -119,10 +120,10 @@ public class ShopInventoryManager {
 
     /**
      * Pushes items from the shop's output inventory to connected neighbor output chests.
-     * 
+     *
      * SIDE EFFECTS: This method MODIFIES neighbor inventories by inserting items.
      * Should only be called on the server side to prevent desync.
-     * 
+     *
      * @param outputHandler The shop's output inventory to extract items from
      */
     public void pushToOutputChest(ItemStackHandler outputHandler) {
@@ -139,3 +140,5 @@ public class ShopInventoryManager {
         }
     }
 }
+
+

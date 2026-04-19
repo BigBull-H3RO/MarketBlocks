@@ -1,12 +1,12 @@
 package de.bigbull.marketblocks.util;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.util.custom.block.TradeStandClassicBlock;
-import de.bigbull.marketblocks.util.custom.block.TradeStandBlock;
-import de.bigbull.marketblocks.util.custom.block.TradeStandTopBlock;
-import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandClassicBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandTopBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.util.custom.menu.MarketplaceMenu;
-import de.bigbull.marketblocks.util.custom.menu.SingleOfferShopMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;

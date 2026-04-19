@@ -1,7 +1,6 @@
-package de.bigbull.marketblocks.util.custom.block;
+package de.bigbull.marketblocks.shop.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
-import de.bigbull.marketblocks.util.block.BaseShopBlock;
 import de.bigbull.marketblocks.util.block.ShopBlockConfig;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 

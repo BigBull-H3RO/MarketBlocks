@@ -2,9 +2,9 @@ package de.bigbull.marketblocks.util.custom.entity.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import de.bigbull.marketblocks.util.block.BaseShopBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.BaseShopBlock;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.util.block.ShopRenderConfig;
-import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -13,16 +13,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ProjectileWeaponItem;
-import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.item.TieredItem;
-import net.minecraft.world.item.TridentItem;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.world.item.ShieldItem;
-import net.minecraft.world.item.MaceItem;
+import net.minecraft.world.item.*;
 
 public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity> {
 

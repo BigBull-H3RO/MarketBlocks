@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.block;
+package de.bigbull.marketblocks.shop.singleoffer;
 
 import net.minecraft.network.chat.Component;
 

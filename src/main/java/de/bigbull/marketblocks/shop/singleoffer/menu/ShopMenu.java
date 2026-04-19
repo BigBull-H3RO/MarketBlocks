@@ -1,6 +1,6 @@
-package de.bigbull.marketblocks.util.custom.menu;
+package de.bigbull.marketblocks.shop.singleoffer.menu;
 
-import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 
 /**
  * Shared contract for single-offer shop menus.
@@ -37,3 +37,4 @@ public interface ShopMenu {
         return hasFlag(SingleOfferShopBlockEntity.PRIMARY_OWNER_FLAG);
     }
 }
+

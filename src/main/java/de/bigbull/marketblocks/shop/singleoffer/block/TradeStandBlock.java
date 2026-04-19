@@ -1,11 +1,10 @@
-package de.bigbull.marketblocks.util.custom.block;
+package de.bigbull.marketblocks.shop.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.util.RegistriesInit;
-import de.bigbull.marketblocks.util.block.BaseShopBlock;
 import de.bigbull.marketblocks.util.block.ShopBlockConfig;
 import de.bigbull.marketblocks.util.block.ShopRenderConfig;
-import de.bigbull.marketblocks.util.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionResult;
