@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.client.render.blockentity;
+package de.bigbull.marketblocks.util.render.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -39,7 +39,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         // Wir nutzen den Standard-Buffer von Minecraft, damit der Block-Abbau-Overlay (Risse) ignoriert wird!
         MultiBufferSource defaultBufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
-        // --- 1. Offer-Item schwebend über dem Block ---
+        // --- 1. Offer-Item schwebend Ã¼ber dem Block ---
         ItemStack result = blockEntity.getOfferResult();
         if (!result.isEmpty()) {
             poseStack.pushPose();
@@ -160,3 +160,4 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 item instanceof ProjectileWeaponItem || item instanceof ShieldItem || item instanceof MaceItem;
     }
 }
+

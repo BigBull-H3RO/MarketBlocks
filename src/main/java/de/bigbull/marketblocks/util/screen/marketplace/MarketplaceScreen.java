@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.marketplace;
+package de.bigbull.marketblocks.util.screen.marketplace;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
@@ -7,9 +7,9 @@ import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceSelectPage
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceSetOfferPacket;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceToggleEditModePacket;
 import de.bigbull.marketblocks.shop.marketplace.menu.MarketplaceMenu;
-import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
-import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
-import de.bigbull.marketblocks.util.custom.screen.gui.VanillaIconButton;
+import de.bigbull.marketblocks.util.screen.gui.IconButton;
+import de.bigbull.marketblocks.util.screen.gui.OfferTemplateButton;
+import de.bigbull.marketblocks.util.screen.gui.VanillaIconButton;
 import de.bigbull.marketblocks.shop.marketplace.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -70,8 +70,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private static final int PREVIEW_Y_OFFSET = 43;
 
     // Controls (Buttons unter den Slots)
-    private static final int CONTROLS_X_START = 160; // Beginnt linksbündig mit Slot 1
-    private static final int CONTROLS_Y_START = 102; // Unterhalb der Slots (Slots sind bei Y=78, Höhe 18)
+    private static final int CONTROLS_X_START = 160; // Beginnt linksbÃ¼ndig mit Slot 1
+    private static final int CONTROLS_Y_START = 102; // Unterhalb der Slots (Slots sind bei Y=78, HÃ¶he 18)
 
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
@@ -853,4 +853,5 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
     }
 }
+
 

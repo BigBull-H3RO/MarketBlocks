@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.marketplace;
+package de.bigbull.marketblocks.util.screen.marketplace;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceAddOfferPacket;
@@ -7,8 +7,8 @@ import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceDeleteOffe
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceDeletePagePacket;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceMoveOfferPacket;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceRenamePagePacket;
-import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
-import de.bigbull.marketblocks.util.custom.screen.gui.VanillaIconButton;
+import de.bigbull.marketblocks.util.screen.gui.IconButton;
+import de.bigbull.marketblocks.util.screen.gui.VanillaIconButton;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceOffer;
 import de.bigbull.marketblocks.shop.marketplace.MarketplacePage;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -223,4 +223,5 @@ public final class MarketplaceEditorControls {
         }
     }
 }
+
 

@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.gui;
+package de.bigbull.marketblocks.util.screen.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;

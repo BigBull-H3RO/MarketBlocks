@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.singleoffer;
+package de.bigbull.marketblocks.util.screen.singleoffer;
 
 import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
@@ -8,9 +8,9 @@ import de.bigbull.marketblocks.network.packets.singleOfferShop.*;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.shop.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
-import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
-import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
+import de.bigbull.marketblocks.util.screen.gui.GuiConstants;
+import de.bigbull.marketblocks.util.screen.gui.IconButton;
+import de.bigbull.marketblocks.util.screen.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -435,7 +435,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
     }
 
-    // --- Maus-Events für den Owner-Scroller ---
+    // --- Maus-Events fÃ¼r den Owner-Scroller ---
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS && menu.isPrimaryOwner()) {
@@ -581,4 +581,5 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         return font;
     }
 }
+
 

@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.singleoffer;
+package de.bigbull.marketblocks.util.screen.singleoffer;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
@@ -6,7 +6,7 @@ import de.bigbull.marketblocks.network.packets.singleOfferShop.SwitchTabPacket;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.shop.singleoffer.menu.ShopMenu;
 import de.bigbull.marketblocks.shop.singleoffer.menu.ShopTab;
-import de.bigbull.marketblocks.util.custom.screen.gui.IconButton;
+import de.bigbull.marketblocks.util.screen.gui.IconButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -124,3 +124,4 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         minecraft.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
     }
 }
+

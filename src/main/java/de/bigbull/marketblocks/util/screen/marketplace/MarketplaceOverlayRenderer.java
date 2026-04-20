@@ -1,6 +1,6 @@
-package de.bigbull.marketblocks.util.custom.screen.marketplace;
+package de.bigbull.marketblocks.util.screen.marketplace;
 
-import de.bigbull.marketblocks.util.custom.screen.gui.OfferTemplateButton;
+import de.bigbull.marketblocks.util.screen.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceClientState;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceOffer;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceOfferViewState;
@@ -296,6 +296,7 @@ public final class MarketplaceOverlayRenderer {
         }
     }
 }
+
 
 
 

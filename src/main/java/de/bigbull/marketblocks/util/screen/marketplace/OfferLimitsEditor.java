@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.marketplace;
+package de.bigbull.marketblocks.util.screen.marketplace;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.packets.marketplace.MarketplaceUpdateOfferLimitsPacket;
@@ -128,5 +128,6 @@ public class OfferLimitsEditor extends BaseModalScreen {
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.restock"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
     }
 }
+
 
 
