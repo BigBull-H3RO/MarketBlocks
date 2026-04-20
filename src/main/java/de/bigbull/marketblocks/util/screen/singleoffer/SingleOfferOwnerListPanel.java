@@ -26,7 +26,7 @@ public class SingleOfferOwnerListPanel {
     private static final int OWNER_PANEL_BORDER = 1;
     private static final int OWNER_PANEL_WIDTH = 137;
     private static final int OWNER_PANEL_HEIGHT = 42;
-    private static final int OWNER_SCROLLBAR_X_OFFSET = 130;
+    private static final int OWNER_SCROLLBAR_X_OFFSET = 131;
     private static final int SCROLLER_WIDTH = 12;
     private static final int SCROLLER_HEIGHT = 15;
 
@@ -88,14 +88,14 @@ public class SingleOfferOwnerListPanel {
                 OWNER_PANEL_HEIGHT
         );
 
-        if (isOwnerScrollActive() && !noPlayers) {
+        if (isOwnerScrollActive()) {
             int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
             int barX = leftPos + OWNER_SCROLLBAR_X_OFFSET;
             int barY = ownerListBaseY;
             int barFull = Math.max(0, listHeight - SCROLLER_HEIGHT);
             int knobOffset = (int) (ownerScrollOffs * (float) barFull);
             graphics.blitSprite(scrollerSprite, barX, barY + knobOffset, SCROLLER_WIDTH, SCROLLER_HEIGHT);
-        } else if (!isOwnerScrollActive() && !noPlayers) {
+        } else {
             int barX = leftPos + OWNER_SCROLLBAR_X_OFFSET;
             int barY = ownerListBaseY;
             graphics.blitSprite(scrollerDisabledSprite, barX, barY, SCROLLER_WIDTH, SCROLLER_HEIGHT);

@@ -13,17 +13,17 @@ import java.util.function.Consumer;
 
 public class SideModeButton extends Button {
     private static final ResourceLocation BUTTON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/button.png");
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/button.png");
     private static final ResourceLocation HIGHLIGHTED =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/button_highlighted.png");
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/button_highlighted.png");
     private static final ResourceLocation SELECTED =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/button_selected.png");
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/button_selected.png");
     private static final ResourceLocation INPUT_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/input_icon.png");
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/input_icon.png");
     private static final ResourceLocation OUTPUT_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/output_icon.png");
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/output_icon.png");
     private static final ResourceLocation DISABLED_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/custom_1/disabled_icon.png");
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/disabled_icon.png");
 
     private SideMode mode;
     private final Consumer<SideMode> callback;
