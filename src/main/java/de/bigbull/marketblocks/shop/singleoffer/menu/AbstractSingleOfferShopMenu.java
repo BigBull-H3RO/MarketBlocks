@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.shop.singleoffer.menu;
 
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.util.custom.screen.gui.GuiConstants;
+import de.bigbull.marketblocks.util.screen.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -127,3 +127,4 @@ public abstract class AbstractSingleOfferShopMenu extends AbstractContainerMenu 
         return ret;
     }
 }
+

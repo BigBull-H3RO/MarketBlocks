@@ -1,7 +1,7 @@
-package de.bigbull.marketblocks.util.custom.screen.singleoffer;
+package de.bigbull.marketblocks.util.screen.singleoffer;
 
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.util.custom.screen.gui.SideModeButton;
+import de.bigbull.marketblocks.util.screen.gui.SideModeButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -94,5 +94,6 @@ public final class SingleOfferSettingsSections {
         backButton.setMessage(Component.translatable("gui.marketblocks.side.back"));
     }
 }
+
 
 

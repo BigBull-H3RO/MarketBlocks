@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.gui;
+package de.bigbull.marketblocks.util.screen.gui;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import net.minecraft.client.Minecraft;

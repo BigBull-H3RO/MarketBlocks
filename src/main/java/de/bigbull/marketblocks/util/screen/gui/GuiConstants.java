@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.gui;
+package de.bigbull.marketblocks.util.screen.gui;
 
 /**
  * Shared GUI constants for single-offer shop menus and screens.
@@ -16,3 +16,4 @@ public final class GuiConstants {
     private GuiConstants() {
     }
 }
+

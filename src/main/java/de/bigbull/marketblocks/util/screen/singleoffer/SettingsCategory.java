@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.util.custom.screen.singleoffer;
+package de.bigbull.marketblocks.util.screen.singleoffer;
 
 import net.minecraft.network.chat.Component;
 
@@ -21,5 +21,6 @@ public enum SettingsCategory {
         return Component.translatable(translationKey);
     }
 }
+
 
 
