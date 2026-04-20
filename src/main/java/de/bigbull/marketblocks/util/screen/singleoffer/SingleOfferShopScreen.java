@@ -39,10 +39,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private static final ResourceLocation SETTINGS_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_stand_settings.png");
     private static final ResourceLocation OWNER_LIST_PANEL_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_stand/owner_list_panel.png");
     private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
-    private static final ResourceLocation OUTPUT_FULL_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/output_full.png");
+    private static final ResourceLocation OUTPUT_FULL_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/output_full.png");
     private static final ResourceLocation CREATE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
-    private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/input_output.png");
+    private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/input_output.png");
 
     // Stonecutter-Scroller-Sprites wiederverwenden
     private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller");
@@ -272,11 +272,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             draftShopName = name;
             draftEmitRedstone = emit;
             saved = true;
-        }).bounds(leftPos + imageWidth - 52, topPos + imageHeight - 22, 44, 18).build());
+        }).bounds(leftPos + imageWidth - 50, topPos + imageHeight - 24, 44, 18).build());
     }
 
     private void buildSettingsAccessSection(SingleOfferShopBlockEntity be) {
-        ownerListPanel.prepareAndRender(this, menu, be, topPos + 100, menu.isPrimaryOwner(), () -> saved = false);
+        ownerListPanel.prepareAndRender(this, menu, be, topPos + 20, menu.isPrimaryOwner(), () -> saved = false);
     }
 
     private void switchSettingsCategory(SettingsCategory category) {
@@ -431,7 +431,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
         } else if (activeSettingsCategory == SettingsCategory.ACCESS && menu.isPrimaryOwner() && ownerListPanel.noPlayers()) {
             Component info = Component.translatable("gui.marketblocks.no_players_available");
-            graphics.drawString(font, info, 8, ownerListPanel.listBaseY() - topPos + 6, 0x808080, false);
+            graphics.drawString(font, info, 10, ownerListPanel.listBaseY() - topPos + 16, 0x808080, false);
         }
     }
 

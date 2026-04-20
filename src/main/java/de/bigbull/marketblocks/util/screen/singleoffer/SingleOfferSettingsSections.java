@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.util.screen.singleoffer;
 
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.util.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.screen.gui.SideModeButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -15,22 +16,34 @@ import java.util.function.Supplier;
  * Builds the category-dependent settings widgets for the single-offer shop screen.
  */
 public final class SingleOfferSettingsSections {
-    private static final int SETTINGS_CATEGORY_BUTTON_Y_OFFSET = -20;
-    private static final int SETTINGS_CATEGORY_BUTTON_WIDTH = 44;
-    private static final int SETTINGS_CATEGORY_BUTTON_HEIGHT = 16;
-    private static final int SETTINGS_CATEGORY_BUTTON_GAP = 2;
+    private static final int SETTINGS_CATEGORY_BUTTON_Y_OFFSET = -24;
+    private static final int SETTINGS_CATEGORY_BUTTON_X_OFFSET = 4;
+    private static final int SETTINGS_CATEGORY_BUTTON_WIDTH = 22;
+    private static final int SETTINGS_CATEGORY_BUTTON_HEIGHT = 22;
+    private static final int SETTINGS_CATEGORY_BUTTON_GAP = 4;
 
     private SingleOfferSettingsSections() {
     }
 
     public static void buildCategoryButtons(SingleOfferShopScreen host, SettingsCategory activeCategory, Consumer<SettingsCategory> onSwitch) {
-        int x = host.settingsLeftPos() + 8;
+        int x = host.settingsLeftPos() + SETTINGS_CATEGORY_BUTTON_X_OFFSET;
         int y = host.settingsTopPos() + SETTINGS_CATEGORY_BUTTON_Y_OFFSET;
         for (SettingsCategory category : SettingsCategory.values()) {
-            Button button = host.addSettingsWidget(Button.builder(category.title(), b -> onSwitch.accept(category))
-                    .bounds(x, y, SETTINGS_CATEGORY_BUTTON_WIDTH, SETTINGS_CATEGORY_BUTTON_HEIGHT)
-                    .build());
-            button.active = category != activeCategory;
+            host.addSettingsWidget(new IconButton(
+                    x,
+                    y,
+                    SETTINGS_CATEGORY_BUTTON_WIDTH,
+                    SETTINGS_CATEGORY_BUTTON_HEIGHT,
+                    AbstractSingleOfferShopScreen.BUTTON_SPRITES,
+                    category.icon(),
+                    b -> {
+                        if (category != activeCategory) {
+                            onSwitch.accept(category);
+                        }
+                    },
+                    category.title(),
+                    () -> category == activeCategory
+            ));
             x += SETTINGS_CATEGORY_BUTTON_WIDTH + SETTINGS_CATEGORY_BUTTON_GAP;
         }
     }
