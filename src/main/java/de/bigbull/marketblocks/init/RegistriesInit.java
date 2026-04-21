@@ -8,9 +8,11 @@ import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBloc
 import de.bigbull.marketblocks.shop.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -29,6 +31,7 @@ public final class RegistriesInit {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MarketBlocks.MODID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MarketBlocks.MODID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MarketBlocks.MODID);
+    public static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(Registries.SOUND_EVENT, MarketBlocks.MODID);
 
     private RegistriesInit() {
     }
@@ -38,6 +41,7 @@ public final class RegistriesInit {
         ITEMS.register(bus);
         BLOCK_ENTITIES.register(bus);
         MENU_TYPES.register(bus);
+        SOUND_EVENTS.register(bus);
     }
 
     // Block Registrierung
@@ -77,6 +81,11 @@ public final class RegistriesInit {
 
     public static final Supplier<MenuType<MarketplaceMenu>> MARKETPLACE_MENU =
             MENU_TYPES.register("marketplace_menu", () -> IMenuTypeExtension.create(MarketplaceMenu::new));
+
+    // Sound events
+    public static final Supplier<SoundEvent> VISUAL_NPC_FALL_SOUND =
+            SOUND_EVENTS.register("visual_npc_fall",
+                    () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "visual_npc_fall")));
 
 
     public static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {

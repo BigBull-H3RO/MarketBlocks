@@ -150,5 +150,6 @@
   "message.marketblocks.marketplace.pricing.no_connection": "Could not save pricing: no server connection.",
   "message.marketblocks.trade_stand.no_offer": "This trade stand currently has no active offer.",
   "message.marketblocks.trade_stand.not_owner": "Only the owner can break this trade stand.",
-  "message.marketblocks.visual_npc.space_blocked": "The decorative villager cannot spawn: two free blocks above are required."
+  "message.marketblocks.visual_npc.space_blocked": "The decorative villager cannot spawn: two free blocks above are required.",
+  "subtitles.marketblocks.visual_npc_fall": "Villager lands"
 }

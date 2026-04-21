@@ -6,6 +6,7 @@ import de.bigbull.marketblocks.shop.visual.VisualNpcPlacementResult;
 import de.bigbull.marketblocks.util.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.screen.gui.SideModeButton;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
@@ -120,12 +121,10 @@ public final class SingleOfferSettingsSections {
             Runnable onNpcToggle,
             Consumer<String> onNpcNameChanged,
             Runnable onProfessionCycle,
-            Runnable onParticlesToggle,
-            Runnable onSoundsToggle,
+            Consumer<Boolean> onParticlesChanged,
+            Consumer<Boolean> onSoundsChanged,
             Supplier<Component> npcToggleLabel,
-            Supplier<Component> professionLabel,
-            Supplier<Component> particlesToggleLabel,
-            Supplier<Component> soundsToggleLabel
+            Supplier<Component> professionLabel
     ) {
         Button npcToggle = host.addSettingsWidget(Button.builder(npcToggleLabel.get(), b -> {
             onNpcToggle.run();
@@ -145,17 +144,23 @@ public final class SingleOfferSettingsSections {
         }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 42, 158, 16).build());
         professionButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.profession")));
 
-        Button particlesToggle = host.addSettingsWidget(Button.builder(particlesToggleLabel.get(), b -> {
-            onParticlesToggle.run();
-            b.setMessage(particlesToggleLabel.get());
-        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 64, 50, 16).build());
-        particlesToggle.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_particles")));
+        Checkbox particlesCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.purchase_particles"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 62)
+                .selected(purchaseParticlesEnabled)
+                .onValueChange((checkbox, value) -> onParticlesChanged.accept(value))
+                .build());
+        particlesCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_particles")));
 
-        Button soundsToggle = host.addSettingsWidget(Button.builder(soundsToggleLabel.get(), b -> {
-            onSoundsToggle.run();
-            b.setMessage(soundsToggleLabel.get());
-        }).bounds(host.settingsLeftPos() + 63, host.settingsTopPos() + 64, 50, 16).build());
-        soundsToggle.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_sounds")));
+        Checkbox soundsCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.purchase_sounds"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 80)
+                .selected(purchaseSoundsEnabled)
+                .onValueChange((checkbox, value) -> onSoundsChanged.accept(value))
+                .build());
+        soundsCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_sounds")));
 
         boolean blocked = placementResult != null && !placementResult.canSpawn() && !npcEnabled;
         if (blocked) {

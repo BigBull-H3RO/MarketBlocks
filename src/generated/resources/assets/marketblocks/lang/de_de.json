@@ -150,5 +150,6 @@
   "message.marketblocks.marketplace.pricing.no_connection": "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.",
   "message.marketblocks.trade_stand.no_offer": "Dieser Handelsstand hat aktuell kein aktives Angebot.",
   "message.marketblocks.trade_stand.not_owner": "Nur der Besitzer kann diesen Handelsstand abbauen.",
-  "message.marketblocks.visual_npc.space_blocked": "Der Deko-Villager kann nicht gespawnt werden: Nach oben sind 2 freie Blöcke nötig."
+  "message.marketblocks.visual_npc.space_blocked": "Der Deko-Villager kann nicht gespawnt werden: Nach oben sind 2 freie Blöcke nötig.",
+  "subtitles.marketblocks.visual_npc_fall": "Villager landet"
 }

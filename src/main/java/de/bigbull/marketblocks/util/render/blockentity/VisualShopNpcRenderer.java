@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.util.render.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.shop.visual.IVisualShopNPC;
 import de.bigbull.marketblocks.shop.visual.ShopNpcAnimationState;
 import de.bigbull.marketblocks.shop.visual.ShopVisualPlacementValidator;
@@ -23,12 +24,16 @@ import net.minecraft.world.phys.Vec3;
 
 public final class VisualShopNpcRenderer {
     private static final float SPAWN_DROP_START_Y = 56.0F;
+    private static final int SPAWN_FALL_SOUND_START_OFFSET_TICKS = 0;
     private static final float SPAWN_DROP_DURATION = 52.0F;
     private static final float SPAWN_BOUNCE_DURATION = 8.0F;
     private static final float DESPAWN_DURATION = 10.0F;
-    private static final int SPAWN_WHOOSH_INTERVAL_TICKS = 8;
     private static final float HEAD_YAW_LIMIT = 58.0F;
     private static final float PLAYER_TRACK_RANGE = 8.0F;
+    private static final float SPAWN_FALL_SOUND_VOLUME = 0.40F;
+    private static final float SPAWN_FALL_SOUND_PITCH = 1.00F;
+    private static final float SPAWN_BOUNCE_SOUND_VOLUME = 0.72F;
+    private static final float SPAWN_BOUNCE_SOUND_PITCH = 1.18F;
 
     private VisualShopNpcRenderer() {
     }
@@ -61,15 +66,15 @@ public final class VisualShopNpcRenderer {
         Vec3 spawnPos = placement.spawnPos();
         if (spawnActive) {
             float age = (now - state.getSpawnAnimationStartTick()) + partialTick;
-            if (age < SPAWN_DROP_DURATION && (state.getLastSpawnWhooshTick() < 0 || now - state.getLastSpawnWhooshTick() >= SPAWN_WHOOSH_INTERVAL_TICKS)) {
+            if (age < SPAWN_DROP_DURATION && age >= SPAWN_FALL_SOUND_START_OFFSET_TICKS && state.getLastSpawnWhooshTick() < 0) {
                 level.playLocalSound(spawnPos.x, spawnPos.y + Math.max(animationYOffset, 2.0F), spawnPos.z,
-                        SoundEvents.WIND_CHARGE_THROW, SoundSource.BLOCKS, 0.35F, 0.75F, false);
+                        RegistriesInit.VISUAL_NPC_FALL_SOUND.get(), SoundSource.BLOCKS, SPAWN_FALL_SOUND_VOLUME, SPAWN_FALL_SOUND_PITCH, false);
                 state.setLastSpawnWhooshTick(now);
             }
         }
         if (spawnActive && !state.isSpawnLandSoundPlayed() && now - state.getSpawnAnimationStartTick() >= (long) SPAWN_DROP_DURATION) {
             level.playLocalSound(spawnPos.x, spawnPos.y, spawnPos.z,
-                    SoundEvents.SLIME_BLOCK_FALL, SoundSource.BLOCKS, 0.85F, 1.25F, false);
+                    SoundEvents.SLIME_BLOCK_FALL, SoundSource.BLOCKS, SPAWN_BOUNCE_SOUND_VOLUME, SPAWN_BOUNCE_SOUND_PITCH, false);
             state.setSpawnLandSoundPlayed(true);
         }
         float bodyYaw = host.getVisualFacing().toYRot();
@@ -79,6 +84,7 @@ public final class VisualShopNpcRenderer {
         float headPitch = state.smoothRenderPitch(lookTarget.pitch());
 
         Villager villager = state.getOrCreateRenderVillager(level);
+        villager.noCulling = true;
         VillagerData data = villager.getVillagerData().setProfession(settings.profession().toVillagerProfession());
         villager.setVillagerData(data);
         villager.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
@@ -94,6 +100,9 @@ public final class VisualShopNpcRenderer {
         if (!settings.npcName().isBlank()) {
             villager.setCustomNameVisible(true);
             villager.setCustomName(net.minecraft.network.chat.Component.literal(settings.npcName()));
+        } else {
+            villager.setCustomNameVisible(false);
+            villager.setCustomName(null);
         }
 
         BlockPos shopPos = host.getVisualShopPos();
@@ -112,23 +121,33 @@ public final class VisualShopNpcRenderer {
     }
 
     private static void processAnimationEvents(IVisualShopNPC host, ShopVisualSettings settings, ShopNpcAnimationState state, Level level, long now) {
-        if (state.getLastAnimationNonce() == host.getVisualAnimationNonce()) {
+        int currentNonce = host.getVisualAnimationNonce();
+        if (!state.isAnimationNonceInitialized()) {
+            // First client sync: adopt nonce without replaying stale animation events.
+            state.primeAnimationNonce(currentNonce);
             return;
         }
-        state.setLastAnimationNonce(host.getVisualAnimationNonce());
+
+        if (state.getLastAnimationNonce() == currentNonce) {
+            return;
+        }
 
         byte event = host.getVisualAnimationEvent();
+        if (event == VisualNpcAnimationEvent.NONE) {
+            state.setLastAnimationNonce(currentNonce);
+            return;
+        }
+
         VisualNpcPlacement placement = ShopVisualPlacementValidator.validate(level, host.getVisualShopPos(), host.getVisualFacing());
         if (!placement.canSpawn()) {
             return;
         }
 
+        // Consume nonce only after this event can really be processed.
+        state.setLastAnimationNonce(currentNonce);
+
         if (event == VisualNpcAnimationEvent.SPAWN && settings.npcEnabled()) {
             state.startSpawn(now);
-            level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 2.5D, placement.spawnPos().z,
-                    SoundEvents.WIND_CHARGE_THROW, SoundSource.BLOCKS, 0.75F, 0.9F, false);
-            state.setSpawnFallSoundPlayed(true);
-            state.setLastSpawnWhooshTick(now);
             return;
         }
 
