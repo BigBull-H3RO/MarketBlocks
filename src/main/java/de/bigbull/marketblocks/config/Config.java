@@ -15,6 +15,8 @@ public class Config {
     public static final ModConfigSpec.BooleanValue MARKETPLACE_GLOBAL_DAILY_LIMIT;
     public static final ModConfigSpec.BooleanValue MARKETPLACE_EDIT_MODE_ENABLED;
     public static final ModConfigSpec.BooleanValue ENABLE_MIXIN_DESYNC_LOGGING;
+    public static final ModConfigSpec.BooleanValue VISUAL_NPC_FORCE_OFFSCREEN_RENDERING;
+    public static final ModConfigSpec.IntValue VISUAL_NPC_RENDER_VIEW_DISTANCE;
 
     static {
         COMMON_BUILDER.push("General Settings");
@@ -46,6 +48,16 @@ public class Config {
         MARKETPLACE_EDIT_MODE_ENABLED = COMMON_BUILDER
                 .comment("If true, the Marketplace edit mode toggle is available for admins. If false, the edit toggle is hidden and disabled globally.")
                 .define("marketplaceEditModeEnabled", false);
+        COMMON_BUILDER.pop();
+
+        COMMON_BUILDER.push("Visual NPC Rendering");
+        VISUAL_NPC_FORCE_OFFSCREEN_RENDERING = COMMON_BUILDER
+                .comment("If true, visual shop NPCs render even when they are near screen borders / off-center.",
+                        "Disable for stricter culling and potentially better performance.")
+                .define("visualNpcForceOffscreenRendering", true);
+        VISUAL_NPC_RENDER_VIEW_DISTANCE = COMMON_BUILDER
+                .comment("Maximum distance in blocks for rendering visual shop NPCs.")
+                .defineInRange("visualNpcRenderViewDistance", 128, 16, 512);
         COMMON_BUILDER.pop();
 
         COMMON_BUILDER.push("Debug Settings");

@@ -2,14 +2,15 @@ package de.bigbull.marketblocks.shop.singleoffer.block.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
+import de.bigbull.marketblocks.init.RegistriesInit;
 import de.bigbull.marketblocks.shop.singleoffer.SideMode;
 import de.bigbull.marketblocks.shop.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
-import de.bigbull.marketblocks.shop.singleoffer.block.entity.OfferManager;
-import de.bigbull.marketblocks.shop.singleoffer.block.entity.ShopInventoryManager;
-import de.bigbull.marketblocks.shop.singleoffer.block.entity.ShopOwnerManager;
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.init.RegistriesInit;
+import de.bigbull.marketblocks.shop.visual.IVisualShopNPC;
+import de.bigbull.marketblocks.shop.visual.ShopNpcAnimationState;
+import de.bigbull.marketblocks.shop.visual.ShopVisualSettings;
+import de.bigbull.marketblocks.shop.visual.VisualNpcAnimationEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -41,7 +42,7 @@ import java.util.*;
  * everything from inventory management, offer creation, player ownership,
  * and interaction with adjacent blocks.
  */
-public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvider {
+public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvider, IVisualShopNPC {
     // Constants
     private static final int MAX_SHOP_NAME_LENGTH = 32;
     private static final double MAX_PLAYER_DISTANCE_SQUARED = 64.0; // 8 blocks
@@ -59,6 +60,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private static final String KEY_RESULT = "OfferResult";
     private static final String NBT_OUTPUT_WARNING = "OutputWarning";
     private static final String NBT_OUTPUT_FULL = "OutputFull";
+    private static final String NBT_VISUALS = "Visuals";
+    private static final String NBT_VISUAL_ANIMATION_NONCE = "VisualAnimationNonce";
+    private static final String NBT_VISUAL_ANIMATION_EVENT = "VisualAnimationEvent";
+    private static final String NBT_VISUAL_PURCHASE_COUNTER = "VisualPurchaseCounter";
 
     // Inventory Handler Names
     private static final String HANDLER_INPUT = "InputInventory";
@@ -90,6 +95,11 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private boolean emitRedstone = false;
     private boolean outputAlmostFull = false;
     private boolean outputFull = false;
+    private ShopVisualSettings visualSettings = ShopVisualSettings.DEFAULT;
+    private int visualAnimationNonce = 0;
+    private byte visualAnimationEvent = VisualNpcAnimationEvent.NONE;
+    private int visualPurchaseCounter = 0;
+    private final ShopNpcAnimationState visualAnimationState = new ShopNpcAnimationState();
 
     // Side Configuration
     private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
@@ -448,15 +458,45 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                                     Direction right, SideMode rightMode,
                                     Direction bottom, SideMode bottomMode,
                                     Direction back, SideMode backMode,
-                                    String name, boolean redstone) {
+                                    String name, boolean redstone,
+                                    ShopVisualSettings visuals) {
+        boolean wasNpcEnabled = this.visualSettings.npcEnabled();
         setModeNoSync(left, leftMode);
         setModeNoSync(right, rightMode);
         setModeNoSync(bottom, bottomMode);
         setModeNoSync(back, backMode);
         setShopNameNoSync(name);
         setEmitRedstoneNoSync(redstone);
+        setVisualSettingsNoSync(visuals);
+        if (wasNpcEnabled != this.visualSettings.npcEnabled()) {
+            visualAnimationEvent = this.visualSettings.npcEnabled() ? VisualNpcAnimationEvent.SPAWN : VisualNpcAnimationEvent.DESPAWN;
+            visualAnimationNonce++;
+        }
         updateNeighborCache();
         sync();
+    }
+
+    public ShopVisualSettings getVisualSettings() {
+        return visualSettings;
+    }
+
+    public void setVisualSettings(ShopVisualSettings visualSettings) {
+        ShopVisualSettings previous = this.visualSettings;
+        setVisualSettingsNoSync(visualSettings);
+        if (previous.npcEnabled() != this.visualSettings.npcEnabled()) {
+            visualAnimationEvent = this.visualSettings.npcEnabled() ? VisualNpcAnimationEvent.SPAWN : VisualNpcAnimationEvent.DESPAWN;
+            visualAnimationNonce++;
+        }
+        sync();
+    }
+
+    public void setVisualSettingsNoSync(ShopVisualSettings visualSettings) {
+        this.visualSettings = visualSettings == null ? ShopVisualSettings.DEFAULT : visualSettings;
+    }
+
+    @ApiStatus.Internal
+    public void setVisualSettingsClient(ShopVisualSettings visualSettings) {
+        this.visualSettings = visualSettings == null ? ShopVisualSettings.DEFAULT : visualSettings;
     }
 
     /**
@@ -759,6 +799,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
 
         executeTrades(p1, p2, result, actualAmount);
+        visualPurchaseCounter += actualAmount;
 
         StringBuilder tradeLog = new StringBuilder();
         tradeLog.append("Sold ").append(actualAmount * result.getCount()).append("x ").append(result.getHoverName().getString());
@@ -1309,11 +1350,23 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
         this.shopName = name;
         this.emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
+        if (tag.contains(NBT_VISUALS, 10)) {
+            this.visualSettings = ShopVisualSettings.load(tag.getCompound(NBT_VISUALS));
+        } else {
+            this.visualSettings = ShopVisualSettings.DEFAULT;
+        }
+        this.visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
+        this.visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
+        this.visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
     }
 
     private void saveSettings(CompoundTag tag) {
         tag.putString(NBT_SHOP_NAME, shopName);
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
+        tag.put(NBT_VISUALS, visualSettings.save());
+        tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
+        tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
+        tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
     }
 
     private void loadSideModes(CompoundTag tag) {
@@ -1369,6 +1422,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Shop settings (needed for UI)
         tag.putString(NBT_SHOP_NAME, shopName);
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
+        tag.put(NBT_VISUALS, visualSettings.save());
+        tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
+        tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
+        tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
 
         // Owner info (needed for permissions check)
         ownerManager.save(tag);
@@ -1400,6 +1457,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Shop settings
         shopName = tag.getString(NBT_SHOP_NAME);
         emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
+        visualSettings = tag.contains(NBT_VISUALS, 10) ? ShopVisualSettings.load(tag.getCompound(NBT_VISUALS)) : ShopVisualSettings.DEFAULT;
+        visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
+        visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
+        visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
 
         // Owner info
         ownerManager.load(tag);
@@ -1413,6 +1474,43 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         // Update client-side state
         updateOfferSlot();
+    }
+
+    @Override
+    public BlockPos getVisualShopPos() {
+        return worldPosition;
+    }
+
+    @Override
+    public Level getVisualLevel() {
+        return level;
+    }
+
+    @Override
+    public Direction getVisualFacing() {
+        return getBlockState().hasProperty(BaseShopBlock.FACING)
+                ? getBlockState().getValue(BaseShopBlock.FACING)
+                : Direction.NORTH;
+    }
+
+    @Override
+    public int getVisualAnimationNonce() {
+        return visualAnimationNonce;
+    }
+
+    @Override
+    public byte getVisualAnimationEvent() {
+        return visualAnimationEvent;
+    }
+
+    @Override
+    public int getVisualPurchaseCounter() {
+        return visualPurchaseCounter;
+    }
+
+    @Override
+    public ShopNpcAnimationState getVisualAnimationState() {
+        return visualAnimationState;
     }
 }
 

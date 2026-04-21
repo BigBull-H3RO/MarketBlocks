@@ -1,6 +1,8 @@
 package de.bigbull.marketblocks.util.screen.singleoffer;
 
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.shop.visual.VillagerVisualProfession;
+import de.bigbull.marketblocks.shop.visual.VisualNpcPlacementResult;
 import de.bigbull.marketblocks.util.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.screen.gui.SideModeButton;
 import net.minecraft.client.gui.components.Button;
@@ -105,6 +107,65 @@ public final class SingleOfferSettingsSections {
         }));
         backButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.back")));
         backButton.setMessage(Component.translatable("gui.marketblocks.side.back"));
+    }
+
+    public static VisualSectionWidgets buildVisualSection(
+            SingleOfferShopScreen host,
+            boolean npcEnabled,
+            String npcName,
+            VillagerVisualProfession profession,
+            boolean purchaseParticlesEnabled,
+            boolean purchaseSoundsEnabled,
+            VisualNpcPlacementResult placementResult,
+            Runnable onNpcToggle,
+            Consumer<String> onNpcNameChanged,
+            Runnable onProfessionCycle,
+            Runnable onParticlesToggle,
+            Runnable onSoundsToggle,
+            Supplier<Component> npcToggleLabel,
+            Supplier<Component> professionLabel,
+            Supplier<Component> particlesToggleLabel,
+            Supplier<Component> soundsToggleLabel
+    ) {
+        Button npcToggle = host.addSettingsWidget(Button.builder(npcToggleLabel.get(), b -> {
+            onNpcToggle.run();
+            b.setMessage(npcToggleLabel.get());
+        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 20, 50, 16).build());
+        npcToggle.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.npc_enabled")));
+
+        EditBox npcNameField = host.addSettingsWidget(new EditBox(host.settingsFont(), host.settingsLeftPos() + 63, host.settingsTopPos() + 20, 103, 16,
+                Component.translatable("gui.marketblocks.visuals.npc_name")));
+        npcNameField.setMaxLength(32);
+        npcNameField.setValue(npcName == null ? "" : npcName);
+        npcNameField.setResponder(onNpcNameChanged);
+
+        Button professionButton = host.addSettingsWidget(Button.builder(professionLabel.get(), b -> {
+            onProfessionCycle.run();
+            b.setMessage(professionLabel.get());
+        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 42, 158, 16).build());
+        professionButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.profession")));
+
+        Button particlesToggle = host.addSettingsWidget(Button.builder(particlesToggleLabel.get(), b -> {
+            onParticlesToggle.run();
+            b.setMessage(particlesToggleLabel.get());
+        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 64, 50, 16).build());
+        particlesToggle.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_particles")));
+
+        Button soundsToggle = host.addSettingsWidget(Button.builder(soundsToggleLabel.get(), b -> {
+            onSoundsToggle.run();
+            b.setMessage(soundsToggleLabel.get());
+        }).bounds(host.settingsLeftPos() + 63, host.settingsTopPos() + 64, 50, 16).build());
+        soundsToggle.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_sounds")));
+
+        boolean blocked = placementResult != null && !placementResult.canSpawn() && !npcEnabled;
+        if (blocked) {
+            npcToggle.setTooltip(Tooltip.create(Component.translatable(placementResult.translationKey())));
+        }
+
+        return new VisualSectionWidgets(npcNameField);
+    }
+
+    public record VisualSectionWidgets(EditBox npcNameField) {
     }
 }
 
