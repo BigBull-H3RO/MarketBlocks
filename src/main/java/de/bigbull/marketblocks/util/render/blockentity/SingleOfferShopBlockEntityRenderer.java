@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.util.render.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.shop.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.util.block.ShopRenderConfig;
@@ -24,25 +23,32 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
     @Override
     public boolean shouldRenderOffScreen(SingleOfferShopBlockEntity blockEntity) {
-        return Config.VISUAL_NPC_FORCE_OFFSCREEN_RENDERING.get();
+        return true;
     }
 
     @Override
     public boolean shouldRender(SingleOfferShopBlockEntity blockEntity, Vec3 cameraPos) {
-        Vec3 center = Vec3.atCenterOf(blockEntity.getBlockPos());
-        int viewDistance = getViewDistance();
-        return cameraPos.distanceToSqr(center) <= (double) viewDistance * viewDistance;
+        return true;
     }
 
     @Override
     public int getViewDistance() {
-        return Config.VISUAL_NPC_RENDER_VIEW_DISTANCE.get();
+        return 256;
     }
 
     @Override
     public void render(SingleOfferShopBlockEntity blockEntity, float partialTick, PoseStack poseStack,
                        MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-        if (!blockEntity.hasOffer() || blockEntity.getLevel() == null) {
+        if (blockEntity.getLevel() == null) {
+            return;
+        }
+
+        MultiBufferSource defaultBufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+
+        // NPC rendering must stay independent from the offer state.
+        VisualShopNpcRenderer.render(blockEntity, partialTick, poseStack, defaultBufferSource, packedLight);
+
+        if (!blockEntity.hasOffer()) {
             return;
         }
 
@@ -54,9 +60,6 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
         Font font = Minecraft.getInstance().font;
         Direction dir = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
-
-        // Wir nutzen den Standard-Buffer von Minecraft, damit der Block-Abbau-Overlay (Risse) ignoriert wird!
-        MultiBufferSource defaultBufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
         // --- 1. Offer-Item schwebend Ã¼ber dem Block ---
         ItemStack result = blockEntity.getOfferResult();
@@ -93,9 +96,6 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
             renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, packedLight, packedOverlay,
                     payment2, dir, config.getPayment2Item(), config.getPayment2CountText());
         }
-
-        // Visual NPC runs fully client-side in the BER and is never spawned as a world entity.
-        VisualShopNpcRenderer.render(blockEntity, partialTick, poseStack, defaultBufferSource, packedLight);
     }
 
     private static float getFinalOfferScale(BakedModel offerModel, ShopRenderConfig.SlotRenderConfig offerItem, ItemStack result) {

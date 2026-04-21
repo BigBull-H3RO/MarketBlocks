@@ -10,10 +10,10 @@ import net.minecraft.world.level.Level;
  */
 public class ShopNpcAnimationState {
     private int lastAnimationNonce = -1;
+    private boolean animationNonceInitialized = false;
     private long spawnAnimationStartTick = -1L;
     private long despawnAnimationStartTick = -1L;
     private int lastPurchaseCounter = 0;
-    private boolean spawnFallSoundPlayed = false;
     private boolean spawnLandSoundPlayed = false;
     private long lastSpawnWhooshTick = -1L;
     private float smoothedYaw = 180.0F;
@@ -28,6 +28,16 @@ public class ShopNpcAnimationState {
 
     public void setLastAnimationNonce(int lastAnimationNonce) {
         this.lastAnimationNonce = lastAnimationNonce;
+        this.animationNonceInitialized = true;
+    }
+
+    public boolean isAnimationNonceInitialized() {
+        return animationNonceInitialized;
+    }
+
+    public void primeAnimationNonce(int animationNonce) {
+        this.lastAnimationNonce = animationNonce;
+        this.animationNonceInitialized = true;
     }
 
     public long getSpawnAnimationStartTick() {
@@ -36,7 +46,6 @@ public class ShopNpcAnimationState {
 
     public void startSpawn(long tick) {
         this.spawnAnimationStartTick = tick;
-        this.spawnFallSoundPlayed = false;
         this.spawnLandSoundPlayed = false;
         this.lastSpawnWhooshTick = -1L;
     }
@@ -57,13 +66,6 @@ public class ShopNpcAnimationState {
         this.lastPurchaseCounter = lastPurchaseCounter;
     }
 
-    public boolean isSpawnFallSoundPlayed() {
-        return spawnFallSoundPlayed;
-    }
-
-    public void setSpawnFallSoundPlayed(boolean spawnFallSoundPlayed) {
-        this.spawnFallSoundPlayed = spawnFallSoundPlayed;
-    }
 
     public boolean isSpawnLandSoundPlayed() {
         return spawnLandSoundPlayed;

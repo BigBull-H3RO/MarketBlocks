@@ -269,18 +269,16 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                             draftVisualNpcProfession = (draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession).next();
                             saved = false;
                         },
-                        () -> {
-                            draftVisualPurchaseParticles = !Boolean.TRUE.equals(draftVisualPurchaseParticles);
+                        value -> {
+                            draftVisualPurchaseParticles = value;
                             saved = false;
                         },
-                        () -> {
-                            draftVisualPurchaseSounds = !Boolean.TRUE.equals(draftVisualPurchaseSounds);
+                        value -> {
+                            draftVisualPurchaseSounds = value;
                             saved = false;
                         },
                         this::getNpcToggleLabel,
-                        this::getProfessionLabel,
-                        this::getPurchaseParticlesToggleLabel,
-                        this::getPurchaseSoundsToggleLabel
+                        this::getProfessionLabel
                 );
                 npcNameField = widgets.npcNameField();
             }
@@ -515,8 +513,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
         if (activeSettingsCategory == SettingsCategory.VISUALS) {
             graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.npc_name"), 63, 12, 4210752, false);
-            graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.purchase_particles"), 8, 54, 4210752, false);
-            graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.purchase_sounds"), 63, 54, 4210752, false);
             if (!visualPlacementResult.canSpawn()) {
                 graphics.drawString(font, Component.translatable(visualPlacementResult.translationKey()), 8, 84, 0xCC3333, false);
             }
@@ -667,13 +663,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 .append(Component.translatable(profession.translationKey()));
     }
 
-    private Component getPurchaseParticlesToggleLabel() {
-        return Component.literal(Boolean.TRUE.equals(draftVisualPurchaseParticles) ? "ON" : "OFF");
-    }
-
-    private Component getPurchaseSoundsToggleLabel() {
-        return Component.literal(Boolean.TRUE.equals(draftVisualPurchaseSounds) ? "ON" : "OFF");
-    }
 
     private VisualNpcPlacementResult resolveVisualPlacementResult(SingleOfferShopBlockEntity be) {
         if (be.getLevel() == null) {

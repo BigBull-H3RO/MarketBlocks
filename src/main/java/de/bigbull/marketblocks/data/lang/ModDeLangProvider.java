@@ -181,6 +181,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
         add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte nur Zahlen eingeben (Punkt oder Komma erlaubt).");
         add("message.marketblocks.visual_npc.space_blocked", "Der Deko-Villager kann nicht gespawnt werden: Nach oben sind 2 freie Blöcke nötig.");
+        add("subtitles.marketblocks.visual_npc_fall", "Villager landet");
 
         add("item.marketblocks.trade_stand.with_showcase", "Handelsstand (mit Vitrine)");
 

@@ -1,0 +1,12 @@
+{
+  "visual_npc_fall": {
+    "subtitle": "subtitles.marketblocks.visual_npc_fall",
+    "sounds": [
+      {
+        "name": "marketblocks:visual_npc/fall",
+        "stream": false
+      }
+    ]
+  }
+}
+

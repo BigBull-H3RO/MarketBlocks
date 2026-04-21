@@ -194,6 +194,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.invalid_data", "Could not save pricing: invalid data.");
         add("message.marketblocks.marketplace.pricing.invalid_number_format", "Please use numbers only (dot or comma allowed).");
         add("message.marketblocks.visual_npc.space_blocked", "The decorative villager cannot spawn: two free blocks above are required.");
+        add("subtitles.marketblocks.visual_npc_fall", "Villager lands");
 
         add("item.marketblocks.trade_stand.with_showcase", "Trade Stand (With Showcase)");
 
