@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.util.render.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.shop.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.util.block.ShopRenderConfig;
@@ -13,11 +14,29 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.item.*;
 
 public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity> {
 
     public SingleOfferShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
+    }
+
+    @Override
+    public boolean shouldRenderOffScreen(SingleOfferShopBlockEntity blockEntity) {
+        return Config.VISUAL_NPC_FORCE_OFFSCREEN_RENDERING.get();
+    }
+
+    @Override
+    public boolean shouldRender(SingleOfferShopBlockEntity blockEntity, Vec3 cameraPos) {
+        Vec3 center = Vec3.atCenterOf(blockEntity.getBlockPos());
+        int viewDistance = getViewDistance();
+        return cameraPos.distanceToSqr(center) <= (double) viewDistance * viewDistance;
+    }
+
+    @Override
+    public int getViewDistance() {
+        return Config.VISUAL_NPC_RENDER_VIEW_DISTANCE.get();
     }
 
     @Override
@@ -74,6 +93,9 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
             renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, packedLight, packedOverlay,
                     payment2, dir, config.getPayment2Item(), config.getPayment2CountText());
         }
+
+        // Visual NPC runs fully client-side in the BER and is never spawned as a world entity.
+        VisualShopNpcRenderer.render(blockEntity, partialTick, poseStack, defaultBufferSource, packedLight);
     }
 
     private static float getFinalOfferScale(BakedModel offerModel, ShopRenderConfig.SlotRenderConfig offerItem, ItemStack result) {

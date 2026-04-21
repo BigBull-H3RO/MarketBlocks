@@ -54,12 +54,35 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");
         add("gui.marketblocks.settings.category.general", "Allgemein");
         add("gui.marketblocks.settings.category.io", "I/O");
+        add("gui.marketblocks.settings.category.visuals", "Visuals");
         add("gui.marketblocks.settings.category.access", "Zugriff");
         add("gui.marketblocks.save", "Speichern");
         add("gui.marketblocks.shop_name", "Shopname");
         add("gui.marketblocks.emit_redstone", "Redstone-Signal ausgeben");
         add("gui.marketblocks.emit_redstone.tooltip", "Gibt nach einem Kauf kurz ein Redstone-Signal aus");
         add("gui.marketblocks.settings_owner_only", "Nur der Besitzer kann Einstellungen ändern");
+        add("gui.marketblocks.visuals.npc_enabled", "Deko-Villager");
+        add("gui.marketblocks.visuals.npc_name", "NPC-Name");
+        add("gui.marketblocks.visuals.profession", "Beruf");
+        add("gui.marketblocks.visuals.purchase_particles", "Kauf-Partikel");
+        add("gui.marketblocks.visuals.purchase_sounds", "Kauf-Sounds");
+        add("gui.marketblocks.visuals.error.no_surface", "Kein Standblock hinter dem Shop!");
+        add("gui.marketblocks.visuals.error.space_blocked", "Platz blockiert!");
+        add("gui.marketblocks.visuals.profession.none", "Arbeitslos");
+        add("gui.marketblocks.visuals.profession.armorer", "Rüstungsschmied");
+        add("gui.marketblocks.visuals.profession.butcher", "Metzger");
+        add("gui.marketblocks.visuals.profession.cartographer", "Kartograf");
+        add("gui.marketblocks.visuals.profession.cleric", "Kleriker");
+        add("gui.marketblocks.visuals.profession.farmer", "Bauer");
+        add("gui.marketblocks.visuals.profession.fisherman", "Fischer");
+        add("gui.marketblocks.visuals.profession.fletcher", "Pfeilmacher");
+        add("gui.marketblocks.visuals.profession.leatherworker", "Lederarbeiter");
+        add("gui.marketblocks.visuals.profession.librarian", "Bibliothekar");
+        add("gui.marketblocks.visuals.profession.mason", "Steinmetz");
+        add("gui.marketblocks.visuals.profession.nitwit", "Trottel");
+        add("gui.marketblocks.visuals.profession.shepherd", "Schäfer");
+        add("gui.marketblocks.visuals.profession.toolsmith", "Werkzeugschmied");
+        add("gui.marketblocks.visuals.profession.weaponsmith", "Waffenschmied");
 
         add("gui.marketblocks.side.left", "Links");
         add("gui.marketblocks.side.right", "Rechts");
@@ -157,6 +180,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.no_connection", "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.marketplace.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
         add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte nur Zahlen eingeben (Punkt oder Komma erlaubt).");
+        add("message.marketblocks.visual_npc.space_blocked", "Der Deko-Villager kann nicht gespawnt werden: Nach oben sind 2 freie Blöcke nötig.");
 
         add("item.marketblocks.trade_stand.with_showcase", "Handelsstand (mit Vitrine)");
 

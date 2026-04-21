@@ -66,12 +66,35 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop Settings");
         add("gui.marketblocks.settings.category.general", "General");
         add("gui.marketblocks.settings.category.io", "I/O");
+        add("gui.marketblocks.settings.category.visuals", "Visuals");
         add("gui.marketblocks.settings.category.access", "Access");
         add("gui.marketblocks.save", "Save");
         add("gui.marketblocks.shop_name", "Shop Name");
         add("gui.marketblocks.emit_redstone", "Emit Redstone");
         add("gui.marketblocks.emit_redstone.tooltip", "Emit a short redstone pulse after a purchase");
         add("gui.marketblocks.settings_owner_only", "Only the owner can change settings");
+        add("gui.marketblocks.visuals.npc_enabled", "Decorative Villager");
+        add("gui.marketblocks.visuals.npc_name", "NPC Name");
+        add("gui.marketblocks.visuals.profession", "Profession");
+        add("gui.marketblocks.visuals.purchase_particles", "Purchase Particles");
+        add("gui.marketblocks.visuals.purchase_sounds", "Purchase Sounds");
+        add("gui.marketblocks.visuals.error.no_surface", "No stand surface behind the shop!");
+        add("gui.marketblocks.visuals.error.space_blocked", "Space blocked!");
+        add("gui.marketblocks.visuals.profession.none", "Unemployed");
+        add("gui.marketblocks.visuals.profession.armorer", "Armorer");
+        add("gui.marketblocks.visuals.profession.butcher", "Butcher");
+        add("gui.marketblocks.visuals.profession.cartographer", "Cartographer");
+        add("gui.marketblocks.visuals.profession.cleric", "Cleric");
+        add("gui.marketblocks.visuals.profession.farmer", "Farmer");
+        add("gui.marketblocks.visuals.profession.fisherman", "Fisherman");
+        add("gui.marketblocks.visuals.profession.fletcher", "Fletcher");
+        add("gui.marketblocks.visuals.profession.leatherworker", "Leatherworker");
+        add("gui.marketblocks.visuals.profession.librarian", "Librarian");
+        add("gui.marketblocks.visuals.profession.mason", "Mason");
+        add("gui.marketblocks.visuals.profession.nitwit", "Nitwit");
+        add("gui.marketblocks.visuals.profession.shepherd", "Shepherd");
+        add("gui.marketblocks.visuals.profession.toolsmith", "Toolsmith");
+        add("gui.marketblocks.visuals.profession.weaponsmith", "Weaponsmith");
 
         add("gui.marketblocks.side.left", "Left");
         add("gui.marketblocks.side.right", "Right");
@@ -170,6 +193,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.no_connection", "Could not save pricing: no server connection.");
         add("message.marketblocks.marketplace.pricing.invalid_data", "Could not save pricing: invalid data.");
         add("message.marketblocks.marketplace.pricing.invalid_number_format", "Please use numbers only (dot or comma allowed).");
+        add("message.marketblocks.visual_npc.space_blocked", "The decorative villager cannot spawn: two free blocks above are required.");
 
         add("item.marketblocks.trade_stand.with_showcase", "Trade Stand (With Showcase)");
 

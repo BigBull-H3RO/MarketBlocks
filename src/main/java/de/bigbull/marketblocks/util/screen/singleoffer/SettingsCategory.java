@@ -11,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 public enum SettingsCategory {
     GENERAL("gui.marketblocks.settings.category.general", "textures/gui/icon/singleoffer/general.png"),
     IO("gui.marketblocks.settings.category.io", "textures/gui/icon/singleoffer/i_o.png"),
+    VISUALS("gui.marketblocks.settings.category.visuals", "textures/gui/icon/singleoffer/home.png"),
     ACCESS("gui.marketblocks.settings.category.access", "textures/gui/icon/singleoffer/padlock.png");
 
     private final String translationKey;

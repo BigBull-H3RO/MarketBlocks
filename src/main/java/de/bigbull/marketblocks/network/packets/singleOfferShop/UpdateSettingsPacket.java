@@ -4,6 +4,9 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.shop.singleoffer.SideMode;
 import de.bigbull.marketblocks.shop.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.shop.visual.ShopVisualPlacementValidator;
+import de.bigbull.marketblocks.shop.visual.ShopVisualSettings;
+import de.bigbull.marketblocks.shop.visual.VillagerVisualProfession;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -15,7 +18,20 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, SideMode bottom, SideMode back, String name, boolean redstone) implements CustomPacketPayload {
+public record UpdateSettingsPacket(
+        BlockPos pos,
+        SideMode left,
+        SideMode right,
+        SideMode bottom,
+        SideMode back,
+        String name,
+        boolean redstone,
+        boolean npcEnabled,
+        String npcName,
+        String npcProfession,
+        boolean purchaseParticles,
+        boolean purchaseSounds
+) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<UpdateSettingsPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_side_config"));
 
@@ -28,6 +44,11 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
                 ByteBufCodecs.STRING_UTF8.encode(buf, packet.back().name());
                 ByteBufCodecs.STRING_UTF8.encode(buf, packet.name());
                 ByteBufCodecs.BOOL.encode(buf, packet.redstone());
+                ByteBufCodecs.BOOL.encode(buf, packet.npcEnabled());
+                ByteBufCodecs.STRING_UTF8.encode(buf, packet.npcName());
+                ByteBufCodecs.STRING_UTF8.encode(buf, packet.npcProfession());
+                ByteBufCodecs.BOOL.encode(buf, packet.purchaseParticles());
+                ByteBufCodecs.BOOL.encode(buf, packet.purchaseSounds());
             },
             buf -> {
                 BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
@@ -37,7 +58,13 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
                 SideMode back = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
                 String name = ByteBufCodecs.STRING_UTF8.decode(buf);
                 boolean redstone = ByteBufCodecs.BOOL.decode(buf);
-                return new UpdateSettingsPacket(pos, left, right, bottom, back, name, redstone);
+                boolean npcEnabled = ByteBufCodecs.BOOL.decode(buf);
+                String npcName = ByteBufCodecs.STRING_UTF8.decode(buf);
+                String npcProfession = ByteBufCodecs.STRING_UTF8.decode(buf);
+                boolean purchaseParticles = ByteBufCodecs.BOOL.decode(buf);
+                boolean purchaseSounds = ByteBufCodecs.BOOL.decode(buf);
+                return new UpdateSettingsPacket(pos, left, right, bottom, back, name, redstone,
+                        npcEnabled, npcName, npcProfession, purchaseParticles, purchaseSounds);
             }
     );
     @Override
@@ -65,13 +92,25 @@ public record UpdateSettingsPacket(BlockPos pos, SideMode left, SideMode right, 
                 
                 // Sanitize shop name
                 String name = packet.name().strip().replaceAll("[^\\p{L}\\p{N} _-]", "");
+                ShopVisualSettings visuals = new ShopVisualSettings(
+                        packet.npcEnabled(),
+                        packet.npcName(),
+                        VillagerVisualProfession.fromSerialized(packet.npcProfession()),
+                        packet.purchaseParticles(),
+                        packet.purchaseSounds()
+                );
+
+                if (visuals.npcEnabled() && !ShopVisualPlacementValidator.validate(level, packet.pos(), facing).canSpawn()) {
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.marketblocks.visual_npc.space_blocked"));
+                    visuals = visuals.withNpcEnabled(false);
+                }
 
                 blockEntity.updateSettingsBatch(
                         facing.getCounterClockWise(), packet.left(),
                         facing.getClockWise(), packet.right(),
                         Direction.DOWN, packet.bottom(),
                         facing.getOpposite(), packet.back(),
-                        name, packet.redstone()
+                        name, packet.redstone(), visuals
                 );
             }
         });

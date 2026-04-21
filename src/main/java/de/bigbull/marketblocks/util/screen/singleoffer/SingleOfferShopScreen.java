@@ -8,6 +8,10 @@ import de.bigbull.marketblocks.network.packets.singleOfferShop.*;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.shop.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.shop.visual.ShopVisualPlacementValidator;
+import de.bigbull.marketblocks.shop.visual.ShopVisualSettings;
+import de.bigbull.marketblocks.shop.visual.VillagerVisualProfession;
+import de.bigbull.marketblocks.shop.visual.VisualNpcPlacementResult;
 import de.bigbull.marketblocks.util.screen.gui.GuiConstants;
 import de.bigbull.marketblocks.util.screen.gui.IconButton;
 import de.bigbull.marketblocks.util.screen.gui.OfferTemplateButton;
@@ -59,12 +63,19 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     // Settings widgets
     private EditBox nameField;
+    private EditBox npcNameField;
     private boolean emitRedstoneEnabled;
     private Direction leftDir, rightDir, bottomDir, backDir;
     private boolean saved;
     private String originalName;
     private String draftShopName;
     private Boolean draftEmitRedstone;
+    private Boolean draftVisualNpcEnabled;
+    private String draftVisualNpcName;
+    private VillagerVisualProfession draftVisualNpcProfession;
+    private Boolean draftVisualPurchaseParticles;
+    private Boolean draftVisualPurchaseSounds;
+    private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
     private final SingleOfferOwnerListPanel ownerListPanel = new SingleOfferOwnerListPanel();
 
@@ -191,7 +202,24 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (draftEmitRedstone == null) {
             draftEmitRedstone = be.isEmitRedstone();
         }
+        ShopVisualSettings visualSettings = be.getVisualSettings();
+        if (draftVisualNpcEnabled == null) {
+            draftVisualNpcEnabled = visualSettings.npcEnabled();
+        }
+        if (draftVisualNpcName == null) {
+            draftVisualNpcName = visualSettings.npcName();
+        }
+        if (draftVisualNpcProfession == null) {
+            draftVisualNpcProfession = visualSettings.profession();
+        }
+        if (draftVisualPurchaseParticles == null) {
+            draftVisualPurchaseParticles = visualSettings.purchaseParticlesEnabled();
+        }
+        if (draftVisualPurchaseSounds == null) {
+            draftVisualPurchaseSounds = visualSettings.purchaseSoundsEnabled();
+        }
         emitRedstoneEnabled = draftEmitRedstone;
+        visualPlacementResult = resolveVisualPlacementResult(be);
 
         SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory, this::switchSettingsCategory);
         buildSaveButton(be);
@@ -220,6 +248,42 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     backDir,
                     () -> saved = false
             );
+            case VISUALS -> {
+                SingleOfferSettingsSections.VisualSectionWidgets widgets = SingleOfferSettingsSections.buildVisualSection(
+                        this,
+                        Boolean.TRUE.equals(draftVisualNpcEnabled),
+                        draftVisualNpcName,
+                        draftVisualNpcProfession,
+                        Boolean.TRUE.equals(draftVisualPurchaseParticles),
+                        Boolean.TRUE.equals(draftVisualPurchaseSounds),
+                        visualPlacementResult,
+                        () -> {
+                            draftVisualNpcEnabled = !Boolean.TRUE.equals(draftVisualNpcEnabled);
+                            saved = false;
+                        },
+                        value -> {
+                            draftVisualNpcName = value;
+                            saved = false;
+                        },
+                        () -> {
+                            draftVisualNpcProfession = (draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession).next();
+                            saved = false;
+                        },
+                        () -> {
+                            draftVisualPurchaseParticles = !Boolean.TRUE.equals(draftVisualPurchaseParticles);
+                            saved = false;
+                        },
+                        () -> {
+                            draftVisualPurchaseSounds = !Boolean.TRUE.equals(draftVisualPurchaseSounds);
+                            saved = false;
+                        },
+                        this::getNpcToggleLabel,
+                        this::getProfessionLabel,
+                        this::getPurchaseParticlesToggleLabel,
+                        this::getPurchaseSoundsToggleLabel
+                );
+                npcNameField = widgets.npcNameField();
+            }
             case ACCESS -> buildSettingsAccessSection(be);
         }
     }
@@ -229,12 +293,23 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             if (nameField != null) {
                 draftShopName = nameField.getValue();
             }
+            if (npcNameField != null) {
+                draftVisualNpcName = npcNameField.getValue();
+            }
             String name = draftShopName != null ? draftShopName : "";
             boolean emit = emitRedstoneEnabled;
+            ShopVisualSettings visuals = new ShopVisualSettings(
+                    Boolean.TRUE.equals(draftVisualNpcEnabled),
+                    draftVisualNpcName,
+                    draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession,
+                    Boolean.TRUE.equals(draftVisualPurchaseParticles),
+                    Boolean.TRUE.equals(draftVisualPurchaseSounds)
+            );
 
             // Clientseitig UI-State anwenden
             be.setShopNameClient(name);
             be.setEmitRedstoneClient(emit);
+            be.setVisualSettingsClient(visuals);
             be.setModeClient(leftDir, menu.getMode(leftDir));
             be.setModeClient(rightDir, menu.getMode(rightDir));
             be.setModeClient(bottomDir, menu.getMode(bottomDir));
@@ -262,7 +337,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     menu.getMode(bottomDir),
                     menu.getMode(backDir),
                     name,
-                    emit
+                    emit,
+                    visuals.npcEnabled(),
+                    visuals.npcName(),
+                    visuals.profession().serializedName(),
+                    visuals.purchaseParticlesEnabled(),
+                    visuals.purchaseSoundsEnabled()
             ));
             if (menu.isPrimaryOwner()) {
                 NetworkHandler.sendToServer(new UpdateOwnersPacket(be.getBlockPos(), selectedOwners));
@@ -271,6 +351,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             originalName = name;
             draftShopName = name;
             draftEmitRedstone = emit;
+            draftVisualNpcEnabled = visuals.npcEnabled();
+            draftVisualNpcName = visuals.npcName();
+            draftVisualNpcProfession = visuals.profession();
+            draftVisualPurchaseParticles = visuals.purchaseParticlesEnabled();
+            draftVisualPurchaseSounds = visuals.purchaseSoundsEnabled();
             saved = true;
         }).bounds(leftPos + imageWidth - 50, topPos + imageHeight - 24, 44, 18).build());
     }
@@ -285,6 +370,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
         if (nameField != null) {
             draftShopName = nameField.getValue();
+        }
+        if (npcNameField != null) {
+            draftVisualNpcName = npcNameField.getValue();
         }
         draftEmitRedstone = emitRedstoneEnabled;
         activeSettingsCategory = category;
@@ -425,6 +513,14 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (activeSettingsCategory == SettingsCategory.GENERAL) {
             graphics.drawString(font, Component.translatable("gui.marketblocks.emit_redstone"), 38, 49, 4210752, false);
         }
+        if (activeSettingsCategory == SettingsCategory.VISUALS) {
+            graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.npc_name"), 63, 12, 4210752, false);
+            graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.purchase_particles"), 8, 54, 4210752, false);
+            graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.purchase_sounds"), 63, 54, 4210752, false);
+            if (!visualPlacementResult.canSpawn()) {
+                graphics.drawString(font, Component.translatable(visualPlacementResult.translationKey()), 8, 84, 0xCC3333, false);
+            }
+        }
         if (!menu.isOwner()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
             int w = font.width(info);
@@ -559,6 +655,31 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private Component getEmitRedstoneToggleLabel() {
         return Component.literal(emitRedstoneEnabled ? "ON" : "OFF");
+    }
+
+    private Component getNpcToggleLabel() {
+        return Component.literal(Boolean.TRUE.equals(draftVisualNpcEnabled) ? "ON" : "OFF");
+    }
+
+    private Component getProfessionLabel() {
+        VillagerVisualProfession profession = draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession;
+        return Component.translatable("gui.marketblocks.visuals.profession").append(": ")
+                .append(Component.translatable(profession.translationKey()));
+    }
+
+    private Component getPurchaseParticlesToggleLabel() {
+        return Component.literal(Boolean.TRUE.equals(draftVisualPurchaseParticles) ? "ON" : "OFF");
+    }
+
+    private Component getPurchaseSoundsToggleLabel() {
+        return Component.literal(Boolean.TRUE.equals(draftVisualPurchaseSounds) ? "ON" : "OFF");
+    }
+
+    private VisualNpcPlacementResult resolveVisualPlacementResult(SingleOfferShopBlockEntity be) {
+        if (be.getLevel() == null) {
+            return VisualNpcPlacementResult.OK;
+        }
+        return ShopVisualPlacementValidator.validate(be.getLevel(), be.getBlockPos(), be.getBlockState().getValue(BaseShopBlock.FACING)).result();
     }
 
     <T extends net.minecraft.client.gui.components.AbstractWidget> T addSettingsWidget(T widget) {
