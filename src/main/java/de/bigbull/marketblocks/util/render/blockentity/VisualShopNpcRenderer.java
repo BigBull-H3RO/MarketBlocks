@@ -191,9 +191,12 @@ public final class VisualShopNpcRenderer {
                 }
             }
             if (settings.purchaseSoundsEnabled()) {
-                if (now - state.getLastPurchaseFeedbackTick() > 20L) {
+                if (now - state.getLastPurchaseFeedbackTick() > 4L) {
+                    int delta = currentCounter - state.getLastPurchaseCounter();
+                    // Höherer Ton bei mehr Käufen auf einmal (wie Vanilla XP-Orbs)
+                    float pitch = Math.min(0.9F + delta * 0.08F, 1.8F);
                     level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
-                            SoundEvents.VILLAGER_YES, SoundSource.BLOCKS, 0.6F, 1.0F, false);
+                            SoundEvents.VILLAGER_YES, SoundSource.BLOCKS, 0.6F, pitch, false);
                     state.setLastPurchaseFeedbackTick(now);
                 }
             }
@@ -220,7 +223,7 @@ public final class VisualShopNpcRenderer {
 
         VisualNpcPlacement placement = ShopVisualPlacementValidator.validate(level, host.getVisualShopPos(), host.getVisualFacing());
         if (placement.canSpawn() && settings.npcEnabled() && settings.paymentSlotSoundsEnabled()) {
-            if (now - state.getLastPaymentFeedbackTick() > 20L) {
+            if (now - state.getLastPaymentFeedbackTick() > 4L) {
                 if (successTriggered) {
                     level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
                             SoundEvents.VILLAGER_TRADE, SoundSource.BLOCKS, 0.4F, 1.0F, false);

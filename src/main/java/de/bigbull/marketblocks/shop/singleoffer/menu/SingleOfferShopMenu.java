@@ -16,6 +16,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 import java.util.EnumMap;
@@ -249,7 +250,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     /**
      * Transfers required items from player inventory to payment slot.
-     *
      * OPTIMIZATION: Early exit when slot is full to avoid unnecessary iteration.
      * Caches slot references to avoid repeated list lookups.
      */
@@ -445,15 +445,12 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     /**
      * Override clicked to handle special cases for double-click collection (PICKUP_ALL).
-     *
      * PICKUP_ALL is blocked for:
      * 1. Payment slots (0-1): Prevents accidental clearing while player is setting up an offer.
      *    During offer creation, the player places items in payment slots, and double-clicking
      *    would collect them all back, which is usually not intended.
-     *
      * 2. Offer slot in template mode: When no offer exists, the offer slot is used to preview
      *    what item will be sold. Double-clicking shouldn't collect this preview item.
-     *
      * This improves UX by preventing accidental disruption of the offer creation workflow.
      */
     @Override
@@ -511,6 +508,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         @Override
         public boolean isActive() {
             return isTab(tab);
+        }
+
+        @Override
+        public void setChanged() {
+            super.setChanged();
+            if (this.getItemHandler() instanceof IItemHandlerModifiable mod) {
+                mod.setStackInSlot(this.getSlotIndex(), this.getItem());
+            }
         }
     }
 
