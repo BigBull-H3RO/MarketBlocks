@@ -60,12 +60,15 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.shop_name", "Shopname");
         add("gui.marketblocks.emit_redstone", "Redstone-Signal ausgeben");
         add("gui.marketblocks.emit_redstone.tooltip", "Gibt nach einem Kauf kurz ein Redstone-Signal aus");
+        add("gui.marketblocks.purchase_xp_sound", "XP-Sound beim Kauf");
+        add("gui.marketblocks.purchase_xp_sound.tooltip", "Spielt einen XP-Sound ab, wenn ein Spieler etwas kauft");
         add("gui.marketblocks.settings_owner_only", "Nur der Besitzer kann Einstellungen ändern");
         add("gui.marketblocks.visuals.npc_enabled", "Deko-Villager");
         add("gui.marketblocks.visuals.npc_name", "NPC-Name");
         add("gui.marketblocks.visuals.profession", "Beruf");
         add("gui.marketblocks.visuals.purchase_particles", "Kauf-Partikel");
         add("gui.marketblocks.visuals.purchase_sounds", "Kauf-Sounds");
+        add("gui.marketblocks.visuals.payment_sounds", "Bezahl-Sounds");
         add("gui.marketblocks.visuals.error.no_surface", "Kein Standblock hinter dem Shop!");
         add("gui.marketblocks.visuals.error.space_blocked", "Platz blockiert!");
         add("gui.marketblocks.visuals.profession.none", "Arbeitslos");

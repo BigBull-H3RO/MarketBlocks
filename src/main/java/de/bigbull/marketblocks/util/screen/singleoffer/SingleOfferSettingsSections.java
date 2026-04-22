@@ -53,20 +53,34 @@ public final class SingleOfferSettingsSections {
 
     public static EditBox buildGeneralSection(SingleOfferShopScreen host,
                                               String draftShopName,
-                                              Supplier<Component> emitToggleLabel,
-                                              Runnable onEmitToggle,
-                                              Consumer<String> onNameChange) {
-        EditBox nameField = host.addSettingsWidget(new EditBox(host.settingsFont(), host.settingsLeftPos() + 8, host.settingsTopPos() + 20, 120, 20,
+                                              boolean emitRedstoneEnabled,
+                                              boolean purchaseXpFeedbackSound,
+                                              Consumer<Boolean> onEmitChanged,
+                                              Consumer<String> onNameChange,
+                                              Consumer<Boolean> onXpSoundChanged) {
+        EditBox nameField = host.addSettingsWidget(new EditBox(host.settingsFont(), host.settingsLeftPos() + 8, host.settingsTopPos() + 28, 120, 18,
                 Component.translatable("gui.marketblocks.shop_name")));
         nameField.setMaxLength(32);
         nameField.setValue(draftShopName != null ? draftShopName : "");
         nameField.setResponder(onNameChange);
 
-        Button emitToggle = host.addSettingsWidget(Button.builder(emitToggleLabel.get(), b -> {
-            onEmitToggle.run();
-            b.setMessage(emitToggleLabel.get());
-        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 45, 24, 16).build());
-        emitToggle.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")));
+        Checkbox emitCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.emit_redstone"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 50)
+                .selected(emitRedstoneEnabled)
+                .onValueChange((checkbox, value) -> onEmitChanged.accept(value))
+                .build());
+        emitCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")));
+
+        Checkbox xpSoundCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.purchase_xp_sound"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 70)
+                .selected(purchaseXpFeedbackSound)
+                .onValueChange((checkbox, value) -> onXpSoundChanged.accept(value))
+                .build());
+        xpSoundCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.purchase_xp_sound.tooltip")));
 
         return nameField;
     }
@@ -117,22 +131,24 @@ public final class SingleOfferSettingsSections {
             VillagerVisualProfession profession,
             boolean purchaseParticlesEnabled,
             boolean purchaseSoundsEnabled,
+            boolean paymentSlotSoundsEnabled,
             VisualNpcPlacementResult placementResult,
             Runnable onNpcToggle,
             Consumer<String> onNpcNameChanged,
             Runnable onProfessionCycle,
             Consumer<Boolean> onParticlesChanged,
             Consumer<Boolean> onSoundsChanged,
+            Consumer<Boolean> onPaymentSoundsChanged,
             Supplier<Component> npcToggleLabel,
             Supplier<Component> professionLabel
     ) {
         Button npcToggle = host.addSettingsWidget(Button.builder(npcToggleLabel.get(), b -> {
             onNpcToggle.run();
             b.setMessage(npcToggleLabel.get());
-        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 20, 50, 16).build());
+        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 26, 32, 16).build());
         npcToggle.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.npc_enabled")));
 
-        EditBox npcNameField = host.addSettingsWidget(new EditBox(host.settingsFont(), host.settingsLeftPos() + 63, host.settingsTopPos() + 20, 103, 16,
+        EditBox npcNameField = host.addSettingsWidget(new EditBox(host.settingsFont(), host.settingsLeftPos() + 46, host.settingsTopPos() + 26, 120, 16,
                 Component.translatable("gui.marketblocks.visuals.npc_name")));
         npcNameField.setMaxLength(32);
         npcNameField.setValue(npcName == null ? "" : npcName);
@@ -141,13 +157,13 @@ public final class SingleOfferSettingsSections {
         Button professionButton = host.addSettingsWidget(Button.builder(professionLabel.get(), b -> {
             onProfessionCycle.run();
             b.setMessage(professionLabel.get());
-        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 42, 158, 16).build());
+        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 48, 158, 16).build());
         professionButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.profession")));
 
         Checkbox particlesCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.purchase_particles"),
                         host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 62)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 68)
                 .selected(purchaseParticlesEnabled)
                 .onValueChange((checkbox, value) -> onParticlesChanged.accept(value))
                 .build());
@@ -156,11 +172,20 @@ public final class SingleOfferSettingsSections {
         Checkbox soundsCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.purchase_sounds"),
                         host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 80)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 88)
                 .selected(purchaseSoundsEnabled)
                 .onValueChange((checkbox, value) -> onSoundsChanged.accept(value))
                 .build());
         soundsCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_sounds")));
+
+        Checkbox paymentSoundsCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.payment_sounds"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 108)
+                .selected(paymentSlotSoundsEnabled)
+                .onValueChange((checkbox, value) -> onPaymentSoundsChanged.accept(value))
+                .build());
+        paymentSoundsCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.payment_sounds")));
 
         boolean blocked = placementResult != null && !placementResult.canSpawn() && !npcEnabled;
         if (blocked) {

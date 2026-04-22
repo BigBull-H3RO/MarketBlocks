@@ -14,8 +14,14 @@ public class ShopNpcAnimationState {
     private long spawnAnimationStartTick = -1L;
     private long despawnAnimationStartTick = -1L;
     private int lastPurchaseCounter = 0;
+    private boolean purchaseCounterInitialized = false;
+    private int lastPaymentSuccessCounter = 0;
+    private int lastPaymentFailCounter = 0;
+    private boolean paymentFeedbackCountersInitialized = false;
     private boolean spawnLandSoundPlayed = false;
     private long lastSpawnWhooshTick = -1L;
+    private long lastPurchaseFeedbackTick = -1L;
+    private long lastPaymentFeedbackTick = -1L;
     private float smoothedYaw = 180.0F;
     private boolean yawInitialized = false;
     private float smoothedPitch = 0.0F;
@@ -64,6 +70,50 @@ public class ShopNpcAnimationState {
 
     public void setLastPurchaseCounter(int lastPurchaseCounter) {
         this.lastPurchaseCounter = lastPurchaseCounter;
+        this.purchaseCounterInitialized = true;
+    }
+
+    public boolean isPurchaseCounterInitialized() {
+        return purchaseCounterInitialized;
+    }
+
+    public void primePurchaseCounter(int purchaseCounter) {
+        this.lastPurchaseCounter = purchaseCounter;
+        this.purchaseCounterInitialized = true;
+    }
+
+    public int getLastPaymentSuccessCounter() {
+        return lastPaymentSuccessCounter;
+    }
+
+    public int getLastPaymentFailCounter() {
+        return lastPaymentFailCounter;
+    }
+
+    public void setPaymentFeedbackCounters(int successCounter, int failCounter) {
+        this.lastPaymentSuccessCounter = successCounter;
+        this.lastPaymentFailCounter = failCounter;
+        this.paymentFeedbackCountersInitialized = true;
+    }
+
+    public boolean isPaymentFeedbackCountersInitialized() {
+        return paymentFeedbackCountersInitialized;
+    }
+
+    public long getLastPurchaseFeedbackTick() {
+        return lastPurchaseFeedbackTick;
+    }
+
+    public void setLastPurchaseFeedbackTick(long lastPurchaseFeedbackTick) {
+        this.lastPurchaseFeedbackTick = lastPurchaseFeedbackTick;
+    }
+
+    public long getLastPaymentFeedbackTick() {
+        return lastPaymentFeedbackTick;
+    }
+
+    public void setLastPaymentFeedbackTick(long lastPaymentFeedbackTick) {
+        this.lastPaymentFeedbackTick = lastPaymentFeedbackTick;
     }
 
 
@@ -89,7 +139,8 @@ public class ShopNpcAnimationState {
             yawInitialized = true;
             return smoothedYaw;
         }
-        smoothedYaw = Mth.rotLerp(0.22F, smoothedYaw, targetYaw);
+
+        smoothedYaw = Mth.rotLerp(0.06F, smoothedYaw, targetYaw);
         return smoothedYaw;
     }
 
@@ -99,7 +150,8 @@ public class ShopNpcAnimationState {
             pitchInitialized = true;
             return smoothedPitch;
         }
-        smoothedPitch = Mth.lerp(0.18F, smoothedPitch, targetPitch);
+
+        smoothedPitch = Mth.lerp(0.05F, smoothedPitch, targetPitch);
         return smoothedPitch;
     }
 

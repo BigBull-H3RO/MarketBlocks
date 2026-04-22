@@ -21,6 +21,12 @@ public interface IVisualShopNPC {
 
     int getVisualPurchaseCounter();
 
+    int getVisualPaymentSuccessCounter();
+
+    int getVisualPaymentFailCounter();
+
+    boolean isVisualXpPurchaseFeedbackEnabled();
+
     ShopNpcAnimationState getVisualAnimationState();
 }
 

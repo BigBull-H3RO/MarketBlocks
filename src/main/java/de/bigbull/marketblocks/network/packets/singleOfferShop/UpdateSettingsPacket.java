@@ -30,7 +30,9 @@ public record UpdateSettingsPacket(
         String npcName,
         String npcProfession,
         boolean purchaseParticles,
-        boolean purchaseSounds
+        boolean purchaseSounds,
+        boolean paymentSlotSounds,
+        boolean xpFeedbackSound
 ) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<UpdateSettingsPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_side_config"));
@@ -49,6 +51,8 @@ public record UpdateSettingsPacket(
                 ByteBufCodecs.STRING_UTF8.encode(buf, packet.npcProfession());
                 ByteBufCodecs.BOOL.encode(buf, packet.purchaseParticles());
                 ByteBufCodecs.BOOL.encode(buf, packet.purchaseSounds());
+                ByteBufCodecs.BOOL.encode(buf, packet.paymentSlotSounds());
+                ByteBufCodecs.BOOL.encode(buf, packet.xpFeedbackSound());
             },
             buf -> {
                 BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
@@ -63,8 +67,10 @@ public record UpdateSettingsPacket(
                 String npcProfession = ByteBufCodecs.STRING_UTF8.decode(buf);
                 boolean purchaseParticles = ByteBufCodecs.BOOL.decode(buf);
                 boolean purchaseSounds = ByteBufCodecs.BOOL.decode(buf);
+                boolean paymentSlotSounds = ByteBufCodecs.BOOL.decode(buf);
+                boolean xpFeedbackSound = ByteBufCodecs.BOOL.decode(buf);
                 return new UpdateSettingsPacket(pos, left, right, bottom, back, name, redstone,
-                        npcEnabled, npcName, npcProfession, purchaseParticles, purchaseSounds);
+                        npcEnabled, npcName, npcProfession, purchaseParticles, purchaseSounds, paymentSlotSounds, xpFeedbackSound);
             }
     );
     @Override
@@ -97,7 +103,8 @@ public record UpdateSettingsPacket(
                         packet.npcName(),
                         VillagerVisualProfession.fromSerialized(packet.npcProfession()),
                         packet.purchaseParticles(),
-                        packet.purchaseSounds()
+                        packet.purchaseSounds(),
+                        packet.paymentSlotSounds()
                 );
 
                 if (visuals.npcEnabled() && !ShopVisualPlacementValidator.validate(level, packet.pos(), facing).canSpawn()) {
@@ -110,7 +117,7 @@ public record UpdateSettingsPacket(
                         facing.getClockWise(), packet.right(),
                         Direction.DOWN, packet.bottom(),
                         facing.getOpposite(), packet.back(),
-                        name, packet.redstone(), visuals
+                        name, packet.redstone(), visuals, packet.xpFeedbackSound()
                 );
             }
         });
