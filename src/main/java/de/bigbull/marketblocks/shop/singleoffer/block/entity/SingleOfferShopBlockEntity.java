@@ -64,6 +64,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private static final String NBT_VISUAL_ANIMATION_NONCE = "VisualAnimationNonce";
     private static final String NBT_VISUAL_ANIMATION_EVENT = "VisualAnimationEvent";
     private static final String NBT_VISUAL_PURCHASE_COUNTER = "VisualPurchaseCounter";
+    private static final String NBT_VISUAL_PAYMENT_SUCCESS_COUNTER = "VisualPaymentSuccessCounter";
+    private static final String NBT_VISUAL_PAYMENT_FAIL_COUNTER = "VisualPaymentFailCounter";
+    private static final String NBT_PURCHASE_XP_FEEDBACK_SOUND = "PurchaseXpFeedbackSound";
 
     // Inventory Handler Names
     private static final String HANDLER_INPUT = "InputInventory";
@@ -95,11 +98,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private boolean emitRedstone = false;
     private boolean outputAlmostFull = false;
     private boolean outputFull = false;
+    private boolean purchaseXpFeedbackSound = true;
     private ShopVisualSettings visualSettings = ShopVisualSettings.DEFAULT;
     private int visualAnimationNonce = 0;
     private byte visualAnimationEvent = VisualNpcAnimationEvent.NONE;
     private int visualPurchaseCounter = 0;
+    private int visualPaymentSuccessCounter = 0;
+    private int visualPaymentFailCounter = 0;
     private final ShopNpcAnimationState visualAnimationState = new ShopNpcAnimationState();
+    private final ItemStack[] paymentFeedbackSnapshot = new ItemStack[] {ItemStack.EMPTY, ItemStack.EMPTY};
+    private long lastPurchaseXpSoundTick = -1L;
 
     // Side Configuration
     private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
@@ -133,7 +141,15 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
     };
 
-    private final ItemStackHandler paymentHandler = new TrackedItemStackHandler(2);
+    private final ItemStackHandler paymentHandler = new ItemStackHandler(2) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+            updateOfferSlot();
+            needsOfferRefresh = true;
+            handlePaymentFeedbackChange(slot);
+        }
+    };
 
     // Reused snapshot handler to avoid per-call allocations during output-space simulations.
     private final ItemStackHandler outputSimulationHandler = new ItemStackHandler(outputHandler.getSlots());
@@ -459,7 +475,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                                     Direction bottom, SideMode bottomMode,
                                     Direction back, SideMode backMode,
                                     String name, boolean redstone,
-                                    ShopVisualSettings visuals) {
+                                    ShopVisualSettings visuals,
+                                    boolean xpFeedbackSound) {
         boolean wasNpcEnabled = this.visualSettings.npcEnabled();
         setModeNoSync(left, leftMode);
         setModeNoSync(right, rightMode);
@@ -468,6 +485,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         setShopNameNoSync(name);
         setEmitRedstoneNoSync(redstone);
         setVisualSettingsNoSync(visuals);
+        setPurchaseXpFeedbackSoundNoSync(xpFeedbackSound);
         if (wasNpcEnabled != this.visualSettings.npcEnabled()) {
             visualAnimationEvent = this.visualSettings.npcEnabled() ? VisualNpcAnimationEvent.SPAWN : VisualNpcAnimationEvent.DESPAWN;
             visualAnimationNonce++;
@@ -516,6 +534,24 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
      */
     public void setEmitRedstoneNoSync(boolean emitRedstone) {
         this.emitRedstone = emitRedstone;
+    }
+
+    public boolean isPurchaseXpFeedbackSound() {
+        return purchaseXpFeedbackSound;
+    }
+
+    public void setPurchaseXpFeedbackSound(boolean enabled) {
+        this.purchaseXpFeedbackSound = enabled;
+        sync();
+    }
+
+    public void setPurchaseXpFeedbackSoundNoSync(boolean enabled) {
+        this.purchaseXpFeedbackSound = enabled;
+    }
+
+    @ApiStatus.Internal
+    public void setPurchaseXpFeedbackSoundClient(boolean enabled) {
+        this.purchaseXpFeedbackSound = enabled;
     }
 
     /**
@@ -800,6 +836,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         executeTrades(p1, p2, result, actualAmount);
         visualPurchaseCounter += actualAmount;
+
+        if (purchaseXpFeedbackSound && level != null) {
+            long now = level.getGameTime();
+            if (now - lastPurchaseXpSoundTick > 20L) {
+                level.playSound(null, worldPosition, net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP, net.minecraft.sounds.SoundSource.BLOCKS, 0.4F, 1.0F);
+                lastPurchaseXpSoundTick = now;
+            }
+        }
 
         StringBuilder tradeLog = new StringBuilder();
         tradeLog.append("Sold ").append(actualAmount * result.getCount()).append("x ").append(result.getHoverName().getString());
@@ -1350,6 +1394,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
         this.shopName = name;
         this.emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
+        this.purchaseXpFeedbackSound = !tag.contains(NBT_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND);
         if (tag.contains(NBT_VISUALS, 10)) {
             this.visualSettings = ShopVisualSettings.load(tag.getCompound(NBT_VISUALS));
         } else {
@@ -1358,15 +1403,20 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         this.visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
         this.visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
         this.visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
+        this.visualPaymentSuccessCounter = tag.getInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER);
+        this.visualPaymentFailCounter = tag.getInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER);
     }
 
     private void saveSettings(CompoundTag tag) {
         tag.putString(NBT_SHOP_NAME, shopName);
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
+        tag.putBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND, purchaseXpFeedbackSound);
         tag.put(NBT_VISUALS, visualSettings.save());
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
         tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
         tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
+        tag.putInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, visualPaymentSuccessCounter);
+        tag.putInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER, visualPaymentFailCounter);
     }
 
     private void loadSideModes(CompoundTag tag) {
@@ -1422,10 +1472,13 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Shop settings (needed for UI)
         tag.putString(NBT_SHOP_NAME, shopName);
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
+        tag.putBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND, purchaseXpFeedbackSound);
         tag.put(NBT_VISUALS, visualSettings.save());
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
         tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
         tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
+        tag.putInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, visualPaymentSuccessCounter);
+        tag.putInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER, visualPaymentFailCounter);
 
         // Owner info (needed for permissions check)
         ownerManager.save(tag);
@@ -1457,10 +1510,13 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Shop settings
         shopName = tag.getString(NBT_SHOP_NAME);
         emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
+        purchaseXpFeedbackSound = !tag.contains(NBT_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND);
         visualSettings = tag.contains(NBT_VISUALS, 10) ? ShopVisualSettings.load(tag.getCompound(NBT_VISUALS)) : ShopVisualSettings.DEFAULT;
         visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
         visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
         visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
+        visualPaymentSuccessCounter = tag.getInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER);
+        visualPaymentFailCounter = tag.getInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER);
 
         // Owner info
         ownerManager.load(tag);
@@ -1474,6 +1530,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         // Update client-side state
         updateOfferSlot();
+        refreshPaymentFeedbackSnapshot();
     }
 
     @Override
@@ -1509,8 +1566,74 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     @Override
+    public int getVisualPaymentSuccessCounter() {
+        return visualPaymentSuccessCounter;
+    }
+
+    @Override
+    public int getVisualPaymentFailCounter() {
+        return visualPaymentFailCounter;
+    }
+
+    @Override
+    public boolean isVisualXpPurchaseFeedbackEnabled() {
+        return purchaseXpFeedbackSound;
+    }
+
+    @Override
     public ShopNpcAnimationState getVisualAnimationState() {
         return visualAnimationState;
+    }
+
+    private void handlePaymentFeedbackChange(int slot) {
+        if (slot < 0 || slot >= paymentFeedbackSnapshot.length) {
+            return;
+        }
+
+        ItemStack previous = paymentFeedbackSnapshot[slot];
+        ItemStack current = paymentHandler.getStackInSlot(slot).copy();
+        paymentFeedbackSnapshot[slot] = current.copy();
+
+        if (level == null || level.isClientSide || !hasOffer || !visualSettings.paymentSlotSoundsEnabled()) {
+            return;
+        }
+
+        if (!isPaymentInsertion(previous, current)) {
+            return;
+        }
+
+        if (matchesOfferPayment(current)) {
+            visualPaymentSuccessCounter++;
+        } else {
+            visualPaymentFailCounter++;
+        }
+    }
+
+    private static boolean isPaymentInsertion(ItemStack previous, ItemStack current) {
+        if (current.isEmpty()) {
+            return false;
+        }
+        if (previous == null || previous.isEmpty()) {
+            return true;
+        }
+        if (ItemStack.isSameItemSameComponents(previous, current)) {
+            return current.getCount() > previous.getCount();
+        }
+        return true;
+    }
+
+    private boolean matchesOfferPayment(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        return (!offerPayment1.isEmpty() && ItemStack.isSameItemSameComponents(offerPayment1, stack))
+                || (!offerPayment2.isEmpty() && ItemStack.isSameItemSameComponents(offerPayment2, stack));
+    }
+
+    private void refreshPaymentFeedbackSnapshot() {
+        for (int i = 0; i < paymentFeedbackSnapshot.length; i++) {
+            paymentFeedbackSnapshot[i] = paymentHandler.getStackInSlot(i).copy();
+        }
     }
 }
 

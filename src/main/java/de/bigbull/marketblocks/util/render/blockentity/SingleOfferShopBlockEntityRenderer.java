@@ -12,9 +12,11 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.item.*;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity> {
 
@@ -180,6 +182,17 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         Item item = stack.getItem();
         return item instanceof TieredItem || item instanceof SwordItem || item instanceof TridentItem ||
                 item instanceof ProjectileWeaponItem || item instanceof ShieldItem || item instanceof MaceItem;
+    }
+
+    @Override
+    public AABB getRenderBoundingBox(SingleOfferShopBlockEntity blockEntity) {
+        BlockPos pos = blockEntity.getBlockPos();
+        return new AABB(
+                pos.getX() - 2, pos.getY(),
+                pos.getZ() - 2,
+                pos.getX() + 3, pos.getY() + 4,
+                pos.getZ() + 3
+        );
     }
 }
 

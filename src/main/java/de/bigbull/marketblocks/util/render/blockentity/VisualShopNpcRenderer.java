@@ -23,15 +23,15 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.phys.Vec3;
 
 public final class VisualShopNpcRenderer {
-    private static final float SPAWN_DROP_START_Y = 56.0F;
+    private static final float SPAWN_DROP_START_Y = 80.0F;
     private static final int SPAWN_FALL_SOUND_START_OFFSET_TICKS = 0;
-    private static final float SPAWN_DROP_DURATION = 52.0F;
+    private static final float SPAWN_DROP_DURATION = 71.0F;
     private static final float SPAWN_BOUNCE_DURATION = 8.0F;
     private static final float DESPAWN_DURATION = 10.0F;
-    private static final float HEAD_YAW_LIMIT = 58.0F;
+    private static final float HEAD_YAW_LIMIT = 60.0F;
     private static final float PLAYER_TRACK_RANGE = 8.0F;
     private static final float SPAWN_FALL_SOUND_VOLUME = 0.40F;
-    private static final float SPAWN_FALL_SOUND_PITCH = 1.00F;
+    private static final float SPAWN_FALL_SOUND_PITCH = 1.5F;
     private static final float SPAWN_BOUNCE_SOUND_VOLUME = 0.72F;
     private static final float SPAWN_BOUNCE_SOUND_PITCH = 1.18F;
 
@@ -49,7 +49,8 @@ public final class VisualShopNpcRenderer {
         long now = level.getGameTime();
 
         processAnimationEvents(host, settings, state, level, now);
-        processPurchaseEffects(host, settings, state, level);
+        processPurchaseEffects(host, settings, state, level, now);
+        processPaymentFeedbackEffects(host, settings, state, level, now);
 
         boolean spawnActive = state.getSpawnAnimationStartTick() >= 0 && now - state.getSpawnAnimationStartTick() <= (long) (SPAWN_DROP_DURATION + SPAWN_BOUNCE_DURATION);
         boolean despawnActive = state.getDespawnAnimationStartTick() >= 0 && now - state.getDespawnAnimationStartTick() <= (long) DESPAWN_DURATION;
@@ -79,8 +80,7 @@ public final class VisualShopNpcRenderer {
         }
         float bodyYaw = host.getVisualFacing().toYRot();
         LookTarget lookTarget = calculateLookTarget(level, spawnPos, now, partialTick, bodyYaw);
-        float clampedHeadYaw = clampRelativeYaw(bodyYaw, lookTarget.yaw(), HEAD_YAW_LIMIT);
-        float headYaw = state.smoothRenderYaw(clampedHeadYaw);
+        float headYaw = state.smoothRenderYaw(lookTarget.yaw());
         float headPitch = state.smoothRenderPitch(lookTarget.pitch());
 
         Villager villager = state.getOrCreateRenderVillager(level);
@@ -159,8 +159,13 @@ public final class VisualShopNpcRenderer {
         }
     }
 
-    private static void processPurchaseEffects(IVisualShopNPC host, ShopVisualSettings settings, ShopNpcAnimationState state, Level level) {
+    private static void processPurchaseEffects(IVisualShopNPC host, ShopVisualSettings settings, ShopNpcAnimationState state, Level level, long now) {
         int currentCounter = host.getVisualPurchaseCounter();
+        if (!state.isPurchaseCounterInitialized()) {
+            state.primePurchaseCounter(currentCounter);
+            return;
+        }
+
         if (currentCounter <= state.getLastPurchaseCounter()) {
             return;
         }
@@ -186,12 +191,48 @@ public final class VisualShopNpcRenderer {
                 }
             }
             if (settings.purchaseSoundsEnabled()) {
-                level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
-                        SoundEvents.VILLAGER_YES, SoundSource.BLOCKS, 0.6F, 1.0F, false);
+                if (now - state.getLastPurchaseFeedbackTick() > 20L) {
+                    level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
+                            SoundEvents.VILLAGER_YES, SoundSource.BLOCKS, 0.6F, 1.0F, false);
+                    state.setLastPurchaseFeedbackTick(now);
+                }
             }
         }
 
         state.setLastPurchaseCounter(currentCounter);
+    }
+
+    private static void processPaymentFeedbackEffects(IVisualShopNPC host, ShopVisualSettings settings, ShopNpcAnimationState state, Level level, long now) {
+        int currentSuccessCounter = host.getVisualPaymentSuccessCounter();
+        int currentFailCounter = host.getVisualPaymentFailCounter();
+
+        if (!state.isPaymentFeedbackCountersInitialized()) {
+            state.setPaymentFeedbackCounters(currentSuccessCounter, currentFailCounter);
+            return;
+        }
+
+        boolean successTriggered = currentSuccessCounter > state.getLastPaymentSuccessCounter();
+        boolean failTriggered = currentFailCounter > state.getLastPaymentFailCounter();
+
+        if (!successTriggered && !failTriggered) {
+            return;
+        }
+
+        VisualNpcPlacement placement = ShopVisualPlacementValidator.validate(level, host.getVisualShopPos(), host.getVisualFacing());
+        if (placement.canSpawn() && settings.npcEnabled() && settings.paymentSlotSoundsEnabled()) {
+            if (now - state.getLastPaymentFeedbackTick() > 20L) {
+                if (successTriggered) {
+                    level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
+                            SoundEvents.VILLAGER_TRADE, SoundSource.BLOCKS, 0.4F, 1.0F, false);
+                } else {
+                    level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
+                            SoundEvents.VILLAGER_NO, SoundSource.BLOCKS, 0.4F, 1.0F, false);
+                }
+                state.setLastPaymentFeedbackTick(now);
+            }
+        }
+
+        state.setPaymentFeedbackCounters(currentSuccessCounter, currentFailCounter);
     }
 
     private static float calculateAnimationYOffset(ShopNpcAnimationState state, long now, float partialTick, boolean spawnActive, boolean despawnActive) {
@@ -215,11 +256,10 @@ public final class VisualShopNpcRenderer {
         return 0.0F;
     }
 
-    private static LookTarget calculateLookTarget(Level level, Vec3 spawnPos, long now, float partialTick, float fallbackYaw) {
+    private static LookTarget calculateLookTarget(Level level, Vec3 spawnPos, long now, float partialTick, float bodyYaw) {
         Player nearest = level.getNearestPlayer(spawnPos.x, spawnPos.y, spawnPos.z, PLAYER_TRACK_RANGE, false);
         if (nearest == null) {
-            float idlePitch = calculateIdleNodPitch(now, partialTick);
-            return new LookTarget(fallbackYaw, idlePitch);
+            return new LookTarget(bodyYaw, calculateIdleNodPitch(now, partialTick));
         }
 
         double dx = nearest.getX() - spawnPos.x;
@@ -227,15 +267,18 @@ public final class VisualShopNpcRenderer {
         double dy = nearest.getEyeY() - (spawnPos.y + 1.42D);
         double horizontal = Math.sqrt(dx * dx + dz * dz);
 
-        float yaw = (float) (Mth.atan2(dz, dx) * (180F / Math.PI)) - 90.0F;
-        float pitch = Mth.clamp((float) (-(Mth.atan2(dy, horizontal) * (180F / Math.PI))), -18.0F, 14.0F);
-        return new LookTarget(yaw, pitch);
-    }
+        float rawYaw = (float) (Mth.atan2(dz, dx) * (180F / Math.PI)) - 90.0F;
+        float delta = Mth.wrapDegrees(rawYaw - bodyYaw);
 
-    private static float clampRelativeYaw(float bodyYaw, float targetYaw, float maxDelta) {
-        float delta = Mth.wrapDegrees(targetYaw - bodyYaw);
-        float clamped = Mth.clamp(delta, -maxDelta, maxDelta);
-        return bodyYaw + clamped;
+        if (Math.abs(delta) > HEAD_YAW_LIMIT) {
+            return new LookTarget(bodyYaw, calculateIdleNodPitch(now, partialTick));
+        }
+
+        float pitch = Mth.clamp(
+                (float) (-(Mth.atan2(dy, horizontal) * (180F / Math.PI))),
+                -24.0F, 20.0F
+        );
+        return new LookTarget(rawYaw, pitch);
     }
 
     private static float calculateIdleNodPitch(long now, float partialTick) {

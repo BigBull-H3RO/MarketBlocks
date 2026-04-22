@@ -16,7 +16,8 @@ class ShopVisualSettingsTest {
                 "  Handler!?@#  ",
                 VillagerVisualProfession.LIBRARIAN,
                 true,
-                false
+                false,
+                true
         );
 
         assertEquals("Handler", settings.npcName());
@@ -29,6 +30,7 @@ class ShopVisualSettingsTest {
         assertEquals(VillagerVisualProfession.LIBRARIAN, loaded.profession());
         assertTrue(loaded.purchaseParticlesEnabled());
         assertFalse(loaded.purchaseSoundsEnabled());
+        assertTrue(loaded.paymentSlotSoundsEnabled());
     }
 
     @Test

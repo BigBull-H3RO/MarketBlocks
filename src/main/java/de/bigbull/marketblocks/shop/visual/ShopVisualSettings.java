@@ -7,7 +7,8 @@ public record ShopVisualSettings(
         String npcName,
         VillagerVisualProfession profession,
         boolean purchaseParticlesEnabled,
-        boolean purchaseSoundsEnabled
+        boolean purchaseSoundsEnabled,
+        boolean paymentSlotSoundsEnabled
 ) {
     private static final int MAX_NPC_NAME_LENGTH = 32;
 
@@ -16,8 +17,9 @@ public record ShopVisualSettings(
     private static final String KEY_PROFESSION = "NpcProfession";
     private static final String KEY_PURCHASE_PARTICLES = "PurchaseParticles";
     private static final String KEY_PURCHASE_SOUNDS = "PurchaseSounds";
+    private static final String KEY_PAYMENT_SLOT_SOUNDS = "PaymentSlotSounds";
 
-    public static final ShopVisualSettings DEFAULT = new ShopVisualSettings(false, "", VillagerVisualProfession.NONE, true, true);
+    public static final ShopVisualSettings DEFAULT = new ShopVisualSettings(false, "", VillagerVisualProfession.NONE, true, true, true);
 
     public ShopVisualSettings {
         npcName = sanitizeNpcName(npcName);
@@ -25,7 +27,7 @@ public record ShopVisualSettings(
     }
 
     public ShopVisualSettings withNpcEnabled(boolean enabled) {
-        return new ShopVisualSettings(enabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled);
+        return new ShopVisualSettings(enabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled, paymentSlotSoundsEnabled);
     }
 
     public CompoundTag save() {
@@ -35,6 +37,7 @@ public record ShopVisualSettings(
         tag.putString(KEY_PROFESSION, profession.serializedName());
         tag.putBoolean(KEY_PURCHASE_PARTICLES, purchaseParticlesEnabled);
         tag.putBoolean(KEY_PURCHASE_SOUNDS, purchaseSoundsEnabled);
+        tag.putBoolean(KEY_PAYMENT_SLOT_SOUNDS, paymentSlotSoundsEnabled);
         return tag;
     }
 
@@ -47,7 +50,8 @@ public record ShopVisualSettings(
                 tag.getString(KEY_NPC_NAME),
                 VillagerVisualProfession.fromSerialized(tag.getString(KEY_PROFESSION)),
                 !tag.contains(KEY_PURCHASE_PARTICLES) || tag.getBoolean(KEY_PURCHASE_PARTICLES),
-                !tag.contains(KEY_PURCHASE_SOUNDS) || tag.getBoolean(KEY_PURCHASE_SOUNDS)
+                !tag.contains(KEY_PURCHASE_SOUNDS) || tag.getBoolean(KEY_PURCHASE_SOUNDS),
+                !tag.contains(KEY_PAYMENT_SLOT_SOUNDS) || tag.getBoolean(KEY_PAYMENT_SLOT_SOUNDS)
         );
     }
 

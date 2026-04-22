@@ -72,12 +72,15 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.shop_name", "Shop Name");
         add("gui.marketblocks.emit_redstone", "Emit Redstone");
         add("gui.marketblocks.emit_redstone.tooltip", "Emit a short redstone pulse after a purchase");
+        add("gui.marketblocks.purchase_xp_sound", "Purchase XP Sound");
+        add("gui.marketblocks.purchase_xp_sound.tooltip", "Plays an XP orb sound when a player purchases something");
         add("gui.marketblocks.settings_owner_only", "Only the owner can change settings");
         add("gui.marketblocks.visuals.npc_enabled", "Decorative Villager");
         add("gui.marketblocks.visuals.npc_name", "NPC Name");
         add("gui.marketblocks.visuals.profession", "Profession");
         add("gui.marketblocks.visuals.purchase_particles", "Purchase Particles");
         add("gui.marketblocks.visuals.purchase_sounds", "Purchase Sounds");
+        add("gui.marketblocks.visuals.payment_sounds", "Payment Sounds");
         add("gui.marketblocks.visuals.error.no_surface", "No stand surface behind the shop!");
         add("gui.marketblocks.visuals.error.space_blocked", "Space blocked!");
         add("gui.marketblocks.visuals.profession.none", "Unemployed");
