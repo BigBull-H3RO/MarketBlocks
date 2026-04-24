@@ -121,7 +121,17 @@ public final class ShopTransactionLogSavedData extends SavedData {
 
         String key = shopKey(shopType, dimension, pos);
         ArrayDeque<TransactionLogEntry> deque = logsByShop.computeIfAbsent(key, ignored -> new ArrayDeque<>());
-        deque.addFirst(entry);
+
+        // --- Smart Stacking Logik ---
+        TransactionLogEntry last = deque.peekFirst();
+        if (last != null && last.canMergeWith(entry)) {
+            // Nimm den alten Eintrag raus und füge den kombinierten hinzu
+            deque.pollFirst();
+            deque.addFirst(last.mergeWith(entry));
+        } else {
+            // Regulär hinzufügen
+            deque.addFirst(entry);
+        }
 
         int effectiveMaxEntries = maxEntries <= 0 ? DEFAULT_MAX_ENTRIES_PER_SHOP : maxEntries;
         while (deque.size() > effectiveMaxEntries) {

@@ -14,15 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Immutable entry for one completed transaction.
- *
- * @param epochSecond Unix timestamp in seconds
- * @param buyerUuid   buyer UUID (zero UUID when unknown)
- * @param buyerName   buyer name fallback for offline display
- * @param paidStacks  items paid by the buyer
- * @param boughtStacks items received by the buyer
- */
 public record TransactionLogEntry(
         long epochSecond,
         UUID buyerUuid,
@@ -60,6 +51,51 @@ public record TransactionLogEntry(
         return new TransactionLogEntry(Instant.now().getEpochSecond(), buyerUuid, buyerName, paidStacks, boughtStacks);
     }
 
+    /**
+     * Prüft, ob dieser Eintrag mit einem neueren zusammengeführt werden kann (Smart Stacking).
+     */
+    public boolean canMergeWith(TransactionLogEntry other) {
+        // Muss derselbe Käufer sein
+        if (!this.buyerUuid().equals(other.buyerUuid())) return false;
+
+        // Führe nur zusammen, wenn der letzte Kauf nicht länger als 1 Stunde (3600 Sek) her ist.
+        // Das hält die Historie etwas sauberer, wenn jemand nach Tagen wiederkommt.
+        if (Math.abs(this.epochSecond() - other.epochSecond()) > 3600) return false;
+
+        return stacksMatchTypes(this.paidStacks(), other.paidStacks()) &&
+                stacksMatchTypes(this.boughtStacks(), other.boughtStacks());
+    }
+
+    /**
+     * Führt zwei Einträge zusammen, indem die Items addiert werden.
+     */
+    public TransactionLogEntry mergeWith(TransactionLogEntry newer) {
+        List<ItemStack> mergedPaid = mergeStacks(this.paidStacks(), newer.paidStacks());
+        List<ItemStack> mergedBought = mergeStacks(this.boughtStacks(), newer.boughtStacks());
+        return new TransactionLogEntry(newer.epochSecond(), this.buyerUuid(), newer.buyerName(), mergedPaid, mergedBought);
+    }
+
+    private static boolean stacksMatchTypes(List<ItemStack> list1, List<ItemStack> list2) {
+        if (list1.size() != list2.size()) return false;
+        for (int i = 0; i < list1.size(); i++) {
+            if (!ItemStack.isSameItemSameComponents(list1.get(i), list2.get(i))) return false;
+        }
+        return true;
+    }
+
+    private static List<ItemStack> mergeStacks(List<ItemStack> list1, List<ItemStack> list2) {
+        List<ItemStack> result = new ArrayList<>(list1.size());
+        for (int i = 0; i < list1.size(); i++) {
+            ItemStack s1 = list1.get(i);
+            ItemStack s2 = list2.get(i);
+            ItemStack merged = s1.copy();
+            long newCount = (long) s1.getCount() + s2.getCount();
+            merged.setCount((int) Math.min(Integer.MAX_VALUE, newCount));
+            result.add(merged);
+        }
+        return result;
+    }
+
     public CompoundTag toTag(HolderLookup.Provider registries) {
         CompoundTag tag = new CompoundTag();
         tag.putLong(NBT_TIME, epochSecond);
@@ -79,17 +115,10 @@ public record TransactionLogEntry(
         return new TransactionLogEntry(time, uuid, name, paid, bought);
     }
 
-    /**
-     * Creates a copy of the stack and multiplies its count.
-     */
     public static ItemStack scaleStack(ItemStack original, int multiplier) {
-        if (original == null || original.isEmpty() || multiplier <= 0) {
-            return ItemStack.EMPTY;
-        }
+        if (original == null || original.isEmpty() || multiplier <= 0) return ItemStack.EMPTY;
         long scaledCount = (long) original.getCount() * multiplier;
-        if (scaledCount <= 0L) {
-            return ItemStack.EMPTY;
-        }
+        if (scaledCount <= 0L) return ItemStack.EMPTY;
         ItemStack copy = original.copy();
         copy.setCount((int) Math.min(Integer.MAX_VALUE, scaledCount));
         return copy;
@@ -97,52 +126,32 @@ public record TransactionLogEntry(
 
     private static String sanitizeName(String name) {
         String normalized = name == null ? "" : name.trim();
-        if (normalized.length() > MAX_NAME_LENGTH) {
-            return normalized.substring(0, MAX_NAME_LENGTH);
-        }
-        return normalized;
+        return normalized.length() > MAX_NAME_LENGTH ? normalized.substring(0, MAX_NAME_LENGTH) : normalized;
     }
 
     private static ListTag toStackListTag(List<ItemStack> stacks, HolderLookup.Provider registries) {
         ListTag listTag = new ListTag();
-        for (ItemStack stack : sanitizeStacks(stacks)) {
-            listTag.add(stack.save(registries));
-        }
+        for (ItemStack stack : sanitizeStacks(stacks)) listTag.add(stack.save(registries));
         return listTag;
     }
 
     private static List<ItemStack> fromStackListTag(ListTag listTag, HolderLookup.Provider registries) {
-        if (listTag == null || listTag.isEmpty()) {
-            return List.of();
-        }
-
+        if (listTag == null || listTag.isEmpty()) return List.of();
         List<ItemStack> loaded = new ArrayList<>(Math.min(listTag.size(), MAX_STACKS_PER_SIDE));
         for (int i = 0; i < listTag.size() && loaded.size() < MAX_STACKS_PER_SIDE; i++) {
-            CompoundTag stackTag = listTag.getCompound(i);
-            ItemStack stack = ItemStack.parseOptional(registries, stackTag);
-            if (!stack.isEmpty() && stack.getCount() > 0) {
-                loaded.add(stack);
-            }
+            ItemStack stack = ItemStack.parseOptional(registries, listTag.getCompound(i));
+            if (!stack.isEmpty() && stack.getCount() > 0) loaded.add(stack);
         }
         return loaded.isEmpty() ? List.of() : List.copyOf(loaded);
     }
 
     private static List<ItemStack> sanitizeStacks(List<ItemStack> stacks) {
-        if (stacks == null || stacks.isEmpty()) {
-            return List.of();
-        }
-
+        if (stacks == null || stacks.isEmpty()) return List.of();
         List<ItemStack> sanitized = new ArrayList<>(Math.min(stacks.size(), MAX_STACKS_PER_SIDE));
         for (ItemStack stack : stacks) {
-            if (sanitized.size() >= MAX_STACKS_PER_SIDE) {
-                break;
-            }
-            if (stack == null || stack.isEmpty() || stack.getCount() <= 0) {
-                continue;
-            }
-            sanitized.add(stack.copy());
+            if (sanitized.size() >= MAX_STACKS_PER_SIDE) break;
+            if (stack != null && !stack.isEmpty() && stack.getCount() > 0) sanitized.add(stack.copy());
         }
-
         return sanitized.isEmpty() ? List.of() : List.copyOf(sanitized);
     }
 }
