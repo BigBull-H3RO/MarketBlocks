@@ -30,7 +30,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
     private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/home.png");
     private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/inventory.png");
     private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
-    private static final ResourceLocation LOG_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/general.png");
+    private static final ResourceLocation LOG_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/log.png");
 
     private boolean lastIsOwner;
 
@@ -73,7 +73,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         ));
 
         addRenderableWidget(new IconButton(
-                x - 2, y + 74, 22, 22,
+                x - 2, y + 132, 22, 22,
                 BUTTON_SPRITES, LOG_ICON,
                 b -> { if (selectedTab != ShopTab.LOG) onLog.run(); },
                 Component.translatable("gui.marketblocks.log_tab"),
