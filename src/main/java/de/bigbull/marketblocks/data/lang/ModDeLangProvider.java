@@ -40,6 +40,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.inventory_flow_hint", "Items wandern vom Eingabe- ins Ausgabeinventar");
         add("gui.marketblocks.inventory_tab", "Inventar anzeigen");
         add("gui.marketblocks.settings_tab", "Einstellungen anzeigen");
+        add("gui.marketblocks.log_tab", "Verlauf anzeigen");
         add("gui.marketblocks.input_inventory", "Eingabe");
         add("gui.marketblocks.output_inventory", "Ausgabe");
         add("gui.marketblocks.delete_offer", "Angebot löschen");
@@ -56,6 +57,17 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings.category.io", "I/O");
         add("gui.marketblocks.settings.category.visuals", "Visuals");
         add("gui.marketblocks.settings.category.access", "Zugriff");
+        add("gui.marketblocks.log_title", "Transaktions-Log");
+        add("gui.marketblocks.log.empty", "Keine Transaktionen vorhanden");
+        add("gui.marketblocks.log.clear", "Log leeren");
+        add("gui.marketblocks.log.count", "Eintr\u00e4ge: %s");
+        add("gui.marketblocks.log.buyer", "K\u00e4ufer: %s");
+        add("gui.marketblocks.log.none", "Nichts");
+        add("gui.marketblocks.log.time.just_now", "Gerade eben");
+        add("gui.marketblocks.log.time.seconds", "Vor %s Sek.");
+        add("gui.marketblocks.log.time.minutes", "Vor %s Min.");
+        add("gui.marketblocks.log.time.hours", "Vor %s Std.");
+        add("gui.marketblocks.log.time.days", "Vor %s T.");
         add("gui.marketblocks.save", "Speichern");
         add("gui.marketblocks.shop_name", "Shopname");
         add("gui.marketblocks.emit_redstone", "Redstone-Signal ausgeben");

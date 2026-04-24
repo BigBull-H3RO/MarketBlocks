@@ -3,6 +3,8 @@ package de.bigbull.marketblocks.shop.singleoffer.block.entity;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.config.Config;
 import de.bigbull.marketblocks.init.RegistriesInit;
+import de.bigbull.marketblocks.shop.log.ShopTransactionLogSavedData;
+import de.bigbull.marketblocks.shop.log.TransactionLogEntry;
 import de.bigbull.marketblocks.shop.singleoffer.SideMode;
 import de.bigbull.marketblocks.shop.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
@@ -32,10 +34,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -87,9 +91,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private ItemStack offerPayment2 = ItemStack.EMPTY;
     private ItemStack offerResult = ItemStack.EMPTY;
     private boolean hasOffer = false;
+    private static final String SHOP_LOG_TYPE = ShopTransactionLogSavedData.SINGLE_OFFER_SHOP_TYPE;
+    public static final int MAX_TRANSACTION_LOG_ENTRIES = 100;
 
-    // Transaction Log
-    private final ArrayDeque<String> transactionLog = new ArrayDeque<>(10);
+    @Nullable
+    private UUID purchaseContextBuyerId;
+    private String purchaseContextBuyerName = "";
 
     // Owner System
     private final ShopOwnerManager ownerManager = new ShopOwnerManager(this);
@@ -394,6 +401,19 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public String getOwnerName() {
         return ownerManager.getOwnerName();
+    }
+
+    public void beginPurchaseContext(@Nullable Player player) {
+        if (player == null || player.level().isClientSide) {
+            return;
+        }
+        purchaseContextBuyerId = player.getUUID();
+        purchaseContextBuyerName = player.getGameProfile().getName();
+    }
+
+    public void clearPurchaseContext() {
+        purchaseContextBuyerId = null;
+        purchaseContextBuyerName = "";
     }
 
     // --- Shop Settings ---
@@ -741,18 +761,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return false;
     }
 
-    @SuppressWarnings("unused")
-    public List<String> getTransactionLog() {
-        return List.copyOf(transactionLog);
-    }
-
-    private void addLogEntry(String entry) {
-        transactionLog.addFirst(entry);
-        if (transactionLog.size() > 10) {
-            transactionLog.removeLast();
-        }
-    }
-
     public int getAnalogSignal(Direction readSide) {
         SideMode mode = getModeForSide(readSide);
         if (mode == SideMode.OUTPUT) {
@@ -785,7 +793,11 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void processPurchase() {
-        processBulkPurchase(1);
+        processPurchase(null);
+    }
+
+    public void processPurchase(@Nullable Player buyer) {
+        processBulkPurchase(1, buyer);
     }
 
     /**
@@ -797,6 +809,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
      * Output space is simulated iteratively to ensure accurate evaluation of max stacking.
      */
     public int processBulkPurchase(int maxAmount) {
+        return processBulkPurchase(maxAmount, null);
+    }
+
+    public int processBulkPurchase(int maxAmount, @Nullable Player buyer) {
         if (maxAmount <= 0) return 0;
 
         if (isChestIoExtensionEnabled()) {
@@ -859,26 +875,65 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             }
         }
 
-        StringBuilder tradeLog = new StringBuilder();
-        tradeLog.append("Sold ").append(actualAmount * result.getCount()).append("x ").append(result.getHoverName().getString());
-        if (!p1.isEmpty() || !p2.isEmpty()) {
-            tradeLog.append(" for ");
-            if (!p1.isEmpty()) {
-                tradeLog.append(actualAmount * p1.getCount()).append("x ").append(p1.getHoverName().getString());
-            }
-            if (!p2.isEmpty()) {
-                if (!p1.isEmpty()) tradeLog.append(" and ");
-                tradeLog.append(actualAmount * p2.getCount()).append("x ").append(p2.getHoverName().getString());
-            }
-        } else {
-            tradeLog.append(" for free");
-        }
-        addLogEntry(tradeLog.toString());
+        appendTransactionEntry(resolveBuyerIdentity(buyer), p1, p2, result, actualAmount);
 
         sync();
         triggerRedstonePulse();
         needsOfferRefresh = true;
         return actualAmount;
+    }
+
+    private void appendTransactionEntry(@Nullable BuyerIdentity buyer, ItemStack payment1, ItemStack payment2, ItemStack result, int tradeCount) {
+        if (!(level instanceof ServerLevel serverLevel) || tradeCount <= 0) {
+            return;
+        }
+
+        List<ItemStack> paidStacks = new ArrayList<>(2);
+        ItemStack paidOne = TransactionLogEntry.scaleStack(payment1, tradeCount);
+        ItemStack paidTwo = TransactionLogEntry.scaleStack(payment2, tradeCount);
+        if (!paidOne.isEmpty()) {
+            paidStacks.add(paidOne);
+        }
+        if (!paidTwo.isEmpty()) {
+            paidStacks.add(paidTwo);
+        }
+
+        List<ItemStack> boughtStacks = new ArrayList<>(1);
+        ItemStack bought = TransactionLogEntry.scaleStack(result, tradeCount);
+        if (!bought.isEmpty()) {
+            boughtStacks.add(bought);
+        }
+
+        UUID buyerId = buyer != null ? buyer.uuid() : new UUID(0L, 0L);
+        String buyerName = buyer != null ? buyer.name() : "";
+
+        TransactionLogEntry entry = TransactionLogEntry.now(
+                buyerId,
+                buyerName,
+                paidStacks,
+                boughtStacks
+        );
+
+        ShopTransactionLogSavedData.get(serverLevel).appendEntry(
+                SHOP_LOG_TYPE,
+                serverLevel.dimension(),
+                worldPosition,
+                entry,
+                MAX_TRANSACTION_LOG_ENTRIES
+        );
+    }
+
+    private @Nullable BuyerIdentity resolveBuyerIdentity(@Nullable Player directBuyer) {
+        if (directBuyer != null) {
+            return new BuyerIdentity(directBuyer.getUUID(), directBuyer.getGameProfile().getName());
+        }
+        if (purchaseContextBuyerId != null) {
+            return new BuyerIdentity(purchaseContextBuyerId, purchaseContextBuyerName);
+        }
+        return null;
+    }
+
+    private record BuyerIdentity(UUID uuid, String name) {
     }
 
     /**
@@ -1330,25 +1385,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         outputAlmostFull = tag.getBoolean(NBT_OUTPUT_WARNING);
         outputFull = tag.getBoolean(NBT_OUTPUT_FULL);
 
-        transactionLog.clear();
-        if (tag.contains("TransactionLog", 9)) {
-            ListTag list = tag.getList("TransactionLog", 8); // 8 is StringTag
-            // Validate transaction log size (max 10 entries)
-            int maxEntries = Math.min(list.size(), 10);
-            if (list.size() > 10) {
-                MarketBlocks.LOGGER.warn("Transaction log exceeds max size at {}, truncating from {} to 10 entries",
-                        worldPosition, list.size());
-            }
-            for (int i = 0; i < maxEntries; i++) {
-                String entry = list.getString(i);
-                // Validate individual entry length (max 256 chars)
-                if (entry.length() > 256) {
-                    entry = entry.substring(0, 256);
-                }
-                transactionLog.add(entry);
-            }
-        }
-
         // Moved to onLoad(): lockAdjacentChests() and invalidateCapabilities()
         // This ensures level is not null and neighbor chunks are loaded
         tickCounter = 0;
@@ -1364,12 +1400,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         saveSideModes(tag);
         tag.putBoolean(NBT_OUTPUT_WARNING, outputAlmostFull);
         tag.putBoolean(NBT_OUTPUT_FULL, outputFull);
-
-        ListTag logList = new ListTag();
-        for (String logEntry : transactionLog) {
-            logList.add(net.minecraft.nbt.StringTag.valueOf(logEntry));
-        }
-        tag.put("TransactionLog", logList);
     }
 
     private void loadHandlers(CompoundTag tag, HolderLookup.Provider registries) {

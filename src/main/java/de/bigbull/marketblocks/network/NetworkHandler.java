@@ -41,6 +41,7 @@ public class NetworkHandler {
         registrar.playToServer(UpdateRedstoneSettingPacket.TYPE, UpdateRedstoneSettingPacket.CODEC, UpdateRedstoneSettingPacket::handle);
         registrar.playToServer(UpdateSettingsPacket.TYPE, UpdateSettingsPacket.CODEC, UpdateSettingsPacket::handle);
         registrar.playToServer(UpdateOwnersPacket.TYPE, UpdateOwnersPacket.CODEC, UpdateOwnersPacket::handle);
+        registrar.playToServer(ClearTransactionLogPacket.TYPE, ClearTransactionLogPacket.CODEC, ClearTransactionLogPacket::handle);
 
         // Marketplace packets
         registrar.playToServer(MarketplaceOpenRequestPacket.TYPE, MarketplaceOpenRequestPacket.CODEC, MarketplaceOpenRequestPacket::handle);
@@ -60,6 +61,7 @@ public class NetworkHandler {
         // Server to Client packets
         // Trade Stand packets
         registrar.playToClient(OfferStatusPacket.TYPE, OfferStatusPacket.CODEC, OfferStatusPacket::handle);
+        registrar.playToClient(TransactionLogSyncPacket.TYPE, TransactionLogSyncPacket.CODEC, TransactionLogSyncPacket::handle);
 
         // Marketplace packets
         registrar.playToClient(MarketplaceSyncPacket.TYPE, MarketplaceSyncPacket.CODEC, MarketplaceSyncPacket::handle);

@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.shop.singleoffer.menu;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.init.RegistriesInit;
+import de.bigbull.marketblocks.shop.log.TransactionLogEntry;
 import de.bigbull.marketblocks.shop.singleoffer.SideMode;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -20,6 +21,7 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,6 +44,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     // Side mode handling for settings tab
     private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
     private final EnumMap<Direction, SideMode> initialModes = new EnumMap<>(Direction.class);
+    private List<TransactionLogEntry> transactionLogEntries = List.of();
 
     private static final int PAYMENT_SLOTS = 2;
     private static final int OFFER_SLOTS = 1;
@@ -222,6 +225,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         return blockEntity.getAdditionalOwners();
     }
 
+    public List<TransactionLogEntry> getTransactionLogEntries() {
+        return transactionLogEntries;
+    }
+
+    public void setTransactionLogEntries(List<TransactionLogEntry> entries) {
+        this.transactionLogEntries = entries == null ? List.of() : List.copyOf(entries);
+    }
+
     /**
      * Füllt die Zahlungsslots mit den benötigten Items aus dem Spielerinventar.
      */
@@ -295,7 +306,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     // --- Quick move / shift click ---
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (isTab(ShopTab.SETTINGS)) return ItemStack.EMPTY;
+        if (isTab(ShopTab.SETTINGS) || isTab(ShopTab.LOG)) return ItemStack.EMPTY;
 
         if (index == OFFER_SLOT_INDEX && isTab(ShopTab.OFFERS)) {
             Slot slot = this.slots.get(index);
@@ -349,7 +360,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             // 2. Execute bulk purchase on the server block entity
             // The BlockEntity handles payment reduction, stock reduction, and output space check.
             // It returns the actual number of transactions performed.
-            int bought = blockEntity.processBulkPurchase(maxPlayerFit);
+            int bought = blockEntity.processBulkPurchase(maxPlayerFit, player);
 
             if (bought > 0) {
                 // 3. Give items to player (capacity was precomputed from exact slot limits)
@@ -455,6 +466,15 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
      */
     @Override
     public void clicked(int slotId, int button, ClickType type, Player player) {
+        boolean trackBuyerContext = !player.level().isClientSide
+                && slotId == OFFER_SLOT_INDEX
+                && type == ClickType.PICKUP
+                && blockEntity.hasOffer();
+        if (trackBuyerContext) {
+            blockEntity.beginPurchaseContext(player);
+        }
+
+        try {
         if (!player.level().isClientSide
                 && slotId == OFFER_SLOT_INDEX
                 && type == ClickType.PICKUP
@@ -479,6 +499,11 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             }
         }
         super.clicked(slotId, button, type, player);
+        } finally {
+            if (trackBuyerContext) {
+                blockEntity.clearPurchaseContext();
+            }
+        }
     }
 
     // --- ShopMenu impl ---
@@ -631,7 +656,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         @Override
         public boolean isActive() {
-            return !isTab(ShopTab.SETTINGS);
+            return !isTab(ShopTab.SETTINGS) && !isTab(ShopTab.LOG);
         }
     }
 }
