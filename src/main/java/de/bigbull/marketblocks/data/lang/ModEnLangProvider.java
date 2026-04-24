@@ -53,6 +53,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.offers_tab", "Show Offers");
         add("gui.marketblocks.inventory_tab", "Show Inventory");
         add("gui.marketblocks.settings_tab", "Show Settings");
+        add("gui.marketblocks.log_tab", "Show Log");
 
         // Inventory Labels
         add("gui.marketblocks.input_inventory", "Input");
@@ -68,6 +69,17 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings.category.io", "I/O");
         add("gui.marketblocks.settings.category.visuals", "Visuals");
         add("gui.marketblocks.settings.category.access", "Access");
+        add("gui.marketblocks.log_title", "Transaction Log");
+        add("gui.marketblocks.log.empty", "No transactions yet");
+        add("gui.marketblocks.log.clear", "Clear log");
+        add("gui.marketblocks.log.count", "Entries: %s");
+        add("gui.marketblocks.log.buyer", "Buyer: %s");
+        add("gui.marketblocks.log.none", "None");
+        add("gui.marketblocks.log.time.just_now", "Just now");
+        add("gui.marketblocks.log.time.seconds", "%s sec ago");
+        add("gui.marketblocks.log.time.minutes", "%s min ago");
+        add("gui.marketblocks.log.time.hours", "%s h ago");
+        add("gui.marketblocks.log.time.days", "%s d ago");
         add("gui.marketblocks.save", "Save");
         add("gui.marketblocks.shop_name", "Shop Name");
         add("gui.marketblocks.emit_redstone", "Emit Redstone");

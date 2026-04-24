@@ -30,6 +30,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
     private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/home.png");
     private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/inventory.png");
     private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
+    private static final ResourceLocation LOG_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/general.png");
 
     private boolean lastIsOwner;
 
@@ -46,7 +47,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         super(menu, inv, title);
     }
 
-    protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings) {
+    protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings, Runnable onLog) {
         addRenderableWidget(new IconButton(
                 x - 2, y - 4, 22, 22,
                 BUTTON_SPRITES, OFFERS_ICON,
@@ -69,6 +70,14 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
                 b -> { if (selectedTab != ShopTab.SETTINGS) onSettings.run(); },
                 Component.translatable("gui.marketblocks.settings_tab"),
                 () -> selectedTab == ShopTab.SETTINGS
+        ));
+
+        addRenderableWidget(new IconButton(
+                x - 2, y + 74, 22, 22,
+                BUTTON_SPRITES, LOG_ICON,
+                b -> { if (selectedTab != ShopTab.LOG) onLog.run(); },
+                Component.translatable("gui.marketblocks.log_tab"),
+                () -> selectedTab == ShopTab.LOG
         ));
     }
 
