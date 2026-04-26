@@ -45,9 +45,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private static final ResourceLocation CLEAR_LOG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/clear_log.png");
     private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/input_output.png");
     private static final ResourceLocation TRADE_ARROW_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
+    private static final ResourceLocation MOVE_RIGHT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_right_mini.png");
+    private static final ResourceLocation MOVE_DOWN_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_down_mini.png");
 
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller_disabled");
+    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller");
+    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller_disabled");
 
     private static final int LOG_LIST_X_OFFSET = 7;
     private static final int LOG_LIST_Y_OFFSET = 19;
@@ -76,6 +78,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private SettingsCategory activeSettingsCategory = SettingsCategory.GENERAL;
 
     private OfferTemplateButton offerButton;
+    private final OfferTemplateButton logOfferPreviewButton = new OfferTemplateButton(0, 0, ignored -> {});
     private EditBox nameField;
     private EditBox npcNameField;
     private boolean emitRedstoneEnabled;
@@ -422,6 +425,26 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int listX = leftPos + LOG_LIST_X_OFFSET;
         int listY = topPos + LOG_LIST_Y_OFFSET;
 
+        int totalWidth = LOG_LIST_WIDTH + 2 + LOG_SCROLLER_WIDTH;
+        int backgroundX = listX - 1;
+        int backgroundY = listY - 1;
+
+        // draw inner panel
+        graphics.fill(backgroundX, backgroundY, backgroundX + totalWidth + 2, backgroundY + LOG_LIST_HEIGHT + 2, 0xFFC6C6C6);
+        // draw outer frame (1px border)
+        graphics.fill(backgroundX - 1, backgroundY - 1, backgroundX + totalWidth + 3, backgroundY, 0xFF000000);
+        graphics.fill(backgroundX - 1, backgroundY + LOG_LIST_HEIGHT + 2, backgroundX + totalWidth + 3, backgroundY + LOG_LIST_HEIGHT + 3, 0xFF000000);
+        graphics.fill(backgroundX - 1, backgroundY, backgroundX, backgroundY + LOG_LIST_HEIGHT + 2, 0xFF000000);
+        graphics.fill(backgroundX + totalWidth + 2, backgroundY, backgroundX + totalWidth + 3, backgroundY + LOG_LIST_HEIGHT + 2, 0xFF000000);
+
+        // frame for list area specifically
+        graphics.fill(listX - 1, listY - 1, listX + LOG_LIST_WIDTH + 1, listY, 0xFF373737);
+        graphics.fill(listX - 1, listY + LOG_LIST_HEIGHT, listX + LOG_LIST_WIDTH + 1, listY + LOG_LIST_HEIGHT + 1, 0xFFFFFFFF);
+        graphics.fill(listX - 1, listY, listX, listY + LOG_LIST_HEIGHT, 0xFF373737);
+        graphics.fill(listX + LOG_LIST_WIDTH, listY, listX + LOG_LIST_WIDTH + 1, listY + LOG_LIST_HEIGHT, 0xFFFFFFFF);
+        // background for the list area
+        graphics.fill(listX, listY, listX + LOG_LIST_WIDTH, listY + LOG_LIST_HEIGHT, 0xFF8B8B8B);
+
         clampLogScroll();
 
         if (entries.isEmpty()) {
@@ -467,13 +490,13 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         graphics.blit(skinTexture, headX, headY, 0, LOG_HAT_U, LOG_HAT_V, LOG_HEAD_SIZE, LOG_HEAD_SIZE, LOG_SKIN_TEX_SIZE, LOG_SKIN_TEX_SIZE);
 
         // Expand/Collapse Indicator [+] / [-]
-        String expandChar = isExpanded ? "v" : ">";
-        int expandX = x + LOG_LIST_WIDTH - 12;
-        graphics.drawString(font, expandChar, expandX, headY, 0x888888, false);
+        ResourceLocation expandIcon = isExpanded ? MOVE_DOWN_ICON : MOVE_RIGHT_ICON;
+        int expandX = x + LOG_LIST_WIDTH - 18;
+        graphics.blit(expandIcon, expandX, headY - 5, 0, 0, 18, 18, 18, 18);
 
         // Time
         Component timeText = formatRelativeTime(entry.epochSecond());
-        int timeX = expandX - 6 - font.width(timeText);
+        int timeX = expandX - 2 - font.width(timeText);
         graphics.drawString(font, timeText, timeX, headY, 0x6F6F6F, false);
 
         // Player Name
@@ -490,28 +513,15 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             int itemY = y + 22;
             int currentX = detailsX;
 
-            // Bezahlte Items
-            if (entry.paidStacks().isEmpty()) {
-                graphics.drawString(font, Component.translatable("gui.marketblocks.log.none"), currentX, itemY + 4, 0x777777, false);
-                currentX += font.width(Component.translatable("gui.marketblocks.log.none")) + 4;
-            } else {
-                for (ItemStack stack : entry.paidStacks()) {
-                    graphics.renderItem(stack, currentX, itemY);
-                    graphics.renderItemDecorations(font, stack, currentX, itemY);
-                    currentX += 18;
-                }
-            }
+            ItemStack p1 = entry.paidStacks().isEmpty() ? ItemStack.EMPTY : entry.paidStacks().get(0);
+            ItemStack p2 = entry.paidStacks().size() > 1 ? entry.paidStacks().get(1) : ItemStack.EMPTY;
+            ItemStack res = entry.boughtStacks().isEmpty() ? ItemStack.EMPTY : entry.boughtStacks().get(0);
 
-            // Tausch Pfeil
-            graphics.blit(TRADE_ARROW_ICON, currentX, itemY + 2, 0, 0, 16, 16, 16, 16);
-            currentX += 18;
-
-            // Erhaltene Items
-            for (ItemStack stack : entry.boughtStacks()) {
-                graphics.renderItem(stack, currentX, itemY);
-                graphics.renderItemDecorations(font, stack, currentX, itemY);
-                currentX += 18;
-            }
+            Pair<ItemStack, ItemStack> norm = normalizePayments(p1, p2);
+            logOfferPreviewButton.setX(currentX);
+            logOfferPreviewButton.setY(itemY);
+            logOfferPreviewButton.update(norm.getFirst(), norm.getSecond(), res, true);
+            logOfferPreviewButton.renderWidget(graphics, -1, -1, 0.0f);
         }
     }
 
@@ -610,26 +620,29 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int detailsX = listX + 4 + LOG_HEAD_SIZE + 6;
 
         // Prüfen, ob die Maus im Item-Rendering Bereich der aufgeklappten Zeile ist
-        if (mouseY >= itemY && mouseY < itemY + 16 && currentY > listY - ROW_HEIGHT_EXPANDED && currentY < listY + LOG_LIST_HEIGHT) {
+        if (mouseY >= itemY && mouseY < itemY + 20 && currentY > listY - ROW_HEIGHT_EXPANDED && currentY < listY + LOG_LIST_HEIGHT) {
             int currentX = detailsX;
             TransactionLogEntry entry = entries.get(expandedLogIndex);
 
-            for (ItemStack stack : entry.paidStacks()) {
-                if (mouseX >= currentX && mouseX < currentX + 16) {
-                    graphics.renderTooltip(font, stack, mouseX, mouseY);
-                    return;
-                }
-                currentX += 18;
+            ItemStack p1 = entry.paidStacks().isEmpty() ? ItemStack.EMPTY : entry.paidStacks().get(0);
+            ItemStack p2 = entry.paidStacks().size() > 1 ? entry.paidStacks().get(1) : ItemStack.EMPTY;
+            ItemStack res = entry.boughtStacks().isEmpty() ? ItemStack.EMPTY : entry.boughtStacks().get(0);
+            Pair<ItemStack, ItemStack> norm = normalizePayments(p1, p2);
+
+            int itemX = currentX + 2;
+            int renderItemY = itemY + 1;
+
+            if (!norm.getFirst().isEmpty() && mouseX >= itemX + 2 && mouseX < itemX + 18 && mouseY >= renderItemY && mouseY < renderItemY + 16) {
+                graphics.renderTooltip(font, norm.getFirst(), mouseX, mouseY);
+                return;
             }
-
-            currentX += 18; // Pfeil überspringen
-
-            for (ItemStack stack : entry.boughtStacks()) {
-                if (mouseX >= currentX && mouseX < currentX + 16) {
-                    graphics.renderTooltip(font, stack, mouseX, mouseY);
-                    return;
-                }
-                currentX += 18;
+            if (!norm.getSecond().isEmpty() && mouseX >= itemX + 26 && mouseX < itemX + 42 && mouseY >= renderItemY && mouseY < renderItemY + 16) {
+                graphics.renderTooltip(font, norm.getSecond(), mouseX, mouseY);
+                return;
+            }
+            if (!res.isEmpty() && mouseX >= currentX + 70 && mouseX < currentX + 86 && mouseY >= renderItemY && mouseY < renderItemY + 16) {
+                graphics.renderTooltip(font, res, mouseX, mouseY);
+                return;
             }
         }
     }
