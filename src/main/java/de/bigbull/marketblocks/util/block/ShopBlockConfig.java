@@ -43,6 +43,10 @@ public class ShopBlockConfig {
             .shape(Block.box(0, 0, 0, 16, 11, 16))
             .build();
 
+    public static final ShopBlockConfig MARKET_CRATE_SHAPE = builder()
+            .shape(Block.box(0, 0, 0, 16, 16, 16))
+            .build();
+
     /**
      * @deprecated Verwende stattdessen TRADE_STAND_NEU_SHAPE.
      *

@@ -194,14 +194,15 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.invalid_finite", "Bitte gültige endliche Zahlen für die Preisdynamik eingeben.");
         add("message.marketblocks.marketplace.pricing.no_connection", "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.marketplace.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
-        add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte nur Zahlen eingeben (Punkt oder Komma erlaubt).");
-        add("message.marketblocks.visual_npc.space_blocked", "Der Deko-Villager kann nicht gespawnt werden: Nach oben sind 2 freie Blöcke nötig.");
+        add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte verwenden Sie nur Zahlen (Punkt oder Komma erlaubt).");
+        add("message.marketblocks.visual_npc.space_blocked", "Der dekorative Villager kann nicht spawnen: Es m\u00fcssen zwei freie Bl\u00f6cke dar\u00fcber sein.");
         add("subtitles.marketblocks.visual_npc_fall", "Villager landet");
 
-        add("item.marketblocks.trade_stand.with_showcase", "Handelsstand (mit Vitrine)");
+        add("item.marketblocks.trade_stand.with_showcase", "Handelsstand (Mit Vitrine)");
 
         // Blocks
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Handelsstand");
+        addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Marktkiste");
         addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

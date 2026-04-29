@@ -1,32 +1,62 @@
 {
   "variants": {
-    "facing=east,powered=false": {
+    "facing=east,has_showcase=false,powered=false": {
       "model": "marketblocks:block/shop_block_test",
       "y": 90
     },
-    "facing=east,powered=true": {
+    "facing=east,has_showcase=false,powered=true": {
       "model": "marketblocks:block/shop_block_test",
       "y": 90
     },
-    "facing=north,powered=false": {
+    "facing=east,has_showcase=true,powered=false": {
+      "model": "marketblocks:block/shop_block_test",
+      "y": 90
+    },
+    "facing=east,has_showcase=true,powered=true": {
+      "model": "marketblocks:block/shop_block_test",
+      "y": 90
+    },
+    "facing=north,has_showcase=false,powered=false": {
       "model": "marketblocks:block/shop_block_test",
       "y": 180
     },
-    "facing=north,powered=true": {
+    "facing=north,has_showcase=false,powered=true": {
       "model": "marketblocks:block/shop_block_test",
       "y": 180
     },
-    "facing=south,powered=false": {
+    "facing=north,has_showcase=true,powered=false": {
+      "model": "marketblocks:block/shop_block_test",
+      "y": 180
+    },
+    "facing=north,has_showcase=true,powered=true": {
+      "model": "marketblocks:block/shop_block_test",
+      "y": 180
+    },
+    "facing=south,has_showcase=false,powered=false": {
       "model": "marketblocks:block/shop_block_test"
     },
-    "facing=south,powered=true": {
+    "facing=south,has_showcase=false,powered=true": {
       "model": "marketblocks:block/shop_block_test"
     },
-    "facing=west,powered=false": {
+    "facing=south,has_showcase=true,powered=false": {
+      "model": "marketblocks:block/shop_block_test"
+    },
+    "facing=south,has_showcase=true,powered=true": {
+      "model": "marketblocks:block/shop_block_test"
+    },
+    "facing=west,has_showcase=false,powered=false": {
       "model": "marketblocks:block/shop_block_test",
       "y": 270
     },
-    "facing=west,powered=true": {
+    "facing=west,has_showcase=false,powered=true": {
+      "model": "marketblocks:block/shop_block_test",
+      "y": 270
+    },
+    "facing=west,has_showcase=true,powered=false": {
+      "model": "marketblocks:block/shop_block_test",
+      "y": 270
+    },
+    "facing=west,has_showcase=true,powered=true": {
       "model": "marketblocks:block/shop_block_test",
       "y": 270
     }

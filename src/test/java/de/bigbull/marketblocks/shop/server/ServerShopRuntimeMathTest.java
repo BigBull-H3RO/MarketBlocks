@@ -4,8 +4,13 @@ import de.bigbull.marketblocks.shop.marketplace.DemandPricing;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceOfferRuntimeState;
 import de.bigbull.marketblocks.shop.marketplace.MarketplaceRuntimeMath;
 import de.bigbull.marketblocks.shop.marketplace.OfferLimit;
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
+import net.neoforged.fml.loading.LoadingModList;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -16,6 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Unit tests for pure server-shop runtime math.
  */
 public class ServerShopRuntimeMathTest {
+
+    @BeforeAll
+    public static void setup() {
+        if (LoadingModList.get() == null) {
+            LoadingModList.of(List.of(), List.of(), List.of(), List.of(), Map.of());
+        }
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     @Test
     void demandMultiplierIsClampedBetweenMinAndMax() {

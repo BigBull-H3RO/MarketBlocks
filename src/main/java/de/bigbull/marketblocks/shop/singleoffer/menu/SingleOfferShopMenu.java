@@ -360,7 +360,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             // 2. Execute bulk purchase on the server block entity
             // The BlockEntity handles payment reduction, stock reduction, and output space check.
             // It returns the actual number of transactions performed.
-            int bought = blockEntity.processBulkPurchase(maxPlayerFit, player);
+            int bought = blockEntity.processBulkPurchase(maxPlayerFit, player, true);
 
             if (bought > 0) {
                 // 3. Give items to player (capacity was precomputed from exact slot limits)

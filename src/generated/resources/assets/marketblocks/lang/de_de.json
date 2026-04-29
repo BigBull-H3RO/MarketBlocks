@@ -1,4 +1,5 @@
 {
+  "block.marketblocks.marketcrate": "Marktkiste",
   "block.marketblocks.shop_block_test": "Shop Block Test",
   "block.marketblocks.trade_stand": "Handelsstand",
   "container.marketblocks.trade_stand": "Handelsstand",
@@ -144,7 +145,7 @@
   "gui.marketblocks.visuals.profession.weaponsmith": "Waffenschmied",
   "gui.marketblocks.visuals.purchase_particles": "Kauf-Partikel",
   "gui.marketblocks.visuals.purchase_sounds": "Kauf-Sounds",
-  "item.marketblocks.trade_stand.with_showcase": "Handelsstand (mit Vitrine)",
+  "item.marketblocks.trade_stand.with_showcase": "Handelsstand (Mit Vitrine)",
   "itemGroup.marketblocks": "MarketBlocks",
   "key.categories.marketblocks": "MarketBlocks",
   "key.marketblocks.open_marketplace": "Marktplatz öffnen",
@@ -161,10 +162,10 @@
   "message.marketblocks.marketplace.page_not_found": "Die gewählte Shop-Seite wurde nicht gefunden.",
   "message.marketblocks.marketplace.pricing.invalid_data": "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.",
   "message.marketblocks.marketplace.pricing.invalid_finite": "Bitte gültige endliche Zahlen für die Preisdynamik eingeben.",
-  "message.marketblocks.marketplace.pricing.invalid_number_format": "Bitte nur Zahlen eingeben (Punkt oder Komma erlaubt).",
+  "message.marketblocks.marketplace.pricing.invalid_number_format": "Bitte verwenden Sie nur Zahlen (Punkt oder Komma erlaubt).",
   "message.marketblocks.marketplace.pricing.no_connection": "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.",
   "message.marketblocks.trade_stand.no_offer": "Dieser Handelsstand hat aktuell kein aktives Angebot.",
   "message.marketblocks.trade_stand.not_owner": "Nur der Besitzer kann diesen Handelsstand abbauen.",
-  "message.marketblocks.visual_npc.space_blocked": "Der Deko-Villager kann nicht gespawnt werden: Nach oben sind 2 freie Blöcke nötig.",
+  "message.marketblocks.visual_npc.space_blocked": "Der dekorative Villager kann nicht spawnen: Es müssen zwei freie Blöcke darüber sein.",
   "subtitles.marketblocks.visual_npc_fall": "Villager landet"
 }

@@ -19,24 +19,31 @@ public record TransactionLogEntry(
         UUID buyerUuid,
         String buyerName,
         List<ItemStack> paidStacks,
-        List<ItemStack> boughtStacks
+        List<ItemStack> boughtStacks,
+        int aggregationCount,
+        PurchaseKind purchaseKind
 ) {
     private static final String NBT_TIME = "Time";
     private static final String NBT_BUYER_UUID = "BuyerUuid";
     private static final String NBT_BUYER_NAME = "BuyerName";
     private static final String NBT_PAID_STACKS = "PaidStacks";
     private static final String NBT_BOUGHT_STACKS = "BoughtStacks";
+    private static final String NBT_AGGREGATION_COUNT = "AggregationCount";
+    private static final String NBT_PURCHASE_KIND = "PurchaseKind";
 
     private static final UUID UNKNOWN_BUYER_UUID = new UUID(0L, 0L);
     private static final int MAX_NAME_LENGTH = 64;
     private static final int MAX_STACKS_PER_SIDE = 12;
+    private static final long MERGE_WINDOW_SECONDS = 20L;
 
     public static final Codec<TransactionLogEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.LONG.fieldOf("epoch_second").forGetter(TransactionLogEntry::epochSecond),
             UUIDUtil.CODEC.fieldOf("buyer_uuid").forGetter(TransactionLogEntry::buyerUuid),
             Codec.STRING.fieldOf("buyer_name").forGetter(TransactionLogEntry::buyerName),
             ItemStack.OPTIONAL_CODEC.listOf().optionalFieldOf("paid_stacks", List.of()).forGetter(TransactionLogEntry::paidStacks),
-            ItemStack.OPTIONAL_CODEC.listOf().optionalFieldOf("bought_stacks", List.of()).forGetter(TransactionLogEntry::boughtStacks)
+            ItemStack.OPTIONAL_CODEC.listOf().optionalFieldOf("bought_stacks", List.of()).forGetter(TransactionLogEntry::boughtStacks),
+            Codec.INT.optionalFieldOf("aggregation_count", 1).forGetter(TransactionLogEntry::aggregationCount),
+            PurchaseKind.CODEC.optionalFieldOf("purchase_kind", PurchaseKind.SINGLE).forGetter(TransactionLogEntry::purchaseKind)
     ).apply(instance, TransactionLogEntry::new));
 
     public TransactionLogEntry {
@@ -45,10 +52,16 @@ public record TransactionLogEntry(
         buyerName = sanitizeName(buyerName);
         paidStacks = sanitizeStacks(paidStacks);
         boughtStacks = sanitizeStacks(boughtStacks);
+        aggregationCount = Math.max(1, aggregationCount);
+        purchaseKind = purchaseKind == null ? PurchaseKind.SINGLE : purchaseKind;
     }
 
     public static TransactionLogEntry now(UUID buyerUuid, String buyerName, List<ItemStack> paidStacks, List<ItemStack> boughtStacks) {
-        return new TransactionLogEntry(Instant.now().getEpochSecond(), buyerUuid, buyerName, paidStacks, boughtStacks);
+        return now(buyerUuid, buyerName, paidStacks, boughtStacks, PurchaseKind.SINGLE);
+    }
+
+    public static TransactionLogEntry now(UUID buyerUuid, String buyerName, List<ItemStack> paidStacks, List<ItemStack> boughtStacks, PurchaseKind purchaseKind) {
+        return new TransactionLogEntry(Instant.now().getEpochSecond(), buyerUuid, buyerName, paidStacks, boughtStacks, 1, purchaseKind);
     }
 
     /**
@@ -58,42 +71,41 @@ public record TransactionLogEntry(
         // Muss derselbe Käufer sein
         if (!this.buyerUuid().equals(other.buyerUuid())) return false;
 
-        // Führe nur zusammen, wenn der letzte Kauf nicht länger als 1 Stunde (3600 Sek) her ist.
-        // Das hält die Historie etwas sauberer, wenn jemand nach Tagen wiederkommt.
-        if (Math.abs(this.epochSecond() - other.epochSecond()) > 3600) return false;
+        if (this.purchaseKind() != other.purchaseKind()) return false;
+        if (Math.abs(this.epochSecond() - other.epochSecond()) > MERGE_WINDOW_SECONDS) return false;
 
-        return stacksMatchTypes(this.paidStacks(), other.paidStacks()) &&
-                stacksMatchTypes(this.boughtStacks(), other.boughtStacks());
+        return stacksMatchExact(this.paidStacks(), other.paidStacks()) &&
+                stacksMatchExact(this.boughtStacks(), other.boughtStacks());
     }
 
     /**
-     * Führt zwei Einträge zusammen, indem die Items addiert werden.
+     * Führt zwei Einträge zusammen, indem nur der Wiederholungszähler erhöht wird.
      */
     public TransactionLogEntry mergeWith(TransactionLogEntry newer) {
-        List<ItemStack> mergedPaid = mergeStacks(this.paidStacks(), newer.paidStacks());
-        List<ItemStack> mergedBought = mergeStacks(this.boughtStacks(), newer.boughtStacks());
-        return new TransactionLogEntry(newer.epochSecond(), this.buyerUuid(), newer.buyerName(), mergedPaid, mergedBought);
+        return new TransactionLogEntry(
+                newer.epochSecond(),
+                this.buyerUuid(),
+                newer.buyerName(),
+                this.paidStacks(),
+                this.boughtStacks(),
+                safeAdd(this.aggregationCount(), newer.aggregationCount()),
+                this.purchaseKind()
+        );
     }
 
-    private static boolean stacksMatchTypes(List<ItemStack> list1, List<ItemStack> list2) {
+    private static boolean stacksMatchExact(List<ItemStack> list1, List<ItemStack> list2) {
         if (list1.size() != list2.size()) return false;
         for (int i = 0; i < list1.size(); i++) {
-            if (!ItemStack.isSameItemSameComponents(list1.get(i), list2.get(i))) return false;
+            ItemStack left = list1.get(i);
+            ItemStack right = list2.get(i);
+            if (!ItemStack.isSameItemSameComponents(left, right) || left.getCount() != right.getCount()) return false;
         }
         return true;
     }
 
-    private static List<ItemStack> mergeStacks(List<ItemStack> list1, List<ItemStack> list2) {
-        List<ItemStack> result = new ArrayList<>(list1.size());
-        for (int i = 0; i < list1.size(); i++) {
-            ItemStack s1 = list1.get(i);
-            ItemStack s2 = list2.get(i);
-            ItemStack merged = s1.copy();
-            long newCount = (long) s1.getCount() + s2.getCount();
-            merged.setCount((int) Math.min(Integer.MAX_VALUE, newCount));
-            result.add(merged);
-        }
-        return result;
+    private static int safeAdd(int a, int b) {
+        long sum = (long) Math.max(1, a) + Math.max(1, b);
+        return (int) Math.min(Integer.MAX_VALUE, sum);
     }
 
     public CompoundTag toTag(HolderLookup.Provider registries) {
@@ -103,6 +115,8 @@ public record TransactionLogEntry(
         tag.putString(NBT_BUYER_NAME, buyerName);
         tag.put(NBT_PAID_STACKS, toStackListTag(paidStacks, registries));
         tag.put(NBT_BOUGHT_STACKS, toStackListTag(boughtStacks, registries));
+        tag.putInt(NBT_AGGREGATION_COUNT, aggregationCount);
+        tag.putString(NBT_PURCHASE_KIND, purchaseKind.serializedName());
         return tag;
     }
 
@@ -112,7 +126,36 @@ public record TransactionLogEntry(
         String name = tag.getString(NBT_BUYER_NAME);
         List<ItemStack> paid = fromStackListTag(tag.getList(NBT_PAID_STACKS, Tag.TAG_COMPOUND), registries);
         List<ItemStack> bought = fromStackListTag(tag.getList(NBT_BOUGHT_STACKS, Tag.TAG_COMPOUND), registries);
-        return new TransactionLogEntry(time, uuid, name, paid, bought);
+        int count = tag.contains(NBT_AGGREGATION_COUNT, Tag.TAG_INT) ? tag.getInt(NBT_AGGREGATION_COUNT) : 1;
+        PurchaseKind kind = PurchaseKind.fromSerializedName(tag.getString(NBT_PURCHASE_KIND));
+        return new TransactionLogEntry(time, uuid, name, paid, bought, count, kind);
+    }
+
+    public enum PurchaseKind {
+        SINGLE("single"),
+        SHIFT("shift");
+
+        public static final Codec<PurchaseKind> CODEC = Codec.STRING.xmap(PurchaseKind::fromSerializedName, PurchaseKind::serializedName);
+
+        private final String serializedName;
+
+        PurchaseKind(String serializedName) {
+            this.serializedName = serializedName;
+        }
+
+        public String serializedName() {
+            return serializedName;
+        }
+
+        public static PurchaseKind fromSerializedName(String raw) {
+            if (raw == null) return SINGLE;
+            for (PurchaseKind value : values()) {
+                if (value.serializedName.equalsIgnoreCase(raw)) {
+                    return value;
+                }
+            }
+            return SINGLE;
+        }
     }
 
     public static ItemStack scaleStack(ItemStack original, int multiplier) {
