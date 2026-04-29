@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=east,powered=false": {
+      "model": "marketblocks:block/marketcrate",
+      "y": 270
+    },
+    "facing=east,powered=true": {
+      "model": "marketblocks:block/marketcrate",
+      "y": 270
+    },
+    "facing=north,powered=false": {
+      "model": "marketblocks:block/marketcrate"
+    },
+    "facing=north,powered=true": {
+      "model": "marketblocks:block/marketcrate"
+    },
+    "facing=south,powered=false": {
+      "model": "marketblocks:block/marketcrate",
+      "y": 180
+    },
+    "facing=south,powered=true": {
+      "model": "marketblocks:block/marketcrate",
+      "y": 180
+    },
+    "facing=west,powered=false": {
+      "model": "marketblocks:block/marketcrate",
+      "y": 90
+    },
+    "facing=west,powered=true": {
+      "model": "marketblocks:block/marketcrate",
+      "y": 90
+    }
+  }
+}

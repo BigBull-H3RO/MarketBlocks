@@ -1,19 +1,20 @@
 package de.bigbull.marketblocks.init;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.shop.marketplace.menu.MarketplaceMenu;
+import de.bigbull.marketblocks.shop.singleoffer.block.MarketCrateBlock;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
-import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandClassicBlock;
 import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandTopBlock;
 import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.shop.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -46,7 +47,7 @@ public final class RegistriesInit {
 
     // Block Registrierung
     public static final DeferredBlock<Block> SHOP_BLOCK_TEST = registerBlock("shop_block_test",
-            () -> new TradeStandClassicBlock(BlockBehaviour.Properties.of()
+            () -> new TradeStandBlock(BlockBehaviour.Properties.of()
                     .noOcclusion()
                     .mapColor(MapColor.PODZOL)
                     .instrument(NoteBlockInstrument.BASS)
@@ -70,10 +71,16 @@ public final class RegistriesInit {
                     .strength(2.5F, 3600000.0F)
                     .sound(SoundType.WOOD)));
 
+    public static final DeferredBlock<Block> MARKETCRATE_BLOCK = registerBlock("marketcrate",
+            () -> new MarketCrateBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
+                    .noOcclusion()
+                    .strength(2.0f, 3.0f)
+                    .sound(SoundType.WOOD)));
+
     // BlockEntity Registrierung
     public static final Supplier<BlockEntityType<SingleOfferShopBlockEntity>> SINGLE_OFFER_SHOP_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("single_offer_shop", () -> BlockEntityType.Builder.of(
-                    SingleOfferShopBlockEntity::new, SHOP_BLOCK_TEST.get(), TRADE_STAND_BLOCK.get()).build(null));
+                    SingleOfferShopBlockEntity::new, SHOP_BLOCK_TEST.get(), TRADE_STAND_BLOCK.get(), MARKETCRATE_BLOCK.get()).build(null));
 
     // Menu Registrierungen
     public static final Supplier<MenuType<SingleOfferShopMenu>> SINGLE_OFFER_SHOP_MENU =
@@ -102,4 +109,3 @@ public final class RegistriesInit {
         ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
     }
 }
-

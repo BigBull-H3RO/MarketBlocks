@@ -797,7 +797,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void processPurchase(@Nullable Player buyer) {
-        processBulkPurchase(1, buyer);
+        processBulkPurchase(1, buyer, false);
     }
 
     /**
@@ -809,10 +809,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
      * Output space is simulated iteratively to ensure accurate evaluation of max stacking.
      */
     public int processBulkPurchase(int maxAmount) {
-        return processBulkPurchase(maxAmount, null);
+        return processBulkPurchase(maxAmount, null, false);
     }
 
     public int processBulkPurchase(int maxAmount, @Nullable Player buyer) {
+        return processBulkPurchase(maxAmount, buyer, false);
+    }
+
+    public int processBulkPurchase(int maxAmount, @Nullable Player buyer, boolean shiftPurchase) {
         if (maxAmount <= 0) return 0;
 
         if (isChestIoExtensionEnabled()) {
@@ -875,7 +879,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             }
         }
 
-        appendTransactionEntry(resolveBuyerIdentity(buyer), p1, p2, result, actualAmount);
+        appendTransactionEntry(resolveBuyerIdentity(buyer), p1, p2, result, actualAmount, shiftPurchase);
 
         sync();
         triggerRedstonePulse();
@@ -883,7 +887,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return actualAmount;
     }
 
-    private void appendTransactionEntry(@Nullable BuyerIdentity buyer, ItemStack payment1, ItemStack payment2, ItemStack result, int tradeCount) {
+    private void appendTransactionEntry(@Nullable BuyerIdentity buyer, ItemStack payment1, ItemStack payment2, ItemStack result, int tradeCount, boolean shiftPurchase) {
         if (!(level instanceof ServerLevel serverLevel) || tradeCount <= 0) {
             return;
         }
@@ -911,7 +915,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                 buyerId,
                 buyerName,
                 paidStacks,
-                boughtStacks
+                boughtStacks,
+                shiftPurchase ? TransactionLogEntry.PurchaseKind.SHIFT : TransactionLogEntry.PurchaseKind.SINGLE
         );
 
         ShopTransactionLogSavedData.get(serverLevel).appendEntry(

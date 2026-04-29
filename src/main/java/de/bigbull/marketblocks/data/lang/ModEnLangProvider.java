@@ -215,6 +215,7 @@ public class ModEnLangProvider extends LanguageProvider {
 
         // Blocks
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Trade Stand");
+        addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Market Crate");
         addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

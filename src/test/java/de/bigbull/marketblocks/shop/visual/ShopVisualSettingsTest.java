@@ -1,13 +1,27 @@
 package de.bigbull.marketblocks.shop.visual;
 
+import net.minecraft.SharedConstants;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.Bootstrap;
+import net.neoforged.fml.loading.LoadingModList;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class ShopVisualSettingsTest {
+
+    @BeforeAll
+    public static void setup() {
+        if (LoadingModList.get() == null) {
+            LoadingModList.of(List.of(), List.of(), List.of(), List.of(), Map.of());
+        }
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     @Test
     void sanitizeNameAndNbtRoundTrip() {
@@ -38,5 +52,3 @@ class ShopVisualSettingsTest {
         assertEquals(VillagerVisualProfession.NONE, VillagerVisualProfession.WEAPONSMITH.next());
     }
 }
-
-

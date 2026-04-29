@@ -54,8 +54,9 @@ public class IconButton extends Button {
         graphics.blit(background, getX(), getY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight());
         ResourceLocation iconToRender = (selected && activeIcon != null) ? activeIcon : icon;
         RenderSystem.setShaderTexture(0, iconToRender);
-        int iconX = getX() + (getWidth() - 18) / 2;
-        int iconY = getY() + (getHeight() - 18) / 2;
-        graphics.blit(iconToRender, iconX, iconY, 0, 0, 0, 18, 18, 18, 18);
+        int iconSize = Math.min(18, Math.min(getWidth(), getHeight()));
+        int iconX = getX() + (getWidth() - iconSize) / 2;
+        int iconY = getY() + (getHeight() - iconSize) / 2;
+        graphics.blit(iconToRender, iconX, iconY, 0, 0, iconSize, iconSize, 18, 18);
     }
 }

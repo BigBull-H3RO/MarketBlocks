@@ -20,6 +20,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
     @Override
     protected void registerStatesAndModels() {
         registerShopBlock(RegistriesInit.SHOP_BLOCK_TEST.get(), "shop_block_test", 0);
+        registerShopBlock(RegistriesInit.MARKETCRATE_BLOCK.get(), "marketcrate", 180);
         registerTradeStandBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), 0);
 
         ModelFile topModel = models().getExistingFile(modLoc("block/trade_stand_block_top"));

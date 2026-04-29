@@ -30,7 +30,8 @@ public final class CreativeTabInit {
                         showcaseStack.set(DataComponents.CUSTOM_NAME,
                                 Component.translatable("item.marketblocks.trade_stand.with_showcase"));
                         output.accept(showcaseStack);
+
+                        output.accept(RegistriesInit.MARKETCRATE_BLOCK.get());
                     })
                     .build());
 }
-
