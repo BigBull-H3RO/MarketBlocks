@@ -198,13 +198,41 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     /** Sets the active tab on the server side and broadcasts changes. */
     public void setActiveTabServer(ShopTab tab) {
-        tabData.set(0, tab.ordinal());
+        tabData.set(0, sanitizeRequestedTab(tab).ordinal());
         broadcastChanges();
     }
 
     /** Sets the active tab on the client side without notifying the server. */
     public void setActiveTabClient(ShopTab tab) {
-        tabData.set(0, tab.ordinal());
+        tabData.set(0, sanitizeRequestedTab(tab).ordinal());
+    }
+
+    public boolean canUseTab(ShopTab tab) {
+        return tab != null && sanitizeRequestedTab(tab) == tab;
+    }
+
+    private ShopTab sanitizeRequestedTab(ShopTab tab) {
+        if (tab == null) {
+            return ShopTab.OFFERS;
+        }
+        return switch (tab) {
+            case OFFERS -> ShopTab.OFFERS;
+            case INVENTORY -> canUseInventoryTab() ? ShopTab.INVENTORY : ShopTab.OFFERS;
+            case SETTINGS -> canUseSettingsTab() ? ShopTab.SETTINGS : ShopTab.OFFERS;
+            case LOG -> canUseLogTab() ? ShopTab.LOG : ShopTab.OFFERS;
+        };
+    }
+
+    private boolean canUseInventoryTab() {
+        return isOwner() && !blockEntity.isAdminShopEnabled();
+    }
+
+    private boolean canUseSettingsTab() {
+        return isOwner() || (isOperator() && isGlobalAdminModeEnabled());
+    }
+
+    private boolean canUseLogTab() {
+        return isOwner();
     }
 
     // --- Settings helpers ---
@@ -307,6 +335,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         if (isTab(ShopTab.SETTINGS) || isTab(ShopTab.LOG)) return ItemStack.EMPTY;
+        if (isTab(ShopTab.INVENTORY) && blockEntity.isAdminShopEnabled()) return ItemStack.EMPTY;
 
         if (index == OFFER_SLOT_INDEX && isTab(ShopTab.OFFERS)) {
             Slot slot = this.slots.get(index);
@@ -335,14 +364,15 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 return ret;
             }
 
-            if (!blockEntity.hasResultItemInInput(false)) {
+            boolean adminShop = blockEntity.isAdminShopEnabled();
+            if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
                 if (!player.level().isClientSide) {
                     player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
                 }
                 return ItemStack.EMPTY;
             }
 
-            if (blockEntity.isOutputSpaceMissing()) {
+            if (!adminShop && blockEntity.isOutputSpaceMissing()) {
                 if (!player.level().isClientSide) {
                     player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 }
@@ -480,11 +510,12 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 && type == ClickType.PICKUP
                 && blockEntity.hasOffer()
                 && blockEntity.getOfferHandler().getStackInSlot(0).isEmpty()) {
-            if (!blockEntity.hasResultItemInInput(false)) {
+            boolean adminShop = blockEntity.isAdminShopEnabled();
+            if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
                 player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
                 return;
             }
-            if (blockEntity.isOutputSpaceMissing()) {
+            if (!adminShop && blockEntity.isOutputSpaceMissing()) {
                 player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 return;
             }
@@ -594,12 +625,13 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 return isOwner();
             }
 
-            if (!blockEntity.hasResultItemInInput(false)) {
+            boolean adminShop = blockEntity.isAdminShopEnabled();
+            if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
                 player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
                 return false;
             }
 
-            if (blockEntity.isOutputSpaceMissing()) {
+            if (!adminShop && blockEntity.isOutputSpaceMissing()) {
                 player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 return false;
             }

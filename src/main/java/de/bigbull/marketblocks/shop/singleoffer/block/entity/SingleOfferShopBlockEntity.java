@@ -64,6 +64,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private static final String KEY_PAYMENT1 = "OfferPayment1";
     private static final String KEY_PAYMENT2 = "OfferPayment2";
     private static final String KEY_RESULT = "OfferResult";
+    private static final String NBT_ADMIN_SHOP_ENABLED = "AdminShopEnabled";
     private static final String NBT_OUTPUT_WARNING = "OutputWarning";
     private static final String NBT_OUTPUT_FULL = "OutputFull";
     private static final String NBT_VISUALS = "Visuals";
@@ -85,6 +86,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public static final int OFFER_AVAILABLE_FLAG = 2;
     public static final int OWNER_FLAG = 4;
     public static final int PRIMARY_OWNER_FLAG = 8;
+    public static final int OPERATOR_FLAG = 16;
+    public static final int GLOBAL_ADMIN_MODE_FLAG = 32;
 
     // Offer System
     private ItemStack offerPayment1 = ItemStack.EMPTY;
@@ -107,6 +110,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private boolean emitRedstone = false;
     private boolean outputAlmostFull = false;
     private boolean outputFull = false;
+    private boolean adminShopEnabled = false;
     private boolean purchaseXpFeedbackSound = true;
     private ShopVisualSettings visualSettings = ShopVisualSettings.DEFAULT;
     private int visualAnimationNonce = 0;
@@ -456,6 +460,31 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         this.emitRedstone = emitRedstone;
     }
 
+    public boolean isAdminShopEnabled() {
+        return adminShopEnabled;
+    }
+
+    public boolean isGlobalAdminModeEnabled() {
+        return Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.get();
+    }
+
+    public void setAdminShopEnabled(boolean enabled) {
+        if (this.adminShopEnabled == enabled) {
+            return;
+        }
+        this.adminShopEnabled = enabled;
+        needsOfferRefresh = true;
+        updateOfferSlot(false);
+        sync();
+    }
+
+    @ApiStatus.Internal
+    public void setAdminShopEnabledClient(boolean enabled) {
+        this.adminShopEnabled = enabled;
+        needsOfferRefresh = true;
+        updateOfferSlot(false);
+    }
+
     // --- Side Configuration ---
     public SideMode getMode(Direction dir) {
         return sideModes.getOrDefault(dir, SideMode.DISABLED);
@@ -694,7 +723,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
-        if (canAfford() && hasResultItemInInput(checkNeighbors) && !isOutputFull() && hasOutputSpace(p1, p2)) {
+        boolean stockAvailable = isAdminShopEnabled() || hasResultItemInInput(checkNeighbors);
+        boolean outputReady = isAdminShopEnabled() || (!isOutputFull() && hasOutputSpace(p1, p2));
+        if (canAfford() && stockAvailable && outputReady) {
             if (offerHandler.getStackInSlot(0).isEmpty()) {
                 offerHandler.setStackInSlot(0, getOfferResult().copy());
             }
@@ -726,6 +757,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public boolean hasResultItemInInput(boolean checkNeighbors) {
         ItemStack result = getOfferResult();
         if (result == null || result.isEmpty()) return false;
+        if (isAdminShopEnabled()) {
+            return true;
+        }
 
         int found = 0;
         // Check internal inventory first
@@ -818,8 +852,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public int processBulkPurchase(int maxAmount, @Nullable Player buyer, boolean shiftPurchase) {
         if (maxAmount <= 0) return 0;
+        boolean adminShop = isAdminShopEnabled();
 
-        if (isChestIoExtensionEnabled()) {
+        if (!adminShop && isChestIoExtensionEnabled()) {
             updateNeighborCache();
             inventoryManager.pullFromInputChest(inputHandler);
         }
@@ -847,25 +882,29 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         if (p1.isEmpty() && p2.isEmpty()) affordable = maxAmount; // Free
 
         // 2. Calculate how many we have in stock (Input)
-        int inStock = countMatchingInput(result) / result.getCount();
+        int inStock = adminShop ? Integer.MAX_VALUE : countMatchingInput(result) / result.getCount();
 
         // 3. Calculate output space
         int actualAmount = Math.min(maxAmount, Math.min(affordable, inStock));
         if (actualAmount <= 0) return 0;
 
         // Fast path for single transactions; run iterative simulation only for bulk purchases.
-        int validAmount = actualAmount == 1
+        int validAmount = adminShop
+                ? actualAmount
+                : (actualAmount == 1
                 ? (hasOutputSpace(p1, p2) ? 1 : 0)
-                : simulateOutputSpace(p1, p2, actualAmount);
+                : simulateOutputSpace(p1, p2, actualAmount));
         actualAmount = validAmount;
 
         if (actualAmount <= 0) {
-            // Output full
-            updateOutputFullness();
+            if (!adminShop) {
+                // Output full
+                updateOutputFullness();
+            }
             return 0;
         }
 
-        executeTrades(p1, p2, result, actualAmount);
+        executeTrades(p1, p2, result, actualAmount, adminShop);
         visualPurchaseCounter += actualAmount;
 
         if (purchaseXpFeedbackSound && level != null) {
@@ -1021,10 +1060,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private boolean isReadyToPurchase() {
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
-        return hasOffer && canAfford() && hasResultItemInInput(false) && !isOutputFull() && hasOutputSpace(p1, p2);
+        boolean stockReady = isAdminShopEnabled() || hasResultItemInInput(false);
+        boolean outputReady = isAdminShopEnabled() || (!isOutputFull() && hasOutputSpace(p1, p2));
+        return hasOffer && canAfford() && stockReady && outputReady;
     }
 
-    private void executeTrades(ItemStack p1, ItemStack p2, ItemStack result, int tradeCount) {
+    private void executeTrades(ItemStack p1, ItemStack p2, ItemStack result, int tradeCount, boolean adminShop) {
         if (tradeCount <= 0) {
             return;
         }
@@ -1039,12 +1080,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         if (!totalP2.isEmpty()) {
             removePayment(totalP2);
         }
-        if (!totalResult.isEmpty()) {
+        if (!adminShop && !totalResult.isEmpty()) {
             removeFromInput(totalResult);
         }
 
-        addToOutputBatched(p1, tradeCount);
-        addToOutputBatched(p2, tradeCount);
+        if (!adminShop) {
+            addToOutputBatched(p1, tradeCount);
+            addToOutputBatched(p2, tradeCount);
+        }
     }
 
     private ItemStack multiplyStackForTrades(ItemStack stack, int tradeCount) {
@@ -1181,6 +1224,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean isOutputSpaceMissing() {
+        if (isAdminShopEnabled()) {
+            return false;
+        }
         if (!hasResultItemInInput(false)) {
             return false;
         }
@@ -1253,6 +1299,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                     if (isOfferAvailable()) flags |= OFFER_AVAILABLE_FLAG;
                     if (isOwner(player)) flags |= OWNER_FLAG;
                     if (isPrimaryOwner(player)) flags |= PRIMARY_OWNER_FLAG;
+                    if (player != null && player.hasPermissions(2)) flags |= OPERATOR_FLAG;
+                    if (isGlobalAdminModeEnabled()) flags |= GLOBAL_ADMIN_MODE_FLAG;
                     return flags;
                 }
                 return 0;
@@ -1443,6 +1491,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
         this.shopName = name;
         this.emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
+        this.adminShopEnabled = tag.getBoolean(NBT_ADMIN_SHOP_ENABLED);
         this.purchaseXpFeedbackSound = !tag.contains(NBT_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND);
         if (tag.contains(NBT_VISUALS, 10)) {
             this.visualSettings = ShopVisualSettings.load(tag.getCompound(NBT_VISUALS));
@@ -1459,6 +1508,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private void saveSettings(CompoundTag tag) {
         tag.putString(NBT_SHOP_NAME, shopName);
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
+        tag.putBoolean(NBT_ADMIN_SHOP_ENABLED, adminShopEnabled);
         tag.putBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND, purchaseXpFeedbackSound);
         tag.put(NBT_VISUALS, visualSettings.save());
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
@@ -1521,6 +1571,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Shop settings (needed for UI)
         tag.putString(NBT_SHOP_NAME, shopName);
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
+        tag.putBoolean(NBT_ADMIN_SHOP_ENABLED, adminShopEnabled);
         tag.putBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND, purchaseXpFeedbackSound);
         tag.put(NBT_VISUALS, visualSettings.save());
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
@@ -1559,6 +1610,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Shop settings
         shopName = tag.getString(NBT_SHOP_NAME);
         emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
+        adminShopEnabled = tag.getBoolean(NBT_ADMIN_SHOP_ENABLED);
         purchaseXpFeedbackSound = !tag.contains(NBT_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND);
         visualSettings = tag.contains(NBT_VISUALS, 10) ? ShopVisualSettings.load(tag.getCompound(NBT_VISUALS)) : ShopVisualSettings.DEFAULT;
         visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
