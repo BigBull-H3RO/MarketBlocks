@@ -36,5 +36,19 @@ public interface ShopMenu {
     default boolean isPrimaryOwner() {
         return hasFlag(SingleOfferShopBlockEntity.PRIMARY_OWNER_FLAG);
     }
+
+    /**
+     * @return true if the current player is server-operator/admin.
+     */
+    default boolean isOperator() {
+        return hasFlag(SingleOfferShopBlockEntity.OPERATOR_FLAG);
+    }
+
+    /**
+     * @return true if global /marketblocks adminmode is currently enabled.
+     */
+    default boolean isGlobalAdminModeEnabled() {
+        return hasFlag(SingleOfferShopBlockEntity.GLOBAL_ADMIN_MODE_FLAG);
+    }
 }
 

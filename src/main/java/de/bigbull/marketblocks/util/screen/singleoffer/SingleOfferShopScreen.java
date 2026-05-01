@@ -94,6 +94,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private ShopTab lastTab;
     private boolean lastHasOffer;
+    private int lastMenuFlags;
     private SettingsCategory activeSettingsCategory = SettingsCategory.GENERAL;
 
     private OfferTemplateButton offerButton;
@@ -132,13 +133,21 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     protected void init() {
         super.init();
         lastTab = menu.getActiveTab();
+        if (!menu.canUseTab(lastTab)) {
+            menu.setActiveTabClient(ShopTab.OFFERS);
+            lastTab = ShopTab.OFFERS;
+        }
         lastHasOffer = menu.getBlockEntity().hasOffer();
-        if (menu.isOwner()) {
+        lastMenuFlags = menu.getFlags();
+        if (canUseManagementTabs()) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, lastTab,
                     () -> switchTab(ShopTab.OFFERS),
                     () -> switchTab(ShopTab.INVENTORY),
                     () -> switchTab(ShopTab.SETTINGS),
-                    () -> switchTab(ShopTab.LOG));
+                    () -> switchTab(ShopTab.LOG),
+                    menu.canUseTab(ShopTab.INVENTORY),
+                    menu.canUseTab(ShopTab.SETTINGS),
+                    menu.canUseTab(ShopTab.LOG));
         }
         buildCurrentTabUI();
     }
@@ -148,6 +157,22 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         super.containerTick();
         ShopTab current = menu.getActiveTab();
         boolean offerChanged = menu.getBlockEntity().hasOffer() != lastHasOffer;
+        boolean flagsChanged = menu.getFlags() != lastMenuFlags;
+
+        if (flagsChanged) {
+            lastMenuFlags = menu.getFlags();
+            if (!menu.canUseTab(current)) {
+                switchTab(ShopTab.OFFERS);
+            } else {
+                rebuildUI();
+            }
+            return;
+        }
+
+        if (!menu.canUseTab(current)) {
+            switchTab(ShopTab.OFFERS);
+            return;
+        }
 
         if (current != lastTab) {
             lastTab = current;
@@ -166,22 +191,26 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     protected void switchTab(ShopTab tab) {
-        if (menu.isOwner()) {
-            menu.setActiveTabClient(tab);
-            lastTab = tab;
-            rebuildUI();
+        if (!menu.canUseTab(tab)) {
+            return;
         }
+        menu.setActiveTabClient(tab);
+        lastTab = tab;
+        rebuildUI();
         super.switchTab(tab);
     }
 
     private void rebuildUI() {
         clearWidgets();
-        if (menu.isOwner()) {
+        if (canUseManagementTabs()) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, menu.getActiveTab(),
                     () -> switchTab(ShopTab.OFFERS),
                     () -> switchTab(ShopTab.INVENTORY),
                     () -> switchTab(ShopTab.SETTINGS),
-                    () -> switchTab(ShopTab.LOG));
+                    () -> switchTab(ShopTab.LOG),
+                    menu.canUseTab(ShopTab.INVENTORY),
+                    menu.canUseTab(ShopTab.SETTINGS),
+                    menu.canUseTab(ShopTab.LOG));
         }
         buildCurrentTabUI();
     }
@@ -254,35 +283,87 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         emitRedstoneEnabled = draftEmitRedstone;
         visualPlacementResult = resolveVisualPlacementResult(be);
 
-        SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory, this::switchSettingsCategory);
-        buildSaveButton(be);
+        boolean isOwner = menu.isOwner();
+        boolean canToggleAdminShop = canToggleAdminShop();
+
+        if (isOwner) {
+            SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory, this::switchSettingsCategory);
+            buildSaveButton(be);
+        } else {
+            activeSettingsCategory = SettingsCategory.GENERAL;
+        }
 
         switch (activeSettingsCategory) {
-            case GENERAL -> nameField = SingleOfferSettingsSections.buildGeneralSection(
-                    this, draftShopName, emitRedstoneEnabled, Boolean.TRUE.equals(draftPurchaseXpFeedbackSound),
-                    value -> { emitRedstoneEnabled = value; draftEmitRedstone = value; saved = false; },
-                    s -> { draftShopName = s; saved = false; },
-                    value -> { draftPurchaseXpFeedbackSound = value; saved = false; }
-            );
-            case IO -> SingleOfferSettingsSections.buildIoSection(
-                    this, menu, leftDir, rightDir, bottomDir, backDir, () -> saved = false
-            );
-            case VISUALS -> {
-                SingleOfferSettingsSections.VisualSectionWidgets widgets = SingleOfferSettingsSections.buildVisualSection(
-                        this, Boolean.TRUE.equals(draftVisualNpcEnabled), draftVisualNpcName, draftVisualNpcProfession,
-                        Boolean.TRUE.equals(draftVisualPurchaseParticles), Boolean.TRUE.equals(draftVisualPurchaseSounds),
-                        Boolean.TRUE.equals(draftVisualPaymentSlotSounds), visualPlacementResult,
-                        () -> { draftVisualNpcEnabled = !Boolean.TRUE.equals(draftVisualNpcEnabled); saved = false; },
-                        value -> { draftVisualNpcName = value; saved = false; },
-                        () -> { draftVisualNpcProfession = (draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession).next(); saved = false; },
-                        value -> { draftVisualPurchaseParticles = value; saved = false; },
-                        value -> { draftVisualPurchaseSounds = value; saved = false; },
-                        value -> { draftVisualPaymentSlotSounds = value; saved = false; },
-                        this::getNpcToggleLabel, this::getProfessionLabel
-                );
-                npcNameField = widgets.npcNameField();
+            case GENERAL -> {
+                if (isOwner) {
+                    nameField = SingleOfferSettingsSections.buildGeneralSection(
+                            this, draftShopName, emitRedstoneEnabled, Boolean.TRUE.equals(draftPurchaseXpFeedbackSound),
+                            value -> {
+                                emitRedstoneEnabled = value;
+                                draftEmitRedstone = value;
+                                saved = false;
+                            },
+                            s -> {
+                                draftShopName = s;
+                                saved = false;
+                            },
+                            value -> {
+                                draftPurchaseXpFeedbackSound = value;
+                                saved = false;
+                            }
+                    );
+                }
+                if (canToggleAdminShop) {
+                    buildAdminShopToggleButton(be);
+                }
             }
-            case ACCESS -> buildSettingsAccessSection(be);
+            case IO -> {
+                if (isOwner) {
+                    SingleOfferSettingsSections.buildIoSection(
+                            this, menu, leftDir, rightDir, bottomDir, backDir, () -> saved = false
+                    );
+                }
+            }
+            case VISUALS -> {
+                if (isOwner) {
+                    SingleOfferSettingsSections.VisualSectionWidgets widgets = SingleOfferSettingsSections.buildVisualSection(
+                            this, Boolean.TRUE.equals(draftVisualNpcEnabled), draftVisualNpcName, draftVisualNpcProfession,
+                            Boolean.TRUE.equals(draftVisualPurchaseParticles), Boolean.TRUE.equals(draftVisualPurchaseSounds),
+                            Boolean.TRUE.equals(draftVisualPaymentSlotSounds), visualPlacementResult,
+                            () -> {
+                                draftVisualNpcEnabled = !Boolean.TRUE.equals(draftVisualNpcEnabled);
+                                saved = false;
+                            },
+                            value -> {
+                                draftVisualNpcName = value;
+                                saved = false;
+                            },
+                            () -> {
+                                draftVisualNpcProfession = (draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession).next();
+                                saved = false;
+                            },
+                            value -> {
+                                draftVisualPurchaseParticles = value;
+                                saved = false;
+                            },
+                            value -> {
+                                draftVisualPurchaseSounds = value;
+                                saved = false;
+                            },
+                            value -> {
+                                draftVisualPaymentSlotSounds = value;
+                                saved = false;
+                            },
+                            this::getNpcToggleLabel, this::getProfessionLabel
+                    );
+                    npcNameField = widgets.npcNameField();
+                }
+            }
+            case ACCESS -> {
+                if (isOwner) {
+                    buildSettingsAccessSection(be);
+                }
+            }
         }
     }
 
@@ -354,6 +435,30 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         rebuildUI();
     }
 
+    private boolean canUseManagementTabs() {
+        return menu.isOwner() || menu.canUseTab(ShopTab.SETTINGS) || menu.canUseTab(ShopTab.LOG) || menu.canUseTab(ShopTab.INVENTORY);
+    }
+
+    private boolean canToggleAdminShop() {
+        return menu.isOperator() && menu.isGlobalAdminModeEnabled();
+    }
+
+    private Component getAdminShopToggleLabel(SingleOfferShopBlockEntity be) {
+        return Component.translatable(be.isAdminShopEnabled()
+                ? "gui.marketblocks.admin_shop.enabled"
+                : "gui.marketblocks.admin_shop.disabled");
+    }
+
+    private void buildAdminShopToggleButton(SingleOfferShopBlockEntity be) {
+        addSettingsWidget(Button.builder(getAdminShopToggleLabel(be), b -> {
+            boolean next = !be.isAdminShopEnabled();
+            be.setAdminShopEnabledClient(next);
+            NetworkHandler.sendToServer(new ToggleAdminShopModePacket(be.getBlockPos(), next));
+            b.setMessage(getAdminShopToggleLabel(be));
+            rebuildUI();
+        }).bounds(leftPos + 8, topPos + 90, 158, 18).build());
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
@@ -362,7 +467,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
         if (menu.getActiveTab() == ShopTab.OFFERS) {
             SingleOfferShopBlockEntity be = menu.getBlockEntity();
-            if (be.hasOffer() && isHovering(STATUS_ICON_RECT.x(), STATUS_ICON_RECT.y(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), mouseX, mouseY)) {
+            if (be.hasOffer() && !be.isAdminShopEnabled()
+                    && isHovering(STATUS_ICON_RECT.x(), STATUS_ICON_RECT.y(), STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(), mouseX, mouseY)) {
                 if (!be.hasResultItemInInput(false)) {
                     graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX, mouseY);
                 } else if (be.isOutputSpaceMissing()) {
@@ -404,12 +510,15 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         offerButton.active = be.hasOffer();
         if (be.hasOffer()) {
-            offerButton.update(be.getOfferPayment1(), be.getOfferPayment2(), be.getOfferResult(), be.hasResultItemInInput(false));
+            offerButton.update(be.getOfferPayment1(), be.getOfferPayment2(), be.getOfferResult(), be.isAdminShopEnabled() || be.hasResultItemInInput(false));
         } else {
             ItemStack p1 = menu.slots.get(0).getItem();
             ItemStack p2 = menu.slots.get(1).getItem();
             Pair<ItemStack, ItemStack> norm = normalizePayments(p1, p2);
             offerButton.update(norm.getFirst(), norm.getSecond(), menu.slots.get(2).getItem(), true);
+        }
+        if (be.isAdminShopEnabled()) {
+            return;
         }
         int iconX = leftPos + STATUS_ICON_RECT.x();
         int iconY = topPos + STATUS_ICON_RECT.y();
@@ -708,7 +817,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         graphics.drawString(font, Component.translatable("gui.marketblocks.inventory_title"), 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
-        if (!menu.isOwner()) {
+        if (be.isAdminShopEnabled()) {
+            Component info = Component.translatable("gui.marketblocks.inventory_admin_disabled");
+            int w = font.width(info);
+            graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
+        } else if (!menu.isOwner()) {
             Component info = Component.translatable("gui.marketblocks.inventory_owner_only");
             int w = font.width(info);
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
@@ -720,16 +833,16 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         graphics.drawString(font, Component.translatable("gui.marketblocks.settings_title"), 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
-        if (activeSettingsCategory == SettingsCategory.GENERAL) {
+        if (menu.isOwner() && activeSettingsCategory == SettingsCategory.GENERAL) {
             graphics.drawString(font, Component.translatable("gui.marketblocks.shop_name"), 10, 20, 4210752, false);
         }
-        if (activeSettingsCategory == SettingsCategory.VISUALS) {
+        if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VISUALS) {
             graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.npc_name"), 48, 18, 4210752, false);
             if (!visualPlacementResult.canSpawn()) {
                 graphics.drawString(font, Component.translatable(visualPlacementResult.translationKey()), 8, 84, 0xCC3333, false);
             }
         }
-        if (!menu.isOwner()) {
+        if (!menu.isOwner() && !canToggleAdminShop()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
             int w = font.width(info);
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);

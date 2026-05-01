@@ -55,7 +55,7 @@ public record SwitchTabPacket(BlockPos pos, ShopTab tab) implements CustomPacket
 
             if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity blockEntity) {
                 if (player.containerMenu instanceof SingleOfferShopMenu menu && menu.getBlockEntity() == blockEntity) {
-                    if (tab == ShopTab.OFFERS || blockEntity.isOwner(player)) {
+                    if (menu.canUseTab(tab)) {
                         menu.setActiveTabServer(tab);
                         if (tab == ShopTab.LOG && level instanceof ServerLevel serverLevel) {
                             ShopTransactionLogSavedData logStorage = ShopTransactionLogSavedData.get(serverLevel);

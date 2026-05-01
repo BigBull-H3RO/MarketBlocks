@@ -86,7 +86,10 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.emit_redstone.tooltip", "Emit a short redstone pulse after a purchase");
         add("gui.marketblocks.purchase_xp_sound", "Purchase XP Sound");
         add("gui.marketblocks.purchase_xp_sound.tooltip", "Plays an XP orb sound when a player purchases something");
+        add("gui.marketblocks.admin_shop.enabled", "Admin-Shop: ON");
+        add("gui.marketblocks.admin_shop.disabled", "Admin-Shop: OFF");
         add("gui.marketblocks.settings_owner_only", "Only the owner can change settings");
+        add("gui.marketblocks.inventory_admin_disabled", "Inventory disabled in admin mode");
         add("gui.marketblocks.visuals.npc_enabled", "Decorative Villager");
         add("gui.marketblocks.visuals.npc_name", "NPC Name");
         add("gui.marketblocks.visuals.profession", "Profession");

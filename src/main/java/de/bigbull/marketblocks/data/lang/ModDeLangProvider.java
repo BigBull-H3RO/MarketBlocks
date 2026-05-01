@@ -75,6 +75,9 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.purchase_xp_sound", "XP-Sound beim Kauf");
         add("gui.marketblocks.purchase_xp_sound.tooltip", "Spielt einen XP-Sound ab, wenn ein Spieler etwas kauft");
         add("gui.marketblocks.settings_owner_only", "Nur der Besitzer kann Einstellungen ändern");
+        add("gui.marketblocks.admin_shop.enabled", "Admin-Shop: AN");
+        add("gui.marketblocks.admin_shop.disabled", "Admin-Shop: AUS");
+        add("gui.marketblocks.inventory_admin_disabled", "Inventar im Admin-Modus deaktiviert");
         add("gui.marketblocks.visuals.npc_enabled", "Deko-Villager");
         add("gui.marketblocks.visuals.npc_name", "NPC-Name");
         add("gui.marketblocks.visuals.profession", "Beruf");

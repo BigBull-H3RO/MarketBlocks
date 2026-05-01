@@ -13,7 +13,7 @@ public class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_OUTPUT_WARNING;
     public static final ModConfigSpec.IntValue OUTPUT_WARNING_PERCENT;
     public static final ModConfigSpec.BooleanValue MARKETPLACE_GLOBAL_DAILY_LIMIT;
-    public static final ModConfigSpec.BooleanValue MARKETPLACE_EDIT_MODE_ENABLED;
+    public static final ModConfigSpec.BooleanValue MARKETBLOCKS_ADMIN_MODE_ENABLED;
     public static final ModConfigSpec.BooleanValue ENABLE_MIXIN_DESYNC_LOGGING;
     public static final ModConfigSpec.BooleanValue VISUAL_NPC_FORCE_OFFSCREEN_RENDERING;
     public static final ModConfigSpec.IntValue VISUAL_NPC_RENDER_VIEW_DISTANCE;
@@ -45,9 +45,10 @@ public class Config {
         MARKETPLACE_GLOBAL_DAILY_LIMIT = COMMON_BUILDER
                 .comment("If true, Marketplace daily limits are shared globally. If false, they apply per player.")
                 .define("marketplaceGlobalDailyLimit", false);
-        MARKETPLACE_EDIT_MODE_ENABLED = COMMON_BUILDER
-                .comment("If true, the Marketplace edit mode toggle is available for admins. If false, the edit toggle is hidden and disabled globally.")
-                .define("marketplaceEditModeEnabled", false);
+        MARKETBLOCKS_ADMIN_MODE_ENABLED = COMMON_BUILDER
+                .comment("Global admin mode controlled by /marketblocks adminmode.",
+                        "Enables Marketplace edit mode and OP-only Admin-Shop controls in SingleOffer settings.")
+                .define("marketblocksAdminModeEnabled", false);
         COMMON_BUILDER.pop();
 
         COMMON_BUILDER.push("Visual NPC Rendering");

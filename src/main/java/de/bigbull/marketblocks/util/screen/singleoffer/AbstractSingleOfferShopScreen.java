@@ -47,7 +47,8 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         super(menu, inv, title);
     }
 
-    protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings, Runnable onLog) {
+    protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings, Runnable onLog,
+                                    boolean inventoryEnabled, boolean settingsEnabled, boolean logEnabled) {
         addRenderableWidget(new IconButton(
                 x - 2, y - 4, 22, 22,
                 BUTTON_SPRITES, OFFERS_ICON,
@@ -56,29 +57,32 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
                 () -> selectedTab == ShopTab.OFFERS
         ));
 
-        addRenderableWidget(new IconButton(
+        IconButton inventoryButton = addRenderableWidget(new IconButton(
                 x - 2, y + 22, 22, 22,
                 BUTTON_SPRITES, INVENTORY_ICON,
                 b -> { if (selectedTab != ShopTab.INVENTORY) onInventory.run(); },
                 Component.translatable("gui.marketblocks.inventory_tab"),
                 () -> selectedTab == ShopTab.INVENTORY
         ));
+        inventoryButton.active = inventoryEnabled;
 
-        addRenderableWidget(new IconButton(
+        IconButton settingsButton = addRenderableWidget(new IconButton(
                 x - 2, y + 48, 22, 22,
                 BUTTON_SPRITES, SETTINGS_ICON,
                 b -> { if (selectedTab != ShopTab.SETTINGS) onSettings.run(); },
                 Component.translatable("gui.marketblocks.settings_tab"),
                 () -> selectedTab == ShopTab.SETTINGS
         ));
+        settingsButton.active = settingsEnabled;
 
-        addRenderableWidget(new IconButton(
+        IconButton logButton = addRenderableWidget(new IconButton(
                 x - 2, y + 132, 22, 22,
                 BUTTON_SPRITES, LOG_ICON,
                 b -> { if (selectedTab != ShopTab.LOG) onLog.run(); },
                 Component.translatable("gui.marketblocks.log_tab"),
                 () -> selectedTab == ShopTab.LOG
         ));
+        logButton.active = logEnabled;
     }
 
     /**
@@ -96,7 +100,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
      * the next container sync will revert the client state.
      */
     protected void switchTab(ShopTab tab) {
-        if (menu instanceof ShopMenu shopMenu && shopMenu.isOwner()) {
+        if (menu instanceof ShopMenu shopMenu && (shopMenu.isOwner() || shopMenu.isOperator())) {
             SingleOfferShopBlockEntity blockEntity = shopMenu.getBlockEntity();
 
             NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), tab));

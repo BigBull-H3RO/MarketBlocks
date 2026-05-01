@@ -274,15 +274,15 @@ public final class MarketplaceManager {
     }
 
     public boolean isGlobalEditModeEnabled() {
-        return Config.MARKETPLACE_EDIT_MODE_ENABLED.get();
+        return Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.get();
     }
 
     public void setGlobalEditModeEnabled(boolean enabled) {
         ViewerSyncBatch viewerSyncBatch = ViewerSyncBatch.empty();
         synchronized (lock) {
             boolean changed = isGlobalEditModeEnabled() != enabled;
-            Config.MARKETPLACE_EDIT_MODE_ENABLED.set(enabled);
-            Config.MARKETPLACE_EDIT_MODE_ENABLED.save();
+            Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.set(enabled);
+            Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.save();
             if (!initialized || !changed) {
                 return;
             }
