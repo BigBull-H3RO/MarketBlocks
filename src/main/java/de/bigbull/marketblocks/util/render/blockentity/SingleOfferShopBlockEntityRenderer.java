@@ -113,7 +113,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                     result.getCount(), config.getOfferCountText(), dir);
         }
 
-        // --- Payment-Items auf der Frontseite ---
+        // --- Payment items on the front side ---
         ItemStack payment1 = blockEntity.getOfferPayment1();
         ItemStack payment2 = blockEntity.getOfferPayment2();
 

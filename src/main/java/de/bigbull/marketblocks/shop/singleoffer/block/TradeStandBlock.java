@@ -65,7 +65,7 @@ public class TradeStandBlock extends BaseShopBlock {
     }
 
     // --- HIER IST DER FIX ---
-    // Wir fragen ab, ob die Vitrine aktiv ist. Wenn ja, geben wir die volle 16er Höhe zurück!
+    // We query whether the showcase is active. If so, we return the full 16 height!
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return state.getValue(HAS_SHOWCASE) ? SHAPE_WITH_SHOWCASE : SHAPE_NO_SHOWCASE;
@@ -165,15 +165,15 @@ public class TradeStandBlock extends BaseShopBlock {
 
     private static @NotNull ItemEntity getItemEntity(Level level, BlockPos pos) {
         double spawnX = pos.getX() + 0.5D;
-        // Y auf exakt 11 Pixel Höhe (11/16) + 0.1 Puffer, damit es schön aufploppt
+        // Y at exactly 11 pixels height (11/16) + 0.1 buffer so it pops out nicely
         double spawnY = pos.getY() + (11.0D / 16.0D) + 0.1D;
         double spawnZ = pos.getZ() + 0.5D;
 
-        // Das Item manuell in die Welt setzen
+        // Manually spawn the item in the world
         ItemEntity glassItem = new ItemEntity(
                 level, spawnX, spawnY, spawnZ, new ItemStack(Items.GLASS)
         );
-        glassItem.setDefaultPickUpDelay(); // Wichtig: Damit der Spieler es nicht in der exakt selben Millisekunde einsaugt
+        glassItem.setDefaultPickUpDelay(); // Important: So the player does not pick it up in the exact same millisecond
         return glassItem;
     }
 
@@ -229,7 +229,7 @@ public class TradeStandBlock extends BaseShopBlock {
                     player.getMainHandItem().getEnchantments().getLevel(silkTouch.get()) > 0;
 
             if (!hasSilkTouch && !player.isCreative()) {
-                // Nur wenn KEINE Behutsamkeit und NICHT im Creative Mode -> Glas Sound abspielen
+                // Only if NOT silk touch and NOT in Creative mode -> play glass sound
                 level.playSound(null, pos, net.minecraft.sounds.SoundEvents.GLASS_BREAK,
                         net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
             }

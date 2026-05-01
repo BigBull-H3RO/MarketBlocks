@@ -110,7 +110,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.output", "Ausgang");
         add("gui.marketblocks.disabled", "Deaktiviert");
 
-        // Fehler- und Erfolgsmeldungen
+        // Error and success messages
         add("gui.marketblocks.error.no_result_item", "Bitte platziere ein Item im Ergebnis-Slot");
         add("gui.marketblocks.error.no_payment_items", "Bitte platziere mindestens ein Zahlungsitem");
         add("gui.marketblocks.error.invalid_offer", "Ungültige Angebotskonfiguration");

@@ -56,13 +56,13 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     }
 
     /**
-     * Gibt die Konfiguration für dieses Shop-Design zurück.
-     * Muss von Subklassen implementiert werden.
+     * Returns the configuration for this shop design.
+     * Must be implemented by subclasses.
      */
     public abstract ShopBlockConfig getShopConfig();
 
     /**
-     * Render-Konfiguration für Offer/Payment-Item und Mengen-Text.
+     * Render configuration for offer/payment item and quantity text.
      */
     public ShopRenderConfig getRenderConfig(BlockState state) {
         return ShopRenderConfig.TRADE_STAND_DEFAULT;
@@ -95,7 +95,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 .setValue(POWERED, false);
     }
 
-    // --- Redstone & Komparator Logik ---
+    // --- Redstone & Comparator Logic ---
 
     @Override
     public boolean isSignalSource(BlockState state) {
@@ -136,7 +136,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 }
             }
 
-            // Fallback: Gebe Signal für die Rückseite, wenn kein dedizierter Komparator erkannt wird
+            // Fallback: Return signal for the back side if no dedicated comparator is detected
             if (!foundComparator) {
                 Direction back = state.getValue(FACING).getOpposite();
                 return shop.getAnalogSignal(back);
@@ -164,7 +164,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 state.getValue(ComparatorBlock.FACING) == sourceToComparator.getOpposite();
     }
 
-    // --- Block Updates & Interaktion ---
+    // --- Block Updates & Interaction ---
 
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
@@ -178,7 +178,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (state.getValue(POWERED)) {
             level.setBlock(pos, state.setValue(POWERED, false), 3);
-            level.updateNeighborsAt(pos, this); // Stellt sicher, dass das Abschalten erkannt wird
+            level.updateNeighborsAt(pos, this); // Ensures that turning off is detected
         }
     }
 
@@ -206,7 +206,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             return InteractionResult.FAIL;
         }
 
-        // Owner-Recovery nur mit administrativen Rechten erlauben
+        // Allow owner recovery only with administrative permissions
         if (shopEntity.getOwnerId() == null) {
             if (canRepairMissingOwner(level, player)) {
                 shopEntity.setOwner(player);
@@ -261,7 +261,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 if (player instanceof ServerPlayer sp) {
                     sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
                 }
-                level.sendBlockUpdated(pos, state, state, 3); // Resync für den Client
+                level.sendBlockUpdated(pos, state, state, 3); // Resync for the client
                 return false;
             }
         }

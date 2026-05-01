@@ -533,7 +533,7 @@ public final class MarketplaceManager {
         }
         DataResult<CompoundTag> encoded = MarketplaceSerialization.encodeData(snapshot, registryAccess);
         if (encoded.error().isPresent()) {
-            LOGGER.error("Fehler beim Serialisieren: {}", encoded.error().get().message());
+            LOGGER.error("Error serializing: {}", encoded.error().get().message());
             return null;
         }
         return encoded.result().orElseGet(CompoundTag::new);
@@ -768,7 +768,7 @@ public final class MarketplaceManager {
                 RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, ra);
                 DataResult<JsonElement> result = MarketplaceData.CODEC.encodeStart(ops, dataSnapshot);
                 if (result.error().isPresent()) {
-                    LOGGER.error("Fehler beim Serialisieren der Marktplatz-Daten: {}", result.error().get().message());
+                    LOGGER.error("Error serializing marketplace data: {}", result.error().get().message());
                 } else {
                     JsonElement json = result.result().orElseGet(JsonObject::new);
                     GSON.toJson(json, writer);
@@ -812,11 +812,11 @@ public final class MarketplaceManager {
             if (result.result().isPresent()) {
                 return result.result();
             }
-            LOGGER.error("Fehler beim Laden der Marktplatz-Datei {}: {}", file,
+            LOGGER.error("Error loading marketplace file {}: {}", file,
                     result.error().map(DataResult.Error::message).orElse("unknown parse error"));
             return Optional.empty();
         } catch (IOException ex) {
-            LOGGER.error("Konnte Marktplatz-Datei {} nicht lesen", file, ex);
+            LOGGER.error("Could not read marketplace file {}", file, ex);
             return Optional.empty();
         }
     }
@@ -846,7 +846,7 @@ public final class MarketplaceManager {
 
     private void ensureInitialized() {
         if (!initialized) {
-            throw new IllegalStateException("Marktplatz wurde noch nicht initialisiert");
+            throw new IllegalStateException("Marketplace has not been initialized yet");
         }
     }
 

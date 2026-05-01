@@ -34,7 +34,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                 .withPool(LootPool.lootPool()
                         .setRolls(ConstantValue.exactly(1.0F))
                         .add(
-                                // applyExplosionCondition fügt automatisch die "survives_explosion" Condition hinzu
+                                // applyExplosionCondition automatically adds the "survives_explosion" condition
                                 this.applyExplosionCondition(block,
                                         // WENN: Behutsamkeit + Vitrine aktiv
                                         LootItem.lootTableItem(block)

@@ -262,7 +262,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     }
 
     /**
-     * Füllt die Zahlungsslots mit den benötigten Items aus dem Spielerinventar.
+     * Fills the payment slots with the required items from the player's inventory.
      */
     public void fillPaymentSlots(ItemStack... required) {
         clearPaymentSlots();
@@ -604,9 +604,9 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            // Angebot existiert -> nie überschreiben
+            // Offer exists -> never overwrite
             if (blockEntity.hasOffer()) return false;
-            // Template-Modus: nur Owner dürfen vorlegen
+            // Template mode: only owners can place items
             return isOwner();
         }
 
@@ -621,7 +621,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
             // Server-side: Full validation with messages
             if (!blockEntity.hasOffer()) {
-                // Template-Modus: Owner dürfen falsch gelegte Items wieder rausnehmen
+                // Template mode: owners can take out incorrectly placed items
                 return isOwner();
             }
 
@@ -636,17 +636,17 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 return false;
             }
 
-            // Angebots-Modus: Kauf erlaubt, wenn verfügbar (Owner darf auch kaufen)
+            // Offer mode: purchase allowed if available (owner can also purchase)
             return blockEntity.isOfferAvailable();
         }
 
         @Override
         public ItemStack remove(int amount) {
             if (!blockEntity.hasOffer()) {
-                // Template-Modus: normal entfernen (Owner-Check übernimmt mayPickup)
+                // Template mode: normal removal (owner check handled by mayPickup)
                 return super.remove(amount);
             }
-            // Angebots-Modus: nur wenn verfügbar
+            // Offer mode: only if available
             if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) {
                 return super.remove(amount);
             }
@@ -655,9 +655,9 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         @Override
         public void set(ItemStack stack) {
-            // Bestehendes Angebot nie per Set überschreiben
+            // Never overwrite existing offer via set
             if (blockEntity.hasOffer()) return;
-            // Template-Modus: nur Owner dürfen setzen
+            // Template mode: only owners can set
             if (!isOwner()) return;
             super.set(stack);
         }
