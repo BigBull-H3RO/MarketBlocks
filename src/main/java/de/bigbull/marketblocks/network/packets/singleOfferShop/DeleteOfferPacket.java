@@ -40,12 +40,12 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
             Level level = player.level();
 
             if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity shopEntity) {
-                // Prüfe ob Spieler der Owner ist
+                // Check if the player is the owner
                 if (shopEntity.isOwner(player)) {
-                    // Lösche das Angebot komplett
+                    // Completely remove the offer
                     shopEntity.clearOffer();
 
-                    // Leere auch die aktuellen Payment und Offer Slots
+                    // Empty current payment and offer slots too
                     for (int i = 0; i < 2; i++) {
                         ItemStack stack = shopEntity.getPaymentHandler().extractItem(i, Integer.MAX_VALUE, false);
                         if (!stack.isEmpty()) {
@@ -68,7 +68,7 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
 
                     shopEntity.updateOfferSlot();
 
-                    // Sende Status-Update an alle Spieler mit geöffnetem Menü
+                    // Send status update to all players with open menus
                     if (level instanceof ServerLevel serverLevel) {
                         for (ServerPlayer p : serverLevel.players()) {
                             if (p.containerMenu instanceof SingleOfferShopMenu menu && menu.getBlockEntity() == shopEntity) {

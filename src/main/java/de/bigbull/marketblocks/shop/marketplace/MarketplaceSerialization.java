@@ -45,9 +45,9 @@ public final class MarketplaceSerialization {
         return decode(tag, DemandPricing.CODEC, access);
     }
 
-    // -------------------------------------------------------------------------
-    // Internal helpers
-    // -------------------------------------------------------------------------
+
+
+
 
     private static <T> DataResult<CompoundTag> encode(T value, String nullMessage, Codec<T> codec, RegistryAccess access) {
         if (value == null) {

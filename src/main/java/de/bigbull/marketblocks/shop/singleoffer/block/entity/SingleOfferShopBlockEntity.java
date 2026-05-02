@@ -910,7 +910,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         if (purchaseXpFeedbackSound && level != null) {
             long now = level.getGameTime();
             if (now - lastPurchaseXpSoundTick > 4L) {
-                // Pitch steigt mit Kaufmenge – klingt befriedigend bei Bulk-Käufen
+                // Pitch increases with purchase amount - sounds satisfying for bulk purchases
                 float pitch = Math.min(0.7F + actualAmount * 0.06F, 1.6F);
                 level.playSound(null, worldPosition, SoundEvents.EXPERIENCE_ORB_PICKUP,
                         SoundSource.BLOCKS, 0.4F, pitch);

@@ -717,7 +717,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(buyerId, name);
-        // SkinManager löst Caching und Asynchrone Downloads nativ über Minecraft.
+        // SkinManager handles caching and asynchronous downloads natively via Minecraft.
         return client.getSkinManager().getInsecureSkin(profile).texture();
     }
 
@@ -760,7 +760,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int itemY = previewY + 1;
         int previewX = getLogPreviewX(listX);
 
-        // Prüfen, ob die Maus im Item-Rendering Bereich der aufgeklappten Zeile ist
+        // Check if mouse is in the item rendering area of the expanded row
         if (mouseY >= itemY && mouseY < itemY + 16 && currentY > listY - ROW_HEIGHT_EXPANDED && currentY < listY + LOG_LIST_HEIGHT) {
             TransactionLogEntry entry = entries.get(expandedLogIndex);
 
@@ -872,7 +872,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 return true;
             }
 
-            // Aufklapp-Funktion per Klick auf die Reihe
+            // Expand row function via click
             int listX = leftPos + LOG_LIST_X_OFFSET;
             if (mouseX >= listX && mouseX < listX + LOG_LIST_WIDTH) {
                 int currentY = listY - logScrollPixelOffset;

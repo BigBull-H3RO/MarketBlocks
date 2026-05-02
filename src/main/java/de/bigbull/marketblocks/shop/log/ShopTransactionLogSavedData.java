@@ -125,7 +125,7 @@ public final class ShopTransactionLogSavedData extends SavedData {
         // --- Smart Stacking Logik ---
         TransactionLogEntry last = deque.peekFirst();
         if (last != null && last.canMergeWith(entry)) {
-            // Nimm den alten Eintrag raus und füge den kombinierten hinzu
+            // Remove the old entry and insert the combined one
             deque.pollFirst();
             deque.addFirst(last.mergeWith(entry));
         } else {

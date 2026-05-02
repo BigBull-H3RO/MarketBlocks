@@ -13,7 +13,7 @@ public final class MarketplaceClientState {
     private static Map<UUID, MarketplaceOfferViewState> offerViewStates = Collections.emptyMap();
     private static long lastSyncTimeMillis;
 
-    // Speichert den letzten Modus (true = Edit, false = Normal)
+    // Stores the last mode (true = Edit, false = Normal)
     private static boolean lastEditMode = false;
 
     private MarketplaceClientState() {
