@@ -70,8 +70,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private static final int PREVIEW_Y_OFFSET = 43;
 
     // Controls (Buttons unter den Slots)
-    private static final int CONTROLS_X_START = 160; // Beginnt linksbÃ¼ndig mit Slot 1
-    private static final int CONTROLS_Y_START = 102; // Unterhalb der Slots (Slots sind bei Y=78, HÃ¶he 18)
+    private static final int CONTROLS_X_START = 160; // Starts left-aligned with Slot 1
+    private static final int CONTROLS_Y_START = 102; // Below the slots (Slots are at Y=78, height 18)
 
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
