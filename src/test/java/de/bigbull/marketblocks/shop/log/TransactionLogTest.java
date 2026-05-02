@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.shop.log;
+package de.bigbull.marketblocks.feature.log;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;

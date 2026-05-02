@@ -1,10 +1,10 @@
 package de.bigbull.marketblocks;
 
 import com.mojang.logging.LogUtils;
-import de.bigbull.marketblocks.config.Config;
+import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.data.DataGenerators;
-import de.bigbull.marketblocks.init.CreativeTabInit;
-import de.bigbull.marketblocks.init.RegistriesInit;
+import de.bigbull.marketblocks.core.init.CreativeTabInit;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;

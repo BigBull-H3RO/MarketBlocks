@@ -1,4 +1,4 @@
-package de.bigbull.marketblocks.shop.visual;
+package de.bigbull.marketblocks.feature.visual.npc;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.CompoundTag;
