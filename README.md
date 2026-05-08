@@ -25,7 +25,7 @@ Der Fokus liegt auf **sicherer Kaufabwicklung**, **klaren Berechtigungen** und *
 - Zusätzliche Co-Owner möglich, inklusive klarer Rollen im UI.
 - Optionaler **Admin-Shop-Modus** (kein Bestand nötig, serverseitig abgesichert).
 
-✅ **Marketplace (ehem. ServerShop / MarketPlace)**
+✅ **Marketplace (ehem. ServerShop)**
 - Blockloses, zentrales Marktsystem mit Seiten und mehreren Angeboten.
 - Öffnen per Keybind (**O**) oder Command.
 - Serverseitige Synchronisation mit Snapshot + Runtime-ViewStates.
@@ -75,7 +75,7 @@ Zusätzlich gibt es weitere Feinabstimmungen für SingleOfferShop, Marketplace u
 Die zentralen Commands sind unter **`/marketblocks`** gebündelt:
 
 | Command | Permission | Beschreibung |
-|---|---|---|
+| --- | --- | --- |
 | **`/marketblocks adminmode [true|false]`** | `admin` | Aktiviert/deaktiviert den globalen Admin-/Edit-Modus. |
 | **`/marketblocks marketplace`** | `admin` | Öffnet den Marketplace. |
 | **`/marketblocks marketplace reload`** | `admin` | Lädt die Marketplace-Konfiguration neu von der Festplatte. |
