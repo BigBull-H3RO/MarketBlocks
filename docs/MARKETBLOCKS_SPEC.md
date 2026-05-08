@@ -2,513 +2,263 @@
 
 ## Überblick
 
-**MarketBlocks** ist ein Minecraft-Mod für **NeoForge** (Minecraft **1.21.1**), dessen Ziel es ist, **Shop-Systeme direkt in Minecraft zu integrieren**. Der Mod verzichtet bewusst auf externe Plugins oder reine Command-Lösungen und setzt stattdessen auf **GUI-basierte, spielernahe Shops**, die sich möglichst natürlich in das Vanilla-Gameplay einfügen.
+**MarketBlocks** ist ein Minecraft-Mod für **NeoForge** (Minecraft **1.21.1**) mit integrierten, serverautoritativen Handelssystemen.
 
-Der Fokus liegt auf **stabilen, sicheren und klar definierten Handelsmechaniken**, bei denen der Server immer autoritativ ist (kein Itemverlust, keine Duplikation, keine Client-Manipulation).
-
----
-
-## Ziel des Mods
-
-Das Hauptziel von MarketBlocks ist es:
-
-- Handel zwischen Spielern zu ermöglichen
-- strukturierte Shop-Systeme bereitzustellen
-- klassische Chest-Shops oder Plugin-Lösungen zu ersetzen
-- sichere Kaufprozesse zu garantieren
-    - kein Itemverlust
-    - keine Item-Duplikation
-    - saubere Client-Server-Synchronisation
+Ziele:
+- Handel direkt im Spiel ohne externe Plugin-Logik
+- klare, sichere Kaufabläufe
+- keine Item-Duplikation / kein stiller Itemverlust
+- konsistente Client-Server-Synchronisation
 
 ---
 
-## Aktuelle Shop-Typen
+## Begriffe (aktualisiert)
 
-MarketBlocks besteht aktuell aus zwei zentralen Shop-Konzepten.
+Die bisherigen Namen wurden umgestellt:
 
-### SmallShop (Block-basiert)
+- **SmallShop** heißt jetzt **SingleOfferShop**
+- **ServerShop** heißt jetzt **Marketplace** (bzw. MarketPlace)
 
-Der **SmallShop** ist ein platzierbarer Block, der einen **einzelnen Handel** zwischen Spielern ermöglicht.
-
-#### Owner-Konzept
-
-- Wird ein SmallShop von einem Spieler platziert, wird dieser Spieler automatisch zum **Owner** des Shops.
-- Der Owner sieht in der SmallShop-GUI **zusätzliche Inhalte und Buttons**, die für normale Spieler nicht sichtbar sind.
+Dieses Dokument startet mit dem vollständig überarbeiteten **SingleOfferShop**-Teil.
 
 ---
 
-#### Angebots-Erstellung
+## Shop-Typen (aktueller Stand)
 
-- Existiert **noch kein Angebot**, kann der Owner:
-    - Items in die **zwei Bezahl-Slots** und den **Kauf-Slot** legen
-- **Sobald der Owner Items in diese Slots legt**, werden diese **live in der Angebots-Vorschau angezeigt**:
-    - diese Live-Vorschau zeigt **nur die Items und Mengen**
-    - **ohne Button-Funktion**
-    - sie dient ausschließlich zur visuellen Kontrolle des Angebots
-
-- Klickt der Owner anschließend neben der Angebots-Vorschau auf den **„Create Offer“-Button**:
-    - wird aus der Live-Vorschau ein **echtes Angebot mit Button-Funktion**
-    - das Angebot ist nun für andere Spieler vollständig nutzbar
-
-- Nach dem Erstellen:
-    - wird das Angebot in der **Angebots-Vorschau** angezeigt
-    - der Button **„Create Offer“** wird durch **„Delete Offer“** ersetzt
-
-- Wird das Angebot gelöscht:
-    - verschwindet das Angebot vollständig
-    - es kann erneut ein neues Angebot erstellt werden
-    - die Live-Vorschau steht wieder zur Verfügung
+- **SingleOfferShop** (blockbasiert, ein Angebot pro Shop)
+- **Marketplace** (GUI-basiert, zentraler Server-Shop)
 
 ---
 
-#### GUI-Seiten (nur für den Owner sichtbar)
+## SingleOfferShop (blockbasiert)
 
-Rechts neben der GUI stehen dem Owner **drei Seiten-Buttons** zur Verfügung:
+Der SingleOfferShop ist ein platzierbarer Shop-Block mit genau einem aktiven Angebot gleichzeitig.
 
-##### 1. Angebotsseite (Standardseite)
+### Block-Varianten
 
-- Wird immer zuerst angezeigt
-- Hier können:
-    - Angebote erstellt oder gelöscht werden
-    - Spieler das Angebot einsehen und Käufe durchführen
-    - Spieler ihre Items in die **Bezahl-Slots** legen
+Aktuell registrierte Varianten für SingleOfferShop:
+- **Trade Stand** (`trade_stand`)
+  - optional mit zuschaltbarer Vitrine (`has_showcase`) inkl. Top-Block
+- **Market Crate** (`marketcrate`)
+- (zusätzlich intern/testnah: `shop_block_test`)
 
-##### 2. Inventarseite
+Alle Varianten nutzen dieselbe SingleOfferShop-BlockEntity-Logik, aber unterschiedliche Shape-/Render-Konfigurationen.
 
-- Besteht aus zwei separaten Inventarbereichen:
-    - **Input-Inventar (links)** – enthält die verfügbaren Kauf-Items
-    - **Output-Inventar (rechts)** – sammelt die Bezahl-Items der Käufer
-- Beide Inventare haben eine feste Größe von **4×3 Slots (Breite × Höhe)**
+---
+
+### Ownership- und Zugriffsmodell
+
+- Beim Platzieren wird der Spieler zum **Primary Owner**.
+- Zusätzliche Owner können gespeichert werden.
+- Nur Owner dürfen:
+  - Angebot erstellen/löschen
+  - Shop-Einstellungen ändern
+  - Input/Output-Inventare verwalten
+  - Shop abbauen
+- **Primary Owner** hat exklusive Rechte für Owner-Liste-Verwaltung und Log-Clear.
+- Falls Owner-Daten fehlen, ist Recovery nur mit Admin-Rechten (OP / Singleplayer-Owner) erlaubt.
+
+Öffnen ohne Angebot:
+- Nicht-Owner können den Shop ohne aktives Angebot nicht öffnen und erhalten eine Meldung.
+
+---
+
+### Tabs und UI-Struktur
+
+Der SingleOfferShop nutzt ein einheitliches Menü mit Tabs:
+
+1. **Offers**
+2. **Inventory**
+3. **Settings**
+4. **Log**
+
+Tab-Berechtigungen:
+- **Offers**: alle mit Zugriff
+- **Inventory**: nur Owner, und nur wenn Admin-Shop-Modus aus ist
+- **Settings**: Owner; zusätzlich OP bei global aktivem Admin-Modus
+- **Log**: nur Owner
+
+Tab-Wechsel werden serverseitig validiert und synchronisiert.
+
+---
+
+### Angebots-Lifecycle
+
+#### Erstellung
+- Owner legt Items in:
+  - 2 Payment-Slots
+  - 1 Result-/Offer-Slot
+- Client zeigt Vorschau; finale Validierung läuft serverseitig im `OfferManager`.
 - Regeln:
-    - Der Owner muss Kauf-Items in das **Input-Inventar** legen
-    - Bei einem erfolgreichen Kauf:
-        - werden die Bezahl-Items automatisch in das **Output-Inventar** gelegt
-    - Der Owner kann:
-        - Items **nur aus dem Output-Inventar entnehmen**
-        - **keine Items manuell in das Output-Inventar legen**
+  - Result darf nicht leer sein
+  - mindestens ein Payment-Item erforderlich
+  - Slots müssen serverseitig exakt/ordnungstolerant konsistent sein
 
-##### 3. Settings-Seite
+#### Normalisierung
+- Wenn nur Payment-Slot 2 befüllt ist, wird auf Payment 1 normalisiert.
 
-Auf der Settings-Seite kann der Owner folgende Optionen konfigurieren:
-
-- Setzen des **Shop-Namens**
-- **Redstone-Signal** aktivieren oder deaktivieren
-    - bei jedem Kauf wird (falls aktiviert) ein Redstone-Signal ausgelöst
-- **Weitere Spieler als Owner hinzufügen**
-- Vier kleine Konfigurations-Buttons:
-    - Jeder Button hat drei Zustände:
-        - *Nichts*
-        - *Input*
-        - *Output*
-    - Diese Buttons definieren, ob und wie **erweiterbare Truhen** als Input- oder Output-Erweiterung genutzt werden
+#### Löschen
+- Owner kann Angebot löschen.
+- Angebotsstatus wird an betroffene Clients synchronisiert.
 
 ---
 
-#### Zentrale Regeln für Slots
+### Kauflogik (Single- und Shift-Kauf)
 
-- Existiert ein Angebot:
-    - **Spieler und Owner können keine Items in den Kauf-Slot legen**
-- Auf der Inventarseite gilt:
-    - Der Owner darf **keine Items in das Output-Inventar legen**, sondern nur entnehmen
+#### Grundlogik
+Ein Kauf ist nur möglich, wenn gleichzeitig erfüllt:
+- aktives Angebot vorhanden
+- ausreichende Payment-Items in den Payment-Slots
+- Ergebnis-Item verfügbar (außer Admin-Shop-Modus)
+- genügend Output-Platz für Payment-Ablage (außer Admin-Shop-Modus)
 
----
+#### Payment-Regeln
+- ein oder zwei Payment-Items möglich
+- bei identischen Payment-Itemtypen wird die Gesamtmenge korrekt zusammengefasst
 
-#### Angebots-Vorschau und automatische Bezahl-Logik
+#### Offer-Slot-Sicherheit
+- bei aktivem Angebot ist Entnahme **all-or-nothing** (keine Teilentnahme)
 
-Die **Angebots-Vorschau** existiert in zwei Zuständen:
+#### Shift-Kauf / Bulk-Kauf
+- serverseitig atomisch berechnet anhand von:
+  1) Bezahlbarkeit
+  2) Bestand (Input)
+  3) Output-Kapazität
+  4) Spielerinventar-Kapazität
+- Ergebnis: tatsächliche Kaufanzahl wird exakt ausgeführt und geloggt
 
-1. **Live-Vorschau (beim Erstellen eines Angebots)**
-    - zeigt Bezahl- und Kauf-Items mit korrekter Menge
-    - besitzt **keine Interaktion**
-    - dient ausschließlich zur Kontrolle durch den Owner
-
-2. **Aktives Angebot (nach Erstellung)**
-    - ist ein **Button**
-    - erlaubt Interaktion durch Spieler
-
----
-
-**Automatisches Einziehen der Bezahl-Items (SmallShop & ServerShop identisch):**
-
-- Existiert ein aktives Angebot, kann ein Spieler auf die Angebots-Vorschau klicken
-- Beim Klick werden:
-    - die passenden Bezahl-Items automatisch aus dem Spielerinventar entnommen
-    - und in die beiden Bezahl-Slots gelegt
-- Dabei gilt:
-    - es wird **immer die maximal mögliche Anzahl** aus dem Spielerinventar verwendet
-    - nicht nur die exakt für einen Kauf benötigte Menge
-
-Die **Angebots-Vorschau** stellt das aktuell existierende Angebot visuell dar und ist ein zentrales Interaktionselement des SmallShops.
-
-- Die Angebots-Vorschau ist ein **Button**, auf dem:
-    - die beiden **Bezahl-Items**
-    - sowie das **Kauf-Item**
-    - jeweils mit der **korrekten Item-Anzahl** angezeigt werden
-- Dadurch ist für jeden Spieler jederzeit klar ersichtlich:
-    - welche Items bezahlt werden müssen
-    - und welches Item man dafür erhält
-
-**Automatisches Einziehen der Bezahl-Items:**
-
-- Existiert ein Angebot, kann ein Spieler auf die Angebots-Vorschau klicken
-- Beim Klick werden:
-    - die passenden Bezahl-Items automatisch aus dem Spielerinventar entnommen
-    - und in die beiden Bezahl-Slots gelegt
-- Dabei gilt:
-    - es wird **immer die maximal mögliche Anzahl** aus dem Spielerinventar verwendet
-    - nicht nur die exakt für einen Kauf benötigte Menge
+#### Auto-Fill
+- Klick auf Offer-Preview kann Payment-Slots automatisch aus Spielerinventar befüllen.
 
 ---
 
-#### Kauf-Interaktion und Anzeige der Kaufmenge
+### Inventare und Slot-Regeln
 
-**Anzeige der Kaufmenge (SmallShop & ServerShop):**
+Interne Shop-Inventare:
+- **Input**: 12 Slots (4×3)
+- **Output**: 12 Slots (4×3)
+- **Payment**: 2 Slots
+- **Offer**: 1 Slot
 
-- Im Kauf-Slot wird **immer exakt die im Angebot definierte Kaufmenge angezeigt**
-    - **nicht** die maximal kaufbare Menge
-    - **nicht** die Anzahl möglicher Käufe
-- Möchte ein Spieler mehrere Kauf-Items erwerben:
-    - klickt er **mehrfach manuell** auf das Kauf-Item
-    - jedes Herausnehmen entspricht **einem einzelnen Kauf**
-- Die Menge des Kauf-Items auf der Maus erhöht sich entsprechend
+Regeln:
+- Output-Slots sind nicht manuell befüllbar (nur Entnahme durch Owner)
+- Offer-Slot ist bei aktivem Angebot nicht manuell überschreibbar
+- Settings/Log blenden Spielerinventar-Slots im Menü aus
 
----
-
-#### Kauf-Interaktion und Shift-Klick-Logik
-
-Spieler haben zwei Möglichkeiten, Kauf-Items aus dem Kauf-Slot zu entnehmen:
-
-1. **Manueller Kauf**
-    - Der Spieler nimmt das Kauf-Item normal mit der Maus aus dem Kauf-Slot
-
-2. **Schnellkauf per Shift-Mausklick**
-    - Der Spieler kann per **Shift-Klick** mehrere Kauf-Items automatisch erhalten
-
-Für den Shift-Klick-Kauf gelten folgende zwingende Regeln:
-
-1. Es muss berechnet werden:
-    - wie viele Bezahl-Items in den Bezahl-Slots liegen
-    - wie viele Kauf-Items damit maximal gekauft werden könnten
-2. Zusätzlich muss geprüft werden:
-    - wie viele Kauf-Items im **Input-Inventar** verfügbar sind
-    - ob im **Output-Inventar** noch genügend Platz vorhanden ist
-3. Es dürfen **nur so viele Kauf-Items gekauft werden**, wie:
-    - in das Spielerinventar passen
-4. Ist das Spielerinventar **voll**:
-    - ist der Shift-Klick-Kauf **nicht erlaubt**
-    - der Spieler kann nur noch **manuell einzelne Käufe** durchführen
+Beim Abbau werden Shop-Inhalte gedroppt (Offer-Slot nur im Template-Fall separat).
 
 ---
 
-#### Kauf- und Angebotsregeln
+### Admin-Shop-Modus
 
-Die folgenden Regeln gelten, **sobald ein Angebot existiert**:
+Zusätzlicher Modus pro Shop (`adminShopEnabled`):
+- aktivierbar nur durch OP
+- zusätzlich muss globaler Admin-Modus in Config aktiv sein (`marketblocksAdminModeEnabled`)
 
-1. Liegen die **richtigen Bezahl-Items** in korrekter Menge oder mehr in den Bezahl-Slots:
-    - wird das **Kauf-Item im Kauf-Slot angezeigt**
-2. Liegen **nicht genügend Bezahl-Items** in den Bezahl-Slots:
-    - wird **kein Kauf-Item** im Kauf-Slot angezeigt
-3. Sind genügend Bezahl-Items vorhanden, aber:
-    - das **Input-Inventar enthält keine Kauf-Items mehr** (nur SmallShop),
-    - wird dies durch ein **eindeutiges Icon und einen erklärenden Text** in der GUI angezeigt
-4. Ist das **Output-Inventar voll** (nur SmallShop):
-    - wird dies ebenfalls durch ein **Icon und einen erklärenden Text** signalisiert
-    - der Spieler kann **kein Kauf-Item mehr kaufen**
-    - das Kauf-Item darf **nicht im Kauf-Slot erscheinen**
+Effekte bei aktivem Admin-Shop:
+- keine Input-Bestandsprüfung
+- keine Output-Platzprüfung
+- Inventory-Tab wird deaktiviert
+- Kauf funktioniert als „unendlicher“ Shop für Result-Items
 
 ---
 
-#### Einheitliches visuelles Feedback (SmallShop & ServerShop)
+### Redstone- und Comparator-Verhalten
 
-Für alle relevanten Kaufzustände soll die GUI **klares, einheitliches Feedback** liefern:
-
-- **Falsche oder zu wenige Bezahl-Items**
-- **Inventar voll** (Spielerinventar)
-- **Kein Kauf möglich** (z. B. Output voll oder keine Kauf-Items)
-
-Das Feedback erfolgt immer durch:
-- ein eindeutiges **Icon** (z. B. Barrier, Redstone, Warnsymbol)
-- einen **klaren, kurzen Text**, der dem Spieler erklärt, warum der Kauf aktuell nicht möglich ist
-
-Ziel:
-- kein stilles Scheitern
-- keine verwirrenden Zustände
-- für Spieler jederzeit nachvollziehbar, **warum** etwas nicht funktioniert
-
-Die folgenden Regeln gelten, **sobald ein Angebot existiert**:
-
-1. Liegen die **richtigen Bezahl-Items** in korrekter Menge oder mehr in den Bezahl-Slots:
-    - wird das **Kauf-Item im Kauf-Slot angezeigt**
-2. Liegen **nicht genügend Bezahl-Items** in den Bezahl-Slots:
-    - wird **kein Kauf-Item** im Kauf-Slot angezeigt
-3. Sind genügend Bezahl-Items vorhanden, aber:
-    - das **Input-Inventar enthält keine Kauf-Items mehr**,
-    - wird dies durch ein **Icon und einen Text** in der GUI angezeigt
-4. Ist das **Output-Inventar voll**:
-    - wird dies ebenfalls durch ein **Icon und einen Text** signalisiert
-    - der Spieler kann **kein Kauf-Item mehr kaufen**
-    - das Kauf-Item darf **nicht im Kauf-Slot erscheinen**
+- Optionaler Redstone-Puls pro erfolgreichem Kauf (`emitRedstone`)
+- Pulsdauer: 20 Ticks (POWERED true -> false)
+- Comparator-Signal basiert seitenspezifisch auf konfiguriertem Input-/Output-Füllstand
 
 ---
 
-#### Block- und Zugriffsregeln
+### Side-Modes & Chest-I/O-Erweiterung (experimentell)
 
-- **Nur der Owner** (oder weitere eingetragene Owner) kann den SmallShop abbauen
-    - Spieler ohne Owner-Rechte können den Block **nicht zerstören**
-- Der SmallShop ist:
-    - **explosionsgeschützt** (z. B. TNT, Creeper)
-    - **nicht durch Pistons verschiebbar**
+Pro relevanter Seite kann konfiguriert werden:
+- `DISABLED`
+- `INPUT`
+- `OUTPUT`
 
-- Existiert **kein Angebot**:
-    - können Spieler, die **nicht Owner** sind, die GUI **nicht per Rechtsklick öffnen**
-    - stattdessen erhalten sie eine **Benachrichtigung**, dass noch kein Angebot existiert
+Ausrichtung in Settings:
+- links, rechts, unten, hinten (relativ zur Shop-Facing-Richtung)
 
-- Baut der Owner den SmallShop ab:
-    - werden **alle Items**, die sich
-        - in den drei Angebots-Slots
-        - im Input-Inventar
-        - im Output-Inventar
-          befinden,
-    - vollständig in der Welt **gedroppt**
+Experimentelle Chest-I/O (`enableChestIoExtensionExperimental`):
+- Pull aus INPUT-Nachbarinventaren in Shop-Input
+- Push aus Shop-Output in OUTPUT-Nachbarinventare
+- periodisch über Config-Intervalle (`offerUpdateInterval`, `chestIoInterval`)
 
-- Der Owner darf den SmallShop **wie ein normaler Spieler benutzen**:
-    - der Owner kann selbst Käufe tätigen
-    - dies dient u. a. zum **Testen des Angebots und der Einstellungen**
+Chest-Security:
+- angrenzende I/O-Truhen sind für Nicht-Owner blockiert
+- Double-Chest-Verhalten ist konfigurierbar (`enableDoubleChestSupport`)
 
 ---
 
-### ServerShop (GUI-basiert)
+### Status-Feedback in Offers-Ansicht
 
-Der **ServerShop** ist ein rein GUI-basierter Shop ohne Block. Er dient als zentraler, serverweiter Shop mit mehreren Angebotsseiten und Angeboten.
+UI zeigt Kaufblocker klar an:
+- **Out of Stock** (kein passender Bestand)
+- **Output Full / Almost Full**
 
-- Öffnung über eine **Taste**
-- Unterstützt mehrere Angebote gleichzeitig
-- Funktional grob vergleichbar mit einem **Villager-Trade**, jedoch erweitert um Seiten, Listen und Verwaltungsfunktionen
-
----
-
-#### View-Mode und Edit-Mode
-
-Der ServerShop besitzt zwei klar getrennte Modi:
-
-##### View-Mode (Standard)
-
-- Der **View-Mode** ist die Standardsicht für **alle Spieler**
-- In diesem Modus sichtbar:
-    - Angebotsliste
-    - Angebots-Vorschau
-    - zwei Bezahl-Slots und ein Kauf-Slot
-    - Seiten-Buttons auf der linken Seite
-
-**Seiten-Buttons (links):**
-- Dienen zum Wechseln zwischen Angebotsseiten
-- Beispiel:
-    - Seite 1: Werkzeuge
-    - Seite 2: Nahrung
-    - Seite 3: Rohstoffe
-
-Spieler können im View-Mode:
-- Angebote auswählen
-- Bezahl-Items einlegen
-- Kauf-Items erwerben
+`Output almost full` wird über konfigurierbaren Schwellwert gesteuert (`enableOutputWarning`, `outputWarningPercent`).
 
 ---
 
-##### Edit-Mode (nur für Server-Owner)
+### Visual-System (Shop-NPC + Effekte)
 
-- Der **Edit-Mode** kann **nur vom Server-Owner** aktiviert werden
-- Umschaltung erfolgt über einen **Button oben rechts** in der GUI
-- Nur der Server-Owner kann:
-    - den Button sehen
-    - den Modus wechseln
+SingleOfferShop unterstützt visuelle Shop-Darstellung:
+- optionaler Visual-NPC
+- Name + Profession
+- Kauf-Partikel
+- Kauf-Sounds
+- Payment-Slot-Sounds (Match/Fail-Feedback)
+- XP-Sound-Feedback bei Kauf (auch für Bulk-Käufe, mit Pitch-Skalierung)
 
-Im Edit-Mode stehen zusätzliche Verwaltungsfunktionen zur Verfügung.
+Spawn wird vor Aktivierung validiert (Platzprüfung); bei Blockade wird NPC-Aktivierung zurückgenommen.
 
----
-
-#### Angebotsseiten-Verwaltung (Edit-Mode)
-
-- Oben links über der GUI befindet sich der Button **„Add Page“**
-- Beim Klick:
-    - wird ein Name für die neue Angebotsseite eingegeben
-- Nach Erstellung einer Seite erscheinen zusätzlich:
-    - **„Rename Page“**
-    - **„Delete Page“**
-
-Diese Buttons gelten immer für die aktuell ausgewählte Angebotsseite.
+Außerdem rendert der Shop:
+- Angebots-Item (je nach Variante schwebend/gestapelt)
+- Payment-Items vorne am Block
+- Mengen-Text
+- bei Market Crate zusätzlich Front-Offer + Trade-Arrow
 
 ---
 
-#### Angebots-Erstellung im ServerShop
+### Transaktionslog
 
-- Angebote werden **nur im Edit-Mode** erstellt
-- Die Erstellung erfolgt grundsätzlich **wie beim SmallShop**:
-    - Items werden in die zwei Bezahl-Slots und den Kauf-Slot gelegt
+Jeder SingleOfferShop führt ein eigenes Kauf-Log:
+- Käufer (UUID/Name)
+- bezahlte Items
+- erhaltene Items
+- Kaufart (Single / Shift)
+- Zeitstempel
 
-- **Während der Item-Platzierung**:
-    - werden die Items **live in der Angebots-Vorschau angezeigt**
-    - diese Ansicht dient nur zur Kontrolle
-    - sie besitzt **keine Button-Funktion**
-
-- Klickt der Server-Owner auf **„Add Offer“**:
-    - wird die Live-Vorschau **vollständig entfernt**
-    - das Angebot wird in die **Angebotsliste** der aktuell ausgewählten Angebotsseite eingefügt
-
-- Klickt man ein Angebot in der Angebotsliste an:
-    - wird es in der **Angebots-Vorschau** angezeigt
-    - und folgende zusätzliche Buttons erscheinen:
-        - **„Delete Offer“**
-        - **„Move Up“**
-        - **„Move Down“**
-
-- Mit diesen Buttons kann der Server-Owner:
-    - Angebote löschen
-    - die Reihenfolge der Angebote innerhalb der Liste verändern
+Eigenschaften:
+- persistiert als SavedData
+- pro Shop begrenzte Historie (aktuell max. 100 Einträge)
+- Sync in die UI bei Log-Tab-Wechsel per dediziertem Packet
+- Clear nur für Primary Owner
 
 ---
 
-#### Kauf-Logik im ServerShop
+### Netzwerk- und Synchronisationsprinzipien
 
-Die **Kauf-Logik des ServerShops** orientiert sich grundsätzlich an der des **SmallShops**, mit folgenden **zentralen Unterschieden**:
+SingleOfferShop nutzt dedizierte Packets u. a. für:
+- Offer erstellen/löschen
+- Auto-Fill
+- Tab-Wechsel
+- Settings-Update (inkl. Visuals/I/O/Name/Redstone/XP-Sound)
+- Owner-Update
+- Admin-Shop-Toggle
+- Log-Sync und Log-Clear
 
-- Es existieren **kein Input- und kein Output-Inventar**
-- Kauf-Items sind vorerst **unendlich verfügbar**
-- Bezahl-Items werden beim Kauf **einfach entfernt** (verbraucht)
-
-##### Gemeinsame Grundlagen (wie SmallShop)
-
-- Der Spieler legt Bezahl-Items in die **zwei Bezahl-Slots**
-- Das aktuell ausgewählte Angebot bestimmt:
-    - welche Items erlaubt sind
-    - welche Menge benötigt wird
-- Liegen genügend passende Bezahl-Items in den Bezahl-Slots:
-    - wird das Kauf-Item im Kauf-Slot angezeigt
-- Liegen nicht genügend oder falsche Items vor:
-    - bleibt der Kauf-Slot leer
-
-##### Unterschiede zur SmallShop-Logik
-
-- Beim Kauf im ServerShop wird **nicht geprüft**:
-    - ob Kauf-Items im Input-Inventar vorhanden sind
-    - ob Platz im Output-Inventar existiert
-- Stattdessen gilt:
-    - Bezahl-Items werden beim Kauf **serverseitig entfernt**
-    - Kauf-Items werden direkt dem Spieler gegeben
-
-##### Shift-Kauf im ServerShop
-
-Die **Shift-Klick-Logik** ist identisch zur SmallShop-Logik, mit angepassten Regeln:
-
-- Es wird berechnet:
-    - wie viele Käufe anhand der Bezahl-Items möglich sind
-    - wie viele Kauf-Items ins Spielerinventar passen
-- Da Kauf-Items unendlich sind:
-    - entfällt jede Prüfung auf verfügbare Kauf-Items
-- Es dürfen nur so viele Kauf-Items vergeben werden, wie:
-    - das Spielerinventar aufnehmen kann
-- Ist das Spielerinventar voll:
-    - ist der Shift-Kauf **nicht erlaubt**
-    - nur manuelle Einzelkäufe sind möglich
-
-##### Wichtige Einschränkung im View-Mode
-
-- Im **View-Mode** gilt zwingend:
-    - **Niemand** (weder Spieler noch Server-Owner)
-    - kann Items manuell in den **Kauf-Slot** legen
-
-Der ServerShop befindet sich aktuell:
-- stark in Entwicklung
-- mit mehreren bekannten Problemen
-- noch nicht in einem finalen Zustand
+Sicherheitsprinzipien:
+- Server validiert Berechtigungen und Zustände
+- Client bekommt nur notwendige, UI-relevante Shopdaten (kein vollständiges Inventar-NBT)
 
 ---
 
-## Zusätzliche Angebots- und Slot-Regeln (alle Shop-Typen)
+## Marketplace
 
-### Dynamische Vorschau-Position der Bezahl-Items
-
-Beim **Erstellen eines Angebots** (Live-Vorschau) gilt eine **dynamische Sortierlogik** für Bezahl-Items:
-
-- Legt der Owner ein Item in den **zweiten Bezahl-Slot**, während der **erste Bezahl-Slot leer** ist,
-    - wird dieses Item in der **Vorschau automatisch auf die erste Bezahl-Position verschoben**
-- Erst wenn sich ein Item im **ersten Bezahl-Slot** befindet,
-    - wird ein Item im zweiten Slot auch **als zweites Bezahl-Item** angezeigt
-
-Diese Logik gilt:
-- in der **Live-Vorschau** während der Angebotserstellung
-- im **finalen Angebot**, nachdem es erstellt wurde
-
-Ziel:
-- visuell konsistente Angebote
-- kein „erstes Bezahl-Item fehlt“-Zustand
-
----
-
-### Angebote mit einem oder zwei Bezahl-Items
-
-- Owner können Angebote mit **nur einem Bezahl-Item** erstellen
-- Angebote können **ein oder zwei Bezahl-Items** besitzen
-
-#### Kauf-Regeln für Spieler
-
-- Bei Angeboten mit **nur einem Bezahl-Item**:
-    - das Item kann **in beliebigen Bezahl-Slot** gelegt werden (Slot 1 oder Slot 2)
-
-- Bei Angeboten mit **zwei Bezahl-Items**:
-    - die Items dürfen **auch vertauscht** in die Bezahl-Slots gelegt werden
-    - die Reihenfolge der Slots ist für den Kauf **irrelevant**
-
-Entscheidend ist ausschließlich:
-- Item-Typ
-- Item-Menge
-
----
-
-## ServerShop – Erweiterungen
-
-### Clear-Button im Edit-Mode
-
-- Befindet sich der ServerShop im **Edit-Mode**
-- und ein **bereits existierendes Angebot** wurde aus der Angebotsliste ausgewählt
-- und wird in der Vorschau angezeigt
-
-Dann gilt:
-
-- Der **"Add Offer"-Button wird ausgeblendet**
-- Stattdessen erscheint ein **"Clear"-Button** an derselben Position
-
-Funktion des Clear-Buttons:
-- hebt die aktuelle Angebots-Auswahl auf
-- leert die Angebots-Vorschau
-- versetzt den Edit-Mode zurück in einen neutralen Zustand
-
----
-
-### Vollständig JSON-basierter ServerShop
-
-Der **gesamte ServerShop** soll vollständig über eine **JSON-Datei** definiert und geladen werden können.
-
-#### Anforderungen:
-
-- Der ServerShop kann:
-    - **vor dem ersten Server-/Weltstart**
-    - oder während der Entwicklung
-      vollständig über eine JSON-Datei erstellt werden
-
-- Die JSON-Datei enthält **alle relevanten Daten**, u. a.:
-    - Angebotsseiten (inkl. Reihenfolge und Namen)
-    - Angebote pro Seite
-    - Bezahl-Items (Item-ID, Menge)
-    - Kauf-Items (Item-ID, Menge)
-
-- Beim Start:
-    - wird der ServerShop aus der JSON-Datei geladen
-    - existiert die Datei nicht, kann sie automatisch generiert werden
-
-Ziel:
-- einfache Konfiguration
-- Versionierung über Git
-- keine GUI-Pflicht für ServerShop-Setup
+Der Marketplace-Teil wurde bereits technisch auf den neuen Namen umgestellt, wird aber in diesem Dokument als nächster Schritt separat detailliert überarbeitet.
 
 ---
 
@@ -516,20 +266,10 @@ Ziel:
 
 - **Modloader:** NeoForge
 - **Minecraft-Version:** 1.21.1
-- **Schwerpunkte:**
-    - GUI- und ScreenHandler-Logik
-    - Inventar- und Slot-Management
-    - Client-Server-Synchronisation
+- **Schwerpunkte:** GUI, Inventar-/Slotlogik, Client-Server-Sync, sichere Handelslogik
 
 ---
 
-## Hinweis zum Dokument
+## Hinweis
 
-Dieses Dokument ist **kein finaler Text**, sondern eine **lebende Mod-Beschreibung**. Es dient als:
-
-- Kontext für KI-Tools (z. B. Jules, Gemini)
-- Grundlage für Dokumentation / README
-- Referenz für Bugfixes und Refactorings
-
-Der Text ist bewusst modular aufgebaut und kann jederzeit erweitert, angepasst oder umstrukturiert werden.
-
+Dieses Dokument ist eine lebende Spezifikation und wird fortlaufend an den tatsächlichen Codezustand angepasst.
