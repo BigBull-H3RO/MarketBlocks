@@ -46,7 +46,7 @@ Legacy-Schreibweise:
 ### 3.3 Netzwerk
 - Zentrale Registrierung aller Payloads: `NetworkHandler`
 - Strikte Trennung zwischen SingleOfferShop- und Marketplace-Paketgruppen
-- Server synchronisiert Marketplace per vollständigem Snapshot + offer-spezifischen Runtime-Viewstates
+- Server synchronisiert Marketplace per vollständigem Snapshot + offer-spezifischen Runtime-ViewStates
 
 ---
 
@@ -160,7 +160,7 @@ Nachbarhandler werden gecacht (`ShopInventoryManager`) und bei Config aus deakti
 NPC-Aktivierung wird vor Anwendung auf Platzierbarkeit geprüft.
 
 ### 4.1.10 Transaktionslog
-Persistenz: `ShopTransactionLogSavedData` (SavedData, nicht Chunk-NBT)
+Persistenz: `ShopTransactionLogSavedData` (persistiert als SavedData, nicht als Chunk-NBT)
 
 Eintrag: `TransactionLogEntry`
 - Käufer UUID/Name
