@@ -1,279 +1,404 @@
-# MarketBlocks – Modbeschreibung
+# MarketBlocks – Technische Spezifikation
 
-## Überblick
+## 1. Ziel und Scope
 
-**MarketBlocks** ist ein Minecraft-Mod für **NeoForge** (Minecraft **1.21.1**) mit integrierten, serverautoritativen Handelssystemen.
+**MarketBlocks** ist ein NeoForge-Mod (Minecraft **1.21.1**) für serverautoritativen Ingame-Handel.
 
-Ziele:
-- Handel direkt im Spiel ohne externe Plugin-Logik
-- klare, sichere Kaufabläufe
-- keine Item-Duplikation / kein stiller Itemverlust
-- konsistente Client-Server-Synchronisation
+Der Mod enthält zwei unabhängige, aber konzeptionell verwandte Handelssysteme:
 
----
+1. **SingleOfferShop** (blockbasiert, ein aktives Angebot pro Shop)
+2. **Marketplace** (blockloses, seitenbasiertes Angebotssystem)
 
-## Begriffe (aktualisiert)
-
-Die bisherigen Namen wurden umgestellt:
-
-- **SmallShop** heißt jetzt **SingleOfferShop**
-- **ServerShop** heißt jetzt **Marketplace**
-
-Hinweis: Die ältere Schreibweise **MarketPlace** bezeichnet dasselbe System.
-
-Dieses Dokument startet mit dem vollständig überarbeiteten **SingleOfferShop**-Teil.
+Kernziele:
+- valide und deterministische Kaufabwicklung auf dem Server
+- klare Rechte-/Rollenmodelle
+- robuste Persistenz und Wiederherstellbarkeit
+- minimierte Client-Vertrauensannahmen
 
 ---
 
-## Shop-Typen (aktueller Stand)
+## 2. Terminologie und Legacy-Namen
 
-- **SingleOfferShop** (blockbasiert, ein Angebot pro Shop)
-- **Marketplace** (GUI-basiert, zentraler Server-Shop)
+Aktuelle Namen:
+- **SingleOfferShop** (früher: **SmallShop**)
+- **Marketplace** (früher: **ServerShop**)
 
----
-
-## SingleOfferShop (blockbasiert)
-
-Der SingleOfferShop ist ein platzierbarer Shop-Block mit genau einem aktiven Angebot gleichzeitig.
-
-### Block-Varianten
-
-Aktuell registrierte Varianten für SingleOfferShop:
-- **Trade Stand** (`trade_stand`)
-  - optional mit zuschaltbarer Vitrine (`has_showcase`) inkl. Top-Block
-- **Market Crate** (`marketcrate`)
-- (zusätzlich intern/testnah: `shop_block_test`)
-
-Alle Varianten nutzen dieselbe SingleOfferShop-BlockEntity-Logik, aber unterschiedliche Shape-/Render-Konfigurationen.
+Legacy-Schreibweise:
+- **MarketPlace** bezeichnet dasselbe System wie Marketplace.
 
 ---
 
-### Ownership- und Zugriffsmodell
+## 3. Mod-Architektur (High Level)
 
-- Beim Platzieren wird der Spieler zum **Primary Owner**.
-- Zusätzliche Owner können gespeichert werden.
-- Nur Owner dürfen:
-  - Angebot erstellen/löschen
-  - Shop-Einstellungen ändern
-  - Input/Output-Inventare verwalten
-  - Shop abbauen
-- **Primary Owner** hat exklusive Rechte für Owner-Liste-Verwaltung und Log-Clear.
-- Falls Owner-Daten fehlen, ist Recovery nur mit Admin-Rechten (OP / Singleplayer-Owner) erlaubt.
+### 3.1 Einstieg und Registrierung
+- Mod-Einstieg: `MarketBlocks`
+- Registries: `RegistriesInit`
+  - Blöcke: `trade_stand`, `marketcrate`, intern `shop_block_test`, Top-Block `trade_stand_top`
+  - BlockEntity: `single_offer_shop`
+  - Menüs: `single_offer_shop_menu`, `marketplace_menu`
+- Creative Tab: `CreativeTabInit`
 
-Öffnen ohne Angebot:
-- Nicht-Owner können den Shop ohne aktives Angebot nicht öffnen und erhalten eine Meldung.
+### 3.2 Event-Lifecycle
+- Serverstart: `MarketplaceManager.initialize(...)`
+- Servertick: `MarketplaceManager.tick()`
+- Serverstop: `MarketplaceManager.shutdown()`
+
+### 3.3 Netzwerk
+- Zentrale Registrierung aller Payloads: `NetworkHandler`
+- Strikte Trennung zwischen SingleOfferShop- und Marketplace-Paketgruppen
+- Server synchronisiert Marketplace per vollständigem Snapshot + offer-spezifischen Runtime-ViewStates
 
 ---
 
-### Tabs und UI-Struktur
+## 4. Shop-Typen
 
-Der SingleOfferShop nutzt ein einheitliches Menü mit Tabs:
+### 4.1 SingleOfferShop (blockbasiert)
 
-1. **Offers**
-2. **Inventory**
-3. **Settings**
-4. **Log**
+### 4.1.1 Blockvarianten
+- `trade_stand` (optional mit Showcase/Top-Block)
+- `marketcrate`
+- `shop_block_test` (intern/testnah)
 
-Tab-Berechtigungen:
-- **Offers**: alle mit Zugriff
-- **Inventory**: nur Owner, und nur wenn Admin-Shop-Modus aus ist
-- **Settings**: Owner; zusätzlich OP bei global aktivem Admin-Modus
+Alle Varianten laufen über dieselbe BlockEntity-Logik: `SingleOfferShopBlockEntity`.
+
+### 4.1.2 Inventar- und Slotmodell
+Interne Handler:
+- Input: **12 Slots**
+- Output: **12 Slots**
+- Payment: **2 Slots**
+- Offer: **1 Slot**
+
+Wichtige Regeln:
+- Output-Slots: keine manuelle Befüllung
+- Offer-Slot bei aktivem Angebot: all-or-nothing Entnahme
+- bei aktivem Angebot ist Offer-Slot ein servervalidierter Kaufslot
+- ohne aktives Angebot ist Offer-Slot Template-/Bearbeitungsslot (Owner-only)
+
+### 4.1.3 Angebotsmodell
+Ein Angebot besteht aus:
+- `offerPayment1`
+- `offerPayment2`
+- `offerResult`
+- `hasOffer`
+
+Erstellung erfolgt servervalidiert über `OfferManager`:
+- Result darf nicht leer sein
+- mindestens ein Payment-Stack nötig
+- Client-Vorschlag muss mit Server-Slots konsistent sein (inkl. Count/Components)
+- Payment-Slots werden semantisch geprüft (ordnungstolerant)
+
+Normalisierung:
+- wenn Payment1 leer und Payment2 gesetzt, wird intern zu Payment1 verschoben.
+
+### 4.1.4 Kaufpfad
+Kauf ist nur möglich, wenn:
+- Angebot aktiv
+- Payment erfüllt
+- Result verfügbar (außer Admin-Shop)
+- Output-Aufnahme möglich (außer Admin-Shop)
+
+Bulk-/Shift-Kauf:
+- `processBulkPurchase(...)` berechnet transaktionssicher:
+  1) Affordability (Payment)
+  2) Bestand (Input)
+  3) Output-Kapazität (inkl. Simulation)
+  4) Zielinventar-Kapazität (Menü-seitig)
+- effektive Kaufanzahl wird atomar durchgeführt
+- bei Erfolg: Sync, optional Redstone-Puls, Log-Eintrag, visuelle Counter
+
+Sonderfall gleiche Payment-Items:
+- Wenn Payment1 und Payment2 derselbe Itemtyp sind, wird gegen die Summe beider Required Counts geprüft.
+
+### 4.1.5 Ownership und Berechtigungen
+- Primary Owner wird beim ersten legitimen Ownership-Set gesetzt
+- zusätzliche Owner möglich
+- `ShopOwnerManager` verwaltet Owner + zusätzliche Owner
+
+UI-Rechte (`SingleOfferShopMenu`):
+- **Offers**: grundsätzlich zugänglich (mit Shop-Zustandsregeln)
+- **Inventory**: nur Owner und nur wenn Admin-Shop aus
+- **Settings**: Owner oder OP bei global aktiviertem Admin-Modus
 - **Log**: nur Owner
 
-Tab-Wechsel werden serverseitig validiert und synchronisiert.
+Primary-Owner-spezifische Rechte (z. B. Log-Clear/Owner-Verwaltung) werden paketseitig separat geprüft.
 
----
+### 4.1.6 Admin-Shop-Modus
+`adminShopEnabled` (pro Shop):
+- Toggle nur durch OP
+- zusätzlich nur bei globalem `marketblocksAdminModeEnabled = true`
 
-### Angebots-Lifecycle
+Effekt:
+- kein Input-Bestand nötig
+- keine Output-Kapazitätsprüfung
+- Inventory-Tab wird aus Sicherheits-/UX-Gründen unzugänglich
 
-#### Erstellung
-- Owner legt Items in:
-  - 2 Payment-Slots
-  - 1 Result-/Offer-Slot
-- Client zeigt Vorschau; finale Validierung läuft serverseitig im `OfferManager`.
-- Regeln:
-  - Result darf nicht leer sein
-  - mindestens ein Payment-Item erforderlich
-  - Slots müssen serverseitig exakt/ordnungstolerant konsistent sein
+### 4.1.7 Side-Modes und Chest-I/O (experimentell)
+`SideMode`: `DISABLED`, `INPUT`, `OUTPUT`
 
-#### Normalisierung
-- Wenn **Payment-Slot 1 leer** und **Payment-Slot 2 befüllt** ist, wird das Item aus Slot 2 als Payment 1 übernommen.
-- Ist Payment-Slot 1 bereits befüllt, erfolgt keine automatische Umsortierung.
+Aktiv über:
+- `enableChestIoExtensionExperimental`
 
-#### Löschen
-- Owner kann Angebot löschen.
-- Angebotsstatus wird an betroffene Clients synchronisiert.
+Pro Tick-Intervall:
+- Pull aus INPUT-Nachbarn in Shop-Input
+- Push aus Shop-Output in OUTPUT-Nachbarn
 
----
+Nachbarhandler werden gecacht (`ShopInventoryManager`) und bei Config aus deaktiviert.
 
-### Kauflogik (Single- und Shift-Kauf)
+### 4.1.8 Comparator/Redstone
+- Comparator liest seitenabhängig Input/Output-Füllstand
+- optionaler Redstone-Puls je erfolgreichem Kauf (`emitRedstone`), Dauer 20 Ticks
 
-#### Grundlogik
-Ein Kauf ist nur möglich, wenn gleichzeitig erfüllt:
-- aktives Angebot vorhanden
-- ausreichende Payment-Items in den Payment-Slots
-- Ergebnis-Item verfügbar (außer Admin-Shop-Modus)
-- genügend Output-Platz für Payment-Ablage (außer Admin-Shop-Modus)
+### 4.1.9 Visual-System
+`IVisualShopNPC` + `ShopVisualSettings`:
+- NPC an/aus
+- NPC-Name + Beruf
+- Purchase-Partikel
+- Purchase-Sounds
+- Payment-Slot-Sounds (Success/Fail-Counter)
+- XP-Feedback-Sound (inkl. Pitch-Skalierung für Bulk-Käufe)
 
-#### Payment-Regeln
-- ein oder zwei Payment-Items möglich
-- bei identischen Payment-Itemtypen wird die Gesamtmenge korrekt zusammengefasst
+NPC-Aktivierung wird vor Anwendung auf Platzierbarkeit geprüft.
 
-#### Offer-Slot-Sicherheit
-- bei aktivem Angebot ist Entnahme **all-or-nothing** (keine Teilentnahme)
+### 4.1.10 Transaktionslog
+Persistenz: `ShopTransactionLogSavedData` (persistiert als SavedData, nicht als Chunk-NBT)
 
-#### Shift-Kauf / Bulk-Kauf
-- serverseitig atomisch berechnet anhand von:
-  1) Bezahlbarkeit
-  2) Bestand (Input)
-  3) Output-Kapazität
-  4) Spielerinventar-Kapazität
-- Ergebnis: tatsächliche Kaufanzahl wird exakt ausgeführt und geloggt
-
-#### Auto-Fill
-- Klick auf Offer-Preview kann Payment-Slots automatisch aus Spielerinventar befüllen.
-
----
-
-### Inventare und Slot-Regeln
-
-Interne Shop-Inventare:
-- **Input**: 12 Slots (4×3)
-- **Output**: 12 Slots (4×3)
-- **Payment**: 2 Slots
-- **Offer**: 1 Slot
-
-Regeln:
-- Output-Slots sind nicht manuell befüllbar (nur Entnahme durch Owner)
-- Offer-Slot ist bei aktivem Angebot nicht manuell überschreibbar
-- Settings/Log blenden Spielerinventar-Slots im Menü aus
-
-Beim Abbau werden Shop-Inhalte gedroppt.
-Begriff **Template-Fall**: Zustand ohne aktives Angebot (`hasOffer = false`), in dem der Offer-Slot nur als Bearbeitungs-/Vorschau-Slot für die Angebotserstellung dient. In diesem Zustand wird dessen Inhalt beim Abbau separat berücksichtigt.
-
----
-
-### Admin-Shop-Modus
-
-Zusätzlicher Modus pro Shop (`adminShopEnabled`):
-- aktivierbar nur durch OP
-- zusätzlich muss globaler Admin-Modus in Config aktiv sein (`marketblocksAdminModeEnabled`)
-
-Effekte bei aktivem Admin-Shop:
-- keine Input-Bestandsprüfung
-- keine Output-Platzprüfung
-- Inventory-Tab wird deaktiviert
-- Kauf funktioniert als „unendlicher“ Shop für Result-Items
-
----
-
-### Redstone- und Comparator-Verhalten
-
-- Optionaler Redstone-Puls pro erfolgreichem Kauf (`emitRedstone`)
-- Pulsdauer: 20 Ticks (POWERED true -> false)
-- Comparator-Signal basiert seitenspezifisch auf konfiguriertem Input-/Output-Füllstand
-
----
-
-### Side-Modes & Chest-I/O-Erweiterung (experimentell)
-
-Pro relevanter Seite kann konfiguriert werden:
-- `DISABLED`
-- `INPUT`
-- `OUTPUT`
-
-Ausrichtung in Settings:
-- links, rechts, unten, hinten (relativ zur Shop-Facing-Richtung)
-
-Experimentelle Chest-I/O (`enableChestIoExtensionExperimental`):
-- Pull aus INPUT-Nachbarinventaren in Shop-Input
-- Push aus Shop-Output in OUTPUT-Nachbarinventare
-- periodisch über Config-Intervalle (`offerUpdateInterval`, `chestIoInterval`)
-
-Chest-Security:
-- angrenzende I/O-Truhen sind für Nicht-Owner blockiert
-- Double-Chest-Verhalten ist konfigurierbar (`enableDoubleChestSupport`)
-
----
-
-### Status-Feedback in Offers-Ansicht
-
-UI zeigt Kaufblocker klar an:
-- **Out of Stock** (kein passender Bestand)
-- **Output Full / Almost Full**
-
-`Output almost full` wird über konfigurierbaren Schwellwert gesteuert (`enableOutputWarning`, `outputWarningPercent`).
-
----
-
-### Visual-System (Shop-NPC + Effekte)
-
-SingleOfferShop unterstützt visuelle Shop-Darstellung:
-- optionaler Visual-NPC
-- Name + Profession
-- Kauf-Partikel
-- Kauf-Sounds
-- Payment-Slot-Sounds (Match/Fail-Feedback)
-- XP-Sound-Feedback bei Kauf (auch für Bulk-Käufe, mit Pitch-Skalierung)
-
-Spawn wird vor Aktivierung validiert (Platzprüfung); bei Blockade wird NPC-Aktivierung zurückgenommen.
-
-Außerdem rendert der Shop:
-- Angebots-Item (je nach Variante schwebend/gestapelt)
-- Payment-Items vorne am Block
-- Mengen-Text
-- bei Market Crate zusätzlich Front-Offer + Trade-Arrow
-
----
-
-### Transaktionslog
-
-Jeder SingleOfferShop führt ein eigenes Kauf-Log:
-- Käufer (UUID/Name)
-- bezahlte Items
-- erhaltene Items
-- Kaufart (Single / Shift)
+Eintrag: `TransactionLogEntry`
+- Käufer UUID/Name
+- bezahlte Stacks
+- gekaufte Stacks
+- Kaufart: SINGLE/SHIFT
 - Zeitstempel
+- Aggregationszähler
 
-Eigenschaften:
-- persistiert als SavedData
-- pro Shop begrenzte Historie (aktuell max. 100 Einträge)
-- Sync in die UI bei Log-Tab-Wechsel per dediziertem Packet
-- Clear nur für Primary Owner
+Smart-Stacking:
+- zeitnah identische Käufe desselben Käufers werden zusammengeführt.
 
 ---
 
-### Netzwerk- und Synchronisationsprinzipien
+### 4.2 Marketplace (ehem. ServerShop / MarketPlace)
 
-SingleOfferShop nutzt dedizierte Packets u. a. für:
-- Offer erstellen/löschen
-- Auto-Fill
-- Tab-Wechsel
-- Settings-Update (inkl. Visuals/I/O/Name/Redstone/XP-Sound)
-- Owner-Update
-- Admin-Shop-Toggle
-- Log-Sync und Log-Clear
+Der Marketplace ist ein **blockloses**, zentral verwaltetes Handelssystem mit persistentem JSON-Backstore.
 
-Sicherheitsprinzipien:
-- Server validiert Berechtigungen und Zustände
-- Client bekommt nur notwendige, UI-relevante Shopdaten (kein vollständiges Inventar-NBT)
+### 4.2.1 Öffnen und Zugriff
+Öffnen möglich via:
+- Keybind (Standard: **O**) -> `MarketplaceOpenRequestPacket`
+- Command `/marketblocks marketplace`
+
+Editorrechte:
+- grundsätzlich OP-Level (`hasPermissions(2)`)
+- tatsächliche Edit-Nutzung zusätzlich an globales Admin-Flag gekoppelt (`marketblocksAdminModeEnabled`)
+
+### 4.2.2 Datenmodell
+Root:
+- `MarketplaceData` -> Liste von `MarketplacePage`
+
+Page:
+- `name`
+- optional `icon`
+- Liste `MarketplaceOffer`
+
+Offer:
+- `id` (UUID)
+- `result`
+- `payments` (max. 2; intern auf zwei Slots normalisiert)
+- `limits` (`OfferLimit`)
+- `pricing` (`DemandPricing`)
+- `runtimeState` (`MarketplaceOfferRuntimeState`)
+
+### 4.2.3 Offer-Limits
+`OfferLimit` unterstützt:
+- unlimited
+- optional daily limit
+- optional stock limit
+- optional restock seconds
+
+Werte <= 0 werden als „nicht gesetzt“ behandelt.
+
+### 4.2.4 Demand Pricing
+`DemandPricing`:
+- enabled
+- base multiplier
+- demand step
+- min/max multiplier
+
+Effektive Payment-Kosten:
+- `effectivePayments()` skaliert Count je Payment-Stack via Multiplikator
+- Rundung nach oben (mindestens 1)
+
+### 4.2.5 Runtime-State je Offer
+`MarketplaceOfferRuntimeState` enthält:
+- stockRemaining
+- purchasedTodayGlobal
+- purchasedTodayByPlayer
+- lastDailyResetDay
+- lastRestockGameTime
+- demandPurchases
+- lastDemandDecayDay
+
+### 4.2.6 Runtime-Upkeep
+`MarketplaceManager.tick()` führt periodisch aus:
+- Daily-Reset bei aktivem Daily-Limit
+- Restock für stock-limitierte Offers
+- Demand-Decay (pro Tag)
+- Viewer-Resync bei Runtime-Änderungen
+
+### 4.2.7 Kaufabwicklung
+Kaufpfad: `processPurchaseTransactionSlotBased(...)`
+
+Ablauf:
+1. Offer finden + Runtime-Upkeep anwenden
+2. Maximum aus Limits für aktuellen Spieler bestimmen
+3. bei Überschreitung: translatierte Fehlermeldung (Daily-Limit/Out-of-Stock)
+4. Runtime-Counter fortschreiben (Stock, Daily, Demand)
+5. Zustand markieren + offene Viewer synchronisieren
+
+Wichtig:
+- MarketplaceMenu verwaltet Payment-/Result-Template-Slots
+- Zahlungsabzug/Slot-Interaktion erfolgt im Menu; Limit-/Runtime-Commit im Manager
+
+### 4.2.8 Global vs. per-player Daily-Limit
+Config:
+- `marketplaceGlobalDailyLimit`
+
+Wenn aktiv:
+- alle Spieler teilen einen globalen Daily-Counter pro Offer
+Wenn inaktiv:
+- Daily-Counter wird pro Spieler getrennt geführt
+
+### 4.2.9 Editor-Flow (Marketplace)
+Editor-Funktionen über Pakete:
+- Seite erstellen/umbenennen/löschen
+- Offer hinzufügen/verschieben/löschen
+- Limits aktualisieren
+- Pricing aktualisieren
+
+Alle Mutationen:
+- serverseitig validiert
+- bei Erfolg: Sync an offene Viewer
+- bei Fehler: direkte User-Message
+
+### 4.2.10 View-/Sync-Modell
+Server -> Client:
+- `MarketplaceSyncPacket` mit
+  - vollständigem Daten-Snapshot
+  - offer-spezifischen `MarketplaceOfferViewState`
+  - Rechtebits (`canEdit`, `globalEditModeEnabled`)
+
+`MarketplaceOfferViewState` enthält:
+- maxPurchasable
+- remainingDailyPurchases (optional)
+- remainingStock (optional)
+- restockSecondsRemaining (optional)
+- priceMultiplier
+
+Clientcache:
+- `MarketplaceClientState`
+
+### 4.2.11 Persistenz und Dateisicherheit
+Datei:
+- `<world>/marketblocks/marketplace.json`
+
+Speicherstrategie:
+- async I/O Single-Thread-Executor
+- temporäre Datei + Move/Replace
+- Backup-Datei (`.bak`)
+- Restore von Backup bei defekter Primärdatei
+
+### 4.2.12 Command-Integration
+Unter `/marketblocks marketplace`:
+- öffnen
+- `reload` (JSON neu laden)
+- `resetlimits <player>` (Daily-Limit-Zustand für Spieler zurücksetzen)
+
+Globaler Admin-Modus:
+- `/marketblocks adminmode [true|false]`
+- beeinflusst Marketplace-Edit und OP-Settingsrechte im SingleOfferShop
 
 ---
 
-## Marketplace
+## 5. Gemeinsame Sicherheits- und Konsistenzprinzipien
 
-Der Marketplace-Teil wurde bereits technisch auf den neuen Namen umgestellt, wird aber in diesem Dokument als nächster Schritt separat detailliert überarbeitet.
+1. **Serverautorität**
+   - kritische Aktionen werden serverseitig validiert
+2. **Zustandskapselung**
+   - Client erhält nur UI-relevante Daten
+   - sensible Inventarzustände werden nicht vollständig via UpdateTag repliziert
+3. **Deterministische Slotlogik**
+   - Payment/Result-Checks nutzen Item + Components + Count
+4. **Fehlerrobustheit**
+   - defensive Parsing-/Fallback-Strategien bei NBT/JSON
+5. **Synchronisation offener Menüs**
+   - relevante Zustandsänderungen triggern gezielte Viewer-Syncs
 
 ---
 
-## Technische Basis
+## 6. Relevante Config-Schalter (Common)
 
-- **Modloader:** NeoForge
-- **Minecraft-Version:** 1.21.1
-- **Schwerpunkte:** GUI, Inventar-/Slotlogik, Client-Server-Sync, sichere Handelslogik
+### SingleOfferShop
+- `enableDoubleChestSupport`
+- `enableChestIoExtensionExperimental`
+- `offerUpdateInterval`
+- `chestIoInterval`
+- `enableOutputWarning`
+- `outputWarningPercent`
+
+### Marketplace / global
+- `marketplaceGlobalDailyLimit`
+- `marketblocksAdminModeEnabled`
+
+### Visual NPC
+- `visualNpcForceOffscreenRendering`
+- `visualNpcRenderViewDistance`
+
+### Debug
+- `enableMixinDesyncLogging`
 
 ---
 
-## Hinweis
+## 7. UI-Struktur (Kurzreferenz)
 
-Dieses Dokument ist eine lebende Spezifikation und wird fortlaufend an den tatsächlichen Codezustand angepasst.
+### SingleOfferShop UI
+Tabs:
+- Offers
+- Inventory
+- Settings
+- Log
+
+### Marketplace UI
+- Seiten-Sidebar
+- Offer-Liste + Scroller
+- Preview-Template
+- optionaler Edit-Mode mit Create/Delete/Move/Rename + Limits/Pricing-Dialogen
+
+---
+
+## 8. Wichtige Klassen (Code-Navigation)
+
+### SingleOfferShop
+- `shop/singleoffer/block/entity/SingleOfferShopBlockEntity`
+- `shop/singleoffer/block/entity/OfferManager`
+- `shop/singleoffer/block/entity/ShopInventoryManager`
+- `shop/singleoffer/block/entity/ShopOwnerManager`
+- `shop/singleoffer/menu/SingleOfferShopMenu`
+
+### Marketplace
+- `shop/marketplace/MarketplaceManager`
+- `shop/marketplace/MarketplaceData`
+- `shop/marketplace/MarketplacePage`
+- `shop/marketplace/MarketplaceOffer`
+- `shop/marketplace/MarketplaceOfferRuntimeState`
+- `shop/marketplace/MarketplaceRuntimeMath`
+- `shop/marketplace/menu/MarketplaceMenu`
+- `util/screen/marketplace/MarketplaceScreen`
+
+### Cross-cutting
+- `network/NetworkHandler`
+- `event/MarketBlocksEvents`
+- `config/Config`
+- `shop/log/ShopTransactionLogSavedData`
+
+---
+
+## 9. Status
+
+Diese Spezifikation beschreibt den aktuellen Codezustand und ersetzt die vorherige, unvollständige Marketplace-Dokumentation.
