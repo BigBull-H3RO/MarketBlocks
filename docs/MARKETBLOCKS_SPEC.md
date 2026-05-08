@@ -17,7 +17,9 @@ Ziele:
 Die bisherigen Namen wurden umgestellt:
 
 - **SmallShop** heißt jetzt **SingleOfferShop**
-- **ServerShop** heißt jetzt **Marketplace** (bzw. MarketPlace)
+- **ServerShop** heißt jetzt **Marketplace**
+
+Hinweis: Die ältere Schreibweise **MarketPlace** bezeichnet dasselbe System.
 
 Dieses Dokument startet mit dem vollständig überarbeiteten **SingleOfferShop**-Teil.
 
@@ -95,7 +97,8 @@ Tab-Wechsel werden serverseitig validiert und synchronisiert.
   - Slots müssen serverseitig exakt/ordnungstolerant konsistent sein
 
 #### Normalisierung
-- Wenn nur Payment-Slot 2 befüllt ist, wird auf Payment 1 normalisiert.
+- Wenn **Payment-Slot 1 leer** und **Payment-Slot 2 befüllt** ist, wird das Item aus Slot 2 als Payment 1 übernommen.
+- Ist Payment-Slot 1 bereits befüllt, erfolgt keine automatische Umsortierung.
 
 #### Löschen
 - Owner kann Angebot löschen.
@@ -145,7 +148,8 @@ Regeln:
 - Offer-Slot ist bei aktivem Angebot nicht manuell überschreibbar
 - Settings/Log blenden Spielerinventar-Slots im Menü aus
 
-Beim Abbau werden Shop-Inhalte gedroppt (Offer-Slot nur im Template-Fall separat).
+Beim Abbau werden Shop-Inhalte gedroppt.
+Begriff **Template-Fall**: Zustand ohne aktives Angebot (`hasOffer = false`), in dem der Offer-Slot nur als Bearbeitungs-/Vorschau-Slot für die Angebotserstellung dient. In diesem Zustand wird dessen Inhalt beim Abbau separat berücksichtigt.
 
 ---
 
