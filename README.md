@@ -19,13 +19,13 @@
 Der Fokus liegt auf **sicherer Kaufabwicklung**, **klaren Berechtigungen** und **zuverlässiger Persistenz** – geeignet für Survival-Server, SMPs und modded Multiplayer-Welten.
 
 ## **✨ Features**
-✅ **SingleOfferShop (ehem. SmallShop)**
+✅ **SingleOfferShop (ehemals SmallShop)**
 - Blockbasierter Shop mit einem aktiven Angebot pro Shop.
 - Unterstützt bis zu **2 Payment-Stacks** und **1 Result-Stack**.
 - Zusätzliche Co-Owner möglich, inklusive klarer Rollen im UI.
 - Optionaler **Admin-Shop-Modus** (kein Bestand nötig, serverseitig abgesichert).
 
-✅ **Marketplace (ehem. ServerShop)**
+✅ **Marketplace (ehemals ServerShop)**
 - Blockloses, zentrales Marktsystem mit Seiten und mehreren Angeboten.
 - Öffnen per Keybind (**O**) oder Command.
 - Serverseitige Synchronisation mit Snapshot + Runtime-ViewStates.
