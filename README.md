@@ -3,10 +3,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/BigBull-H3RO/MarketBlocks/releases"><img src="https://img.shields.io/github/v/release/BigBull-H3RO/MarketBlocks?style=flat&amp;color=0280ff" alt="Latest Release"></a>
-  <a href="https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE.txt"><img src="https://img.shields.io/github/license/BigBull-H3RO/MarketBlocks?style=flat&amp;color=0280ff" alt="License"></a>
-  <a href="https://github.com/BigBull-H3RO/MarketBlocks/stargazers"><img src="https://img.shields.io/github/stars/BigBull-H3RO/MarketBlocks?style=flat&amp;color=1c1c1c" alt="GitHub Stars"></a>
-  <a href="https://github.com/BigBull-H3RO/MarketBlocks/releases"><img src="https://img.shields.io/github/downloads/BigBull-H3RO/MarketBlocks/total?style=flat&amp;color=5ca424" alt="Downloads"></a>
+  <a href="https://github.com/BigBull-H3RO/MarketBlocks/releases"><img src="https://img.shields.io/github/v/release/BigBull-H3RO/MarketBlocks?style=flat&color=0280ff" alt="Latest Release"></a>
+  <a href="https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE.txt"><img src="https://img.shields.io/github/license/BigBull-H3RO/MarketBlocks?style=flat&color=0280ff" alt="License"></a>
+  <a href="https://github.com/BigBull-H3RO/MarketBlocks/stargazers"><img src="https://img.shields.io/github/stars/BigBull-H3RO/MarketBlocks?style=flat&color=1c1c1c" alt="GitHub Stars"></a>
+  <a href="https://github.com/BigBull-H3RO/MarketBlocks/releases"><img src="https://img.shields.io/github/downloads/BigBull-H3RO/MarketBlocks/total?style=flat&color=5ca424" alt="Downloads"></a>
 </p>
 
 # MarketBlocks
