@@ -11,7 +11,7 @@
 
 # MarketBlocks
 
-**MarketBlocks** ist ein NeoForge-Mod für **Minecraft 1.21.1**, der ein serverautoritäres Handelssystem mit zwei Shop-Typen bereitstellt:
+**MarketBlocks** ist ein NeoForge-Mod für **Minecraft 1.21.1**, der ein serverautoritatives Handelssystem mit zwei Shop-Typen bereitstellt:
 
 - **SingleOfferShop** (blockbasiert, ein aktives Angebot pro Shop)
 - **Marketplace** (blockloses, seitenbasiertes Angebotssystem)
