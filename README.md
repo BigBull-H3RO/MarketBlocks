@@ -74,11 +74,11 @@ Zusätzlich gibt es weitere Feinabstimmungen für SingleOfferShop, Marketplace u
 ## **📝 Commands**
 Die zentralen Commands sind unter **`/marketblocks`** gebündelt:
 
-| Command                                           | Permission | Beschreibung |
-|---------------------------------------------------|------------|--------------|
-| **`/marketblocks adminmode [true|false]`**       | `admin`    | Aktiviert/deaktiviert den globalen Admin-/Edit-Modus. |
-| **`/marketblocks marketplace`**                   | `admin`    | Öffnet den Marketplace. |
-| **`/marketblocks marketplace reload`**            | `admin`    | Lädt die Marketplace-Konfiguration neu von der Festplatte. |
+| Command | Permission | Beschreibung |
+|---|---|---|
+| **`/marketblocks adminmode [true|false]`** | `admin` | Aktiviert/deaktiviert den globalen Admin-/Edit-Modus. |
+| **`/marketblocks marketplace`** | `admin` | Öffnet den Marketplace. |
+| **`/marketblocks marketplace reload`** | `admin` | Lädt die Marketplace-Konfiguration neu von der Festplatte. |
 | **`/marketblocks marketplace resetlimits <player>`** | `admin` | Setzt Daily-Limits für den angegebenen Spieler zurück. |
 
 ---
