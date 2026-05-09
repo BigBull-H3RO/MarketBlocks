@@ -11,53 +11,53 @@
 
 # MarketBlocks
 
-**MarketBlocks** ist ein NeoForge-Mod für **Minecraft 1.21.1**, der ein serverautoritatives Handelssystem mit zwei Shop-Typen bereitstellt:
+**MarketBlocks** is a NeoForge mod for **Minecraft 1.21.1** that provides a server-authoritative trading system with two shop types:
 
-- **SingleOfferShop** (blockbasiert, ein aktives Angebot pro Shop)
-- **Marketplace** (blockloses, seitenbasiertes Angebotssystem)
+- **SingleOfferShop** (block-based, one active offer per shop)
+- **Marketplace** (blockless, page-based offer system)
 
-Der Fokus liegt auf **sicherer Kaufabwicklung**, **klaren Berechtigungen** und **zuverlässiger Persistenz** – geeignet für Survival-Server, SMPs und modded Multiplayer-Welten.
+The mod focuses on **secure transactions**, **clear permission rules**, and **reliable persistence**—ideal for survival servers, SMPs, and modded multiplayer worlds.
 
 ## **✨ Features**
-✅ **SingleOfferShop (ehemals SmallShop)**
-- Blockbasierter Shop mit einem aktiven Angebot pro Shop.
-- Unterstützt bis zu **2 Payment-Stacks** und **1 Result-Stack**.
-- Zusätzliche Co-Owner möglich, inklusive klarer Rollen im UI.
-- Optionaler **Admin-Shop-Modus** (kein Bestand nötig, serverseitig abgesichert).
+✅ **SingleOfferShop (formerly SmallShop)**
+- Block-based shop with one active offer per shop.
+- Supports up to **2 payment stacks** and **1 result stack**.
+- Additional co-owners with clear UI role handling.
+- Optional **Admin Shop Mode** (no stock required, server-side validated).
 
-✅ **Marketplace (ehemals ServerShop)**
-- Blockloses, zentrales Marktsystem mit Seiten und mehreren Angeboten.
-- Öffnen per Keybind (**O**) oder Command.
-- Serverseitige Synchronisation mit Snapshot + Runtime-ViewStates.
-- Persistenz über JSON mit Backup/Restore-Strategie.
+✅ **Marketplace (formerly ServerShop)**
+- Blockless, centralized market system with pages and multiple offers.
+- Open via keybind (**O**) or command.
+- Server-side sync with snapshot + runtime view states.
+- JSON persistence with backup/restore strategy.
 
-✅ **Sichere, serverseitige Transaktionen**
-- Validierung von Item, Count und Components auf dem Server.
-- Deterministische Kauflogik (auch bei Shift-/Bulk-Käufen).
-- Schutz vor Client-Manipulation durch serverautoritative Prüfungen.
+✅ **Secure server-side transactions**
+- Server-side validation of item, count, and components.
+- Deterministic purchase logic (including shift/bulk buys).
+- Protection against client-side manipulation.
 
 ✅ **Limits, Restock & Demand Pricing (Marketplace)**
-- Daily-Limits (global oder pro Spieler), Stock-Limits und Restock-Intervalle.
-- Dynamische Preisberechnung über Multiplikator-System.
-- Automatische Runtime-Upkeep-Logik über Serverticks.
+- Daily limits (global or per-player), stock limits, and restock intervals.
+- Dynamic price calculation via multiplier system.
+- Automatic runtime upkeep via server ticks.
 
-✅ **Chest-I/O Erweiterung (experimentell)**
-- Optionales automatisches Ziehen/Schieben von Items über angrenzende Inventare.
-- Separat über Config aktivierbar.
+✅ **Chest I/O extension (experimental)**
+- Optional automatic pull/push of items through adjacent inventories.
+- Enabled separately via config.
 
-✅ **Transaktionslog & QoL**
-- Persistentes Shop-Transaktionslog für SingleOfferShop.
-- Redstone-Puls bei erfolgreichem Kauf (optional).
-- Konfigurierbare visuelle/soundbasierte Shop-Feedbacks.
-
----
-
-> Die komplette Logik für Kaufabwicklung und Rechteprüfung läuft serverseitig.
+✅ **Transaction log & QoL**
+- Persistent shop transaction log for SingleOfferShop.
+- Optional redstone pulse on successful purchase.
+- Configurable visual/audio shop feedback.
 
 ---
 
-## **⚙️ Konfiguration**
-Die wichtigsten Schalter liegen in der Common-Config, u. a.:
+> All transaction logic and permission checks are handled server-side.
+
+---
+
+## **⚙️ Configuration**
+Key switches are available in the common config, including:
 
 - `enableDoubleChestSupport`
 - `enableChestIoExtensionExperimental`
@@ -67,26 +67,28 @@ Die wichtigsten Schalter liegen in der Common-Config, u. a.:
 - `marketblocksAdminModeEnabled`
 - `visualNpcRenderViewDistance`
 
-Zusätzlich gibt es weitere Feinabstimmungen für SingleOfferShop, Marketplace und Visual/NPC-Verhalten.
+Additional fine-tuning options exist for SingleOfferShop, Marketplace, and visual/NPC behavior.
+
+---
 
 ---
 
 ## **📝 Commands**
-Die zentralen Commands sind unter **`/marketblocks`** gebündelt:
+Main commands are grouped under **`/marketblocks`**:
 
-| Command | Permission | Beschreibung |
+| Command | Permission | Description |
 | --- | --- | --- |
-| **`/marketblocks adminmode [true|false]`** | `admin` | Aktiviert/deaktiviert den globalen Admin-/Edit-Modus. |
-| **`/marketblocks marketplace`** | `admin` | Öffnet den Marketplace. |
-| **`/marketblocks marketplace reload`** | `admin` | Lädt die Marketplace-Konfiguration neu von der Festplatte. |
-| **`/marketblocks marketplace resetlimits <player>`** | `admin` | Setzt Daily-Limits für den angegebenen Spieler zurück. |
+| **`/marketblocks adminmode [true|false]`** | `admin` | Enables/disables global admin/edit mode. |
+| **`/marketblocks marketplace`** | `admin` | Opens the marketplace. |
+| **`/marketblocks marketplace reload`** | `admin` | Reloads marketplace configuration from disk. |
+| **`/marketblocks marketplace resetlimits <player>`** | `admin` | Resets daily limits for the specified player. |
 
 ---
 
-## **🛠 Kurz-Workflow**
-1. **SingleOfferShop platzieren** und als Owner verwalten.
-2. **Angebot setzen** (Result + bis zu 2 Payments).
-3. Optional **Input/Output + Chest-I/O** konfigurieren.
-4. Für zentrale Handelsseiten den **Marketplace** öffnen und Angebote verwalten.
+## **🛠 Quick Workflow**
+1. Place a **SingleOfferShop** and manage it as owner.
+2. Create an offer (result + up to 2 payments).
+3. Optionally configure input/output and Chest I/O.
+4. Open the **Marketplace** for centralized offer management.
 
-So lassen sich sowohl lokale Spieler-Shops als auch ein globales Marktsystem parallel betreiben.
+This allows local player shops and a global market system to run side by side.
