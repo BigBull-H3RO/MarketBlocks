@@ -1,25 +1,94 @@
+<p align="center">
+  <img src=".idea/icon.png" alt="MarketBlocks Logo" width="180">
+</p>
+
+<p align="center">
+  <a href="https://github.com/BigBull-H3RO/MarketBlocks/releases"><img src="https://img.shields.io/github/v/release/BigBull-H3RO/MarketBlocks?style=flat&color=0280ff" alt="Latest Release"></a>
+  <a href="https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE.txt"><img src="https://img.shields.io/github/license/BigBull-H3RO/MarketBlocks?style=flat&color=0280ff" alt="License"></a>
+  <a href="https://github.com/BigBull-H3RO/MarketBlocks/stargazers"><img src="https://img.shields.io/github/stars/BigBull-H3RO/MarketBlocks?style=flat&color=1c1c1c" alt="GitHub Stars"></a>
+  <a href="https://github.com/BigBull-H3RO/MarketBlocks/releases"><img src="https://img.shields.io/github/downloads/BigBull-H3RO/MarketBlocks/total?style=flat&color=5ca424" alt="Downloads"></a>
+</p>
+
 # MarketBlocks
 
-## Overview
+**MarketBlocks** is a NeoForge mod for **Minecraft 1.21.1** that provides a server-authoritative trading system with two shop types:
 
-MarketBlocks is a Minecraft mod for the NeoForge mod loader that introduces a simple and intuitive player-driven economy. It allows players to set up their own shops using a special "Small Shop Block" to trade items with other players on a server.
+- **SingleOfferShop** (block-based, one active offer per shop)
+- **Marketplace** (blockless, page-based offer system)
 
-## Features
+The mod focuses on **secure transactions**, **clear permission rules**, and **reliable persistence**—ideal for survival servers, SMPs, and modded multiplayer worlds.
 
-*   **Player-Owned Shops:** Craft and place a Small Shop Block to start your own business. The player who places the block becomes its owner.
-*   **Create Trade Offers:** Owners can set up a trade by specifying up to two payment items and one result item. For example, you can sell 1 Diamond for 64 Iron Ingots.
-*   **Secure Transactions:** Only the owner (and any players they add as co-owners) can manage the shop's offers and inventory.
-*   **Item Automation (Experimental):** The shop block can interact with adjacent chests (or other inventories) to automatically pull necessary items for sale and push payment items into storage. This feature is controlled by `enableChestIoExtensionExperimental` and is disabled by default.
-*   **Customizable Shop:** Set a custom name for your shop that appears in the UI.
-*   **Redstone Integration:** The shop can emit a redstone signal upon a successful trade, allowing for integration with other redstone contraptions.
+## **✨ Features**
+✅ **SingleOfferShop (formerly SmallShop)**
+- Block-based shop with one active offer per shop.
+- Supports up to **2 payment stacks** and **1 result stack**.
+- Additional co-owners with clear UI role handling.
+- Optional **Admin Shop Mode** (no stock required, server-side validated).
 
-## How to Use
+✅ **Marketplace (formerly ServerShop)**
+- Blockless, centralized market system with pages and multiple offers.
+- Open via keybind (**O**) or command.
+- Server-side sync with snapshot + runtime view states.
+- JSON persistence with backup/restore strategy.
 
-1.  **Craft a Small Shop Block:** (Recipe to be defined, but it's the central block of the mod).
-2.  **Place the Block:** Place it in the world. You are now the owner.
-3.  **Open the UI:** Right-click the block to open its interface.
-4.  **Set an Offer:** Place the items you want to sell (result) and the items you want to receive as payment in the designated slots.
-5.  **Stock Your Shop:** Add the items you are selling to the shop's input inventory. You can do this manually or by placing a chest next to the shop and configuring the side to "Input" (requires `enableChestIoExtensionExperimental=true` in common config).
-6.  **Collect Payment:** Payments will be stored in the shop's output inventory. You can also configure a side to "Output" to have them automatically moved to an adjacent chest (requires `enableChestIoExtensionExperimental=true`).
+✅ **Secure server-side transactions**
+- Server-side validation of item, count, and components.
+- Deterministic purchase logic (including shift/bulk buys).
+- Protection against client-side manipulation.
 
-This mod provides a seamless way to create a thriving market economy on your Minecraft server. Happy trading!
+✅ **Limits, Restock & Demand Pricing (Marketplace)**
+- Daily limits (global or per-player), stock limits, and restock intervals.
+- Dynamic price calculation via multiplier system.
+- Automatic runtime upkeep via server ticks.
+
+✅ **Chest I/O extension (experimental)**
+- Optional automatic pull/push of items through adjacent inventories.
+- Enabled separately via config.
+
+✅ **Transaction log & QoL**
+- Persistent shop transaction log for SingleOfferShop.
+- Optional redstone pulse on successful purchase.
+- Configurable visual/audio shop feedback.
+
+---
+
+> All transaction logic and permission checks are handled server-side.
+
+---
+
+## **⚙️ Configuration**
+Key switches are available in the common config, including:
+
+- `enableDoubleChestSupport`
+- `enableChestIoExtensionExperimental`
+- `offerUpdateInterval`
+- `chestIoInterval`
+- `marketplaceGlobalDailyLimit`
+- `marketblocksAdminModeEnabled`
+- `visualNpcRenderViewDistance`
+
+Additional fine-tuning options exist for SingleOfferShop, Marketplace, and visual/NPC behavior.
+
+---
+
+---
+
+## **📝 Commands**
+Main commands are grouped under **`/marketblocks`**:
+
+| Command | Permission | Description |
+| --- | --- | --- |
+| **`/marketblocks adminmode [true|false]`** | `admin` | Enables/disables global admin/edit mode. |
+| **`/marketblocks marketplace`** | `admin` | Opens the marketplace. |
+| **`/marketblocks marketplace reload`** | `admin` | Reloads marketplace configuration from disk. |
+| **`/marketblocks marketplace resetlimits <player>`** | `admin` | Resets daily limits for the specified player. |
+
+---
+
+## **🛠 Quick Workflow**
+1. Place a **SingleOfferShop** and manage it as owner.
+2. Create an offer (result + up to 2 payments).
+3. Optionally configure input/output and Chest I/O.
+4. Open the **Marketplace** for centralized offer management.
+
+This allows local player shops and a global market system to run side by side.
