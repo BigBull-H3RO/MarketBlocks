@@ -1,5 +1,4 @@
-<p align="center">
-  <img src=".idea/icon.png" alt="MarketBlocks Logo" width="180">
+<p align="center"><img src=".idea/icon.png" alt="MarketBlocks Logo" width="250">
 </p>
 
 <p align="center">
@@ -92,3 +91,14 @@ Main commands are grouped under **`/marketblocks`**:
 4. Open the **Marketplace** for centralized offer management.
 
 This allows local player shops and a global market system to run side by side.
+
+---
+
+<div align="center">
+
+#### 📢 **Found a bug? Have a suggestion?**
+
+Report issues to the [Issue Tracker](https://github.com/BigBull-H3RO/MarketBlocks/issues)
+
+#### 💡 Find out more about MarketBlocks on our [Curseforge](https://www.curseforge.com/minecraft/mc-mods/marketblocks) or [Modrinth](https://modrinth.com/mod/marketblocks) Page
+</div>
