@@ -8,7 +8,7 @@
 
 <p align="center">
 <a href="https://www.curseforge.com/minecraft/mc-mods/marketblocks/files"><img src="https://cf.way2muchnoise.eu/versions/1214103(0280ff).svg?cachebuster=1" alt="Supported Versions"></a>
-<a href="https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE"><img src="https://img.shields.io/github/license/BigBull-H3RO/MarketBlocks?style=flat&color=0280ff" alt="License"></a>
+<a href="https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE.txt"><img src="https://img.shields.io/github/license/BigBull-H3RO/MarketBlocks?style=flat&color=0280ff" alt="License"></a>
 <a href="https://www.curseforge.com/minecraft/mc-mods/marketblocks"><img src="https://cf.way2muchnoise.eu/1214103.svg?" alt="CurseForge"></a>
 <a href="https://modrinth.com/mod/marketblocks"><img src="https://img.shields.io/modrinth/dt/u43pMIKj?logo=modrinth&label=&suffix=%20&style=flat&color=242629&labelColor=5ca424&logoColor=1c1c1c" alt="Modrinth"></a>
 <a href="https://www.curseforge.com/minecraft/mc-mods/marketblocks/files/all?page=1&pageSize=20"><img src="https://img.shields.io/curseforge/v/1214103?logo=adguard&label=&suffix=%20&style=flat&color=1c1c1c&labelColor=121212&logoColor=5ca424" alt="Version"></a>
@@ -93,6 +93,15 @@ Main commands are grouped under **`/marketblocks`**:
 4. Open the **Marketplace** for centralized offer management.
 
 This allows local player shops and a global market system to run side by side.
+
+---
+
+## **⚖️ License**
+
+This project is licensed under a split licensing model:
+
+* **Code:** The source code of **MarketBlocks** is licensed under the **MIT License**. See the [`LICENSE.txt`](LICENSE.txt) file for the full license text.
+* **Assets:** All graphical assets (textures, models, icons) and sound files are **strictly All Rights Reserved** and may not be reused without permission. See the [`LICENSE_ASSETS.txt`](LICENSE_ASSETS.txt) file for details.
 
 ---
 
