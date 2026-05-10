@@ -1,0 +1,20 @@
+ALL RIGHTS RESERVED LICENSE
+
+Copyright (c) 2025-2026 BigBull-H3RO
+
+All rights reserved.
+
+This license applies to all graphical and audio assets within this project, 
+including but not limited to:
+- Textures (.png)
+- Models (.json, .obj, .bbmodel)
+- Icons and Logos
+- Sound files (.ogg)
+
+These assets are located primarily in the 'src/main/resources/assets/' directory 
+of the MarketBlocks project.
+
+No part of these assets may be reproduced, distributed, modified, or 
+reused in any form or by any means (including other Minecraft mods, 
+resource packs, or websites) without the prior written permission of 
+the copyright holder (BigBull-H3RO).
