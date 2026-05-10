@@ -4,8 +4,8 @@ Der **SingleOfferShop** ist ein blockbasierter Shop mit genau einem aktiven Ange
 
 ## Inhalte
 
-- [Setup & Roles](SingleOfferShop-Setup-and-Roles)
-- [Admin Shop Mode](SingleOfferShop-Admin-Shop-Mode)
+- [Setup & Rollen](SingleOfferShop-Setup-and-Roles)
+- [Admin-Shop-Modus](SingleOfferShop-Admin-Shop-Mode)
 - [Beispiele / typische Setups](SingleOfferShop-Beispiele-und-typische-Setups)
 
 ## Kurzüberblick

@@ -1,4 +1,4 @@
-# Marketplace: JSON Configuration Guide
+# Marketplace: JSON-Konfigurationsleitfaden
 
 Diese Seite beschreibt den Aufbau und das Verhalten der Marketplace-Daten.
 
@@ -20,7 +20,7 @@ Marketplace-Daten werden serverseitig unter folgendem Pfad gespeichert:
       - `payments` (max. 2)
       - `limits`
       - `pricing`
-      - `runtimeState`
+      - `runtime_state`
 
 ## Limits
 
@@ -37,9 +37,10 @@ Werte `<= 0` gelten als „nicht gesetzt“.
 Pricing nutzt Multiplikatoren und skaliert die Payment-Kosten dynamisch:
 
 - `enabled`
-- `base multiplier`
-- `demand step`
-- `min/max multiplier`
+- `base_multiplier`
+- `demand_step`
+- `min_multiplier`
+- `max_multiplier`
 
 Die effektiven Payment-Mengen werden aufgerundet (mindestens 1).
 

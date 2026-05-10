@@ -1,4 +1,4 @@
-# Marketplace: Dynamic Pricing & Limits
+# Marketplace: Dynamische Preise & Limits
 
 ## Limits im Überblick
 
@@ -26,9 +26,10 @@ Demand Pricing passt die effektiven Payment-Kosten anhand der Nachfrage an.
 Wichtige Parameter:
 
 - Aktivierung (`enabled`)
-- Basiswert (`base multiplier`)
-- Steigerung (`demand step`)
-- Unter-/Obergrenze (`min/max multiplier`)
+- Basiswert (`base_multiplier`)
+- Steigerung (`demand_step`)
+- Untergrenze (`min_multiplier`)
+- Obergrenze (`max_multiplier`)
 
 ## Runtime-Upkeep
 
@@ -41,5 +42,5 @@ Regelmäßige Hintergrundprozesse aktualisieren:
 ## Empfehlung für Serverbetrieb
 
 - Limits zuerst konservativ setzen und anhand realer Nutzung nachjustieren.
-- Preisgrenzen (`min/max`) definieren, um extreme Ausschläge zu vermeiden.
+- Preisgrenzen (`min_multiplier`/`max_multiplier`) definieren, um extreme Ausschläge zu vermeiden.
 - Restock-Werte an Server-Ökonomie und Spieltempo anpassen.

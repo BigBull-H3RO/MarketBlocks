@@ -4,10 +4,10 @@ Der **Marketplace** ist das blocklose, zentral verwaltete Handelssystem von Mark
 
 ## Inhalte
 
-- [JSON Configuration Guide](Marketplace-JSON-Configuration-Guide)
-- [In-Game Management](Marketplace-In-Game-Management)
-- [Dynamic Pricing & Limits](Marketplace-Dynamic-Pricing-and-Limits)
-- [Troubleshooting](Marketplace-Troubleshooting)
+- [JSON-Konfigurationsleitfaden](Marketplace-JSON-Configuration-Guide)
+- [Ingame-Verwaltung](Marketplace-In-Game-Management)
+- [Dynamische Preise & Limits](Marketplace-Dynamic-Pricing-and-Limits)
+- [Fehlerbehebung](Marketplace-Troubleshooting)
 
 ## Kurzüberblick
 
