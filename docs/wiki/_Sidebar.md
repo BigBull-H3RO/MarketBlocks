@@ -7,6 +7,6 @@
 - [SingleOfferShop](SingleOfferShop)
   - [Setup & Roles](SingleOfferShop-Setup-and-Roles)
   - [Admin Shop Mode](SingleOfferShop-Admin-Shop-Mode)
-  - [Examples / Common Setups](SingleOfferShop-Beispiele-und-typische-Setups)
+  - [Examples / Common Setups](SingleOfferShop-Examples-and-Common-Setups)
 - [Commands & Permissions](Commands-and-Permissions)
 - [Developer Info](Developer-Info)
