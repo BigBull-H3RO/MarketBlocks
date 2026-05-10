@@ -1,34 +1,34 @@
 # Marketplace: Troubleshooting
 
-## „Angebot kann nicht gekauft werden“
+## "Offer cannot be purchased"
 
-Prüfen:
+Check:
 
-- Payment-Stapel und Mengen korrekt?
-- Daily-Limit erreicht?
-- Stock-Limit erreicht?
-- Runtime-State durch Restock/Demand beeinflusst?
+- Are payment stacks and amounts correct?
+- Has the daily limit been reached?
+- Has the stock limit been reached?
+- Is runtime state affected by restock/demand?
 
-## „Marketplace öffnet nicht“
+## "Marketplace does not open"
 
-Prüfen:
+Check:
 
-- Keybind korrekt belegt?
-- Command-Berechtigung vorhanden?
-- Läuft der Server ohne Fehler beim Laden der Marketplace-Daten?
+- Is the keybind assigned correctly?
+- Do you have command permission?
+- Does the server load Marketplace data without errors?
 
-## „Änderungen sind nicht sichtbar“
+## "Changes are not visible"
 
-Prüfen:
+Check:
 
-- Wurde die Änderung serverseitig bestätigt?
-- Sind Viewer neu synchronisiert?
-- Falls JSON manuell bearbeitet wurde: Reload korrekt ausgeführt?
+- Was the change acknowledged server-side?
+- Were viewers synchronized again?
+- If JSON was edited manually: was reload run correctly?
 
-## „JSON scheint beschädigt“
+## "JSON appears to be corrupted"
 
-Prüfen:
+Check:
 
-- Existiert die `.bak`-Datei?
-- Letzte manuelle Änderung rückgängig machen
-- Server-Logs auf Parse-/I/O-Fehler prüfen
+- Does the `.bak` file exist?
+- Revert the most recent manual change
+- Check server logs for parse/I/O errors

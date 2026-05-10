@@ -1,10 +1,10 @@
 # Developer Info
 
-Diese Seite richtet sich an Entwickler von Addons, Integrationen und Server-Erweiterungen.
+This page is for developers building addons, integrations, and server extensions.
 
-## API/Addons: Einstieg
+## API/Addons: Entry Points
 
-Wichtige technische Einstiegspunkte im Code:
+Important technical entry points in the code:
 
 - `shop/marketplace/MarketplaceManager`
 - `shop/marketplace/MarketplaceData`
@@ -15,22 +15,22 @@ Wichtige technische Einstiegspunkte im Code:
 
 ## Events/Hooks
 
-Die Mod arbeitet serverautoritativ mit klarer Netzwerk- und Lifecycle-Trennung.
+The mod is server-authoritative with clear network and lifecycle separation.
 
-Relevant sind insbesondere:
+Especially relevant:
 
-- Serverstart/Servertick/Serverstop-Fluss für Marketplace-Runtime
-- Paketbasierte Mutationen mit serverseitiger Validierung
-- Viewer-Synchronisierung nach relevanten Zustandsänderungen
+- server start/server tick/server stop flow for Marketplace runtime
+- packet-based mutations with server-side validation
+- viewer synchronization after relevant state changes
 
-## Datenformate/Integration
+## Data Formats / Integration
 
-- Marketplace-Persistenz über JSON: `<world>/marketblocks/marketplace.json`
-- Backup-/Restore-Strategie mit `.bak`
-- Runtime-Ansichten werden getrennt von persistenter Konfiguration geführt
+- Marketplace persistence via JSON: `<world>/marketblocks/marketplace.json`
+- Backup/restore strategy with `.bak`
+- Runtime views are kept separate from persistent configuration
 
-## Integrationsprinzipien
+## Integration Principles
 
-- Keine clientseitigen Annahmen für kritische Transaktionen
-- Änderungen nur über validierte Serverpfade
-- Bei externen Tools: defensives Parsing und Fallbacks einplanen
+- No client-side assumptions for critical transactions
+- Apply changes only through validated server paths
+- For external tools, plan defensive parsing and fallbacks

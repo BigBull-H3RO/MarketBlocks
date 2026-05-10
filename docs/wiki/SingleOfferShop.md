@@ -1,16 +1,16 @@
 # SingleOfferShop
 
-Der **SingleOfferShop** ist ein blockbasierter Shop mit genau einem aktiven Angebot pro Shop.
+The **SingleOfferShop** is a block-based shop with exactly one active offer per shop.
 
-## Inhalte
+## Contents
 
-- [Setup & Rollen](SingleOfferShop-Setup-and-Roles)
-- [Admin-Shop-Modus](SingleOfferShop-Admin-Shop-Mode)
-- [Beispiele / typische Setups](SingleOfferShop-Beispiele-und-typische-Setups)
+- [Setup & Roles](SingleOfferShop-Setup-and-Roles)
+- [Admin Shop Mode](SingleOfferShop-Admin-Shop-Mode)
+- [Examples / Common Setups](SingleOfferShop-Beispiele-und-typische-Setups)
 
-## Kurzüberblick
+## Quick Overview
 
-- Ein Angebot mit bis zu 2 Payment-Stacks und 1 Result-Stack
-- Klare Owner-/Rollenlogik
-- Optionaler Admin-Shop-Modus
-- Serverseitige Validierung und Transaktionssicherheit
+- One offer with up to 2 payment stacks and 1 result stack
+- Clear owner/role model
+- Optional admin shop mode
+- Server-side validation and transaction safety

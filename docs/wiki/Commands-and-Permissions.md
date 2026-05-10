@@ -1,27 +1,27 @@
 # Commands & Permissions
 
-Diese Übersicht gruppiert die wichtigsten Commands und Rechte nach Rollen.
+This overview groups the most important commands and permissions by role.
 
-## Admin / OP
+## Admin / Operator
 
-| Command | Zweck |
+| Command | Purpose |
 | --- | --- |
-| `/marketblocks adminmode [true|false]` | Aktiviert/deaktiviert den globalen Admin/Edit-Modus. |
-| `/marketblocks marketplace` | Öffnet den Marketplace. |
-| `/marketblocks marketplace reload` | Lädt die Marketplace-Konfiguration neu. |
-| `/marketblocks marketplace resetlimits <player>` | Setzt Daily-Limits für einen Spieler zurück. |
+| `/marketblocks adminmode [true|false]` | Enables/disables global admin/edit mode. |
+| `/marketblocks marketplace` | Opens the Marketplace. |
+| `/marketblocks marketplace reload` | Reloads Marketplace configuration. |
+| `/marketblocks marketplace resetlimits <player>` | Resets daily limits for a player. |
 
-## Spieler
+## Players
 
-- Zugriff auf Kauf-Workflows gemäß Shop-/Marketplace-Zustand
-- keine administrativen Marketplace-Mutationen ohne passende Rechte
+- Access to purchase flows based on shop/marketplace state
+- No administrative marketplace mutations without proper rights
 
-## Permission-Nodes (Kurz erklärt)
+## Permission Nodes (Short Explanation)
 
-Die konkreten Permission-Nodes können je nach Server-Setup/Permission-Mod variieren.
+The exact permission nodes can vary by server setup/permission mod.
 
-Empfehlung:
+Recommendation:
 
-1. Rechte zuerst über OP/Admin testen.
-2. Danach in Gruppen (z. B. Admin, Mod, Spieler) sauber trennen.
-3. Kritische Befehle (`reload`, `resetlimits`, `adminmode`) nur vertrauenswürdigen Rollen geben.
+1. Test permissions first with operator/admin rights.
+2. Then separate groups cleanly (for example admin, moderator, player).
+3. Grant critical commands (`reload`, `resetlimits`, `adminmode`) only to trusted roles.

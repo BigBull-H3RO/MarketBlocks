@@ -1,25 +1,25 @@
-# SingleOfferShop: Beispiele / typische Setups
+# SingleOfferShop: Examples / Common Setups
 
-## Beispiel 1: Spielerladen (Survival)
+## Example 1: Player Shop (Survival)
 
-- Owner verwaltet eigenes Angebot
-- Input/Output wird regulär mit Bestand genutzt
-- kein Admin-Shop-Modus
+- owner manages their own offer
+- input/output uses regular stock behavior
+- no admin shop mode
 
-## Beispiel 2: Spawn-Kaufstation
+## Example 2: Spawn Purchase Station
 
-- Admin-Shop-Modus aktiv
-- feste Preise für Standardgüter
-- für Einsteigerbereiche geeignet
+- admin shop mode enabled
+- fixed prices for standard goods
+- suitable for starter areas
 
-## Beispiel 3: Community-Handelspunkt
+## Example 3: Community Trading Point
 
-- Primary Owner + zusätzliche Owner
-- regelmäßige Pflege der Preise
-- Log-Auswertung zur Nachfragebeobachtung
+- primary owner + additional owners
+- regular price maintenance
+- use logs to observe demand trends
 
-## Setup-Tipps
+## Setup Tips
 
-- Erst einfache, stabile Angebote anlegen
-- Bei hoher Nachfrage Limits und Preise schrittweise anpassen
-- Änderungen dokumentieren, wenn mehrere Admins pflegen
+- Start with simple, stable offers first
+- With high demand, adjust limits and prices incrementally
+- Document changes when multiple admins maintain shops

@@ -1,31 +1,31 @@
 # MarketBlocks Wiki
 
-Willkommen zur offiziellen MarketBlocks-Wiki.
+Welcome to the official MarketBlocks wiki.
 
-MarketBlocks ist ein NeoForge-Mod für **Minecraft 1.21.1** mit zwei Handelssystemen:
+MarketBlocks is a NeoForge mod for **Minecraft 1.21.1** with two trading systems:
 
-- **SingleOfferShop** (blockbasiert, ein aktives Angebot pro Shop)
-- **Marketplace** (blocklos, seitenbasiert, zentral verwaltet)
+- **SingleOfferShop** (block-based, one active offer per shop)
+- **Marketplace** (blockless, page-based, centrally managed)
 
-## Schnellstart / Installation
+## Quick Start / Installation
 
-1. **NeoForge für Minecraft 1.21.1** auf Server und Client installieren.
-2. Die aktuelle `marketblocks`-JAR in den `mods`-Ordner legen.
-3. Server starten, damit Konfigurationen erzeugt werden.
-4. Optional globale Einstellungen anpassen (z. B. Admin-Modus, Marketplace-Limits).
-5. Ingame mit SingleOfferShop starten oder den Marketplace öffnen.
+1. Install **NeoForge for Minecraft 1.21.1** on server and client.
+2. Put the latest `marketblocks` JAR into the `mods` folder.
+3. Start the server so configuration files are created.
+4. Optionally adjust global settings (for example admin mode or marketplace limits).
+5. Start with SingleOfferShop in-game or open the Marketplace.
 
-## Versionen & Voraussetzungen
+## Versions & Requirements
 
 - **Minecraft:** 1.21.1
 - **Modloader:** NeoForge
 - **Mod:** MarketBlocks
 
-> Wichtig: In dieser Wiki werden die aktuellen Namen verwendet: **Marketplace** und **SingleOfferShop**.
+> Important: This wiki uses the current names: **Marketplace** and **SingleOfferShop**.
 
-## Wiki-Navigation
+## Wiki Navigation
 
-- **Marketplace**: JSON-Konfiguration, Bedienung ingame, Limits & Pricing
-- **SingleOfferShop**: Setup, Rollenmodell, Admin-Shop-Modus
-- **Commands & Permissions**: Befehle und Rechte nach Rollen
-- **Developer Info**: technische Einstiegspunkte für Addons/Integrationen
+- **Marketplace**: JSON configuration, in-game management, limits & pricing
+- **SingleOfferShop**: setup, role model, admin shop mode
+- **Commands & Permissions**: commands and permissions by role
+- **Developer Info**: technical entry points for addons and integrations

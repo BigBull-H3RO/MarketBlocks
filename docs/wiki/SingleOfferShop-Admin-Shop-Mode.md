@@ -1,23 +1,23 @@
 # SingleOfferShop: Admin Shop Mode
 
-## Zweck
+## Purpose
 
-Der Admin-Shop-Modus ist für servergesteuerte Shops ohne klassisches Bestandsmanagement gedacht.
+Admin shop mode is designed for server-controlled shops without classic inventory management.
 
-## Voraussetzungen
+## Requirements
 
-- Globaler Admin-Mode muss aktiviert sein (`marketblocksAdminModeEnabled`).
-- Umschalten ist nur mit OP-Rechten möglich.
+- Global admin mode must be enabled (`marketblocksAdminModeEnabled`).
+- Toggling is only possible with operator rights.
 
-## Verhalten
+## Behavior
 
-Bei aktivem Admin-Shop-Modus:
+With admin shop mode enabled:
 
-- kein Input-Bestand für Verkäufe erforderlich
-- keine Output-Kapazitätsprüfung
-- Inventory-Tab ist aus Sicherheits-/UX-Gründen nicht zugänglich
+- no input stock required for sales
+- no output capacity check
+- inventory tab is inaccessible for safety/UX reasons
 
-## Empfehlung
+## Recommendation
 
-- Nur für klar definierte Server-Shops einsetzen.
-- Preise und Payment-Items regelmäßig administrativ prüfen.
+- Use only for clearly defined server shops.
+- Regularly review prices and payment items administratively.

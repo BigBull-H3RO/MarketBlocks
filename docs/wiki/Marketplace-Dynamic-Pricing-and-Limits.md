@@ -1,46 +1,46 @@
-# Marketplace: Dynamische Preise & Limits
+# Marketplace: Dynamic Pricing & Limits
 
-## Limits im Überblick
+## Limits Overview
 
-Ein Offer kann gleichzeitig folgende Grenzen nutzen:
+An offer can use these limits at the same time:
 
-- **Daily-Limit** (pro Tag)
-- **Stock-Limit** (Bestand)
-- **Restock** (Wiederauffüllung nach Zeit)
+- **Daily limit** (per day)
+- **Stock limit** (inventory)
+- **Restock** (refill over time)
 
-## Daily-Limit: global vs. pro Spieler
+## Daily Limit: Global vs Per Player
 
-Gesteuert über die Konfiguration:
+Controlled by configuration:
 
 - `marketplaceGlobalDailyLimit`
 
-Verhalten:
+Behavior:
 
-- **aktiv**: alle Spieler teilen einen globalen Daily-Counter pro Offer
-- **inaktiv**: jeder Spieler hat einen eigenen Daily-Counter pro Offer
+- **enabled**: all players share one global daily counter per offer
+- **disabled**: each player has an individual daily counter per offer
 
 ## Demand Pricing
 
-Demand Pricing passt die effektiven Payment-Kosten anhand der Nachfrage an.
+Demand pricing adjusts effective payment costs based on demand.
 
-Wichtige Parameter:
+Important parameters:
 
-- Aktivierung (`enabled`)
-- Basiswert (`base_multiplier`)
-- Steigerung (`demand_step`)
-- Untergrenze (`min_multiplier`)
-- Obergrenze (`max_multiplier`)
+- Enabled (`enabled`)
+- Base value (`base_multiplier`)
+- Demand step (`demand_step`)
+- Lower bound (`min_multiplier`)
+- Upper bound (`max_multiplier`)
 
 ## Runtime-Upkeep
 
-Regelmäßige Hintergrundprozesse aktualisieren:
+Regular background upkeep updates:
 
-- Daily-Resets
-- Restock-Zyklen
-- Demand-Decay
+- daily resets
+- restock cycles
+- demand decay
 
-## Empfehlung für Serverbetrieb
+## Recommendations for Server Operation
 
-- Limits zuerst konservativ setzen und anhand realer Nutzung nachjustieren.
-- Preisgrenzen (`min_multiplier`/`max_multiplier`) definieren, um extreme Ausschläge zu vermeiden.
-- Restock-Werte an Server-Ökonomie und Spieltempo anpassen.
+- Start with conservative limits and tune based on real usage.
+- Define price bounds (`min_multiplier`/`max_multiplier`) to avoid extreme swings.
+- Adjust restock values to your server economy and gameplay pace.

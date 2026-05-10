@@ -1,30 +1,30 @@
 # Marketplace: In-Game Management
 
-## Öffnen
+## Opening
 
-Der Marketplace kann geöffnet werden über:
+The Marketplace can be opened via:
 
 - Keybind: **O**
 - Command: `/marketblocks marketplace`
 
-## Editieren
+## Editing
 
-Typische Editor-Aktionen:
+Typical editor actions:
 
-- Seite erstellen, umbenennen, löschen
-- Offers hinzufügen, verschieben, löschen
-- Limits anpassen
-- Pricing anpassen
+- create, rename, or delete pages
+- add, move, or delete offers
+- adjust limits
+- adjust pricing
 
-Alle Mutationen werden serverseitig validiert und bei Erfolg an offene Viewer synchronisiert.
+All mutations are validated server-side and synchronized to open viewers on success.
 
-## Rechte
+## Permissions
 
-- Basiszugriff auf Editorfunktionen ist an Admin-/OP-Rechte gebunden.
-- Effektive Bearbeitung hängt zusätzlich vom globalen Admin-Mode ab.
+- Basic access to editor features requires admin/operator rights.
+- Effective editing permissions also depend on global admin mode.
 
-## Betriebshinweise
+## Operational Notes
 
-- Änderungen sofort im Team kommunizieren (Preise/Limits).
-- Bei größeren Umbauten besser in mehreren kleinen Schritten arbeiten.
-- Nach umfangreichen Änderungen Funktionscheck mit Testkäufen durchführen.
+- Communicate changes to the team immediately (prices/limits).
+- For bigger changes, work in smaller incremental steps.
+- After major edits, run functional checks with test purchases.

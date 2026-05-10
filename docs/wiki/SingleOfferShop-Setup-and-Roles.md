@@ -1,27 +1,27 @@
 # SingleOfferShop: Setup & Roles
 
-## Grundsetup
+## Basic Setup
 
-1. Shop platzieren.
-2. Als Owner Angebot konfigurieren:
-   - Result-Item setzen
-   - mindestens ein Payment setzen
-3. Angebot aktivieren und Testkauf durchführen.
+1. Place the shop.
+2. As owner, configure the offer:
+   - set result item
+   - set at least one payment
+3. Activate the offer and perform a test purchase.
 
-## Rollenmodell
+## Role Model
 
-- **Primary Owner**: volle Shopverwaltung
-- **zusätzliche Owner**: erweiterte Verwaltungsrechte
-- **Nicht-Owner**: können gemäß Shopzustand kaufen, aber nicht verwalten
+- **Primary Owner**: full shop management
+- **Additional Owners**: extended management rights
+- **Non-Owners**: can buy based on shop state, but cannot manage
 
-## Tab-Rechte (Kurzfassung)
+## Tab Access (Summary)
 
-- **Offers**: allgemein zugänglich (zustandsabhängig)
-- **Inventory**: nur Owner, sofern Admin-Shop nicht aktiv
-- **Settings**: Owner oder OP bei globalem Admin-Mode
-- **Log**: nur Owner
+- **Offers**: generally accessible (state-dependent)
+- **Inventory**: owner only, unless admin shop mode is active
+- **Settings**: owner or operator when global admin mode is enabled
+- **Log**: owner only
 
-## Hinweise
+## Notes
 
-- Alle kritischen Aktionen werden serverseitig validiert.
-- Bei Rollenproblemen zuerst Ownership-Zustand prüfen.
+- All critical actions are validated server-side.
+- For role issues, verify ownership state first.

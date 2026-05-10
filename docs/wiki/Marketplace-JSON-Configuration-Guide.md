@@ -1,40 +1,40 @@
-# Marketplace: JSON-Konfigurationsleitfaden
+# Marketplace: JSON Configuration Guide
 
-Diese Seite beschreibt den Aufbau und das Verhalten der Marketplace-Daten.
+This page describes the structure and behavior of Marketplace data.
 
-## Speicherort
+## Storage Location
 
-Marketplace-Daten werden serverseitig unter folgendem Pfad gespeichert:
+Marketplace data is stored server-side at:
 
 - `<world>/marketblocks/marketplace.json`
 
-## Datenstruktur (High-Level)
+## Data Structure (High-Level)
 
 - **MarketplaceData**
-  - Liste von **MarketplacePage**
+  - List of **MarketplacePage**
     - `name`
     - optional `icon`
-    - Liste von **MarketplaceOffer**
+    - List of **MarketplaceOffer**
       - `id` (UUID)
       - `result`
-      - `payments` (max. 2)
+      - `payments` (max 2)
       - `limits`
       - `pricing`
       - `runtime_state`
 
 ## Limits
 
-Ein Offer kann kombinieren:
+An offer can combine:
 
 - Daily-Limit
 - Stock-Limit
-- Restock-Intervall (Sekunden)
+- Restock interval (seconds)
 
-Werte `<= 0` gelten als „nicht gesetzt“.
+Values `<= 0` are treated as "not set".
 
 ## Demand Pricing
 
-Pricing nutzt Multiplikatoren und skaliert die Payment-Kosten dynamisch:
+Pricing uses multipliers and scales payment costs dynamically:
 
 - `enabled`
 - `base_multiplier`
@@ -42,27 +42,27 @@ Pricing nutzt Multiplikatoren und skaliert die Payment-Kosten dynamisch:
 - `min_multiplier`
 - `max_multiplier`
 
-Die effektiven Payment-Mengen werden aufgerundet (mindestens 1).
+Effective payment amounts are rounded up (minimum 1).
 
 ## Runtime-State
 
-Zur Laufzeit verwaltet der Marketplace u. a.:
+At runtime, the Marketplace manages:
 
-- verbleibenden Stock
-- Daily-Counter (global oder pro Spieler)
-- Restock-Zeitpunkt
-- Nachfragezustand (Demand)
+- remaining stock
+- daily counter (global or per-player)
+- restock timestamp
+- demand state
 
-## Dateisicherheit
+## File Safety
 
-Die Speicherung erfolgt mit Sicherheitsmechanismen:
+Saving uses safety mechanisms:
 
-- Schreiben über temporäre Datei + Replace/Move
-- Backup-Datei (`.bak`)
-- Restore aus Backup bei defekter Primärdatei
+- write via temporary file + replace/move
+- backup file (`.bak`)
+- restore from backup if the primary file is corrupted
 
-## Hinweise
+## Notes
 
-- JSON-Daten sind serverautoritativ.
-- Änderungen sollten nur erfolgen, wenn der Aufbau klar verstanden ist.
-- Für Alltagsverwaltung im Betrieb ist die Ingame-Editor-Funktion der empfohlene Weg.
+- JSON data is server-authoritative.
+- Edit the file manually only if you fully understand the structure.
+- For day-to-day operations, the in-game editor is the recommended path.
