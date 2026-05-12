@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.shop.log;
 
+import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.ItemStack;

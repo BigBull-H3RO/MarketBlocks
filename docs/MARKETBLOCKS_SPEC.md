@@ -46,7 +46,15 @@ Legacy-Schreibweise:
 ### 3.3 Netzwerk
 - Zentrale Registrierung aller Payloads: `NetworkHandler`
 - Strikte Trennung zwischen SingleOfferShop- und Marketplace-Paketgruppen
+- Paketstruktur: `network.singleoffer` und `network.marketplace` (keine CamelCase-Paketnamen)
 - Server synchronisiert Marketplace per vollständigem Snapshot + offer-spezifischen Runtime-ViewStates
+
+### 3.4 Paket- und Abhängigkeitsregeln
+- Feature-Slices liegen unter `feature/*` (z. B. `feature/singleoffer`, `feature/marketplace`, `feature/visual`, `feature/log`)
+- UI-Bausteine liegen unter `client/gui`, Feature-spezifische Screens/Renderer unter `feature/*/client/*`
+- `util` ist für echte, generische Hilfsklassen reserviert (keine Screen-/Render-/Block-Config-Logik)
+- Erlaubte Richtung: `feature/*` -> `core/*` (bzw. bestehende zentrale Initialisierungs-/Event-Pakete)
+- Zu vermeiden: direkte Feature-zu-Feature-Abhängigkeiten
 
 ---
 
