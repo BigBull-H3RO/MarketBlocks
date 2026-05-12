@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.data.lang;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.init.RegistriesInit;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 

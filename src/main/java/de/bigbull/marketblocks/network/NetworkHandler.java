@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.network;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.packets.marketplace.*;
-import de.bigbull.marketblocks.network.packets.singleOfferShop.*;
+import de.bigbull.marketblocks.network.marketplace.*;
+import de.bigbull.marketblocks.network.singleoffer.*;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;

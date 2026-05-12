@@ -1,9 +1,9 @@
 package de.bigbull.marketblocks.shop.server;
 
-import de.bigbull.marketblocks.shop.marketplace.DemandPricing;
-import de.bigbull.marketblocks.shop.marketplace.MarketplaceOfferRuntimeState;
-import de.bigbull.marketblocks.shop.marketplace.MarketplaceRuntimeMath;
-import de.bigbull.marketblocks.shop.marketplace.OfferLimit;
+import de.bigbull.marketblocks.feature.marketplace.data.DemandPricing;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferRuntimeState;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath;
+import de.bigbull.marketblocks.feature.marketplace.data.OfferLimit;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.neoforged.fml.loading.LoadingModList;

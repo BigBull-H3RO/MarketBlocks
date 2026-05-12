@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.shop.visual;
 
+import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
+import de.bigbull.marketblocks.feature.visual.npc.VillagerVisualProfession;
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.Bootstrap;
