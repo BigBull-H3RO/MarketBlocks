@@ -360,6 +360,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 }
             }
             case VISUALS -> {
+                npcNameField = null;
             }
             case ACCESS -> {
                 if (isOwner) {
