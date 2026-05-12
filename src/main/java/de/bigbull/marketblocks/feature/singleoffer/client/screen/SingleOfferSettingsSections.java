@@ -5,14 +5,18 @@ import de.bigbull.marketblocks.feature.visual.npc.VillagerVisualProfession;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import de.bigbull.marketblocks.client.gui.IconButton;
 import de.bigbull.marketblocks.client.gui.SideModeButton;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
+import java.util.Locale;
 import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -197,7 +201,166 @@ public final class SingleOfferSettingsSections {
 
     public record VisualSectionWidgets(EditBox npcNameField) {
     }
-}
 
+    public static void buildOfferVisualGlobalSection(
+            SingleOfferShopScreen host,
+            boolean offerItemVisualizationEnabled,
+            Consumer<Boolean> onOfferItemVisualizationChanged
+    ) {
+        Checkbox globalOfferVisualCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item.enabled"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 26)
+                .selected(offerItemVisualizationEnabled)
+                .onValueChange((checkbox, value) -> onOfferItemVisualizationChanged.accept(value))
+                .build());
+        globalOfferVisualCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.enabled.tooltip")));
+    }
+
+    public static void buildTradeStandOfferVisualSection(
+            SingleOfferShopScreen host,
+            float scaleMultiplier,
+            float rotationSpeed,
+            float heightOffset,
+            DoubleConsumer onScaleChanged,
+            DoubleConsumer onRotationChanged,
+            DoubleConsumer onHeightChanged,
+            Runnable onResetDefaults
+    ) {
+        OfferVisualSlider scaleSlider = host.addSettingsWidget(new OfferVisualSlider(
+                host.settingsLeftPos() + 8, host.settingsTopPos() + 48, 158, 16,
+                "gui.marketblocks.visuals.offer_item.trade_stand.scale",
+                0.60D, 1.40D, scaleMultiplier, 2, onScaleChanged
+        ));
+        scaleSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.trade_stand.scale.tooltip")));
+
+        OfferVisualSlider rotationSlider = host.addSettingsWidget(new OfferVisualSlider(
+                host.settingsLeftPos() + 8, host.settingsTopPos() + 68, 158, 16,
+                "gui.marketblocks.visuals.offer_item.trade_stand.rotation_speed",
+                0.0D, 12.0D, rotationSpeed, 1, onRotationChanged
+        ));
+        rotationSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.trade_stand.rotation_speed.tooltip")));
+
+        OfferVisualSlider heightSlider = host.addSettingsWidget(new OfferVisualSlider(
+                host.settingsLeftPos() + 8, host.settingsTopPos() + 88, 158, 16,
+                "gui.marketblocks.visuals.offer_item.trade_stand.height_offset",
+                -0.35D, 0.35D, heightOffset, 2, onHeightChanged
+        ));
+        heightSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.trade_stand.height_offset.tooltip")));
+
+        Button resetButton = host.addSettingsWidget(Button.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item.reset"),
+                        b -> onResetDefaults.run())
+                .bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 108, 120, 16)
+                .build());
+        resetButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.reset.tooltip")));
+    }
+
+    public static void buildMarketCrateOfferVisualSection(
+            SingleOfferShopScreen host,
+            int displayCount,
+            float heightOffset,
+            float rotationSpeed,
+            boolean randomPlacement,
+            boolean stableRandom,
+            DoubleConsumer onDisplayCountChanged,
+            DoubleConsumer onHeightChanged,
+            DoubleConsumer onRotationChanged,
+            Consumer<Boolean> onRandomPlacementChanged,
+            Consumer<Boolean> onStableRandomChanged,
+            Runnable onResetDefaults
+    ) {
+        OfferVisualSlider countSlider = host.addSettingsWidget(new OfferVisualSlider(
+                host.settingsLeftPos() + 8, host.settingsTopPos() + 48, 158, 16,
+                "gui.marketblocks.visuals.offer_item.market_crate.count",
+                1.0D, 12.0D, displayCount, 0, onDisplayCountChanged
+        ));
+        countSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.count.tooltip")));
+
+        OfferVisualSlider heightSlider = host.addSettingsWidget(new OfferVisualSlider(
+                host.settingsLeftPos() + 8, host.settingsTopPos() + 68, 158, 16,
+                "gui.marketblocks.visuals.offer_item.market_crate.height_offset",
+                -0.35D, 0.35D, heightOffset, 2, onHeightChanged
+        ));
+        heightSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.height_offset.tooltip")));
+
+        OfferVisualSlider rotationSlider = host.addSettingsWidget(new OfferVisualSlider(
+                host.settingsLeftPos() + 8, host.settingsTopPos() + 88, 158, 16,
+                "gui.marketblocks.visuals.offer_item.market_crate.rotation_speed",
+                0.0D, 12.0D, rotationSpeed, 1, onRotationChanged
+        ));
+        rotationSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.rotation_speed.tooltip")));
+
+        Checkbox randomPlacementCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.random_placement"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 108)
+                .selected(randomPlacement)
+                .onValueChange((checkbox, value) -> onRandomPlacementChanged.accept(value))
+                .build());
+        randomPlacementCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.random_placement.tooltip")));
+
+        Checkbox stableRandomCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.stable_random"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 126)
+                .selected(stableRandom)
+                .onValueChange((checkbox, value) -> onStableRandomChanged.accept(value))
+                .build());
+        stableRandomCheckbox.active = randomPlacement;
+        stableRandomCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.stable_random.tooltip")));
+
+        Button resetButton = host.addSettingsWidget(Button.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item.reset"),
+                        b -> onResetDefaults.run())
+                .bounds(host.settingsLeftPos() + 132, host.settingsTopPos() + 126, 34, 16)
+                .build());
+        resetButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.reset.tooltip")));
+    }
+
+    private static final class OfferVisualSlider extends AbstractSliderButton {
+        private final String labelKey;
+        private final double min;
+        private final double max;
+        private final int precision;
+        private final DoubleConsumer onChanged;
+
+        private OfferVisualSlider(int x, int y, int width, int height, String labelKey,
+                                  double min, double max, double initialValue, int precision,
+                                  DoubleConsumer onChanged) {
+            super(x, y, width, height, Component.empty(), 0.0D);
+            this.labelKey = labelKey;
+            this.min = min;
+            this.max = max;
+            this.precision = precision;
+            this.onChanged = onChanged;
+            this.value = normalize(initialValue);
+            updateMessage();
+        }
+
+        @Override
+        protected void updateMessage() {
+            double valueNow = denormalize();
+            String formatted = precision <= 0
+                    ? Integer.toString(Mth.floor(valueNow + 0.5D))
+                    : String.format(Locale.ROOT, "%." + precision + "f", valueNow);
+            setMessage(Component.translatable(labelKey).append(": ").append(Component.literal(formatted)));
+        }
+
+        @Override
+        protected void applyValue() {
+            onChanged.accept(denormalize());
+        }
+
+        private double normalize(double raw) {
+            if (max <= min) return 0.0D;
+            return Mth.clamp((raw - min) / (max - min), 0.0D, 1.0D);
+        }
+
+        private double denormalize() {
+            return min + (max - min) * value;
+        }
+    }
+}
 
 

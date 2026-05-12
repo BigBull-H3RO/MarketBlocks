@@ -3,10 +3,13 @@ package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.singleoffer.*;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
@@ -112,6 +115,15 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private Boolean draftVisualPurchaseParticles;
     private Boolean draftVisualPurchaseSounds;
     private Boolean draftVisualPaymentSlotSounds;
+    private Boolean draftOfferItemVisualizationEnabled;
+    private Float draftTradeStandOfferScaleMultiplier;
+    private Float draftTradeStandOfferRotationSpeed;
+    private Float draftTradeStandOfferHeightOffset;
+    private Integer draftMarketCrateDisplayCount;
+    private Float draftMarketCrateOfferHeightOffset;
+    private Float draftMarketCrateOfferRotationSpeed;
+    private Boolean draftMarketCrateRandomPlacement;
+    private Boolean draftMarketCrateStableRandom;
     private Boolean draftPurchaseXpFeedbackSound;
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
@@ -278,6 +290,15 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (draftVisualPurchaseParticles == null) draftVisualPurchaseParticles = visualSettings.purchaseParticlesEnabled();
         if (draftVisualPurchaseSounds == null) draftVisualPurchaseSounds = visualSettings.purchaseSoundsEnabled();
         if (draftVisualPaymentSlotSounds == null) draftVisualPaymentSlotSounds = visualSettings.paymentSlotSoundsEnabled();
+        if (draftOfferItemVisualizationEnabled == null) draftOfferItemVisualizationEnabled = visualSettings.offerItemVisualizationEnabled();
+        if (draftTradeStandOfferScaleMultiplier == null) draftTradeStandOfferScaleMultiplier = visualSettings.tradeStandOfferScaleMultiplier();
+        if (draftTradeStandOfferRotationSpeed == null) draftTradeStandOfferRotationSpeed = visualSettings.tradeStandOfferRotationSpeed();
+        if (draftTradeStandOfferHeightOffset == null) draftTradeStandOfferHeightOffset = visualSettings.tradeStandOfferHeightOffset();
+        if (draftMarketCrateDisplayCount == null) draftMarketCrateDisplayCount = visualSettings.marketCrateDisplayCount();
+        if (draftMarketCrateOfferHeightOffset == null) draftMarketCrateOfferHeightOffset = visualSettings.marketCrateOfferHeightOffset();
+        if (draftMarketCrateOfferRotationSpeed == null) draftMarketCrateOfferRotationSpeed = visualSettings.marketCrateOfferRotationSpeed();
+        if (draftMarketCrateRandomPlacement == null) draftMarketCrateRandomPlacement = visualSettings.marketCrateRandomPlacement();
+        if (draftMarketCrateStableRandom == null) draftMarketCrateStableRandom = visualSettings.marketCrateStableRandom();
         if (draftPurchaseXpFeedbackSound == null) draftPurchaseXpFeedbackSound = be.isPurchaseXpFeedbackSound();
 
         emitRedstoneEnabled = draftEmitRedstone;
@@ -361,6 +382,103 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
             case VISUALS -> {
                 npcNameField = null;
+                if (!isOwner) {
+                    break;
+                }
+
+                if (isTestShopBlock(be)) {
+                    break;
+                }
+
+                SingleOfferSettingsSections.buildOfferVisualGlobalSection(
+                        this,
+                        Boolean.TRUE.equals(draftOfferItemVisualizationEnabled),
+                        value -> {
+                            draftOfferItemVisualizationEnabled = value;
+                            applyVisualPreviewToClient(be);
+                            saved = false;
+                        }
+                );
+
+                if (isTradeStandVisualType(be)) {
+                    SingleOfferSettingsSections.buildTradeStandOfferVisualSection(
+                            this,
+                            draftTradeStandOfferScaleMultiplier == null ? ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_SCALE_MULTIPLIER : draftTradeStandOfferScaleMultiplier,
+                            draftTradeStandOfferRotationSpeed == null ? ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_ROTATION_SPEED : draftTradeStandOfferRotationSpeed,
+                            draftTradeStandOfferHeightOffset == null ? ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_HEIGHT_OFFSET : draftTradeStandOfferHeightOffset,
+                            value -> {
+                                draftTradeStandOfferScaleMultiplier = (float) value;
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                            },
+                            value -> {
+                                draftTradeStandOfferRotationSpeed = (float) value;
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                            },
+                            value -> {
+                                draftTradeStandOfferHeightOffset = (float) value;
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                            },
+                            () -> {
+                                draftTradeStandOfferScaleMultiplier = ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_SCALE_MULTIPLIER;
+                                draftTradeStandOfferRotationSpeed = ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_ROTATION_SPEED;
+                                draftTradeStandOfferHeightOffset = ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_HEIGHT_OFFSET;
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                                rebuildUI();
+                            }
+                    );
+                } else if (isMarketCrateVisualType(be)) {
+                    SingleOfferSettingsSections.buildMarketCrateOfferVisualSection(
+                            this,
+                            draftMarketCrateDisplayCount == null ? ShopVisualSettings.DEFAULT_MARKET_CRATE_DISPLAY_COUNT : draftMarketCrateDisplayCount,
+                            draftMarketCrateOfferHeightOffset == null ? ShopVisualSettings.DEFAULT_MARKET_CRATE_OFFER_HEIGHT_OFFSET : draftMarketCrateOfferHeightOffset,
+                            draftMarketCrateOfferRotationSpeed == null ? ShopVisualSettings.DEFAULT_MARKET_CRATE_OFFER_ROTATION_SPEED : draftMarketCrateOfferRotationSpeed,
+                            Boolean.TRUE.equals(draftMarketCrateRandomPlacement),
+                            Boolean.TRUE.equals(draftMarketCrateStableRandom),
+                            value -> {
+                                draftMarketCrateDisplayCount = Mth.clamp((int) Math.round(value), 1, 12);
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                            },
+                            value -> {
+                                draftMarketCrateOfferHeightOffset = (float) value;
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                            },
+                            value -> {
+                                draftMarketCrateOfferRotationSpeed = (float) value;
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                            },
+                            value -> {
+                                draftMarketCrateRandomPlacement = value;
+                                if (!value) {
+                                    draftMarketCrateStableRandom = true;
+                                }
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                                rebuildUI();
+                            },
+                            value -> {
+                                draftMarketCrateStableRandom = value;
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                            },
+                            () -> {
+                                draftMarketCrateDisplayCount = ShopVisualSettings.DEFAULT_MARKET_CRATE_DISPLAY_COUNT;
+                                draftMarketCrateOfferHeightOffset = ShopVisualSettings.DEFAULT_MARKET_CRATE_OFFER_HEIGHT_OFFSET;
+                                draftMarketCrateOfferRotationSpeed = ShopVisualSettings.DEFAULT_MARKET_CRATE_OFFER_ROTATION_SPEED;
+                                draftMarketCrateRandomPlacement = ShopVisualSettings.DEFAULT_MARKET_CRATE_RANDOM_PLACEMENT;
+                                draftMarketCrateStableRandom = ShopVisualSettings.DEFAULT_MARKET_CRATE_STABLE_RANDOM;
+                                applyVisualPreviewToClient(be);
+                                saved = false;
+                                rebuildUI();
+                            }
+                    );
+                }
             }
             case ACCESS -> {
                 if (isOwner) {
@@ -377,12 +495,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
             String name = draftShopName != null ? draftShopName : "";
             boolean emit = emitRedstoneEnabled;
-            ShopVisualSettings visuals = new ShopVisualSettings(
-                    Boolean.TRUE.equals(draftVisualNpcEnabled), draftVisualNpcName,
-                    draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession,
-                    Boolean.TRUE.equals(draftVisualPurchaseParticles), Boolean.TRUE.equals(draftVisualPurchaseSounds),
-                    Boolean.TRUE.equals(draftVisualPaymentSlotSounds)
-            );
+            ShopVisualSettings visuals = createVisualSettingsFromDraft();
 
             be.setShopNameClient(name);
             be.setEmitRedstoneClient(emit);
@@ -410,7 +523,16 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     be.getBlockPos(), menu.getMode(leftDir), menu.getMode(rightDir), menu.getMode(bottomDir), menu.getMode(backDir),
                     name, emit, visuals.npcEnabled(), visuals.npcName(), visuals.profession().serializedName(),
                     visuals.purchaseParticlesEnabled(), visuals.purchaseSoundsEnabled(), visuals.paymentSlotSoundsEnabled(),
-                    Boolean.TRUE.equals(draftPurchaseXpFeedbackSound)
+                    Boolean.TRUE.equals(draftPurchaseXpFeedbackSound),
+                    visuals.offerItemVisualizationEnabled(),
+                    visuals.tradeStandOfferScaleMultiplier(),
+                    visuals.tradeStandOfferRotationSpeed(),
+                    visuals.tradeStandOfferHeightOffset(),
+                    visuals.marketCrateDisplayCount(),
+                    visuals.marketCrateOfferHeightOffset(),
+                    visuals.marketCrateOfferRotationSpeed(),
+                    visuals.marketCrateRandomPlacement(),
+                    visuals.marketCrateStableRandom()
             ));
             if (menu.isPrimaryOwner()) {
                 NetworkHandler.sendToServer(new UpdateOwnersPacket(be.getBlockPos(), selectedOwners));
@@ -420,6 +542,15 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             draftVisualNpcEnabled = visuals.npcEnabled(); draftVisualNpcName = visuals.npcName();
             draftVisualNpcProfession = visuals.profession(); draftVisualPurchaseParticles = visuals.purchaseParticlesEnabled();
             draftVisualPurchaseSounds = visuals.purchaseSoundsEnabled(); draftVisualPaymentSlotSounds = visuals.paymentSlotSoundsEnabled();
+            draftOfferItemVisualizationEnabled = visuals.offerItemVisualizationEnabled();
+            draftTradeStandOfferScaleMultiplier = visuals.tradeStandOfferScaleMultiplier();
+            draftTradeStandOfferRotationSpeed = visuals.tradeStandOfferRotationSpeed();
+            draftTradeStandOfferHeightOffset = visuals.tradeStandOfferHeightOffset();
+            draftMarketCrateDisplayCount = visuals.marketCrateDisplayCount();
+            draftMarketCrateOfferHeightOffset = visuals.marketCrateOfferHeightOffset();
+            draftMarketCrateOfferRotationSpeed = visuals.marketCrateOfferRotationSpeed();
+            draftMarketCrateRandomPlacement = visuals.marketCrateRandomPlacement();
+            draftMarketCrateStableRandom = visuals.marketCrateStableRandom();
             draftPurchaseXpFeedbackSound = Boolean.TRUE.equals(draftPurchaseXpFeedbackSound);
             saved = true;
         }).bounds(leftPos + imageWidth - 50, topPos + imageHeight - 24, 44, 18).build());
@@ -846,7 +977,13 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
         }
         if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VISUALS) {
-            graphics.drawString(font, Component.translatable("gui.marketblocks.settings.visual.placeholder"), 10, 24, 0x808080, false);
+            if (isTestShopBlock(be)) {
+                graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.offer_item.test_shop_excluded"), 10, 24, 0x808080, false);
+            } else if (isTradeStandVisualType(be)) {
+                graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.offer_item.type.trade_stand"), 10, 38, 4210752, false);
+            } else if (isMarketCrateVisualType(be)) {
+                graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.offer_item.type.market_crate"), 10, 38, 4210752, false);
+            }
         }
         if (!menu.isOwner() && !canToggleAdminShop()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
@@ -1019,6 +1156,42 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private VisualNpcPlacementResult resolveVisualPlacementResult(SingleOfferShopBlockEntity be) {
         if (be.getLevel() == null) return VisualNpcPlacementResult.OK;
         return ShopVisualPlacementValidator.validate(be.getLevel(), be.getBlockPos(), be.getBlockState().getValue(BaseShopBlock.FACING)).result();
+    }
+
+    private ShopVisualSettings createVisualSettingsFromDraft() {
+        return new ShopVisualSettings(
+                Boolean.TRUE.equals(draftVisualNpcEnabled),
+                draftVisualNpcName,
+                draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession,
+                Boolean.TRUE.equals(draftVisualPurchaseParticles),
+                Boolean.TRUE.equals(draftVisualPurchaseSounds),
+                Boolean.TRUE.equals(draftVisualPaymentSlotSounds),
+                draftOfferItemVisualizationEnabled == null ? ShopVisualSettings.DEFAULT_OFFER_ITEM_VISUALIZATION_ENABLED : draftOfferItemVisualizationEnabled,
+                draftTradeStandOfferScaleMultiplier == null ? ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_SCALE_MULTIPLIER : draftTradeStandOfferScaleMultiplier,
+                draftTradeStandOfferRotationSpeed == null ? ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_ROTATION_SPEED : draftTradeStandOfferRotationSpeed,
+                draftTradeStandOfferHeightOffset == null ? ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_HEIGHT_OFFSET : draftTradeStandOfferHeightOffset,
+                draftMarketCrateDisplayCount == null ? ShopVisualSettings.DEFAULT_MARKET_CRATE_DISPLAY_COUNT : draftMarketCrateDisplayCount,
+                draftMarketCrateOfferHeightOffset == null ? ShopVisualSettings.DEFAULT_MARKET_CRATE_OFFER_HEIGHT_OFFSET : draftMarketCrateOfferHeightOffset,
+                draftMarketCrateOfferRotationSpeed == null ? ShopVisualSettings.DEFAULT_MARKET_CRATE_OFFER_ROTATION_SPEED : draftMarketCrateOfferRotationSpeed,
+                draftMarketCrateRandomPlacement == null ? ShopVisualSettings.DEFAULT_MARKET_CRATE_RANDOM_PLACEMENT : draftMarketCrateRandomPlacement,
+                draftMarketCrateStableRandom == null ? ShopVisualSettings.DEFAULT_MARKET_CRATE_STABLE_RANDOM : draftMarketCrateStableRandom
+        );
+    }
+
+    private void applyVisualPreviewToClient(SingleOfferShopBlockEntity be) {
+        be.setVisualSettingsClient(createVisualSettingsFromDraft());
+    }
+
+    private boolean isTradeStandVisualType(SingleOfferShopBlockEntity be) {
+        return be.getBlockState().getBlock() instanceof TradeStandBlock && !isTestShopBlock(be);
+    }
+
+    private boolean isMarketCrateVisualType(SingleOfferShopBlockEntity be) {
+        return be.getBlockState().getBlock() instanceof MarketCrateBlock;
+    }
+
+    private boolean isTestShopBlock(SingleOfferShopBlockEntity be) {
+        return be.getBlockState().is(RegistriesInit.SHOP_BLOCK_TEST.get());
     }
 
     <T extends net.minecraft.client.gui.components.AbstractWidget> T addSettingsWidget(T widget) {

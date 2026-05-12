@@ -3,8 +3,11 @@ package de.bigbull.marketblocks.feature.singleoffer.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
+import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
+import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
 import de.bigbull.marketblocks.feature.visual.render.VisualShopNpcRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -21,6 +24,7 @@ import net.minecraft.world.phys.Vec3;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 import de.bigbull.marketblocks.MarketBlocks;
 
@@ -68,39 +72,64 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
         Font font = Minecraft.getInstance().font;
         Direction dir = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
+        ShopVisualSettings visualSettings = blockEntity.getVisualSettings();
+        boolean offerVisualsEnabled = visualSettings.offerItemVisualizationEnabled();
+        boolean isTradeStand = blockEntity.getBlockState().getBlock() instanceof TradeStandBlock;
+        boolean isMarketCrate = blockEntity.getBlockState().getBlock() instanceof MarketCrateBlock;
 
         // --- 1. Offer-Item schwebend ueber dem Block ---
         ItemStack result = blockEntity.getOfferResult();
-        if (!result.isEmpty()) {
+        if (offerVisualsEnabled && !result.isEmpty()) {
             ShopRenderConfig.SlotRenderConfig offerItem = config.getOfferItem();
             BakedModel offerModel = itemRenderer.getModel(result, blockEntity.getLevel(), null, 0);
             float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result);
+            if (isTradeStand) {
+                finalOfferScale *= visualSettings.tradeStandOfferScaleMultiplier();
+            }
 
             if (config.isOfferItemFloating()) {
                 poseStack.pushPose();
-                poseStack.translate(offerItem.x(), offerItem.y(), offerItem.z());
-                float time = (blockEntity.getLevel().getGameTime() + partialTick) * 2.0f;
-                poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
+                float tradeStandHeightOffset = isTradeStand ? visualSettings.tradeStandOfferHeightOffset() : 0.0F;
+                poseStack.translate(offerItem.x(), offerItem.y() + tradeStandHeightOffset, offerItem.z());
+                float rotationSpeed = isTradeStand ? visualSettings.tradeStandOfferRotationSpeed() : 2.0F;
+                if (rotationSpeed > 0.0F) {
+                    float time = (blockEntity.getLevel().getGameTime() + partialTick) * rotationSpeed;
+                    poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
+                }
                 applySlotRotation(poseStack, offerItem);
                 poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
                 itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, packedLight, packedOverlay,
                         poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
                 poseStack.popPose();
             } else {
-                int displayCount = config.getOfferItemDisplayCount();
+                int displayCount = isMarketCrate
+                        ? Mth.clamp(visualSettings.marketCrateDisplayCount(), 1, 12)
+                        : config.getOfferItemDisplayCount();
+                boolean randomPlacement = !isMarketCrate || visualSettings.marketCrateRandomPlacement();
+                boolean stableRandom = !isMarketCrate || visualSettings.marketCrateStableRandom();
+                float crateHeightOffset = isMarketCrate ? visualSettings.marketCrateOfferHeightOffset() : 0.0F;
+                float crateRotationSpeed = isMarketCrate ? visualSettings.marketCrateOfferRotationSpeed() : 0.0F;
                 long seed = blockEntity.getBlockPos().asLong();
+                if (!stableRandom) {
+                    seed ^= blockEntity.getLevel().getGameTime();
+                }
                 java.util.Random rand = new java.util.Random(seed);
 
                 for (int i = 0; i < displayCount; i++) {
                     poseStack.pushPose();
-                    double offsetX = (rand.nextDouble() - 0.5) * 0.4;
-                    double offsetZ = (rand.nextDouble() - 0.5) * 0.4;
+                    double offsetX = randomPlacement ? (rand.nextDouble() - 0.5) * 0.4 : 0.0;
+                    double offsetZ = randomPlacement ? (rand.nextDouble() - 0.5) * 0.4 : 0.0;
                     double offsetY = i * 0.05; // Stack them slightly
 
-                    poseStack.translate(offerItem.x() + offsetX, offerItem.y() + offsetY, offerItem.z() + offsetZ);
+                    poseStack.translate(offerItem.x() + offsetX, offerItem.y() + offsetY + crateHeightOffset, offerItem.z() + offsetZ);
 
-                    float randomYaw = rand.nextFloat() * 360.0f;
-                    poseStack.mulPose(Axis.YP.rotationDegrees(randomYaw));
+                    float randomYaw = randomPlacement ? rand.nextFloat() * 360.0f : 0.0f;
+                    float yaw = randomYaw;
+                    if (crateRotationSpeed > 0.0F) {
+                        float animatedYaw = (blockEntity.getLevel().getGameTime() + partialTick) * crateRotationSpeed;
+                        yaw = (yaw + animatedYaw) % 360.0F;
+                    }
+                    poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
 
                     applySlotRotation(poseStack, offerItem);
                     poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
@@ -118,7 +147,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         ItemStack payment1 = blockEntity.getOfferPayment1();
         ItemStack payment2 = blockEntity.getOfferPayment2();
 
-        if (config.isShowFrontOffer() && !result.isEmpty()) {
+        if (offerVisualsEnabled && config.isShowFrontOffer() && !result.isEmpty()) {
             renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, packedLight, packedOverlay,
                     result, dir, config.getFrontOfferItem(), null);
         }
