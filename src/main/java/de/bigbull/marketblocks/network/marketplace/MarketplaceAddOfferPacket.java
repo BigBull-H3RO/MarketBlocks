@@ -2,10 +2,10 @@ package de.bigbull.marketblocks.network.marketplace;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
-import de.bigbull.marketblocks.feature.marketplace.DemandPricing;
-import de.bigbull.marketblocks.feature.marketplace.OfferLimit;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceManager;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceOffer;
+import de.bigbull.marketblocks.feature.marketplace.data.DemandPricing;
+import de.bigbull.marketblocks.feature.marketplace.data.OfferLimit;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;

@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.network.singleoffer;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.config.Config;
-import de.bigbull.marketblocks.feature.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import io.netty.buffer.ByteBuf;

@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.menu;
 
-import de.bigbull.marketblocks.feature.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.client.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;

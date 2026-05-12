@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.menu;
 
-import de.bigbull.marketblocks.feature.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 
 /**
  * Shared contract for single-offer shop menus.

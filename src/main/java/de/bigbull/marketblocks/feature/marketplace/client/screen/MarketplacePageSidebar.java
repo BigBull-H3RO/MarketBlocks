@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
-import de.bigbull.marketblocks.feature.marketplace.MarketplacePage;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

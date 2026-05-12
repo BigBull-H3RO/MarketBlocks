@@ -1,13 +1,13 @@
 package de.bigbull.marketblocks.feature.visual.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.bigbull.marketblocks.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.visual.IVisualShopNPC;
-import de.bigbull.marketblocks.feature.visual.ShopNpcAnimationState;
-import de.bigbull.marketblocks.feature.visual.ShopVisualPlacementValidator;
-import de.bigbull.marketblocks.feature.visual.ShopVisualSettings;
-import de.bigbull.marketblocks.feature.visual.VisualNpcAnimationEvent;
-import de.bigbull.marketblocks.feature.visual.VisualNpcPlacement;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
+import de.bigbull.marketblocks.feature.visual.npc.IVisualShopNPC;
+import de.bigbull.marketblocks.feature.visual.npc.ShopNpcAnimationState;
+import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
+import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
+import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
+import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;

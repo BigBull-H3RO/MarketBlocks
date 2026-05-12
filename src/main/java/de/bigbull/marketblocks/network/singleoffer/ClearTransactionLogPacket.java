@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.network.singleoffer;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.log.ShopTransactionLogSavedData;
-import de.bigbull.marketblocks.feature.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;

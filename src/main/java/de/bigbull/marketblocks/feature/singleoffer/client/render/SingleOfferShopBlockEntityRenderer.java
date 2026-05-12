@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.singleoffer.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
-import de.bigbull.marketblocks.feature.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

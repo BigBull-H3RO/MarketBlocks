@@ -1,10 +1,10 @@
 package de.bigbull.marketblocks.feature.singleoffer.menu;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.init.RegistriesInit;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
-import de.bigbull.marketblocks.feature.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;

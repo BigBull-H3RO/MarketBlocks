@@ -1,10 +1,10 @@
 package de.bigbull.marketblocks.feature.marketplace.menu;
 
-import de.bigbull.marketblocks.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceClientState;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceManager;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceOffer;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceOfferViewState;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceClientState;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewState;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;

@@ -1,10 +1,10 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
 import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceClientState;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceOffer;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceOfferViewState;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceRuntimeMath;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceClientState;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewState;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;

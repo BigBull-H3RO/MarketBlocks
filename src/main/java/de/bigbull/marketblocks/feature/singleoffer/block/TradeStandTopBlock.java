@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
-import de.bigbull.marketblocks.init.RegistriesInit;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;

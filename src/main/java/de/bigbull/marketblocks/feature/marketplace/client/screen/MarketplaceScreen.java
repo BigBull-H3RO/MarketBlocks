@@ -10,7 +10,7 @@ import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.client.gui.IconButton;
 import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.client.gui.VanillaIconButton;
-import de.bigbull.marketblocks.feature.marketplace.*;
+import de.bigbull.marketblocks.feature.marketplace.data.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;

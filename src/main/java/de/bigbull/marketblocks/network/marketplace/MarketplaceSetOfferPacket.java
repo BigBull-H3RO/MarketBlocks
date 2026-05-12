@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.network.marketplace;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceManager;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

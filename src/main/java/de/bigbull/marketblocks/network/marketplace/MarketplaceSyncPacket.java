@@ -2,9 +2,9 @@ package de.bigbull.marketblocks.network.marketplace;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceClientState;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceOfferViewState;
-import de.bigbull.marketblocks.feature.marketplace.MarketplaceSerialization;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceClientState;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewState;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceSerialization;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;

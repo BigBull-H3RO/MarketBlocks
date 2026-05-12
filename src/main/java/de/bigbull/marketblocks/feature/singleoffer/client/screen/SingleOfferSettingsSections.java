@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.feature.visual.VillagerVisualProfession;
-import de.bigbull.marketblocks.feature.visual.VisualNpcPlacementResult;
+import de.bigbull.marketblocks.feature.visual.npc.VillagerVisualProfession;
+import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import de.bigbull.marketblocks.client.gui.IconButton;
 import de.bigbull.marketblocks.client.gui.SideModeButton;
 import net.minecraft.client.gui.components.Button;
