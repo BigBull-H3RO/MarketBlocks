@@ -342,7 +342,7 @@ public final class SingleOfferSettingsSections {
         protected void updateMessage() {
             double valueNow = denormalize();
             String formatted = precision <= 0
-                    ? Integer.toString(Mth.floor(valueNow + 0.5D))
+                    ? Integer.toString((int) Math.round(valueNow))
                     : String.format(Locale.ROOT, "%." + precision + "f", valueNow);
             setMessage(Component.translatable(labelKey).append(": ").append(Component.literal(formatted)));
         }
@@ -358,9 +358,11 @@ public final class SingleOfferSettingsSections {
         }
 
         private double denormalize() {
-            return min + (max - min) * value;
+            double raw = min + (max - min) * value;
+            if (precision <= 0) {
+                return Math.round(raw);
+            }
+            return raw;
         }
     }
 }
-
-

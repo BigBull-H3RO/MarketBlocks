@@ -439,7 +439,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                             Boolean.TRUE.equals(draftMarketCrateRandomPlacement),
                             Boolean.TRUE.equals(draftMarketCrateStableRandom),
                             value -> {
-                                draftMarketCrateDisplayCount = Mth.clamp((int) Math.round(value), 1, 12);
+                                draftMarketCrateDisplayCount = ShopVisualSettings.clampMarketCrateDisplayCount((int) value);
                                 applyVisualPreviewToClient(be);
                                 saved = false;
                             },
