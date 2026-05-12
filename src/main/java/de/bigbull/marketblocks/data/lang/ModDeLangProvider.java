@@ -55,7 +55,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");
         add("gui.marketblocks.settings.category.general", "Allgemein");
         add("gui.marketblocks.settings.category.io", "I/O");
-        add("gui.marketblocks.settings.category.villager", "Villager");
+        add("gui.marketblocks.settings.category.villager", "Dorfbewohner");
         add("gui.marketblocks.settings.category.visual", "Visual");
         add("gui.marketblocks.settings.category.access", "Zugriff");
         add("gui.marketblocks.settings.visual.placeholder", "Weitere Visual-Einstellungen folgen.");
