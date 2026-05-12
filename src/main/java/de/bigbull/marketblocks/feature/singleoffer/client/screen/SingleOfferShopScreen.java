@@ -324,7 +324,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     );
                 }
             }
-            case VISUALS -> {
+            case VILLAGER -> {
                 if (isOwner) {
                     SingleOfferSettingsSections.VisualSectionWidgets widgets = SingleOfferSettingsSections.buildVisualSection(
                             this, Boolean.TRUE.equals(draftVisualNpcEnabled), draftVisualNpcName, draftVisualNpcProfession,
@@ -358,6 +358,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     );
                     npcNameField = widgets.npcNameField();
                 }
+            }
+            case VISUALS -> {
             }
             case ACCESS -> {
                 if (isOwner) {
@@ -836,11 +838,14 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (menu.isOwner() && activeSettingsCategory == SettingsCategory.GENERAL) {
             graphics.drawString(font, Component.translatable("gui.marketblocks.shop_name"), 10, 20, 4210752, false);
         }
-        if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VISUALS) {
+        if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VILLAGER) {
             graphics.drawString(font, Component.translatable("gui.marketblocks.visuals.npc_name"), 48, 18, 4210752, false);
             if (!visualPlacementResult.canSpawn()) {
                 graphics.drawString(font, Component.translatable(visualPlacementResult.translationKey()), 8, 84, 0xCC3333, false);
             }
+        }
+        if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VISUALS) {
+            graphics.drawString(font, Component.translatable("gui.marketblocks.settings.visual.placeholder"), 10, 24, 0x808080, false);
         }
         if (!menu.isOwner() && !canToggleAdminShop()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
