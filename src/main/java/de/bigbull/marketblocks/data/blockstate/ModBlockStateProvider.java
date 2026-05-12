@@ -19,15 +19,15 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        registerShopBlock(RegistriesInit.SHOP_BLOCK_TEST.get(), "shop_block_test", 0);
-        registerShopBlock(RegistriesInit.MARKETCRATE_BLOCK.get(), "marketcrate", 180);
+        registerShopBlock(RegistriesInit.SHOP_BLOCK_TEST.get(), "shop_block_test", 0, false);
+        registerShopBlock(RegistriesInit.MARKETCRATE_BLOCK.get(), "marketcrate", 180, true);
         registerTradeStandBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), 0);
 
         ModelFile topModel = models().getExistingFile(modLoc("block/trade_stand_block_top"));
         simpleBlock(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), topModel);
     }
 
-    private void registerShopBlock(Block block, String modelName, int rotationOffset) {
+    private void registerShopBlock(Block block, String modelName, int rotationOffset, boolean flipEastWest) {
         ModelFile model = models().getExistingFile(modLoc("block/" + modelName));
         getVariantBuilder(block)
                 .forAllStates(state -> {
@@ -38,6 +38,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         case WEST -> 270;
                         default -> 0;
                     };
+                    if (flipEastWest && facing.getAxis() == Direction.Axis.X) {
+                        baseRotation = Math.floorMod(baseRotation + 180, 360);
+                    }
                     int rotationY = Math.floorMod(baseRotation + rotationOffset, 360);
                     return ConfiguredModel.builder()
                             .modelFile(model)

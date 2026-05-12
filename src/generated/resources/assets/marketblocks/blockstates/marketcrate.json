@@ -2,11 +2,11 @@
   "variants": {
     "facing=east,powered=false": {
       "model": "marketblocks:block/marketcrate",
-      "y": 270
+      "y": 90
     },
     "facing=east,powered=true": {
       "model": "marketblocks:block/marketcrate",
-      "y": 270
+      "y": 90
     },
     "facing=north,powered=false": {
       "model": "marketblocks:block/marketcrate"
@@ -24,11 +24,11 @@
     },
     "facing=west,powered=false": {
       "model": "marketblocks:block/marketcrate",
-      "y": 90
+      "y": 270
     },
     "facing=west,powered=true": {
       "model": "marketblocks:block/marketcrate",
-      "y": 90
+      "y": 270
     }
   }
 }
