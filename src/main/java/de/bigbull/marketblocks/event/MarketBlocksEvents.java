@@ -2,8 +2,8 @@ package de.bigbull.marketblocks.event;
 
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.shop.marketplace.MarketplaceManager;
-import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.feature.marketplace.MarketplaceManager;
+import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;

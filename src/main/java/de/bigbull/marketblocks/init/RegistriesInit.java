@@ -1,12 +1,12 @@
 package de.bigbull.marketblocks.init;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.shop.marketplace.menu.MarketplaceMenu;
-import de.bigbull.marketblocks.shop.singleoffer.block.MarketCrateBlock;
-import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandBlock;
-import de.bigbull.marketblocks.shop.singleoffer.block.TradeStandTopBlock;
-import de.bigbull.marketblocks.shop.singleoffer.block.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.shop.singleoffer.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
+import de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandTopBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
