@@ -67,8 +67,10 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop Settings");
         add("gui.marketblocks.settings.category.general", "General");
         add("gui.marketblocks.settings.category.io", "I/O");
-        add("gui.marketblocks.settings.category.visuals", "Visuals");
+        add("gui.marketblocks.settings.category.villager", "Villager");
+        add("gui.marketblocks.settings.category.visual", "Visual");
         add("gui.marketblocks.settings.category.access", "Access");
+        add("gui.marketblocks.settings.visual.placeholder", "More visual settings coming soon.");
         add("gui.marketblocks.log_title", "Transaction Log");
         add("gui.marketblocks.log.empty", "No transactions yet");
         add("gui.marketblocks.log.clear", "Clear log");

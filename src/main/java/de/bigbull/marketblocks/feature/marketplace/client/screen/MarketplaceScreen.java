@@ -83,9 +83,9 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private static final ResourceLocation ADD_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
     private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
-    private static final ResourceLocation ADD_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/add_page.png");
-    private static final ResourceLocation DELETE_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete_page.png");
-    private static final ResourceLocation RENAME_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/rename_page.png");
+    private static final ResourceLocation ADD_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/marketplace/add_page.png");
+    private static final ResourceLocation DELETE_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/marketplace/delete_page.png");
+    private static final ResourceLocation RENAME_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/marketplace/rename_page.png");
     private static final ResourceLocation CLEAR_SELECTION_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/clear_selection.png");
     private static final ResourceLocation MOVE_UP_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_up_mini.png");
     private static final ResourceLocation MOVE_DOWN_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_down_mini.png");
@@ -853,5 +853,4 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
     }
 }
-
 
