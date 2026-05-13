@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.feature.singleoffer.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
@@ -73,7 +74,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         Font font = Minecraft.getInstance().font;
         Direction dir = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
         ShopVisualSettings visualSettings = blockEntity.getVisualSettings();
-        boolean offerVisualsEnabled = visualSettings.offerItemVisualizationEnabled();
+        boolean offerVisualsEnabled = Config.OFFER_ITEM_VISUALIZATION_GLOBAL_ENABLED.get() && visualSettings.offerItemVisualizationEnabled();
         boolean isTradeStand = blockEntity.getBlockState().getBlock() instanceof TradeStandBlock;
         boolean isMarketCrate = blockEntity.getBlockState().getBlock() instanceof MarketCrateBlock;
 

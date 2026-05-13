@@ -33,7 +33,16 @@ class ShopVisualSettingsTest {
                 VillagerVisualProfession.LIBRARIAN,
                 true,
                 false,
-                true
+                true,
+                ShopVisualSettings.DEFAULT_OFFER_ITEM_VISUALIZATION_ENABLED,
+                ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_SCALE_MULTIPLIER,
+                ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_ROTATION_SPEED,
+                ShopVisualSettings.DEFAULT_TRADE_STAND_OFFER_HEIGHT_OFFSET,
+                ShopVisualSettings.DEFAULT_MARKET_CRATE_DISPLAY_COUNT,
+                ShopVisualSettings.DEFAULT_MARKET_CRATE_OFFER_HEIGHT_OFFSET,
+                ShopVisualSettings.DEFAULT_MARKET_CRATE_OFFER_ROTATION_SPEED,
+                ShopVisualSettings.DEFAULT_MARKET_CRATE_RANDOM_PLACEMENT,
+                ShopVisualSettings.DEFAULT_MARKET_CRATE_STABLE_RANDOM
         );
 
         assertEquals("Handler", settings.npcName());

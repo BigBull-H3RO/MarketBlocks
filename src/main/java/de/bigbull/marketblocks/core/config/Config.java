@@ -17,6 +17,7 @@ public class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_MIXIN_DESYNC_LOGGING;
     public static final ModConfigSpec.BooleanValue VISUAL_NPC_FORCE_OFFSCREEN_RENDERING;
     public static final ModConfigSpec.IntValue VISUAL_NPC_RENDER_VIEW_DISTANCE;
+    public static final ModConfigSpec.BooleanValue OFFER_ITEM_VISUALIZATION_GLOBAL_ENABLED;
 
     static {
         COMMON_BUILDER.push("General Settings");
@@ -59,6 +60,10 @@ public class Config {
         VISUAL_NPC_RENDER_VIEW_DISTANCE = COMMON_BUILDER
                 .comment("Maximum distance in blocks for rendering visual shop NPCs.")
                 .defineInRange("visualNpcRenderViewDistance", 128, 16, 512);
+        OFFER_ITEM_VISUALIZATION_GLOBAL_ENABLED = COMMON_BUILDER
+                .comment("Global switch for rendering SingleOfferShop offer items (all shop variants).",
+                        "If disabled, per-shop visual offer toggles are ignored.")
+                .define("offerItemVisualizationGlobalEnabled", true);
         COMMON_BUILDER.pop();
 
         COMMON_BUILDER.push("Debug Settings");
