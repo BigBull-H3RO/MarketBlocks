@@ -89,7 +89,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.offer_item.type.market_crate", "MarketCrate Angebots-Items");
         add("gui.marketblocks.visuals.offer_item.test_shop_excluded", "Visual-Offer-Einstellungen sind beim Test-Shop deaktiviert.");
         add("gui.marketblocks.visuals.offer_item.enabled", "Offer-Item anzeigen");
-        add("gui.marketblocks.visuals.offer_item.enabled.tooltip", "Aktiviert/deaktiviert die Angebots-Item-Darstellung für diesen Shop");
+        add("gui.marketblocks.visuals.offer_item.enabled.tooltip", "Aktiviert/deaktiviert die Angebots-Item-Darstellung nur für diesen Shop (globale Config kann Rendering trotzdem deaktivieren)");
         add("gui.marketblocks.visuals.offer_item.trade_stand.scale", "Größe");
         add("gui.marketblocks.visuals.offer_item.trade_stand.scale.tooltip", "Skaliert das schwebende Offer-Item beim TradeStand");
         add("gui.marketblocks.visuals.offer_item.trade_stand.rotation_speed", "Drehgeschwindigkeit");

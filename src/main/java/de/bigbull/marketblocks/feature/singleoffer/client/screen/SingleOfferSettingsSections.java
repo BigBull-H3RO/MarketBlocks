@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VillagerVisualProfession;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import de.bigbull.marketblocks.client.gui.IconButton;
@@ -230,21 +231,21 @@ public final class SingleOfferSettingsSections {
         OfferVisualSlider scaleSlider = host.addSettingsWidget(new OfferVisualSlider(
                 host.settingsLeftPos() + 8, host.settingsTopPos() + 48, 158, 16,
                 "gui.marketblocks.visuals.offer_item.trade_stand.scale",
-                0.60D, 1.40D, scaleMultiplier, 2, onScaleChanged
+                ShopVisualSettings.MIN_TRADE_STAND_OFFER_SCALE_MULTIPLIER, ShopVisualSettings.MAX_TRADE_STAND_OFFER_SCALE_MULTIPLIER, scaleMultiplier, 2, onScaleChanged
         ));
         scaleSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.trade_stand.scale.tooltip")));
 
         OfferVisualSlider rotationSlider = host.addSettingsWidget(new OfferVisualSlider(
                 host.settingsLeftPos() + 8, host.settingsTopPos() + 68, 158, 16,
                 "gui.marketblocks.visuals.offer_item.trade_stand.rotation_speed",
-                0.0D, 12.0D, rotationSpeed, 1, onRotationChanged
+                ShopVisualSettings.MIN_OFFER_ROTATION_SPEED, ShopVisualSettings.MAX_OFFER_ROTATION_SPEED, rotationSpeed, 1, onRotationChanged
         ));
         rotationSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.trade_stand.rotation_speed.tooltip")));
 
         OfferVisualSlider heightSlider = host.addSettingsWidget(new OfferVisualSlider(
                 host.settingsLeftPos() + 8, host.settingsTopPos() + 88, 158, 16,
                 "gui.marketblocks.visuals.offer_item.trade_stand.height_offset",
-                -0.35D, 0.35D, heightOffset, 2, onHeightChanged
+                ShopVisualSettings.MIN_OFFER_HEIGHT_OFFSET, ShopVisualSettings.MAX_OFFER_HEIGHT_OFFSET, heightOffset, 2, onHeightChanged
         ));
         heightSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.trade_stand.height_offset.tooltip")));
 
@@ -273,21 +274,21 @@ public final class SingleOfferSettingsSections {
         OfferVisualSlider countSlider = host.addSettingsWidget(new OfferVisualSlider(
                 host.settingsLeftPos() + 8, host.settingsTopPos() + 48, 158, 16,
                 "gui.marketblocks.visuals.offer_item.market_crate.count",
-                1.0D, 12.0D, displayCount, 0, onDisplayCountChanged
+                ShopVisualSettings.MIN_MARKET_CRATE_DISPLAY_COUNT, ShopVisualSettings.MAX_MARKET_CRATE_DISPLAY_COUNT, displayCount, 0, onDisplayCountChanged
         ));
         countSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.count.tooltip")));
 
         OfferVisualSlider heightSlider = host.addSettingsWidget(new OfferVisualSlider(
                 host.settingsLeftPos() + 8, host.settingsTopPos() + 68, 158, 16,
                 "gui.marketblocks.visuals.offer_item.market_crate.height_offset",
-                -0.35D, 0.35D, heightOffset, 2, onHeightChanged
+                ShopVisualSettings.MIN_OFFER_HEIGHT_OFFSET, ShopVisualSettings.MAX_OFFER_HEIGHT_OFFSET, heightOffset, 2, onHeightChanged
         ));
         heightSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.height_offset.tooltip")));
 
         OfferVisualSlider rotationSlider = host.addSettingsWidget(new OfferVisualSlider(
                 host.settingsLeftPos() + 8, host.settingsTopPos() + 88, 158, 16,
                 "gui.marketblocks.visuals.offer_item.market_crate.rotation_speed",
-                0.0D, 12.0D, rotationSpeed, 1, onRotationChanged
+                ShopVisualSettings.MIN_OFFER_ROTATION_SPEED, ShopVisualSettings.MAX_OFFER_ROTATION_SPEED, rotationSpeed, 1, onRotationChanged
         ));
         rotationSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item.market_crate.rotation_speed.tooltip")));
 

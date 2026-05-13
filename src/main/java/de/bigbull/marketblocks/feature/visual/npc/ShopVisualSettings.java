@@ -20,14 +20,14 @@ public record ShopVisualSettings(
         boolean marketCrateStableRandom
 ) {
     private static final int MAX_NPC_NAME_LENGTH = 32;
-    private static final int MIN_MARKET_CRATE_DISPLAY_COUNT = 1;
-    private static final int MAX_MARKET_CRATE_DISPLAY_COUNT = 12;
-    private static final float MIN_TRADE_STAND_OFFER_SCALE_MULTIPLIER = 0.60F;
-    private static final float MAX_TRADE_STAND_OFFER_SCALE_MULTIPLIER = 1.40F;
-    private static final float MIN_OFFER_ROTATION_SPEED = 0.0F;
-    private static final float MAX_OFFER_ROTATION_SPEED = 12.0F;
-    private static final float MIN_OFFER_HEIGHT_OFFSET = -0.35F;
-    private static final float MAX_OFFER_HEIGHT_OFFSET = 0.35F;
+    public static final int MIN_MARKET_CRATE_DISPLAY_COUNT = 1;
+    public static final int MAX_MARKET_CRATE_DISPLAY_COUNT = 12;
+    public static final float MIN_TRADE_STAND_OFFER_SCALE_MULTIPLIER = 0.60F;
+    public static final float MAX_TRADE_STAND_OFFER_SCALE_MULTIPLIER = 1.40F;
+    public static final float MIN_OFFER_ROTATION_SPEED = 0.0F;
+    public static final float MAX_OFFER_ROTATION_SPEED = 12.0F;
+    public static final float MIN_OFFER_HEIGHT_OFFSET = -0.35F;
+    public static final float MAX_OFFER_HEIGHT_OFFSET = 0.35F;
 
     private static final String KEY_NPC_ENABLED = "NpcEnabled";
     private static final String KEY_NPC_NAME = "NpcName";
@@ -71,12 +71,12 @@ public record ShopVisualSettings(
     public ShopVisualSettings {
         npcName = sanitizeNpcName(npcName);
         profession = profession == null ? VillagerVisualProfession.NONE : profession;
-        tradeStandOfferScaleMultiplier = clampTradeStandOfferScaleMultiplier(tradeStandOfferScaleMultiplier);
-        tradeStandOfferRotationSpeed = clampOfferRotationSpeed(tradeStandOfferRotationSpeed);
-        tradeStandOfferHeightOffset = clampOfferHeightOffset(tradeStandOfferHeightOffset);
+        tradeStandOfferScaleMultiplier = clampTradeStandOfferScaleMultiplier(sanitizeFinite(tradeStandOfferScaleMultiplier, DEFAULT_TRADE_STAND_OFFER_SCALE_MULTIPLIER));
+        tradeStandOfferRotationSpeed = clampOfferRotationSpeed(sanitizeFinite(tradeStandOfferRotationSpeed, DEFAULT_TRADE_STAND_OFFER_ROTATION_SPEED));
+        tradeStandOfferHeightOffset = clampOfferHeightOffset(sanitizeFinite(tradeStandOfferHeightOffset, DEFAULT_TRADE_STAND_OFFER_HEIGHT_OFFSET));
         marketCrateDisplayCount = clampMarketCrateDisplayCount(marketCrateDisplayCount);
-        marketCrateOfferHeightOffset = clampOfferHeightOffset(marketCrateOfferHeightOffset);
-        marketCrateOfferRotationSpeed = clampOfferRotationSpeed(marketCrateOfferRotationSpeed);
+        marketCrateOfferHeightOffset = clampOfferHeightOffset(sanitizeFinite(marketCrateOfferHeightOffset, DEFAULT_MARKET_CRATE_OFFER_HEIGHT_OFFSET));
+        marketCrateOfferRotationSpeed = clampOfferRotationSpeed(sanitizeFinite(marketCrateOfferRotationSpeed, DEFAULT_MARKET_CRATE_OFFER_ROTATION_SPEED));
     }
 
     public ShopVisualSettings withNpcEnabled(boolean enabled) {
@@ -156,5 +156,9 @@ public record ShopVisualSettings(
             sanitized = sanitized.substring(0, MAX_NPC_NAME_LENGTH);
         }
         return sanitized;
+    }
+
+    private static float sanitizeFinite(float raw, float fallback) {
+        return Float.isFinite(raw) ? raw : fallback;
     }
 }

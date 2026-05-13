@@ -101,7 +101,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.offer_item.type.market_crate", "Market Crate Offer Items");
         add("gui.marketblocks.visuals.offer_item.test_shop_excluded", "Visual offer settings are disabled for Test Shop.");
         add("gui.marketblocks.visuals.offer_item.enabled", "Render Offer Item");
-        add("gui.marketblocks.visuals.offer_item.enabled.tooltip", "Globally enables/disables offer item rendering on this shop");
+        add("gui.marketblocks.visuals.offer_item.enabled.tooltip", "Enables/disables offer item rendering for this shop only (global config can still disable rendering)");
         add("gui.marketblocks.visuals.offer_item.trade_stand.scale", "Size");
         add("gui.marketblocks.visuals.offer_item.trade_stand.scale.tooltip", "Scales the floating offer item on Trade Stand");
         add("gui.marketblocks.visuals.offer_item.trade_stand.rotation_speed", "Rotation Speed");
