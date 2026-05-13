@@ -69,6 +69,7 @@ Key switches are available in the common config, including:
 - `marketplaceGlobalDailyLimit`
 - `marketblocksAdminModeEnabled`
 - `visualNpcRenderViewDistance`
+- `offerItemVisualizationGlobalEnabled`
 
 Additional fine-tuning options exist for SingleOfferShop, Marketplace, and visual/NPC behavior.
 

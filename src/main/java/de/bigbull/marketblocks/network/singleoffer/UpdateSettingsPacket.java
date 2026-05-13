@@ -32,7 +32,16 @@ public record UpdateSettingsPacket(
         boolean purchaseParticles,
         boolean purchaseSounds,
         boolean paymentSlotSounds,
-        boolean xpFeedbackSound
+        boolean xpFeedbackSound,
+        boolean offerItemVisualizationEnabled,
+        float tradeStandOfferScaleMultiplier,
+        float tradeStandOfferRotationSpeed,
+        float tradeStandOfferHeightOffset,
+        int marketCrateDisplayCount,
+        float marketCrateOfferHeightOffset,
+        float marketCrateOfferRotationSpeed,
+        boolean marketCrateRandomPlacement,
+        boolean marketCrateStableRandom
 ) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<UpdateSettingsPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_side_config"));
@@ -53,6 +62,15 @@ public record UpdateSettingsPacket(
                 ByteBufCodecs.BOOL.encode(buf, packet.purchaseSounds());
                 ByteBufCodecs.BOOL.encode(buf, packet.paymentSlotSounds());
                 ByteBufCodecs.BOOL.encode(buf, packet.xpFeedbackSound());
+                ByteBufCodecs.BOOL.encode(buf, packet.offerItemVisualizationEnabled());
+                ByteBufCodecs.FLOAT.encode(buf, packet.tradeStandOfferScaleMultiplier());
+                ByteBufCodecs.FLOAT.encode(buf, packet.tradeStandOfferRotationSpeed());
+                ByteBufCodecs.FLOAT.encode(buf, packet.tradeStandOfferHeightOffset());
+                ByteBufCodecs.VAR_INT.encode(buf, packet.marketCrateDisplayCount());
+                ByteBufCodecs.FLOAT.encode(buf, packet.marketCrateOfferHeightOffset());
+                ByteBufCodecs.FLOAT.encode(buf, packet.marketCrateOfferRotationSpeed());
+                ByteBufCodecs.BOOL.encode(buf, packet.marketCrateRandomPlacement());
+                ByteBufCodecs.BOOL.encode(buf, packet.marketCrateStableRandom());
             },
             buf -> {
                 BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
@@ -69,8 +87,20 @@ public record UpdateSettingsPacket(
                 boolean purchaseSounds = ByteBufCodecs.BOOL.decode(buf);
                 boolean paymentSlotSounds = ByteBufCodecs.BOOL.decode(buf);
                 boolean xpFeedbackSound = ByteBufCodecs.BOOL.decode(buf);
+                boolean offerItemVisualizationEnabled = ByteBufCodecs.BOOL.decode(buf);
+                float tradeStandOfferScaleMultiplier = ByteBufCodecs.FLOAT.decode(buf);
+                float tradeStandOfferRotationSpeed = ByteBufCodecs.FLOAT.decode(buf);
+                float tradeStandOfferHeightOffset = ByteBufCodecs.FLOAT.decode(buf);
+                int marketCrateDisplayCount = ByteBufCodecs.VAR_INT.decode(buf);
+                float marketCrateOfferHeightOffset = ByteBufCodecs.FLOAT.decode(buf);
+                float marketCrateOfferRotationSpeed = ByteBufCodecs.FLOAT.decode(buf);
+                boolean marketCrateRandomPlacement = ByteBufCodecs.BOOL.decode(buf);
+                boolean marketCrateStableRandom = ByteBufCodecs.BOOL.decode(buf);
                 return new UpdateSettingsPacket(pos, left, right, bottom, back, name, redstone,
-                        npcEnabled, npcName, npcProfession, purchaseParticles, purchaseSounds, paymentSlotSounds, xpFeedbackSound);
+                        npcEnabled, npcName, npcProfession, purchaseParticles, purchaseSounds, paymentSlotSounds, xpFeedbackSound,
+                        offerItemVisualizationEnabled, tradeStandOfferScaleMultiplier, tradeStandOfferRotationSpeed, tradeStandOfferHeightOffset,
+                        marketCrateDisplayCount, marketCrateOfferHeightOffset, marketCrateOfferRotationSpeed,
+                        marketCrateRandomPlacement, marketCrateStableRandom);
             }
     );
     @Override
@@ -104,7 +134,16 @@ public record UpdateSettingsPacket(
                         VillagerVisualProfession.fromSerialized(packet.npcProfession()),
                         packet.purchaseParticles(),
                         packet.purchaseSounds(),
-                        packet.paymentSlotSounds()
+                        packet.paymentSlotSounds(),
+                        packet.offerItemVisualizationEnabled(),
+                        packet.tradeStandOfferScaleMultiplier(),
+                        packet.tradeStandOfferRotationSpeed(),
+                        packet.tradeStandOfferHeightOffset(),
+                        packet.marketCrateDisplayCount(),
+                        packet.marketCrateOfferHeightOffset(),
+                        packet.marketCrateOfferRotationSpeed(),
+                        packet.marketCrateRandomPlacement(),
+                        packet.marketCrateStableRandom()
                 );
 
                 if (visuals.npcEnabled() && !ShopVisualPlacementValidator.validate(level, packet.pos(), facing).canSpawn()) {
