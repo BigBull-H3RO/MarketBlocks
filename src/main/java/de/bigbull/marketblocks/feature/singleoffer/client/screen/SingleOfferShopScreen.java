@@ -455,9 +455,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                             },
                             value -> {
                                 draftMarketCrateRandomPlacement = value;
-                                if (!value) {
-                                    draftMarketCrateStableRandom = true;
-                                }
                                 applyVisualPreviewToClient(be);
                                 saved = false;
                                 rebuildUI();

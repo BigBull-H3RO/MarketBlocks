@@ -353,7 +353,7 @@ public final class SingleOfferSettingsSections {
         }
 
         private double normalize(double raw) {
-            if (max <= min) return 0.0D;
+            if (max <= min) return 0.5D;
             return Mth.clamp((raw - min) / (max - min), 0.0D, 1.0D);
         }
 
