@@ -12,9 +12,12 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
 import net.minecraft.world.item.*;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -71,46 +74,75 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         // --- 1. Offer-Item schwebend ueber dem Block ---
         ItemStack result = blockEntity.getOfferResult();
-        if (!result.isEmpty()) {
+        ShopVisualSettings visualSettings = blockEntity.getVisualSettings();
+        boolean renderOfferItem = Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get() && visualSettings.offerItemVisible();
+
+        if (!result.isEmpty() && renderOfferItem) {
             ShopRenderConfig.SlotRenderConfig offerItem = config.getOfferItem();
             BakedModel offerModel = itemRenderer.getModel(result, blockEntity.getLevel(), null, 0);
-            float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result);
+            float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result) * visualSettings.offerItemScale();
+            int actualPackedLight = visualSettings.offerItemFullbright() ? LightTexture.FULL_BRIGHT : packedLight;
 
             if (config.isOfferItemFloating()) {
                 poseStack.pushPose();
-                poseStack.translate(offerItem.x(), offerItem.y(), offerItem.z());
-                float time = (blockEntity.getLevel().getGameTime() + partialTick) * 2.0f;
-                poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
+
+                float heightOffset = visualSettings.offerItemHeightOffset();
+                float bobbingOffset = 0.0f;
+                if (visualSettings.offerItemBobbing()) {
+                    float bobTime = (blockEntity.getLevel().getGameTime() + partialTick) * 0.05f;
+                    bobbingOffset = net.minecraft.util.Mth.sin(bobTime) * 0.1f;
+                }
+
+                poseStack.translate(offerItem.x(), offerItem.y() + heightOffset + bobbingOffset, offerItem.z());
+
+                float speed = visualSettings.offerItemSpeed();
+                if (speed > 0) {
+                    float time = (blockEntity.getLevel().getGameTime() + partialTick) * speed;
+                    poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
+                }
+
                 applySlotRotation(poseStack, offerItem);
                 poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, packedLight, packedOverlay,
+                itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLight, packedOverlay,
                         poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
                 poseStack.popPose();
             } else {
-                int displayCount = config.getOfferItemDisplayCount();
+                int displayCount = visualSettings.offerItemCount() > 0 ? visualSettings.offerItemCount() : config.getOfferItemDisplayCount();
                 long seed = blockEntity.getBlockPos().asLong();
                 java.util.Random rand = new java.util.Random(seed);
+                float heightOffset = visualSettings.offerItemHeightOffset();
+                float spread = visualSettings.offerItemSpread();
+                boolean chaos = visualSettings.offerItemChaos();
 
                 for (int i = 0; i < displayCount; i++) {
                     poseStack.pushPose();
-                    double offsetX = (rand.nextDouble() - 0.5) * 0.4;
-                    double offsetZ = (rand.nextDouble() - 0.5) * 0.4;
-                    double offsetY = i * 0.05; // Stack them slightly
+
+                    double offsetX = 0;
+                    double offsetZ = 0;
+                    double offsetY = i * 0.05 + heightOffset;
+
+                    if (chaos) {
+                        offsetX = (rand.nextDouble() - 0.5) * spread * 2;
+                        offsetZ = (rand.nextDouble() - 0.5) * spread * 2;
+                    }
 
                     poseStack.translate(offerItem.x() + offsetX, offerItem.y() + offsetY, offerItem.z() + offsetZ);
 
-                    float randomYaw = rand.nextFloat() * 360.0f;
-                    poseStack.mulPose(Axis.YP.rotationDegrees(randomYaw));
+                    float itemYaw = visualSettings.offerItemRotation();
+                    if (chaos) {
+                        itemYaw = rand.nextFloat() * 360.0f;
+                    }
+                    poseStack.mulPose(Axis.YP.rotationDegrees(itemYaw));
 
                     applySlotRotation(poseStack, offerItem);
                     poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                    itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, packedLight, packedOverlay,
+                    itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLight, packedOverlay,
                             poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
                     poseStack.popPose();
                 }
             }
 
-            renderCountText(font, poseStack, defaultBufferSource, packedLight,
+            renderCountText(font, poseStack, defaultBufferSource, actualPackedLight,
                     result.getCount(), config.getOfferCountText(), dir);
         }
 

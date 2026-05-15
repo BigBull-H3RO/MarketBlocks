@@ -33,7 +33,17 @@ class ShopVisualSettingsTest {
                 VillagerVisualProfession.LIBRARIAN,
                 true,
                 false,
-                true
+                true,
+                true,
+                false,
+                1.5f,
+                3.0f,
+                0.2f,
+                false,
+                5,
+                45.0f,
+                true,
+                0.4f
         );
 
         assertEquals("Handler", settings.npcName());
@@ -47,6 +57,17 @@ class ShopVisualSettingsTest {
         assertTrue(loaded.purchaseParticlesEnabled());
         assertFalse(loaded.purchaseSoundsEnabled());
         assertTrue(loaded.paymentSlotSoundsEnabled());
+
+        assertTrue(loaded.offerItemVisible());
+        assertFalse(loaded.offerItemFullbright());
+        assertEquals(1.5f, loaded.offerItemScale());
+        assertEquals(3.0f, loaded.offerItemSpeed());
+        assertEquals(0.2f, loaded.offerItemHeightOffset());
+        assertFalse(loaded.offerItemBobbing());
+        assertEquals(5, loaded.offerItemCount());
+        assertEquals(45.0f, loaded.offerItemRotation());
+        assertTrue(loaded.offerItemChaos());
+        assertEquals(0.4f, loaded.offerItemSpread());
     }
 
     @Test

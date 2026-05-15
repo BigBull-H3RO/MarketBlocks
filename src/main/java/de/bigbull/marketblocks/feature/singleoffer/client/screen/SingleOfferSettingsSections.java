@@ -11,6 +11,9 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.client.gui.FloatSlider;
+import de.bigbull.marketblocks.client.gui.IntSlider;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -196,6 +199,90 @@ public final class SingleOfferSettingsSections {
     }
 
     public record VisualSectionWidgets(EditBox npcNameField) {
+    }
+
+    public static void buildOfferItemSection(
+            SingleOfferShopScreen host,
+            boolean isTradeStand,
+            boolean isMarketCrate,
+            boolean draftOfferItemVisible,
+            boolean draftOfferItemFullbright,
+            float draftOfferItemScale,
+            float draftOfferItemSpeed,
+            float draftOfferItemHeightOffset,
+            boolean draftOfferItemBobbing,
+            int draftOfferItemCount,
+            float draftOfferItemRotation,
+            boolean draftOfferItemChaos,
+            float draftOfferItemSpread,
+            Consumer<Boolean> onVisibleChanged,
+            Consumer<Boolean> onFullbrightChanged,
+            Consumer<Float> onScaleChanged,
+            Consumer<Float> onSpeedChanged,
+            Consumer<Float> onHeightChanged,
+            Consumer<Boolean> onBobbingChanged,
+            Consumer<Integer> onCountChanged,
+            Consumer<Float> onRotationChanged,
+            Consumer<Boolean> onChaosChanged,
+            Consumer<Float> onSpreadChanged
+    ) {
+        int y = host.settingsTopPos() + 26;
+        int leftX = host.settingsLeftPos() + 8;
+
+        Checkbox visibleCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item_visible"),
+                        host.settingsFont())
+                .pos(leftX, y)
+                .selected(draftOfferItemVisible)
+                .onValueChange((checkbox, value) -> onVisibleChanged.accept(value))
+                .build());
+        if (!Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get()) {
+            visibleCheckbox.active = false;
+            visibleCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_disabled_global")));
+        } else {
+            visibleCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_visible.tooltip")));
+        }
+
+        Checkbox fullbrightCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item_fullbright"),
+                        host.settingsFont())
+                .pos(leftX + 100, y)
+                .selected(draftOfferItemFullbright)
+                .onValueChange((checkbox, value) -> onFullbrightChanged.accept(value))
+                .build());
+        fullbrightCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_fullbright.tooltip")));
+        y += 20;
+
+        if (isTradeStand) {
+            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draftOfferItemScale, onScaleChanged));
+            host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.speed"), 0.0f, 10.0f, draftOfferItemSpeed, onSpeedChanged));
+            y += 20;
+
+            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"), -0.5f, 1.5f, draftOfferItemHeightOffset, onHeightChanged));
+            host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.bobbing"),
+                        host.settingsFont())
+                .pos(leftX + 85, y)
+                .selected(draftOfferItemBobbing)
+                .onValueChange((checkbox, value) -> onBobbingChanged.accept(value))
+                .build());
+        } else if (isMarketCrate) {
+            host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 10, draftOfferItemCount, onCountChanged));
+            host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"), -0.2f, 1.0f, draftOfferItemHeightOffset, onHeightChanged));
+            y += 20;
+
+            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draftOfferItemRotation, onRotationChanged));
+            host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.chaos"),
+                        host.settingsFont())
+                .pos(leftX + 85, y)
+                .selected(draftOfferItemChaos)
+                .onValueChange((checkbox, value) -> onChaosChanged.accept(value))
+                .build());
+            y += 20;
+
+            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.spread"), 0.0f, 0.5f, draftOfferItemSpread, onSpreadChanged));
+        }
     }
 }
 
