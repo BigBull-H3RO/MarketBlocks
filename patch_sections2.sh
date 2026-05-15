@@ -1,3 +1,5 @@
+#!/bin/bash
+cat << 'INNER_EOF' > src/main/java/de/bigbull/marketblocks/feature/singleoffer/client/screen/SingleOfferSettingsSections.java
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
@@ -285,3 +287,4 @@ public final class SingleOfferSettingsSections {
         }
     }
 }
+INNER_EOF

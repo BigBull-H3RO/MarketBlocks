@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import java.util.function.Consumer;
 
@@ -17,7 +18,8 @@ public class IntSlider extends AbstractSliderButton {
         this.min = min;
         this.max = max;
         this.onValueChanged = onValueChanged;
-        this.value = (double) (currentValue - min) / (max - min);
+        int clampedVal = Mth.clamp(currentValue, min, max);
+        this.value = (double) (clampedVal - min) / (max - min);
         updateMessage();
     }
 

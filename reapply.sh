@@ -1,9 +1,15 @@
 #!/bin/bash
+# 1. Config
+sed -i 's/VISUAL_NPC_RENDER_VIEW_DISTANCE;/VISUAL_NPC_RENDER_VIEW_DISTANCE;\n    public static final ModConfigSpec.BooleanValue ENABLE_GLOBAL_OFFER_ITEM_RENDERING;/g' src/main/java/de/bigbull/marketblocks/core/config/Config.java
+sed -i 's/COMMON_BUILDER.pop();/VISUAL_NPC_RENDER_VIEW_DISTANCE = COMMON_BUILDER\n                .comment("Maximum distance in blocks for rendering visual shop NPCs.")\n                .defineInRange("visualNpcRenderViewDistance", 128, 16, 512);\n        ENABLE_GLOBAL_OFFER_ITEM_RENDERING = COMMON_BUILDER\n                .comment("Global master switch to enable\/disable offer item rendering for all shops. Disable to save performance.")\n                .define("enableGlobalOfferItemRendering", true);\n        COMMON_BUILDER.pop();/' src/main/java/de/bigbull/marketblocks/core/config/Config.java
+
+# 2. Sliders
 cat << 'INNER_EOF' > src/main/java/de/bigbull/marketblocks/client/gui/FloatSlider.java
 package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import java.util.function.Consumer;
 
@@ -19,7 +25,8 @@ public class FloatSlider extends AbstractSliderButton {
         this.min = min;
         this.max = max;
         this.onValueChanged = onValueChanged;
-        this.value = (currentValue - min) / (max - min);
+        float clampedVal = Mth.clamp(currentValue, min, max);
+        this.value = (clampedVal - min) / (max - min);
         updateMessage();
     }
 
@@ -42,6 +49,7 @@ package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import java.util.function.Consumer;
 
@@ -57,7 +65,8 @@ public class IntSlider extends AbstractSliderButton {
         this.min = min;
         this.max = max;
         this.onValueChanged = onValueChanged;
-        this.value = (double) (currentValue - min) / (max - min);
+        int clampedVal = Mth.clamp(currentValue, min, max);
+        this.value = (double) (clampedVal - min) / (max - min);
         updateMessage();
     }
 
