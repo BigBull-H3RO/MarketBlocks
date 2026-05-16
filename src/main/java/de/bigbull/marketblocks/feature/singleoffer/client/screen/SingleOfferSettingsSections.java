@@ -11,7 +11,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.client.gui.FloatSlider;
 import de.bigbull.marketblocks.client.gui.IntSlider;
 
@@ -205,6 +204,7 @@ public final class SingleOfferSettingsSections {
             SingleOfferShopScreen host,
             boolean isTradeStand,
             boolean isMarketCrate,
+            boolean offerItemRenderingGloballyEnabled,
             boolean draftOfferItemVisible,
             boolean draftOfferItemFullbright,
             float draftOfferItemScale,
@@ -236,7 +236,7 @@ public final class SingleOfferSettingsSections {
                 .selected(draftOfferItemVisible)
                 .onValueChange((checkbox, value) -> onVisibleChanged.accept(value))
                 .build());
-        if (!Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get()) {
+        if (!offerItemRenderingGloballyEnabled) {
             visibleCheckbox.active = false;
             visibleCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_disabled_global")));
         } else {

@@ -24,6 +24,22 @@ public record ShopVisualSettings(
         float offerItemSpread
 ) {
     private static final int MAX_NPC_NAME_LENGTH = 32;
+    private static final float MIN_OFFER_ITEM_SCALE = 0.1f;
+    private static final float MAX_OFFER_ITEM_SCALE = 4.0f;
+    private static final float MIN_OFFER_ITEM_SPEED = 0.0f;
+    private static final float MAX_OFFER_ITEM_SPEED = 20.0f;
+    private static final float MIN_OFFER_ITEM_HEIGHT = -2.0f;
+    private static final float MAX_OFFER_ITEM_HEIGHT = 4.0f;
+    private static final int MIN_OFFER_ITEM_COUNT = 1;
+    private static final int MAX_OFFER_ITEM_COUNT = 64;
+    private static final float MIN_OFFER_ITEM_SPREAD = 0.0f;
+    private static final float MAX_OFFER_ITEM_SPREAD = 4.0f;
+    private static final float DEFAULT_OFFER_ITEM_SCALE = 1.0f;
+    private static final float DEFAULT_OFFER_ITEM_SPEED = 2.0f;
+    private static final float DEFAULT_OFFER_ITEM_HEIGHT = 0.0f;
+    private static final int DEFAULT_OFFER_ITEM_COUNT = 1;
+    private static final float DEFAULT_OFFER_ITEM_ROTATION = 0.0f;
+    private static final float DEFAULT_OFFER_ITEM_SPREAD = 0.2f;
 
     private static final String KEY_NPC_ENABLED = "NpcEnabled";
     private static final String KEY_NPC_NAME = "NpcName";
@@ -45,7 +61,8 @@ public record ShopVisualSettings(
 
     public static final ShopVisualSettings DEFAULT = new ShopVisualSettings(
             false, "", VillagerVisualProfession.NONE, true, true, true,
-            true, false, 1.0f, 2.0f, 0.0f, true, 1, 0.0f, false, 0.2f
+            true, false, DEFAULT_OFFER_ITEM_SCALE, DEFAULT_OFFER_ITEM_SPEED, DEFAULT_OFFER_ITEM_HEIGHT,
+            true, DEFAULT_OFFER_ITEM_COUNT, DEFAULT_OFFER_ITEM_ROTATION, false, DEFAULT_OFFER_ITEM_SPREAD
     );
 
     public static final StreamCodec<ByteBuf, ShopVisualSettings> STREAM_CODEC = StreamCodec.of(
@@ -92,6 +109,12 @@ public record ShopVisualSettings(
     public ShopVisualSettings {
         npcName = sanitizeNpcName(npcName);
         profession = profession == null ? VillagerVisualProfession.NONE : profession;
+        offerItemScale = clampFinite(offerItemScale, MIN_OFFER_ITEM_SCALE, MAX_OFFER_ITEM_SCALE, DEFAULT_OFFER_ITEM_SCALE);
+        offerItemSpeed = clampFinite(offerItemSpeed, MIN_OFFER_ITEM_SPEED, MAX_OFFER_ITEM_SPEED, DEFAULT_OFFER_ITEM_SPEED);
+        offerItemHeightOffset = clampFinite(offerItemHeightOffset, MIN_OFFER_ITEM_HEIGHT, MAX_OFFER_ITEM_HEIGHT, DEFAULT_OFFER_ITEM_HEIGHT);
+        offerItemCount = Math.max(MIN_OFFER_ITEM_COUNT, Math.min(MAX_OFFER_ITEM_COUNT, offerItemCount));
+        offerItemRotation = normalizeDegrees(offerItemRotation);
+        offerItemSpread = clampFinite(offerItemSpread, MIN_OFFER_ITEM_SPREAD, MAX_OFFER_ITEM_SPREAD, DEFAULT_OFFER_ITEM_SPREAD);
     }
 
     public ShopVisualSettings withNpcEnabled(boolean enabled) {
@@ -138,15 +161,30 @@ public record ShopVisualSettings(
 
                 !tag.contains(KEY_OFFER_ITEM_VISIBLE) || tag.getBoolean(KEY_OFFER_ITEM_VISIBLE),
                 tag.getBoolean(KEY_OFFER_ITEM_FULLBRIGHT),
-                tag.contains(KEY_OFFER_ITEM_SCALE) ? tag.getFloat(KEY_OFFER_ITEM_SCALE) : 1.0f,
-                tag.contains(KEY_OFFER_ITEM_SPEED) ? tag.getFloat(KEY_OFFER_ITEM_SPEED) : 2.0f,
-                tag.contains(KEY_OFFER_ITEM_HEIGHT) ? tag.getFloat(KEY_OFFER_ITEM_HEIGHT) : 0.0f,
+                tag.contains(KEY_OFFER_ITEM_SCALE) ? tag.getFloat(KEY_OFFER_ITEM_SCALE) : DEFAULT_OFFER_ITEM_SCALE,
+                tag.contains(KEY_OFFER_ITEM_SPEED) ? tag.getFloat(KEY_OFFER_ITEM_SPEED) : DEFAULT_OFFER_ITEM_SPEED,
+                tag.contains(KEY_OFFER_ITEM_HEIGHT) ? tag.getFloat(KEY_OFFER_ITEM_HEIGHT) : DEFAULT_OFFER_ITEM_HEIGHT,
                 !tag.contains(KEY_OFFER_ITEM_BOBBING) || tag.getBoolean(KEY_OFFER_ITEM_BOBBING),
-                tag.contains(KEY_OFFER_ITEM_COUNT) ? tag.getInt(KEY_OFFER_ITEM_COUNT) : 1,
-                tag.contains(KEY_OFFER_ITEM_ROTATION) ? tag.getFloat(KEY_OFFER_ITEM_ROTATION) : 0.0f,
+                tag.contains(KEY_OFFER_ITEM_COUNT) ? tag.getInt(KEY_OFFER_ITEM_COUNT) : DEFAULT_OFFER_ITEM_COUNT,
+                tag.contains(KEY_OFFER_ITEM_ROTATION) ? tag.getFloat(KEY_OFFER_ITEM_ROTATION) : DEFAULT_OFFER_ITEM_ROTATION,
                 tag.getBoolean(KEY_OFFER_ITEM_CHAOS),
-                tag.contains(KEY_OFFER_ITEM_SPREAD) ? tag.getFloat(KEY_OFFER_ITEM_SPREAD) : 0.2f
+                tag.contains(KEY_OFFER_ITEM_SPREAD) ? tag.getFloat(KEY_OFFER_ITEM_SPREAD) : DEFAULT_OFFER_ITEM_SPREAD
         );
+    }
+
+    private static float clampFinite(float value, float min, float max, float fallback) {
+        if (!Float.isFinite(value)) {
+            return fallback;
+        }
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private static float normalizeDegrees(float value) {
+        if (!Float.isFinite(value)) {
+            return DEFAULT_OFFER_ITEM_ROTATION;
+        }
+        float normalized = value % 360.0f;
+        return normalized < 0.0f ? normalized + 360.0f : normalized;
     }
 
     public static String sanitizeNpcName(String raw) {

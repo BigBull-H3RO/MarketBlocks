@@ -71,6 +71,35 @@ class ShopVisualSettingsTest {
     }
 
     @Test
+    void clampsUnsafeVisualValues() {
+        ShopVisualSettings settings = new ShopVisualSettings(
+                false,
+                "",
+                VillagerVisualProfession.NONE,
+                true,
+                true,
+                true,
+                true,
+                false,
+                Float.NaN,
+                Float.POSITIVE_INFINITY,
+                -99.0f,
+                true,
+                -5,
+                -45.0f,
+                false,
+                -1.0f
+        );
+
+        assertEquals(1.0f, settings.offerItemScale());
+        assertEquals(2.0f, settings.offerItemSpeed());
+        assertEquals(-2.0f, settings.offerItemHeightOffset());
+        assertEquals(1, settings.offerItemCount());
+        assertEquals(315.0f, settings.offerItemRotation());
+        assertEquals(0.0f, settings.offerItemSpread());
+    }
+
+    @Test
     void cycleProfessionWrapsAround() {
         assertEquals(VillagerVisualProfession.NONE, VillagerVisualProfession.WEAPONSMITH.next());
     }
