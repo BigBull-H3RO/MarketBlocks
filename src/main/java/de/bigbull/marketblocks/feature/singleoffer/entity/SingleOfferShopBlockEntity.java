@@ -74,6 +74,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private static final String NBT_VISUAL_PAYMENT_SUCCESS_COUNTER = "VisualPaymentSuccessCounter";
     private static final String NBT_VISUAL_PAYMENT_FAIL_COUNTER = "VisualPaymentFailCounter";
     private static final String NBT_PURCHASE_XP_FEEDBACK_SOUND = "PurchaseXpFeedbackSound";
+    private static final String NBT_GLOBAL_OFFER_ITEM_RENDERING = "GlobalOfferItemRendering";
 
     // Inventory Handler Names
     private static final String HANDLER_INPUT = "InputInventory";
@@ -112,6 +113,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private boolean outputFull = false;
     private boolean adminShopEnabled = false;
     private boolean purchaseXpFeedbackSound = true;
+    private boolean globalOfferItemRenderingEnabled = true;
     private ShopVisualSettings visualSettings = ShopVisualSettings.DEFAULT;
     private int visualAnimationNonce = 0;
     private byte visualAnimationEvent = VisualNpcAnimationEvent.NONE;
@@ -466,6 +468,15 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public boolean isGlobalAdminModeEnabled() {
         return Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.get();
+    }
+
+    public boolean isOfferItemRenderingGloballyEnabled() {
+        return level != null && level.isClientSide ? globalOfferItemRenderingEnabled : Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get();
+    }
+
+    @ApiStatus.Internal
+    public void setOfferItemRenderingGloballyEnabledClient(boolean enabled) {
+        this.globalOfferItemRenderingEnabled = enabled;
     }
 
     public void setAdminShopEnabled(boolean enabled) {
@@ -1493,6 +1504,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         this.emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
         this.adminShopEnabled = tag.getBoolean(NBT_ADMIN_SHOP_ENABLED);
         this.purchaseXpFeedbackSound = !tag.contains(NBT_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND);
+        this.globalOfferItemRenderingEnabled = Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get();
         if (tag.contains(NBT_VISUALS, 10)) {
             this.visualSettings = ShopVisualSettings.load(tag.getCompound(NBT_VISUALS));
         } else {
@@ -1573,6 +1585,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
         tag.putBoolean(NBT_ADMIN_SHOP_ENABLED, adminShopEnabled);
         tag.putBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND, purchaseXpFeedbackSound);
+        tag.putBoolean(NBT_GLOBAL_OFFER_ITEM_RENDERING, Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get());
         tag.put(NBT_VISUALS, visualSettings.save());
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
         tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
@@ -1612,6 +1625,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
         adminShopEnabled = tag.getBoolean(NBT_ADMIN_SHOP_ENABLED);
         purchaseXpFeedbackSound = !tag.contains(NBT_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND);
+        globalOfferItemRenderingEnabled = !tag.contains(NBT_GLOBAL_OFFER_ITEM_RENDERING) || tag.getBoolean(NBT_GLOBAL_OFFER_ITEM_RENDERING);
         visualSettings = tag.contains(NBT_VISUALS, 10) ? ShopVisualSettings.load(tag.getCompound(NBT_VISUALS)) : ShopVisualSettings.DEFAULT;
         visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
         visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);

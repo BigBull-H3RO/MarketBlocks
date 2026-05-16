@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
 import net.minecraft.world.item.*;
 import net.minecraft.world.phys.AABB;
@@ -75,7 +74,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         // --- 1. Offer-Item schwebend ueber dem Block ---
         ItemStack result = blockEntity.getOfferResult();
         ShopVisualSettings visualSettings = blockEntity.getVisualSettings();
-        boolean renderOfferItem = Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get() && visualSettings.offerItemVisible();
+        boolean renderOfferItem = blockEntity.isOfferItemRenderingGloballyEnabled() && visualSettings.offerItemVisible();
 
         int actualPackedLightFront = visualSettings.offerItemFullbright() ? LightTexture.FULL_BRIGHT : packedLight;
 
@@ -151,7 +150,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         ItemStack payment1 = blockEntity.getOfferPayment1();
         ItemStack payment2 = blockEntity.getOfferPayment2();
 
-        if (config.isShowFrontOffer() && !result.isEmpty()) {
+        if (config.isShowFrontOffer() && !result.isEmpty() && renderOfferItem) {
             renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, actualPackedLightFront, packedOverlay,
                     result, dir, config.getFrontOfferItem(), null);
         }

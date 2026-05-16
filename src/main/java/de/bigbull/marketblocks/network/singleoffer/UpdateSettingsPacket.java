@@ -6,7 +6,6 @@ import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
-import de.bigbull.marketblocks.feature.visual.npc.VillagerVisualProfession;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -32,13 +31,19 @@ public record UpdateSettingsPacket(
     public static final CustomPacketPayload.Type<UpdateSettingsPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_side_config"));
 
+    private static final SideMode[] SIDE_MODE_VALUES = SideMode.values();
+    private static final StreamCodec<ByteBuf, SideMode> SIDE_MODE_CODEC = ByteBufCodecs.VAR_INT.map(
+            value -> value >= 0 && value < SIDE_MODE_VALUES.length ? SIDE_MODE_VALUES[value] : SideMode.DISABLED,
+            SideMode::ordinal
+    );
+
     public static final StreamCodec<ByteBuf, UpdateSettingsPacket> CODEC = StreamCodec.of(
             (buf, packet) -> {
                 BlockPos.STREAM_CODEC.encode(buf, packet.pos());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.left().name());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.right().name());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.bottom().name());
-                ByteBufCodecs.STRING_UTF8.encode(buf, packet.back().name());
+                SIDE_MODE_CODEC.encode(buf, packet.left());
+                SIDE_MODE_CODEC.encode(buf, packet.right());
+                SIDE_MODE_CODEC.encode(buf, packet.bottom());
+                SIDE_MODE_CODEC.encode(buf, packet.back());
                 ByteBufCodecs.STRING_UTF8.encode(buf, packet.name());
                 ByteBufCodecs.BOOL.encode(buf, packet.redstone());
                 ShopVisualSettings.STREAM_CODEC.encode(buf, packet.visualSettings());
@@ -46,10 +51,10 @@ public record UpdateSettingsPacket(
             },
             buf -> {
                 BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
-                SideMode left = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode right = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode bottom = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
-                SideMode back = parseSideMode(ByteBufCodecs.STRING_UTF8.decode(buf));
+                SideMode left = SIDE_MODE_CODEC.decode(buf);
+                SideMode right = SIDE_MODE_CODEC.decode(buf);
+                SideMode bottom = SIDE_MODE_CODEC.decode(buf);
+                SideMode back = SIDE_MODE_CODEC.decode(buf);
                 String name = ByteBufCodecs.STRING_UTF8.decode(buf);
                 boolean redstone = ByteBufCodecs.BOOL.decode(buf);
                 ShopVisualSettings visualSettings = ShopVisualSettings.STREAM_CODEC.decode(buf);
@@ -61,15 +66,6 @@ public record UpdateSettingsPacket(
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
-    }
-
-    private static SideMode parseSideMode(String value) {
-        try {
-            return SideMode.valueOf(value);
-        } catch (IllegalArgumentException e) {
-            MarketBlocks.LOGGER.warn("Received invalid side mode '{}' in UpdateSettingsPacket, defaulting to DISABLED", value);
-            return SideMode.DISABLED;
-        }
     }
 
     public static void handle(UpdateSettingsPacket packet, IPayloadContext context) {

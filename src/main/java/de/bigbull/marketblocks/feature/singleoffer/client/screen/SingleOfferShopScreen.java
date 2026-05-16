@@ -389,31 +389,34 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     boolean isTradeStand = block instanceof de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
                     boolean isMarketCrate = block instanceof de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
 
-                    SingleOfferSettingsSections.buildOfferItemSection(
-                        this,
-                        isTradeStand,
-                        isMarketCrate,
-                        draftOfferItemVisible,
-                        draftOfferItemFullbright,
-                        draftOfferItemScale,
-                        draftOfferItemSpeed,
-                        draftOfferItemHeightOffset,
-                        draftOfferItemBobbing,
-                        draftOfferItemCount,
-                        draftOfferItemRotation,
-                        draftOfferItemChaos,
-                        draftOfferItemSpread,
-                        val -> draftOfferItemVisible = val,
-                        val -> draftOfferItemFullbright = val,
-                        val -> draftOfferItemScale = val,
-                        val -> draftOfferItemSpeed = val,
-                        val -> draftOfferItemHeightOffset = val,
-                        val -> draftOfferItemBobbing = val,
-                        val -> draftOfferItemCount = val,
-                        val -> draftOfferItemRotation = val,
-                        val -> draftOfferItemChaos = val,
-                        val -> draftOfferItemSpread = val
-                    );
+                    if (isTradeStand || isMarketCrate) {
+                        SingleOfferSettingsSections.buildOfferItemSection(
+                            this,
+                            isTradeStand,
+                            isMarketCrate,
+                            be.isOfferItemRenderingGloballyEnabled(),
+                            draftOfferItemVisible,
+                            draftOfferItemFullbright,
+                            draftOfferItemScale,
+                            draftOfferItemSpeed,
+                            draftOfferItemHeightOffset,
+                            draftOfferItemBobbing,
+                            draftOfferItemCount,
+                            draftOfferItemRotation,
+                            draftOfferItemChaos,
+                            draftOfferItemSpread,
+                            val -> { draftOfferItemVisible = val; saved = false; },
+                            val -> { draftOfferItemFullbright = val; saved = false; },
+                            val -> { draftOfferItemScale = val; saved = false; },
+                            val -> { draftOfferItemSpeed = val; saved = false; },
+                            val -> { draftOfferItemHeightOffset = val; saved = false; },
+                            val -> { draftOfferItemBobbing = val; saved = false; },
+                            val -> { draftOfferItemCount = val; saved = false; },
+                            val -> { draftOfferItemRotation = val; saved = false; },
+                            val -> { draftOfferItemChaos = val; saved = false; },
+                            val -> { draftOfferItemSpread = val; saved = false; }
+                        );
+                    }
                 }
             }
             case ACCESS -> {
@@ -485,6 +488,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             draftVisualNpcEnabled = visuals.npcEnabled(); draftVisualNpcName = visuals.npcName();
             draftVisualNpcProfession = visuals.profession(); draftVisualPurchaseParticles = visuals.purchaseParticlesEnabled();
             draftVisualPurchaseSounds = visuals.purchaseSoundsEnabled(); draftVisualPaymentSlotSounds = visuals.paymentSlotSoundsEnabled();
+            draftOfferItemVisible = visuals.offerItemVisible(); draftOfferItemFullbright = visuals.offerItemFullbright();
+            draftOfferItemScale = visuals.offerItemScale(); draftOfferItemSpeed = visuals.offerItemSpeed();
+            draftOfferItemHeightOffset = visuals.offerItemHeightOffset(); draftOfferItemBobbing = visuals.offerItemBobbing();
+            draftOfferItemCount = visuals.offerItemCount(); draftOfferItemRotation = visuals.offerItemRotation();
+            draftOfferItemChaos = visuals.offerItemChaos(); draftOfferItemSpread = visuals.offerItemSpread();
             draftPurchaseXpFeedbackSound = Boolean.TRUE.equals(draftPurchaseXpFeedbackSound);
             saved = true;
         }).bounds(leftPos + imageWidth - 50, topPos + imageHeight - 24, 44, 18).build());
