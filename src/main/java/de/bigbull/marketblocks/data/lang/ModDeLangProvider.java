@@ -96,7 +96,12 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.height", "Höhe");
         add("gui.marketblocks.visuals.bobbing", "Wippen (Bobbing)");
         add("gui.marketblocks.visuals.count", "Anzahl");
+        add("gui.marketblocks.visuals.count.dynamic_fill.tooltip", "Deaktiviert, solange Dynamischer Füllstand aktiv ist.");
+        add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamischer Füllstand");
         add("gui.marketblocks.visuals.rotation", "Rotation");
+        add("gui.marketblocks.visuals.rotation_x", "Rotation X");
+        add("gui.marketblocks.visuals.rotation_y", "Rotation Y");
+        add("gui.marketblocks.visuals.rotation_z", "Rotation Z");
         add("gui.marketblocks.visuals.chaos", "Chaos-Verteilung");
         add("gui.marketblocks.visuals.spread", "Streuung/Radius");
         add("gui.marketblocks.visuals.error.no_surface", "Kein Standblock hinter dem Shop!");
