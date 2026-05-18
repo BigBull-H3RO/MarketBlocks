@@ -19,9 +19,12 @@ public record ShopVisualSettings(
         float offerItemHeightOffset,
         boolean offerItemBobbing,
         int offerItemCount,
-        float offerItemRotation,
+        float offerItemRotationX,
+        float offerItemRotationY,
+        float offerItemRotationZ,
         boolean offerItemChaos,
-        float offerItemSpread
+        float offerItemSpread,
+        boolean dynamicFillLevel
 ) {
     private static final int MAX_NPC_NAME_LENGTH = 32;
     private static final float MIN_OFFER_ITEM_SCALE = 0.1f;
@@ -40,6 +43,7 @@ public record ShopVisualSettings(
     private static final int DEFAULT_OFFER_ITEM_COUNT = 1;
     private static final float DEFAULT_OFFER_ITEM_ROTATION = 0.0f;
     private static final float DEFAULT_OFFER_ITEM_SPREAD = 0.2f;
+    private static final boolean DEFAULT_DYNAMIC_FILL_LEVEL = false;
 
     private static final String KEY_NPC_ENABLED = "NpcEnabled";
     private static final String KEY_NPC_NAME = "NpcName";
@@ -56,13 +60,18 @@ public record ShopVisualSettings(
     private static final String KEY_OFFER_ITEM_BOBBING = "OfferItemBobbing";
     private static final String KEY_OFFER_ITEM_COUNT = "OfferItemCount";
     private static final String KEY_OFFER_ITEM_ROTATION = "OfferItemRotation";
+    private static final String KEY_OFFER_ITEM_ROTATION_X = "OfferItemRotationX";
+    private static final String KEY_OFFER_ITEM_ROTATION_Y = "OfferItemRotationY";
+    private static final String KEY_OFFER_ITEM_ROTATION_Z = "OfferItemRotationZ";
     private static final String KEY_OFFER_ITEM_CHAOS = "OfferItemChaos";
     private static final String KEY_OFFER_ITEM_SPREAD = "OfferItemSpread";
+    private static final String KEY_DYNAMIC_FILL_LEVEL = "DynamicFillLevel";
 
     public static final ShopVisualSettings DEFAULT = new ShopVisualSettings(
             false, "", VillagerVisualProfession.NONE, true, true, true,
             true, false, DEFAULT_OFFER_ITEM_SCALE, DEFAULT_OFFER_ITEM_SPEED, DEFAULT_OFFER_ITEM_HEIGHT,
-            true, DEFAULT_OFFER_ITEM_COUNT, DEFAULT_OFFER_ITEM_ROTATION, false, DEFAULT_OFFER_ITEM_SPREAD
+            true, DEFAULT_OFFER_ITEM_COUNT, DEFAULT_OFFER_ITEM_ROTATION, DEFAULT_OFFER_ITEM_ROTATION,
+            DEFAULT_OFFER_ITEM_ROTATION, false, DEFAULT_OFFER_ITEM_SPREAD, DEFAULT_DYNAMIC_FILL_LEVEL
     );
 
     public static final StreamCodec<ByteBuf, ShopVisualSettings> STREAM_CODEC = StreamCodec.of(
@@ -81,9 +90,12 @@ public record ShopVisualSettings(
                 ByteBufCodecs.FLOAT.encode(buf, settings.offerItemHeightOffset());
                 ByteBufCodecs.BOOL.encode(buf, settings.offerItemBobbing());
                 ByteBufCodecs.INT.encode(buf, settings.offerItemCount());
-                ByteBufCodecs.FLOAT.encode(buf, settings.offerItemRotation());
+                ByteBufCodecs.FLOAT.encode(buf, settings.offerItemRotationX());
+                ByteBufCodecs.FLOAT.encode(buf, settings.offerItemRotationY());
+                ByteBufCodecs.FLOAT.encode(buf, settings.offerItemRotationZ());
                 ByteBufCodecs.BOOL.encode(buf, settings.offerItemChaos());
                 ByteBufCodecs.FLOAT.encode(buf, settings.offerItemSpread());
+                ByteBufCodecs.BOOL.encode(buf, settings.dynamicFillLevel());
             },
             buf -> new ShopVisualSettings(
                     ByteBufCodecs.BOOL.decode(buf),
@@ -101,8 +113,11 @@ public record ShopVisualSettings(
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.INT.decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),
+                    ByteBufCodecs.FLOAT.decode(buf),
+                    ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
-                    ByteBufCodecs.FLOAT.decode(buf)
+                    ByteBufCodecs.FLOAT.decode(buf),
+                    ByteBufCodecs.BOOL.decode(buf)
             )
     );
 
@@ -113,7 +128,9 @@ public record ShopVisualSettings(
         offerItemSpeed = clampFinite(offerItemSpeed, MIN_OFFER_ITEM_SPEED, MAX_OFFER_ITEM_SPEED, DEFAULT_OFFER_ITEM_SPEED);
         offerItemHeightOffset = clampFinite(offerItemHeightOffset, MIN_OFFER_ITEM_HEIGHT, MAX_OFFER_ITEM_HEIGHT, DEFAULT_OFFER_ITEM_HEIGHT);
         offerItemCount = Math.max(MIN_OFFER_ITEM_COUNT, Math.min(MAX_OFFER_ITEM_COUNT, offerItemCount));
-        offerItemRotation = normalizeDegrees(offerItemRotation);
+        offerItemRotationX = normalizeDegrees(offerItemRotationX);
+        offerItemRotationY = normalizeDegrees(offerItemRotationY);
+        offerItemRotationZ = normalizeDegrees(offerItemRotationZ);
         offerItemSpread = clampFinite(offerItemSpread, MIN_OFFER_ITEM_SPREAD, MAX_OFFER_ITEM_SPREAD, DEFAULT_OFFER_ITEM_SPREAD);
     }
 
@@ -121,7 +138,8 @@ public record ShopVisualSettings(
         return new ShopVisualSettings(
                 enabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled, paymentSlotSoundsEnabled,
                 offerItemVisible, offerItemFullbright, offerItemScale, offerItemSpeed, offerItemHeightOffset,
-                offerItemBobbing, offerItemCount, offerItemRotation, offerItemChaos, offerItemSpread
+                offerItemBobbing, offerItemCount, offerItemRotationX, offerItemRotationY, offerItemRotationZ,
+                offerItemChaos, offerItemSpread, dynamicFillLevel
         );
     }
 
@@ -141,9 +159,12 @@ public record ShopVisualSettings(
         tag.putFloat(KEY_OFFER_ITEM_HEIGHT, offerItemHeightOffset);
         tag.putBoolean(KEY_OFFER_ITEM_BOBBING, offerItemBobbing);
         tag.putInt(KEY_OFFER_ITEM_COUNT, offerItemCount);
-        tag.putFloat(KEY_OFFER_ITEM_ROTATION, offerItemRotation);
+        tag.putFloat(KEY_OFFER_ITEM_ROTATION_X, offerItemRotationX);
+        tag.putFloat(KEY_OFFER_ITEM_ROTATION_Y, offerItemRotationY);
+        tag.putFloat(KEY_OFFER_ITEM_ROTATION_Z, offerItemRotationZ);
         tag.putBoolean(KEY_OFFER_ITEM_CHAOS, offerItemChaos);
         tag.putFloat(KEY_OFFER_ITEM_SPREAD, offerItemSpread);
+        tag.putBoolean(KEY_DYNAMIC_FILL_LEVEL, dynamicFillLevel);
         return tag;
     }
 
@@ -166,9 +187,12 @@ public record ShopVisualSettings(
                 tag.contains(KEY_OFFER_ITEM_HEIGHT) ? tag.getFloat(KEY_OFFER_ITEM_HEIGHT) : DEFAULT_OFFER_ITEM_HEIGHT,
                 !tag.contains(KEY_OFFER_ITEM_BOBBING) || tag.getBoolean(KEY_OFFER_ITEM_BOBBING),
                 tag.contains(KEY_OFFER_ITEM_COUNT) ? tag.getInt(KEY_OFFER_ITEM_COUNT) : DEFAULT_OFFER_ITEM_COUNT,
-                tag.contains(KEY_OFFER_ITEM_ROTATION) ? tag.getFloat(KEY_OFFER_ITEM_ROTATION) : DEFAULT_OFFER_ITEM_ROTATION,
+                tag.contains(KEY_OFFER_ITEM_ROTATION_X) ? tag.getFloat(KEY_OFFER_ITEM_ROTATION_X) : DEFAULT_OFFER_ITEM_ROTATION,
+                tag.contains(KEY_OFFER_ITEM_ROTATION_Y) ? tag.getFloat(KEY_OFFER_ITEM_ROTATION_Y) : legacyOfferItemRotationY(tag),
+                tag.contains(KEY_OFFER_ITEM_ROTATION_Z) ? tag.getFloat(KEY_OFFER_ITEM_ROTATION_Z) : DEFAULT_OFFER_ITEM_ROTATION,
                 tag.getBoolean(KEY_OFFER_ITEM_CHAOS),
-                tag.contains(KEY_OFFER_ITEM_SPREAD) ? tag.getFloat(KEY_OFFER_ITEM_SPREAD) : DEFAULT_OFFER_ITEM_SPREAD
+                tag.contains(KEY_OFFER_ITEM_SPREAD) ? tag.getFloat(KEY_OFFER_ITEM_SPREAD) : DEFAULT_OFFER_ITEM_SPREAD,
+                tag.contains(KEY_DYNAMIC_FILL_LEVEL) ? tag.getBoolean(KEY_DYNAMIC_FILL_LEVEL) : DEFAULT_DYNAMIC_FILL_LEVEL
         );
     }
 
@@ -185,6 +209,10 @@ public record ShopVisualSettings(
         }
         float normalized = value % 360.0f;
         return normalized < 0.0f ? normalized + 360.0f : normalized;
+    }
+
+    private static float legacyOfferItemRotationY(CompoundTag tag) {
+        return tag.contains(KEY_OFFER_ITEM_ROTATION) ? tag.getFloat(KEY_OFFER_ITEM_ROTATION) : DEFAULT_OFFER_ITEM_ROTATION;
     }
 
     public static String sanitizeNpcName(String raw) {
