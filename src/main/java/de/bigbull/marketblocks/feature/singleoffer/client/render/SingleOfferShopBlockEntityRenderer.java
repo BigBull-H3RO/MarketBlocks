@@ -27,6 +27,7 @@ import org.joml.Matrix4f;
 import de.bigbull.marketblocks.MarketBlocks;
 
 public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity> {
+    private static final int MAX_DYNAMIC_OFFER_ITEM_DISPLAY_COUNT = 10;
 
     public SingleOfferShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
     }
@@ -107,7 +108,9 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                         poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
                 poseStack.popPose();
             } else {
-                int displayCount = visualSettings.offerItemCount() > 0 ? visualSettings.offerItemCount() : config.getOfferItemDisplayCount();
+                int displayCount = visualSettings.dynamicFillLevel()
+                        ? calculateDynamicOfferItemDisplayCount(blockEntity, result)
+                        : (visualSettings.offerItemCount() > 0 ? visualSettings.offerItemCount() : config.getOfferItemDisplayCount());
                 long seed = blockEntity.getBlockPos().asLong();
                 java.util.Random rand = new java.util.Random(seed);
                 float heightOffset = visualSettings.offerItemHeightOffset();
@@ -128,11 +131,14 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
                     poseStack.translate(offerItem.x() + offsetX, offerItem.y() + offsetY, offerItem.z() + offsetZ);
 
-                    float itemYaw = visualSettings.offerItemRotation();
+                    poseStack.mulPose(Axis.XP.rotationDegrees(visualSettings.offerItemRotationX()));
+                    poseStack.mulPose(Axis.YP.rotationDegrees(visualSettings.offerItemRotationY()));
+                    poseStack.mulPose(Axis.ZP.rotationDegrees(visualSettings.offerItemRotationZ()));
                     if (chaos) {
-                        itemYaw = rand.nextFloat() * 360.0f;
+                        poseStack.mulPose(Axis.XP.rotationDegrees(rand.nextFloat() * 360.0f));
+                        poseStack.mulPose(Axis.YP.rotationDegrees(rand.nextFloat() * 360.0f));
+                        poseStack.mulPose(Axis.ZP.rotationDegrees(rand.nextFloat() * 360.0f));
                     }
-                    poseStack.mulPose(Axis.YP.rotationDegrees(itemYaw));
 
                     applySlotRotation(poseStack, offerItem);
                     poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
@@ -181,6 +187,34 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
             }
         }
         return finalOfferScale;
+    }
+
+    private static int calculateDynamicOfferItemDisplayCount(SingleOfferShopBlockEntity blockEntity, ItemStack result) {
+        if (result.isEmpty()) {
+            return 0;
+        }
+
+        int storedItems = 0;
+        int inventoryCapacity = 0;
+
+        for (int slot = 0; slot < blockEntity.getInputHandler().getSlots(); slot++) {
+            ItemStack stack = blockEntity.getInputHandler().getStackInSlot(slot);
+            int slotCapacity = Math.min(blockEntity.getInputHandler().getSlotLimit(slot), result.getMaxStackSize());
+
+            if (stack.isEmpty()) {
+                inventoryCapacity += slotCapacity;
+            } else if (ItemStack.isSameItemSameComponents(stack, result)) {
+                storedItems += stack.getCount();
+                inventoryCapacity += slotCapacity;
+            }
+        }
+
+        if (storedItems <= 0 || inventoryCapacity <= 0) {
+            return 0;
+        }
+
+        float fillRatio = Math.min(1.0f, (float) storedItems / (float) inventoryCapacity);
+        return Math.max(1, (int) Math.ceil(fillRatio * MAX_DYNAMIC_OFFER_ITEM_DISPLAY_COUNT));
     }
 
     private void renderPaymentItem(ItemRenderer itemRenderer, Font font, PoseStack poseStack,

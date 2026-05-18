@@ -41,9 +41,12 @@ class ShopVisualSettingsTest {
                 0.2f,
                 false,
                 5,
+                15.0f,
                 45.0f,
+                90.0f,
                 true,
-                0.4f
+                0.4f,
+                true
         );
 
         assertEquals("Handler", settings.npcName());
@@ -65,9 +68,12 @@ class ShopVisualSettingsTest {
         assertEquals(0.2f, loaded.offerItemHeightOffset());
         assertFalse(loaded.offerItemBobbing());
         assertEquals(5, loaded.offerItemCount());
-        assertEquals(45.0f, loaded.offerItemRotation());
+        assertEquals(15.0f, loaded.offerItemRotationX());
+        assertEquals(45.0f, loaded.offerItemRotationY());
+        assertEquals(90.0f, loaded.offerItemRotationZ());
         assertTrue(loaded.offerItemChaos());
         assertEquals(0.4f, loaded.offerItemSpread());
+        assertTrue(loaded.dynamicFillLevel());
     }
 
     @Test
@@ -86,17 +92,37 @@ class ShopVisualSettingsTest {
                 -99.0f,
                 true,
                 -5,
+                Float.NaN,
                 -45.0f,
+                Float.POSITIVE_INFINITY,
                 false,
-                -1.0f
+                -1.0f,
+                false
         );
 
         assertEquals(1.0f, settings.offerItemScale());
         assertEquals(2.0f, settings.offerItemSpeed());
         assertEquals(-2.0f, settings.offerItemHeightOffset());
         assertEquals(1, settings.offerItemCount());
-        assertEquals(315.0f, settings.offerItemRotation());
+        assertEquals(0.0f, settings.offerItemRotationX());
+        assertEquals(315.0f, settings.offerItemRotationY());
+        assertEquals(0.0f, settings.offerItemRotationZ());
         assertEquals(0.0f, settings.offerItemSpread());
+    }
+
+    @Test
+    void loadsLegacyRotationAsYaw() {
+        CompoundTag tag = ShopVisualSettings.DEFAULT.save();
+        tag.remove("OfferItemRotationX");
+        tag.remove("OfferItemRotationY");
+        tag.remove("OfferItemRotationZ");
+        tag.putFloat("OfferItemRotation", 270.0f);
+
+        ShopVisualSettings loaded = ShopVisualSettings.load(tag);
+
+        assertEquals(0.0f, loaded.offerItemRotationX());
+        assertEquals(270.0f, loaded.offerItemRotationY());
+        assertEquals(0.0f, loaded.offerItemRotationZ());
     }
 
     @Test

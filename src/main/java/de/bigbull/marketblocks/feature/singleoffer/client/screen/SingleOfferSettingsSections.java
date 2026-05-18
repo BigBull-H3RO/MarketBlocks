@@ -212,9 +212,12 @@ public final class SingleOfferSettingsSections {
             float draftOfferItemHeightOffset,
             boolean draftOfferItemBobbing,
             int draftOfferItemCount,
-            float draftOfferItemRotation,
+            float draftOfferItemRotationX,
+            float draftOfferItemRotationY,
+            float draftOfferItemRotationZ,
             boolean draftOfferItemChaos,
             float draftOfferItemSpread,
+            boolean draftDynamicFillLevel,
             Consumer<Boolean> onVisibleChanged,
             Consumer<Boolean> onFullbrightChanged,
             Consumer<Float> onScaleChanged,
@@ -222,9 +225,12 @@ public final class SingleOfferSettingsSections {
             Consumer<Float> onHeightChanged,
             Consumer<Boolean> onBobbingChanged,
             Consumer<Integer> onCountChanged,
-            Consumer<Float> onRotationChanged,
+            Consumer<Float> onRotationXChanged,
+            Consumer<Float> onRotationYChanged,
+            Consumer<Float> onRotationZChanged,
             Consumer<Boolean> onChaosChanged,
-            Consumer<Float> onSpreadChanged
+            Consumer<Float> onSpreadChanged,
+            Consumer<Boolean> onDynamicFillLevelChanged
     ) {
         int y = host.settingsTopPos() + 26;
         int leftX = host.settingsLeftPos() + 8;
@@ -267,11 +273,22 @@ public final class SingleOfferSettingsSections {
                 .onValueChange((checkbox, value) -> onBobbingChanged.accept(value))
                 .build());
         } else if (isMarketCrate) {
-            host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 10, draftOfferItemCount, onCountChanged));
+            IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 10, draftOfferItemCount, onCountChanged));
+            if (draftDynamicFillLevel) {
+                countSlider.active = false;
+                countSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.count.dynamic_fill.tooltip")));
+            }
+
             host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"), -0.2f, 1.0f, draftOfferItemHeightOffset, onHeightChanged));
             y += 20;
 
-            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draftOfferItemRotation, onRotationChanged));
+            host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.dynamic_fill_level"),
+                        host.settingsFont())
+                .pos(leftX, y)
+                .selected(draftDynamicFillLevel)
+                .onValueChange((checkbox, value) -> onDynamicFillLevelChanged.accept(value))
+                .build());
             host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.chaos"),
                         host.settingsFont())
@@ -281,7 +298,12 @@ public final class SingleOfferSettingsSections {
                 .build());
             y += 20;
 
-            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.spread"), 0.0f, 0.5f, draftOfferItemSpread, onSpreadChanged));
+            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.rotation_x"), 0.0f, 360.0f, draftOfferItemRotationX, onRotationXChanged));
+            host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.rotation_y"), 0.0f, 360.0f, draftOfferItemRotationY, onRotationYChanged));
+            y += 20;
+
+            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.rotation_z"), 0.0f, 360.0f, draftOfferItemRotationZ, onRotationZChanged));
+            host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.spread"), 0.0f, 0.5f, draftOfferItemSpread, onSpreadChanged));
         }
     }
 }

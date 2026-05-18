@@ -108,7 +108,12 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.height", "Height");
         add("gui.marketblocks.visuals.bobbing", "Bobbing");
         add("gui.marketblocks.visuals.count", "Item Count");
+        add("gui.marketblocks.visuals.count.dynamic_fill.tooltip", "Disabled while Dynamic Fill Level is enabled.");
+        add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamic Fill Level");
         add("gui.marketblocks.visuals.rotation", "Rotation");
+        add("gui.marketblocks.visuals.rotation_x", "Rotation X");
+        add("gui.marketblocks.visuals.rotation_y", "Rotation Y");
+        add("gui.marketblocks.visuals.rotation_z", "Rotation Z");
         add("gui.marketblocks.visuals.chaos", "Chaos Placement");
         add("gui.marketblocks.visuals.spread", "Spread/Radius");
         add("gui.marketblocks.visuals.error.no_surface", "No stand surface behind the shop!");
