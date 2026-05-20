@@ -273,7 +273,7 @@ public final class SingleOfferSettingsSections {
                 .build());
         } else if (isMarketCrate) {
             // Zeile 1: Count Slider + Dynamic Fill Checkbox
-            IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 10, draftOfferItemCount, onCountChanged));
+            IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 32, draftOfferItemCount, onCountChanged));
             if (draftDynamicFillLevel) {
                 countSlider.active = false;
                 countSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.count.dynamic_fill.tooltip")));
@@ -305,7 +305,11 @@ public final class SingleOfferSettingsSections {
             host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draftOfferItemRotation, onRotationChanged));
             y += 20;
 
-            // Zeile 4 (DYNAMISCH): spacing OR chaos rotation depending on mode
+            // Zeile 4: Scale slider
+            host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draftOfferItemScale, onScaleChanged));
+            y += 20;
+
+            // Zeile 5 (DYNAMISCH): spacing OR chaos rotation depending on mode
             if (currentMode == CrateLayoutMode.GESTAPELT) {
                 host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.spacing"), 0.0f, 1.0f, draftOfferItemSpacing, onSpacingChanged));
             } else {

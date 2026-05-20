@@ -125,15 +125,23 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 boolean isMarketCrate = blockEntity.getBlockState().getBlock() instanceof MarketCrateBlock;
 
                 if (isMarketCrate) {
-                    // Prevent clipping with the crate walls: keep items within a safe interior box
-                    double margin = 0.06;
-                    double maxOffset = 0.5 - margin; // relative to block center
+                    // MarketCrate hat ein komplexes Modell mit schrägen Seiten (rotation -22.5° um X axis)
+                    // Sicherheitsbox: Verhindert, dass Items durch Korb-Wände clippen
+                    // Conservativer Margin (0.10) berücksichtigt die angewinkelten Wände
+                    double safeMargin = 0.10;
+                    double maxOffsetX = 0.4 - safeMargin; // etwa 0.3 block units vom Center
+                    double maxOffsetZ = 0.4 - safeMargin; // etwa 0.3 block units vom Center
 
-                    // Map spacing 0..1 to an intuitive block-space separation (in blocks)
-                    double spacingBlocks = 0.2 + spacing * 0.8; // between 0.2 and 1.0
+                    // Layer-System: Items werden auf Ebenen angeordnet, die basierend auf Item-Typ gestapelt werden
+                    // BlockItem-Modelle sind dicker (0.25 block units), flache Items dünner (0.08)
+                    boolean isBlock = result.getItem() instanceof BlockItem;
+                    double layerHeight = isBlock ? 0.25 : 0.08;
 
-                    // Compute grid dimensions for a single Y-layer
-                    int cols = Math.max(1, (int) Math.floor((maxOffset * 2) / spacingBlocks));
+                    // Spacing-Berechnung: 0..1 auf intuitiven Block-Raum abbilden
+                    double spacingBlocks = 0.1 + spacing * 0.6; // zwischen 0.1 und 0.7 blocks
+
+                    // Grid-Dimensionen für eine Y-Schicht berechnen
+                    int cols = Math.max(1, (int) Math.floor((maxOffsetX * 2) / spacingBlocks));
                     int rows = Math.max(1, cols);
                     int itemsPerLayer = cols * rows;
 
@@ -148,41 +156,35 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                         double offsetZ = 0.0;
 
                         if (layoutMode == CrateLayoutMode.GESTAPELT) {
+                            // GESTAPELT (Gestapelt): Deterministische Grid-Anordnung
                             int xIdx = indexInLayer % cols;
                             int zIdx = indexInLayer / cols;
-                            // center the grid
+                            // Grid um den Mittelpunkt zentrieren
                             double centerOffsetX = (xIdx - (cols - 1) / 2.0) * spacingBlocks;
                             double centerOffsetZ = (zIdx - (rows - 1) / 2.0) * spacingBlocks;
-                            offsetX = Math.clamp(centerOffsetX, -maxOffset, maxOffset);
-                            offsetZ = Math.clamp(centerOffsetZ, -maxOffset, maxOffset);
-
-                            // Y raise per layer depending on item type
-                            boolean isBlock = result.getItem() instanceof BlockItem;
-                            double layerHeight = isBlock ? 0.25 : 0.08;
+                            // Innerhalb der sicheren Box clampen
+                            offsetX = Math.clamp(centerOffsetX, -maxOffsetX, maxOffsetX);
+                            offsetZ = Math.clamp(centerOffsetZ, -maxOffsetZ, maxOffsetZ);
                             offsetY = layer * layerHeight;
                         } else {
-                            // LOSE mode: distribute items randomly on each Y-layer within crate bounds
-                            // Use deterministic random per slot
-                            double randX = rand.nextDouble() * (maxOffset * 2) - maxOffset;
-                            double randZ = rand.nextDouble() * (maxOffset * 2) - maxOffset;
+                            // LOSE: Deterministische Pseudo-Random-Verteilung auf Y-Schicht
+                            double randX = rand.nextDouble() * (maxOffsetX * 2) - maxOffsetX;
+                            double randZ = rand.nextDouble() * (maxOffsetZ * 2) - maxOffsetZ;
                             offsetX = randX;
                             offsetZ = randZ;
-
-                            boolean isBlock = result.getItem() instanceof BlockItem;
-                            double layerHeight = isBlock ? 0.25 : 0.08;
                             offsetY = layer * layerHeight;
                         }
 
-                        // Apply translations relative to the slot origin
+                        // Zur Slot-Origin übersetzen
                         poseStack.translate(offerItem.x(), offerItem.y(), offerItem.z());
 
-                        // translate local offsets
+                        // Lokale Offsets anwenden
                         poseStack.translate(offsetX, offsetY, offsetZ);
 
-                        // Each item gets the base rotation plus a random chaos offset in LOSE mode
+                        // Jedes Artikel erhält die Basis-Rotation plus zufälliger Offset im LOSE-Modus
                         double itemRotationOffset = 0.0;
                         if (layoutMode == CrateLayoutMode.LOSE) {
-                            // chaosRotation 0..1 -> up to +/-30 degrees
+                            // chaosRotation 0..1 -> bis zu +/-30 Grad
                             itemRotationOffset = (rand.nextDouble() * 2.0 - 1.0) * 30.0 * chaosRotation;
                         }
 
@@ -190,7 +192,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
                         applySlotRotation(poseStack, offerItem);
                         poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                        // Apply final global height offset
+                        // Globalen Height-Offset anwenden
                         if (visualSettings.offerItemHeightOffset() != 0.0f) {
                             poseStack.translate(0.0, visualSettings.offerItemHeightOffset(), 0.0);
                         }
@@ -247,7 +249,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         ItemStack payment1 = blockEntity.getOfferPayment1();
         ItemStack payment2 = blockEntity.getOfferPayment2();
 
-        if (config.isShowFrontOffer() && !result.isEmpty() && renderOfferItem) {
+        if (config.isShowFrontOffer() && !result.isEmpty()) {
             renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, actualPackedLightFront, packedOverlay,
                     result, dir, config.getFrontOfferItem(), null);
         }
