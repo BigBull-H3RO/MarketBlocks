@@ -7,6 +7,7 @@ import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.singleoffer.*;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
@@ -121,11 +122,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private Float draftOfferItemHeightOffset;
     private Boolean draftOfferItemBobbing;
     private Integer draftOfferItemCount;
-    private Float draftOfferItemRotationX;
-    private Float draftOfferItemRotationY;
-    private Float draftOfferItemRotationZ;
-    private Boolean draftOfferItemChaos;
-    private Float draftOfferItemSpread;
+    private Float draftOfferItemRotation;
+    private CrateLayoutMode draftOfferItemLayoutMode;
+    private Float draftOfferItemSpacing;
+    private Float draftOfferItemChaosRotation;
     private Boolean draftDynamicFillLevel;
 
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
@@ -302,11 +302,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (draftOfferItemHeightOffset == null) draftOfferItemHeightOffset = visualSettings.offerItemHeightOffset();
         if (draftOfferItemBobbing == null) draftOfferItemBobbing = visualSettings.offerItemBobbing();
         if (draftOfferItemCount == null) draftOfferItemCount = visualSettings.offerItemCount();
-        if (draftOfferItemRotationX == null) draftOfferItemRotationX = visualSettings.offerItemRotationX();
-        if (draftOfferItemRotationY == null) draftOfferItemRotationY = visualSettings.offerItemRotationY();
-        if (draftOfferItemRotationZ == null) draftOfferItemRotationZ = visualSettings.offerItemRotationZ();
-        if (draftOfferItemChaos == null) draftOfferItemChaos = visualSettings.offerItemChaos();
-        if (draftOfferItemSpread == null) draftOfferItemSpread = visualSettings.offerItemSpread();
+        if (draftOfferItemRotation == null) draftOfferItemRotation = visualSettings.offerItemRotation();
+        if (draftOfferItemLayoutMode == null) draftOfferItemLayoutMode = visualSettings.offerItemLayoutMode();
+        if (draftOfferItemSpacing == null) draftOfferItemSpacing = visualSettings.offerItemSpacing();
+        if (draftOfferItemChaosRotation == null) draftOfferItemChaosRotation = visualSettings.offerItemChaosRotation();
         if (draftDynamicFillLevel == null) draftDynamicFillLevel = visualSettings.dynamicFillLevel();
 
         emitRedstoneEnabled = draftEmitRedstone;
@@ -408,11 +407,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                             draftOfferItemHeightOffset,
                             draftOfferItemBobbing,
                             draftOfferItemCount,
-                            draftOfferItemRotationX,
-                            draftOfferItemRotationY,
-                            draftOfferItemRotationZ,
-                            draftOfferItemChaos,
-                            draftOfferItemSpread,
+                            draftOfferItemRotation,
+                            draftOfferItemLayoutMode,
+                            draftOfferItemSpacing,
+                            draftOfferItemChaosRotation,
                             Boolean.TRUE.equals(draftDynamicFillLevel),
                             val -> { draftOfferItemVisible = val; saved = false; },
                             val -> { draftOfferItemFullbright = val; saved = false; },
@@ -421,11 +419,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                             val -> { draftOfferItemHeightOffset = val; saved = false; },
                             val -> { draftOfferItemBobbing = val; saved = false; },
                             val -> { draftOfferItemCount = val; saved = false; },
-                            val -> { draftOfferItemRotationX = val; saved = false; },
-                            val -> { draftOfferItemRotationY = val; saved = false; },
-                            val -> { draftOfferItemRotationZ = val; saved = false; },
-                            val -> { draftOfferItemChaos = val; saved = false; },
-                            val -> { draftOfferItemSpread = val; saved = false; },
+                            val -> { draftOfferItemRotation = val; saved = false; },
+                            val -> { draftOfferItemLayoutMode = val; saved = false; },
+                            val -> { draftOfferItemSpacing = val; saved = false; },
+                            val -> { draftOfferItemChaosRotation = val; saved = false; },
                             val -> { draftDynamicFillLevel = val; saved = false; rebuildUI(); }
                         );
                     }
@@ -460,11 +457,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     draftOfferItemHeightOffset != null ? draftOfferItemHeightOffset : currentVisuals.offerItemHeightOffset(),
                     Boolean.TRUE.equals(draftOfferItemBobbing),
                     draftOfferItemCount != null ? draftOfferItemCount : currentVisuals.offerItemCount(),
-                    draftOfferItemRotationX != null ? draftOfferItemRotationX : currentVisuals.offerItemRotationX(),
-                    draftOfferItemRotationY != null ? draftOfferItemRotationY : currentVisuals.offerItemRotationY(),
-                    draftOfferItemRotationZ != null ? draftOfferItemRotationZ : currentVisuals.offerItemRotationZ(),
-                    Boolean.TRUE.equals(draftOfferItemChaos),
-                    draftOfferItemSpread != null ? draftOfferItemSpread : currentVisuals.offerItemSpread(),
+                    draftOfferItemRotation != null ? draftOfferItemRotation : currentVisuals.offerItemRotation(),
+                    draftOfferItemLayoutMode != null ? draftOfferItemLayoutMode : currentVisuals.offerItemLayoutMode(),
+                    draftOfferItemSpacing != null ? draftOfferItemSpacing : currentVisuals.offerItemSpacing(),
+                    draftOfferItemChaosRotation != null ? draftOfferItemChaosRotation : currentVisuals.offerItemChaosRotation(),
                     Boolean.TRUE.equals(draftDynamicFillLevel)
             );
 
@@ -506,9 +502,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             draftOfferItemVisible = visuals.offerItemVisible(); draftOfferItemFullbright = visuals.offerItemFullbright();
             draftOfferItemScale = visuals.offerItemScale(); draftOfferItemSpeed = visuals.offerItemSpeed();
             draftOfferItemHeightOffset = visuals.offerItemHeightOffset(); draftOfferItemBobbing = visuals.offerItemBobbing();
-            draftOfferItemCount = visuals.offerItemCount(); draftOfferItemRotationX = visuals.offerItemRotationX();
-            draftOfferItemRotationY = visuals.offerItemRotationY(); draftOfferItemRotationZ = visuals.offerItemRotationZ();
-            draftOfferItemChaos = visuals.offerItemChaos(); draftOfferItemSpread = visuals.offerItemSpread();
+            draftOfferItemCount = visuals.offerItemCount(); draftOfferItemRotation = visuals.offerItemRotation();
+            draftOfferItemLayoutMode = visuals.offerItemLayoutMode(); draftOfferItemSpacing = visuals.offerItemSpacing(); draftOfferItemChaosRotation = visuals.offerItemChaosRotation();
             draftDynamicFillLevel = visuals.dynamicFillLevel();
             draftPurchaseXpFeedbackSound = Boolean.TRUE.equals(draftPurchaseXpFeedbackSound);
             saved = true;

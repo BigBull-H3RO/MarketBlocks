@@ -32,7 +32,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.trade_unavailable", "Handel nicht verfügbar");
         add("gui.marketblocks.available", "Verfügbar");
         add("gui.marketblocks.no_offers", "Keine Angebote verfügbar");
-        add("gui.marketblocks.no_players_available", "Keine Spieler verf\u00fcgbar");
+        add("gui.marketblocks.no_players_available", "Keine Spieler verfügbar");
         add("gui.marketblocks.out_of_stock", "Nicht auf Lager");
         add("gui.marketblocks.output_full", "Ausgabe voll");
         add("gui.marketblocks.owner", "Besitzer: %s");
@@ -62,8 +62,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.log_title", "Transaktions-Log");
         add("gui.marketblocks.log.empty", "Keine Transaktionen vorhanden");
         add("gui.marketblocks.log.clear", "Log leeren");
-        add("gui.marketblocks.log.count", "Eintr\u00e4ge: %s");
-        add("gui.marketblocks.log.buyer", "K\u00e4ufer: %s");
+        add("gui.marketblocks.log.count", "Einträge: %s");
+        add("gui.marketblocks.log.buyer", "Käufer: %s");
         add("gui.marketblocks.log.none", "Nichts");
         add("gui.marketblocks.log.time.just_now", "Gerade eben");
         add("gui.marketblocks.log.time.seconds", "Vor %s Sek.");
@@ -99,11 +99,14 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.count.dynamic_fill.tooltip", "Deaktiviert, solange Dynamischer Füllstand aktiv ist.");
         add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamischer Füllstand");
         add("gui.marketblocks.visuals.rotation", "Rotation");
+        add("gui.marketblocks.visuals.spacing", "Item-Abstand");
+        add("gui.marketblocks.visuals.layout_mode", "Layout-Modus");
+        add("gui.marketblocks.visuals.layout_mode.gestapelt", "Gestapelt");
+        add("gui.marketblocks.visuals.layout_mode.lose", "Lose");
+        add("gui.marketblocks.visuals.chaos_rotation", "Chaos-Rotation");
         add("gui.marketblocks.visuals.rotation_x", "Rotation X");
         add("gui.marketblocks.visuals.rotation_y", "Rotation Y");
         add("gui.marketblocks.visuals.rotation_z", "Rotation Z");
-        add("gui.marketblocks.visuals.chaos", "Chaos-Verteilung");
-        add("gui.marketblocks.visuals.spread", "Streuung/Radius");
         add("gui.marketblocks.visuals.error.no_surface", "Kein Standblock hinter dem Shop!");
         add("gui.marketblocks.visuals.error.space_blocked", "Platz blockiert!");
         add("gui.marketblocks.visuals.profession.none", "Arbeitslos");
@@ -218,7 +221,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.no_connection", "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.marketplace.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
         add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte verwenden Sie nur Zahlen (Punkt oder Komma erlaubt).");
-        add("message.marketblocks.visual_npc.space_blocked", "Der dekorative Villager kann nicht spawnen: Es m\u00fcssen zwei freie Bl\u00f6cke dar\u00fcber sein.");
+        add("message.marketblocks.visual_npc.space_blocked", "Der dekorative Villager kann nicht spawnen: Es müssen zwei freie Blöcke darüber sein.");
         add("subtitles.marketblocks.visual_npc_fall", "Villager landet");
 
         add("item.marketblocks.trade_stand.with_showcase", "Handelsstand (Mit Vitrine)");

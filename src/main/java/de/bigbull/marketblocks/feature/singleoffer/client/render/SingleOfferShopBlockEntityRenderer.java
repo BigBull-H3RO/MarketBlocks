@@ -3,6 +3,9 @@ package de.bigbull.marketblocks.feature.singleoffer.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
+import de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
+import net.minecraft.world.item.BlockItem;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
 import de.bigbull.marketblocks.feature.visual.render.VisualShopNpcRenderer;
@@ -114,37 +117,125 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 long seed = blockEntity.getBlockPos().asLong();
                 java.util.Random rand = new java.util.Random(seed);
                 float heightOffset = visualSettings.offerItemHeightOffset();
-                float spread = visualSettings.offerItemSpread();
-                boolean chaos = visualSettings.offerItemChaos();
+                float spacing = visualSettings.offerItemSpacing();
+                float chaosRotation = visualSettings.offerItemChaosRotation();
+                float baseRotation = visualSettings.offerItemRotation();
+                CrateLayoutMode layoutMode = visualSettings.offerItemLayoutMode();
 
-                for (int i = 0; i < displayCount; i++) {
-                    poseStack.pushPose();
+                boolean isMarketCrate = blockEntity.getBlockState().getBlock() instanceof MarketCrateBlock;
 
-                    double offsetX = 0;
-                    double offsetZ = 0;
-                    double offsetY = i * 0.05 + heightOffset;
+                if (isMarketCrate) {
+                    // Prevent clipping with the crate walls: keep items within a safe interior box
+                    double margin = 0.06;
+                    double maxOffset = 0.5 - margin; // relative to block center
 
-                    if (chaos) {
-                        offsetX = (rand.nextDouble() - 0.5) * spread * 2;
-                        offsetZ = (rand.nextDouble() - 0.5) * spread * 2;
+                    // Map spacing 0..1 to an intuitive block-space separation (in blocks)
+                    double spacingBlocks = 0.2 + spacing * 0.8; // between 0.2 and 1.0
+
+                    // Compute grid dimensions for a single Y-layer
+                    int cols = Math.max(1, (int) Math.floor((maxOffset * 2) / spacingBlocks));
+                    int rows = Math.max(1, cols);
+                    int itemsPerLayer = cols * rows;
+
+                    for (int i = 0; i < displayCount; i++) {
+                        poseStack.pushPose();
+
+                        int layer = i / itemsPerLayer;
+                        int indexInLayer = i % itemsPerLayer;
+
+                        double offsetX = 0.0;
+                        double offsetY = 0.0;
+                        double offsetZ = 0.0;
+
+                        if (layoutMode == CrateLayoutMode.GESTAPELT) {
+                            int xIdx = indexInLayer % cols;
+                            int zIdx = indexInLayer / cols;
+                            // center the grid
+                            double centerOffsetX = (xIdx - (cols - 1) / 2.0) * spacingBlocks;
+                            double centerOffsetZ = (zIdx - (rows - 1) / 2.0) * spacingBlocks;
+                            offsetX = Math.clamp(centerOffsetX, -maxOffset, maxOffset);
+                            offsetZ = Math.clamp(centerOffsetZ, -maxOffset, maxOffset);
+
+                            // Y raise per layer depending on item type
+                            boolean isBlock = result.getItem() instanceof BlockItem;
+                            double layerHeight = isBlock ? 0.25 : 0.08;
+                            offsetY = layer * layerHeight;
+                        } else {
+                            // LOSE mode: distribute items randomly on each Y-layer within crate bounds
+                            // Use deterministic random per slot
+                            double randX = rand.nextDouble() * (maxOffset * 2) - maxOffset;
+                            double randZ = rand.nextDouble() * (maxOffset * 2) - maxOffset;
+                            offsetX = randX;
+                            offsetZ = randZ;
+
+                            boolean isBlock = result.getItem() instanceof BlockItem;
+                            double layerHeight = isBlock ? 0.25 : 0.08;
+                            offsetY = layer * layerHeight;
+                        }
+
+                        // Apply translations relative to the slot origin
+                        poseStack.translate(offerItem.x(), offerItem.y(), offerItem.z());
+
+                        // translate local offsets
+                        poseStack.translate(offsetX, offsetY, offsetZ);
+
+                        // Each item gets the base rotation plus a random chaos offset in LOSE mode
+                        double itemRotationOffset = 0.0;
+                        if (layoutMode == CrateLayoutMode.LOSE) {
+                            // chaosRotation 0..1 -> up to +/-30 degrees
+                            itemRotationOffset = (rand.nextDouble() * 2.0 - 1.0) * 30.0 * chaosRotation;
+                        }
+
+                        poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation + (float) itemRotationOffset));
+
+                        applySlotRotation(poseStack, offerItem);
+                        poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
+                        // Apply final global height offset
+                        if (visualSettings.offerItemHeightOffset() != 0.0f) {
+                            poseStack.translate(0.0, visualSettings.offerItemHeightOffset(), 0.0);
+                        }
+
+                        itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
+                                poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
+                        poseStack.popPose();
                     }
+                } else {
+                    // Fallback: preserve previous non-market-crate behaviour using the (now reduced) enum
+                    for (int i = 0; i < displayCount; i++) {
+                        poseStack.pushPose();
 
-                    poseStack.translate(offerItem.x() + offsetX, offerItem.y() + offsetY, offerItem.z() + offsetZ);
+                        // Translate to base position
+                        poseStack.translate(offerItem.x(), offerItem.y() + heightOffset, offerItem.z());
 
-                    poseStack.mulPose(Axis.XP.rotationDegrees(visualSettings.offerItemRotationX()));
-                    poseStack.mulPose(Axis.YP.rotationDegrees(visualSettings.offerItemRotationY()));
-                    poseStack.mulPose(Axis.ZP.rotationDegrees(visualSettings.offerItemRotationZ()));
-                    if (chaos) {
-                        poseStack.mulPose(Axis.XP.rotationDegrees(rand.nextFloat() * 360.0f));
-                        poseStack.mulPose(Axis.YP.rotationDegrees(rand.nextFloat() * 360.0f));
-                        poseStack.mulPose(Axis.ZP.rotationDegrees(rand.nextFloat() * 360.0f));
+                        // Apply base rotation to the entire item group
+                        poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
+
+                        // Calculate position offsets based on layout mode
+                        double offsetX = 0;
+                        double offsetY = 0;
+                        double offsetZ = 0;
+
+                        // The old STACK/GRID/CHAOS modes no longer exist; use simple stacking/grid/chaos
+                        if (layoutMode == CrateLayoutMode.GESTAPELT) {
+                            int gridSize = (int) Math.ceil(Math.sqrt(displayCount));
+                            int x = i % gridSize;
+                            int z = i / gridSize;
+                            offsetX = (x - (gridSize - 1) / 2.0) * spacing;
+                            offsetZ = (z - (gridSize - 1) / 2.0) * spacing;
+                        } else if (layoutMode == CrateLayoutMode.LOSE) {
+                            offsetX = (rand.nextDouble() - 0.5) * spacing * 2;
+                            offsetZ = (rand.nextDouble() - 0.5) * spacing * 2;
+                        }
+
+                        // Apply calculated offsets
+                        poseStack.translate(offsetX, offsetY, offsetZ);
+
+                        applySlotRotation(poseStack, offerItem);
+                        poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
+                        itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
+                                poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
+                        poseStack.popPose();
                     }
-
-                    applySlotRotation(poseStack, offerItem);
-                    poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                    itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
-                            poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
-                    poseStack.popPose();
                 }
             }
 

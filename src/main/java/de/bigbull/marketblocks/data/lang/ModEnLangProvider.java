@@ -111,11 +111,14 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.count.dynamic_fill.tooltip", "Disabled while Dynamic Fill Level is enabled.");
         add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamic Fill Level");
         add("gui.marketblocks.visuals.rotation", "Rotation");
+        add("gui.marketblocks.visuals.spacing", "Item Spacing");
+        add("gui.marketblocks.visuals.layout_mode", "Layout Mode");
+        add("gui.marketblocks.visuals.layout_mode.gestapelt", "Stacked");
+        add("gui.marketblocks.visuals.layout_mode.lose", "Loose");
+        add("gui.marketblocks.visuals.chaos_rotation", "Chaos Rotation");
         add("gui.marketblocks.visuals.rotation_x", "Rotation X");
         add("gui.marketblocks.visuals.rotation_y", "Rotation Y");
         add("gui.marketblocks.visuals.rotation_z", "Rotation Z");
-        add("gui.marketblocks.visuals.chaos", "Chaos Placement");
-        add("gui.marketblocks.visuals.spread", "Spread/Radius");
         add("gui.marketblocks.visuals.error.no_surface", "No stand surface behind the shop!");
         add("gui.marketblocks.visuals.error.space_blocked", "Space blocked!");
         add("gui.marketblocks.visuals.profession.none", "Unemployed");

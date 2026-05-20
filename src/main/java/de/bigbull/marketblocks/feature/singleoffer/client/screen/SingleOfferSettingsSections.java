@@ -1,18 +1,19 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
+import de.bigbull.marketblocks.client.gui.FloatSlider;
+import de.bigbull.marketblocks.client.gui.IconButton;
+import de.bigbull.marketblocks.client.gui.IntSlider;
+import de.bigbull.marketblocks.client.gui.SideModeButton;
+import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.feature.visual.npc.VillagerVisualProfession;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
-import de.bigbull.marketblocks.client.gui.IconButton;
-import de.bigbull.marketblocks.client.gui.SideModeButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import de.bigbull.marketblocks.client.gui.FloatSlider;
-import de.bigbull.marketblocks.client.gui.IntSlider;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -212,11 +213,10 @@ public final class SingleOfferSettingsSections {
             float draftOfferItemHeightOffset,
             boolean draftOfferItemBobbing,
             int draftOfferItemCount,
-            float draftOfferItemRotationX,
-            float draftOfferItemRotationY,
-            float draftOfferItemRotationZ,
-            boolean draftOfferItemChaos,
-            float draftOfferItemSpread,
+            float draftOfferItemRotation,
+            CrateLayoutMode draftOfferItemLayoutMode,
+            float draftOfferItemSpacing,
+            float draftOfferItemChaosRotation,
             boolean draftDynamicFillLevel,
             Consumer<Boolean> onVisibleChanged,
             Consumer<Boolean> onFullbrightChanged,
@@ -225,11 +225,10 @@ public final class SingleOfferSettingsSections {
             Consumer<Float> onHeightChanged,
             Consumer<Boolean> onBobbingChanged,
             Consumer<Integer> onCountChanged,
-            Consumer<Float> onRotationXChanged,
-            Consumer<Float> onRotationYChanged,
-            Consumer<Float> onRotationZChanged,
-            Consumer<Boolean> onChaosChanged,
-            Consumer<Float> onSpreadChanged,
+            Consumer<Float> onRotationChanged,
+            Consumer<CrateLayoutMode> onLayoutModeChanged,
+            Consumer<Float> onSpacingChanged,
+            Consumer<Float> onChaosRotationChanged,
             Consumer<Boolean> onDynamicFillLevelChanged
     ) {
         int y = host.settingsTopPos() + 26;
@@ -273,37 +272,45 @@ public final class SingleOfferSettingsSections {
                 .onValueChange((checkbox, value) -> onBobbingChanged.accept(value))
                 .build());
         } else if (isMarketCrate) {
+            // Zeile 1: Count Slider + Dynamic Fill Checkbox
             IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 10, draftOfferItemCount, onCountChanged));
             if (draftDynamicFillLevel) {
                 countSlider.active = false;
                 countSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.count.dynamic_fill.tooltip")));
             }
 
-            host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"), -0.2f, 1.0f, draftOfferItemHeightOffset, onHeightChanged));
-            y += 20;
-
             host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.dynamic_fill_level"),
                         host.settingsFont())
-                .pos(leftX, y)
+                .pos(leftX + 85, y)
                 .selected(draftDynamicFillLevel)
                 .onValueChange((checkbox, value) -> onDynamicFillLevelChanged.accept(value))
                 .build());
-            host.addSettingsWidget(Checkbox.builder(
-                        Component.translatable("gui.marketblocks.visuals.chaos"),
-                        host.settingsFont())
-                .pos(leftX + 85, y)
-                .selected(draftOfferItemChaos)
-                .onValueChange((checkbox, value) -> onChaosChanged.accept(value))
-                .build());
             y += 20;
 
-            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.rotation_x"), 0.0f, 360.0f, draftOfferItemRotationX, onRotationXChanged));
-            host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.rotation_y"), 0.0f, 360.0f, draftOfferItemRotationY, onRotationYChanged));
+            // Zeile 2: Layout Mode Button
+            CrateLayoutMode currentMode = draftOfferItemLayoutMode != null ? draftOfferItemLayoutMode : CrateLayoutMode.LOSE;
+            Button layoutModeButton = host.addSettingsWidget(Button.builder(
+                    Component.translatable(currentMode.translationKey()),
+                    b -> {
+                        CrateLayoutMode nextMode = currentMode.next();
+                        onLayoutModeChanged.accept(nextMode);
+                        b.setMessage(Component.translatable(nextMode.translationKey()));
+                    }
+            ).bounds(leftX, y, 158, 16).build());
+            layoutModeButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.layout_mode")));
             y += 20;
 
-            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.rotation_z"), 0.0f, 360.0f, draftOfferItemRotationZ, onRotationZChanged));
-            host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.spread"), 0.0f, 0.5f, draftOfferItemSpread, onSpreadChanged));
+            // Zeile 3: Base Rotation for the whole pile
+            host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draftOfferItemRotation, onRotationChanged));
+            y += 20;
+
+            // Zeile 4 (DYNAMISCH): spacing OR chaos rotation depending on mode
+            if (currentMode == CrateLayoutMode.GESTAPELT) {
+                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.spacing"), 0.0f, 1.0f, draftOfferItemSpacing, onSpacingChanged));
+            } else {
+                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f, draftOfferItemChaosRotation, onChaosRotationChanged));
+            }
         }
     }
 }

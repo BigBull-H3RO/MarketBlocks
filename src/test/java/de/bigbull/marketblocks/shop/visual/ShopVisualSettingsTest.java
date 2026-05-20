@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.shop.visual;
 
+import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VillagerVisualProfession;
 import net.minecraft.SharedConstants;
@@ -41,11 +42,10 @@ class ShopVisualSettingsTest {
                 0.2f,
                 false,
                 5,
-                15.0f,
                 45.0f,
-                90.0f,
-                true,
+                CrateLayoutMode.GESTAPELT,
                 0.4f,
+                0.2f,
                 true
         );
 
@@ -68,11 +68,9 @@ class ShopVisualSettingsTest {
         assertEquals(0.2f, loaded.offerItemHeightOffset());
         assertFalse(loaded.offerItemBobbing());
         assertEquals(5, loaded.offerItemCount());
-        assertEquals(15.0f, loaded.offerItemRotationX());
-        assertEquals(45.0f, loaded.offerItemRotationY());
-        assertEquals(90.0f, loaded.offerItemRotationZ());
-        assertTrue(loaded.offerItemChaos());
-        assertEquals(0.4f, loaded.offerItemSpread());
+        assertEquals(45.0f, loaded.offerItemRotation());
+        assertEquals(CrateLayoutMode.GESTAPELT, loaded.offerItemLayoutMode());
+        assertEquals(0.4f, loaded.offerItemSpacing());
         assertTrue(loaded.dynamicFillLevel());
     }
 
@@ -93,10 +91,9 @@ class ShopVisualSettingsTest {
                 true,
                 -5,
                 Float.NaN,
-                -45.0f,
-                Float.POSITIVE_INFINITY,
-                false,
+                CrateLayoutMode.LOSE,
                 -1.0f,
+                0.0f,
                 false
         );
 
@@ -104,29 +101,30 @@ class ShopVisualSettingsTest {
         assertEquals(2.0f, settings.offerItemSpeed());
         assertEquals(-2.0f, settings.offerItemHeightOffset());
         assertEquals(1, settings.offerItemCount());
-        assertEquals(0.0f, settings.offerItemRotationX());
-        assertEquals(315.0f, settings.offerItemRotationY());
-        assertEquals(0.0f, settings.offerItemRotationZ());
-        assertEquals(0.0f, settings.offerItemSpread());
+        assertEquals(0.0f, settings.offerItemRotation());
+        assertEquals(CrateLayoutMode.LOSE, settings.offerItemLayoutMode());
+        assertEquals(0.0f, settings.offerItemSpacing());
     }
 
     @Test
     void loadsLegacyRotationAsYaw() {
         CompoundTag tag = ShopVisualSettings.DEFAULT.save();
-        tag.remove("OfferItemRotationX");
-        tag.remove("OfferItemRotationY");
-        tag.remove("OfferItemRotationZ");
+        tag.remove("OfferItemRotation");
         tag.putFloat("OfferItemRotation", 270.0f);
 
         ShopVisualSettings loaded = ShopVisualSettings.load(tag);
 
-        assertEquals(0.0f, loaded.offerItemRotationX());
-        assertEquals(270.0f, loaded.offerItemRotationY());
-        assertEquals(0.0f, loaded.offerItemRotationZ());
+        assertEquals(270.0f, loaded.offerItemRotation());
+        assertEquals(CrateLayoutMode.LOSE, loaded.offerItemLayoutMode());
     }
 
     @Test
     void cycleProfessionWrapsAround() {
         assertEquals(VillagerVisualProfession.NONE, VillagerVisualProfession.WEAPONSMITH.next());
+    }
+
+    @Test
+    void cycleLayoutModeWrapsAround() {
+        assertEquals(CrateLayoutMode.LOSE, CrateLayoutMode.GESTAPELT.next());
     }
 }
