@@ -125,25 +125,32 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 boolean isMarketCrate = blockEntity.getBlockState().getBlock() instanceof MarketCrateBlock;
 
                 if (isMarketCrate) {
-                    // MarketCrate hat ein komplexes Modell mit schrägen Seiten (rotation -22.5° um X axis)
-                    // Sicherheitsbox: Verhindert, dass Items durch Korb-Wände clippen
-                    // Conservativer Margin (0.10) berücksichtigt die angewinkelten Wände
-                    double safeMargin = 0.10;
-                    double maxOffsetX = 0.4 - safeMargin; // etwa 0.3 block units vom Center
-                    double maxOffsetZ = 0.4 - safeMargin; // etwa 0.3 block units vom Center
+                    // Exakte Korb-Ausrichtung aus dem Blockbench-Modell (Reihenfolge ist wichtig).
+                    poseStack.pushPose();
+                    poseStack.translate(0.5f, 0.9375f, 0.96875f);
+                    poseStack.mulPose(Axis.XP.rotationDegrees(-22.5f));
+                    poseStack.translate(0.0f, -0.125f, -0.5f);
 
-                    // Layer-System: Items werden auf Ebenen angeordnet, die basierend auf Item-Typ gestapelt werden
-                    // BlockItem-Modelle sind dicker (0.25 block units), flache Items dünner (0.08)
+                    // Innerer Korbbereich laut Modell: X/Z ~ [2.25..13.75] px, zusätzlicher Sicherheitsrand gegen Clipping.
+                    final float texturePadding = 0.15f;
+                    final float innerHalfSpan = (13.75f - 2.25f) / 32.0f; // 5.75 px -> 0.359375 blocks
+                    final float safeHalfSpan = Math.max(0.05f, innerHalfSpan - texturePadding);
+                    final float maxOffsetX = safeHalfSpan;
+                    final float maxOffsetZ = safeHalfSpan;
+
+                    // Höhere Scale macht die Items dicker -> Layerhöhe wächst mit.
                     boolean isBlock = result.getItem() instanceof BlockItem;
-                    double layerHeight = isBlock ? 0.25 : 0.08;
+                    double baseLayerHeight = isBlock ? 0.25 : 0.08;
+                    double layerHeight = baseLayerHeight * Math.max(0.35f, finalOfferScale);
 
-                    // Spacing-Berechnung: 0..1 auf intuitiven Block-Raum abbilden
-                    double spacingBlocks = 0.1 + spacing * 0.6; // zwischen 0.1 und 0.7 blocks
+                    // Spacing im sicheren Korbraum halten.
+                    double minSpacing = 0.08;
+                    double maxSpacing = Math.min(0.20, maxOffsetX * 1.6);
+                    double spacingBlocks = minSpacing + (maxSpacing - minSpacing) * spacing;
 
-                    // Grid-Dimensionen für eine Y-Schicht berechnen
-                    int cols = Math.max(1, (int) Math.floor((maxOffsetX * 2) / spacingBlocks));
-                    int rows = Math.max(1, cols);
-                    int itemsPerLayer = cols * rows;
+                    int cols = Math.max(1, (int) Math.floor((maxOffsetX * 2.0) / Math.max(0.01, spacingBlocks)) + 1);
+                    int rows = Math.max(1, (int) Math.floor((maxOffsetZ * 2.0) / Math.max(0.01, spacingBlocks)) + 1);
+                    int itemsPerLayer = Math.max(1, cols * rows);
 
                     for (int i = 0; i < displayCount; i++) {
                         poseStack.pushPose();
@@ -151,56 +158,37 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                         int layer = i / itemsPerLayer;
                         int indexInLayer = i % itemsPerLayer;
 
-                        double offsetX = 0.0;
-                        double offsetY = 0.0;
-                        double offsetZ = 0.0;
+                        double offsetX;
+                        double offsetZ;
 
                         if (layoutMode == CrateLayoutMode.GESTAPELT) {
-                            // GESTAPELT (Gestapelt): Deterministische Grid-Anordnung
                             int xIdx = indexInLayer % cols;
                             int zIdx = indexInLayer / cols;
-                            // Grid um den Mittelpunkt zentrieren
                             double centerOffsetX = (xIdx - (cols - 1) / 2.0) * spacingBlocks;
                             double centerOffsetZ = (zIdx - (rows - 1) / 2.0) * spacingBlocks;
-                            // Innerhalb der sicheren Box clampen
                             offsetX = Math.clamp(centerOffsetX, -maxOffsetX, maxOffsetX);
                             offsetZ = Math.clamp(centerOffsetZ, -maxOffsetZ, maxOffsetZ);
-                            offsetY = layer * layerHeight;
                         } else {
-                            // LOSE: Deterministische Pseudo-Random-Verteilung auf Y-Schicht
-                            double randX = rand.nextDouble() * (maxOffsetX * 2) - maxOffsetX;
-                            double randZ = rand.nextDouble() * (maxOffsetZ * 2) - maxOffsetZ;
-                            offsetX = randX;
-                            offsetZ = randZ;
-                            offsetY = layer * layerHeight;
+                            offsetX = rand.nextDouble() * (maxOffsetX * 2.0) - maxOffsetX;
+                            offsetZ = rand.nextDouble() * (maxOffsetZ * 2.0) - maxOffsetZ;
                         }
 
-                        // Zur Slot-Origin übersetzen
-                        poseStack.translate(offerItem.x(), offerItem.y(), offerItem.z());
-
-                        // Lokale Offsets anwenden
+                        double offsetY = layer * layerHeight;
                         poseStack.translate(offsetX, offsetY, offsetZ);
 
-                        // Jedes Artikel erhält die Basis-Rotation plus zufälliger Offset im LOSE-Modus
                         double itemRotationOffset = 0.0;
                         if (layoutMode == CrateLayoutMode.LOSE) {
-                            // chaosRotation 0..1 -> bis zu +/-30 Grad
                             itemRotationOffset = (rand.nextDouble() * 2.0 - 1.0) * 30.0 * chaosRotation;
                         }
-
                         poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation + (float) itemRotationOffset));
 
-                        applySlotRotation(poseStack, offerItem);
+                        // Scale nach Korb-Transform, direkt vor dem eigentlichen Item-Render.
                         poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                        // Globalen Height-Offset anwenden
-                        if (visualSettings.offerItemHeightOffset() != 0.0f) {
-                            poseStack.translate(0.0, visualSettings.offerItemHeightOffset(), 0.0);
-                        }
-
                         itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
                                 poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
                         poseStack.popPose();
                     }
+                    poseStack.popPose();
                 } else {
                     // Fallback: preserve previous non-market-crate behaviour using the (now reduced) enum
                     for (int i = 0; i < displayCount; i++) {
