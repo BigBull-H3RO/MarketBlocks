@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
-import de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import net.minecraft.world.item.BlockItem;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
@@ -122,9 +122,9 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 float baseRotation = visualSettings.offerItemRotation();
                 CrateLayoutMode layoutMode = visualSettings.offerItemLayoutMode();
 
-                boolean isMarketCrate = blockEntity.getBlockState().getBlock() instanceof MarketCrateBlock;
+                ShopVisualType visualType = ShopVisualType.from(blockEntity.getBlockState().getBlock());
 
-                if (isMarketCrate) {
+                if (visualType.isMarketCrate()) {
                     // Exakte Korb-Ausrichtung aus dem Blockbench-Modell (Reihenfolge ist wichtig).
                     poseStack.pushPose();
                     poseStack.translate(0.5f, 0.9375f, 0.96875f);

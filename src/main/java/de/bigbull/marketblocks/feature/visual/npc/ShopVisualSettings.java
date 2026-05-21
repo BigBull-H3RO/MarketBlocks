@@ -135,12 +135,293 @@ public record ShopVisualSettings(
         offerItemChaosRotation = clampFinite(offerItemChaosRotation, MIN_OFFER_ITEM_CHAOS_ROTATION, MAX_OFFER_ITEM_CHAOS_ROTATION, DEFAULT_OFFER_ITEM_CHAOS_ROTATION);
     }
 
+    public Draft toDraft(String shopName, boolean emitRedstoneEnabled, boolean purchaseXpFeedbackSound) {
+        return new Draft(shopName, emitRedstoneEnabled, purchaseXpFeedbackSound, this);
+    }
+
     public ShopVisualSettings withNpcEnabled(boolean enabled) {
         return new ShopVisualSettings(
                 enabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled, paymentSlotSoundsEnabled,
                 offerItemVisible, offerItemFullbright, offerItemScale, offerItemSpeed, offerItemHeightOffset,
                 offerItemBobbing, offerItemCount, offerItemRotation, offerItemLayoutMode, offerItemSpacing, offerItemChaosRotation, dynamicFillLevel
         );
+    }
+
+    public static final class Draft {
+        private String shopName;
+        private boolean emitRedstoneEnabled;
+        private boolean purchaseXpFeedbackSound;
+
+        private boolean npcEnabled;
+        private String npcName;
+        private VillagerVisualProfession profession;
+        private boolean purchaseParticlesEnabled;
+        private boolean purchaseSoundsEnabled;
+        private boolean paymentSlotSoundsEnabled;
+
+        private boolean offerItemVisible;
+        private boolean offerItemFullbright;
+        private float offerItemScale;
+        private float offerItemSpeed;
+        private float offerItemHeightOffset;
+        private boolean offerItemBobbing;
+        private int offerItemCount;
+        private float offerItemRotation;
+        private CrateLayoutMode offerItemLayoutMode;
+        private float offerItemSpacing;
+        private float offerItemChaosRotation;
+        private boolean dynamicFillLevel;
+
+        private Draft(String shopName, boolean emitRedstoneEnabled, boolean purchaseXpFeedbackSound, ShopVisualSettings visualSettings) {
+            this.shopName = shopName == null ? "" : shopName;
+            this.emitRedstoneEnabled = emitRedstoneEnabled;
+            this.purchaseXpFeedbackSound = purchaseXpFeedbackSound;
+            applyVisualSettings(visualSettings == null ? DEFAULT : visualSettings);
+        }
+
+        public String shopName() {
+            return shopName;
+        }
+
+        public Draft setShopName(String shopName) {
+            this.shopName = shopName == null ? "" : shopName;
+            return this;
+        }
+
+        public boolean emitRedstoneEnabled() {
+            return emitRedstoneEnabled;
+        }
+
+        public Draft setEmitRedstoneEnabled(boolean emitRedstoneEnabled) {
+            this.emitRedstoneEnabled = emitRedstoneEnabled;
+            return this;
+        }
+
+        public boolean purchaseXpFeedbackSound() {
+            return purchaseXpFeedbackSound;
+        }
+
+        public Draft setPurchaseXpFeedbackSound(boolean purchaseXpFeedbackSound) {
+            this.purchaseXpFeedbackSound = purchaseXpFeedbackSound;
+            return this;
+        }
+
+        public boolean npcEnabled() {
+            return npcEnabled;
+        }
+
+        public Draft setNpcEnabled(boolean npcEnabled) {
+            this.npcEnabled = npcEnabled;
+            return this;
+        }
+
+        public Draft toggleNpcEnabled() {
+            this.npcEnabled = !this.npcEnabled;
+            return this;
+        }
+
+        public String npcName() {
+            return npcName;
+        }
+
+        public Draft setNpcName(String npcName) {
+            this.npcName = sanitizeNpcName(npcName);
+            return this;
+        }
+
+        public VillagerVisualProfession profession() {
+            return profession;
+        }
+
+        public Draft setProfession(VillagerVisualProfession profession) {
+            this.profession = profession == null ? VillagerVisualProfession.NONE : profession;
+            return this;
+        }
+
+        public Draft cycleProfession() {
+            this.profession = (this.profession == null ? VillagerVisualProfession.NONE : this.profession).next();
+            return this;
+        }
+
+        public boolean purchaseParticlesEnabled() {
+            return purchaseParticlesEnabled;
+        }
+
+        public Draft setPurchaseParticlesEnabled(boolean purchaseParticlesEnabled) {
+            this.purchaseParticlesEnabled = purchaseParticlesEnabled;
+            return this;
+        }
+
+        public boolean purchaseSoundsEnabled() {
+            return purchaseSoundsEnabled;
+        }
+
+        public Draft setPurchaseSoundsEnabled(boolean purchaseSoundsEnabled) {
+            this.purchaseSoundsEnabled = purchaseSoundsEnabled;
+            return this;
+        }
+
+        public boolean paymentSlotSoundsEnabled() {
+            return paymentSlotSoundsEnabled;
+        }
+
+        public Draft setPaymentSlotSoundsEnabled(boolean paymentSlotSoundsEnabled) {
+            this.paymentSlotSoundsEnabled = paymentSlotSoundsEnabled;
+            return this;
+        }
+
+        public boolean offerItemVisible() {
+            return offerItemVisible;
+        }
+
+        public Draft setOfferItemVisible(boolean offerItemVisible) {
+            this.offerItemVisible = offerItemVisible;
+            return this;
+        }
+
+        public boolean offerItemFullbright() {
+            return offerItemFullbright;
+        }
+
+        public Draft setOfferItemFullbright(boolean offerItemFullbright) {
+            this.offerItemFullbright = offerItemFullbright;
+            return this;
+        }
+
+        public float offerItemScale() {
+            return offerItemScale;
+        }
+
+        public Draft setOfferItemScale(float offerItemScale) {
+            this.offerItemScale = offerItemScale;
+            return this;
+        }
+
+        public float offerItemSpeed() {
+            return offerItemSpeed;
+        }
+
+        public Draft setOfferItemSpeed(float offerItemSpeed) {
+            this.offerItemSpeed = offerItemSpeed;
+            return this;
+        }
+
+        public float offerItemHeightOffset() {
+            return offerItemHeightOffset;
+        }
+
+        public Draft setOfferItemHeightOffset(float offerItemHeightOffset) {
+            this.offerItemHeightOffset = offerItemHeightOffset;
+            return this;
+        }
+
+        public boolean offerItemBobbing() {
+            return offerItemBobbing;
+        }
+
+        public Draft setOfferItemBobbing(boolean offerItemBobbing) {
+            this.offerItemBobbing = offerItemBobbing;
+            return this;
+        }
+
+        public int offerItemCount() {
+            return offerItemCount;
+        }
+
+        public Draft setOfferItemCount(int offerItemCount) {
+            this.offerItemCount = offerItemCount;
+            return this;
+        }
+
+        public float offerItemRotation() {
+            return offerItemRotation;
+        }
+
+        public Draft setOfferItemRotation(float offerItemRotation) {
+            this.offerItemRotation = offerItemRotation;
+            return this;
+        }
+
+        public CrateLayoutMode offerItemLayoutMode() {
+            return offerItemLayoutMode;
+        }
+
+        public Draft setOfferItemLayoutMode(CrateLayoutMode offerItemLayoutMode) {
+            this.offerItemLayoutMode = offerItemLayoutMode == null ? DEFAULT_OFFER_ITEM_LAYOUT_MODE : offerItemLayoutMode;
+            return this;
+        }
+
+        public float offerItemSpacing() {
+            return offerItemSpacing;
+        }
+
+        public Draft setOfferItemSpacing(float offerItemSpacing) {
+            this.offerItemSpacing = offerItemSpacing;
+            return this;
+        }
+
+        public float offerItemChaosRotation() {
+            return offerItemChaosRotation;
+        }
+
+        public Draft setOfferItemChaosRotation(float offerItemChaosRotation) {
+            this.offerItemChaosRotation = offerItemChaosRotation;
+            return this;
+        }
+
+        public boolean dynamicFillLevel() {
+            return dynamicFillLevel;
+        }
+
+        public Draft setDynamicFillLevel(boolean dynamicFillLevel) {
+            this.dynamicFillLevel = dynamicFillLevel;
+            return this;
+        }
+
+        public void applyVisualSettings(ShopVisualSettings visualSettings) {
+            ShopVisualSettings settings = visualSettings == null ? DEFAULT : visualSettings;
+            this.npcEnabled = settings.npcEnabled();
+            this.npcName = settings.npcName();
+            this.profession = settings.profession();
+            this.purchaseParticlesEnabled = settings.purchaseParticlesEnabled();
+            this.purchaseSoundsEnabled = settings.purchaseSoundsEnabled();
+            this.paymentSlotSoundsEnabled = settings.paymentSlotSoundsEnabled();
+            this.offerItemVisible = settings.offerItemVisible();
+            this.offerItemFullbright = settings.offerItemFullbright();
+            this.offerItemScale = settings.offerItemScale();
+            this.offerItemSpeed = settings.offerItemSpeed();
+            this.offerItemHeightOffset = settings.offerItemHeightOffset();
+            this.offerItemBobbing = settings.offerItemBobbing();
+            this.offerItemCount = settings.offerItemCount();
+            this.offerItemRotation = settings.offerItemRotation();
+            this.offerItemLayoutMode = settings.offerItemLayoutMode();
+            this.offerItemSpacing = settings.offerItemSpacing();
+            this.offerItemChaosRotation = settings.offerItemChaosRotation();
+            this.dynamicFillLevel = settings.dynamicFillLevel();
+        }
+
+        public ShopVisualSettings toVisualSettings() {
+            return new ShopVisualSettings(
+                    npcEnabled,
+                    npcName,
+                    profession,
+                    purchaseParticlesEnabled,
+                    purchaseSoundsEnabled,
+                    paymentSlotSoundsEnabled,
+                    offerItemVisible,
+                    offerItemFullbright,
+                    offerItemScale,
+                    offerItemSpeed,
+                    offerItemHeightOffset,
+                    offerItemBobbing,
+                    offerItemCount,
+                    offerItemRotation,
+                    offerItemLayoutMode,
+                    offerItemSpacing,
+                    offerItemChaosRotation,
+                    dynamicFillLevel
+            );
+        }
     }
 
     public CompoundTag save() {

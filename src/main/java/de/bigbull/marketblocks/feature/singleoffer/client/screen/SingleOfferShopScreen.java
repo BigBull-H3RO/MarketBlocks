@@ -7,13 +7,12 @@ import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.network.singleoffer.*;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
-import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
-import de.bigbull.marketblocks.feature.visual.npc.VillagerVisualProfession;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import de.bigbull.marketblocks.client.gui.GuiConstants;
 import de.bigbull.marketblocks.client.gui.IconButton;
@@ -101,32 +100,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private OfferTemplateButton offerButton;
     private EditBox nameField;
     private EditBox npcNameField;
-    private boolean emitRedstoneEnabled;
     private Direction leftDir, rightDir, bottomDir, backDir;
     private boolean saved;
     private String originalName;
-    private String draftShopName;
-    private Boolean draftEmitRedstone;
-    private Boolean draftVisualNpcEnabled;
-    private String draftVisualNpcName;
-    private VillagerVisualProfession draftVisualNpcProfession;
-    private Boolean draftVisualPurchaseParticles;
-    private Boolean draftVisualPurchaseSounds;
-    private Boolean draftVisualPaymentSlotSounds;
-    private Boolean draftPurchaseXpFeedbackSound;
-
-    private Boolean draftOfferItemVisible;
-    private Boolean draftOfferItemFullbright;
-    private Float draftOfferItemScale;
-    private Float draftOfferItemSpeed;
-    private Float draftOfferItemHeightOffset;
-    private Boolean draftOfferItemBobbing;
-    private Integer draftOfferItemCount;
-    private Float draftOfferItemRotation;
-    private CrateLayoutMode draftOfferItemLayoutMode;
-    private Float draftOfferItemSpacing;
-    private Float draftOfferItemChaosRotation;
-    private Boolean draftDynamicFillLevel;
+    private ShopVisualSettings.Draft settingsDraft;
 
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
@@ -283,32 +260,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         backDir = facing.getOpposite();
 
         if (originalName == null) originalName = be.getShopName();
-        if (draftShopName == null) draftShopName = be.getShopName();
-        if (draftEmitRedstone == null) draftEmitRedstone = be.isEmitRedstone();
-
-        ShopVisualSettings visualSettings = be.getVisualSettings();
-        if (draftVisualNpcEnabled == null) draftVisualNpcEnabled = visualSettings.npcEnabled();
-        if (draftVisualNpcName == null) draftVisualNpcName = visualSettings.npcName();
-        if (draftVisualNpcProfession == null) draftVisualNpcProfession = visualSettings.profession();
-        if (draftVisualPurchaseParticles == null) draftVisualPurchaseParticles = visualSettings.purchaseParticlesEnabled();
-        if (draftVisualPurchaseSounds == null) draftVisualPurchaseSounds = visualSettings.purchaseSoundsEnabled();
-        if (draftVisualPaymentSlotSounds == null) draftVisualPaymentSlotSounds = visualSettings.paymentSlotSoundsEnabled();
-        if (draftPurchaseXpFeedbackSound == null) draftPurchaseXpFeedbackSound = be.isPurchaseXpFeedbackSound();
-
-        if (draftOfferItemVisible == null) draftOfferItemVisible = visualSettings.offerItemVisible();
-        if (draftOfferItemFullbright == null) draftOfferItemFullbright = visualSettings.offerItemFullbright();
-        if (draftOfferItemScale == null) draftOfferItemScale = visualSettings.offerItemScale();
-        if (draftOfferItemSpeed == null) draftOfferItemSpeed = visualSettings.offerItemSpeed();
-        if (draftOfferItemHeightOffset == null) draftOfferItemHeightOffset = visualSettings.offerItemHeightOffset();
-        if (draftOfferItemBobbing == null) draftOfferItemBobbing = visualSettings.offerItemBobbing();
-        if (draftOfferItemCount == null) draftOfferItemCount = visualSettings.offerItemCount();
-        if (draftOfferItemRotation == null) draftOfferItemRotation = visualSettings.offerItemRotation();
-        if (draftOfferItemLayoutMode == null) draftOfferItemLayoutMode = visualSettings.offerItemLayoutMode();
-        if (draftOfferItemSpacing == null) draftOfferItemSpacing = visualSettings.offerItemSpacing();
-        if (draftOfferItemChaosRotation == null) draftOfferItemChaosRotation = visualSettings.offerItemChaosRotation();
-        if (draftDynamicFillLevel == null) draftDynamicFillLevel = visualSettings.dynamicFillLevel();
-
-        emitRedstoneEnabled = draftEmitRedstone;
+        ShopVisualSettings.Draft draft = ensureSettingsDraft(be);
         visualPlacementResult = resolveVisualPlacementResult(be);
 
         boolean isOwner = menu.isOwner();
@@ -324,22 +276,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         switch (activeSettingsCategory) {
             case GENERAL -> {
                 if (isOwner) {
-                    nameField = SingleOfferSettingsSections.buildGeneralSection(
-                            this, draftShopName, emitRedstoneEnabled, Boolean.TRUE.equals(draftPurchaseXpFeedbackSound),
-                            value -> {
-                                emitRedstoneEnabled = value;
-                                draftEmitRedstone = value;
-                                saved = false;
-                            },
-                            s -> {
-                                draftShopName = s;
-                                saved = false;
-                            },
-                            value -> {
-                                draftPurchaseXpFeedbackSound = value;
-                                saved = false;
-                            }
-                    );
+                    nameField = SingleOfferSettingsSections.buildGeneralSection(this, draft, this::markDirty);
                 }
                 if (canToggleAdminShop) {
                     buildAdminShopToggleButton(be);
@@ -347,84 +284,21 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
             case IO -> {
                 if (isOwner) {
-                    SingleOfferSettingsSections.buildIoSection(
-                            this, menu, leftDir, rightDir, bottomDir, backDir, () -> saved = false
-                    );
+                    SingleOfferSettingsSections.buildIoSection(this, menu, leftDir, rightDir, bottomDir, backDir, this::markDirty);
                 }
             }
             case VILLAGER -> {
                 if (isOwner) {
-                    SingleOfferSettingsSections.VisualSectionWidgets widgets = SingleOfferSettingsSections.buildVisualSection(
-                            this, Boolean.TRUE.equals(draftVisualNpcEnabled), draftVisualNpcName, draftVisualNpcProfession,
-                            Boolean.TRUE.equals(draftVisualPurchaseParticles), Boolean.TRUE.equals(draftVisualPurchaseSounds),
-                            Boolean.TRUE.equals(draftVisualPaymentSlotSounds), visualPlacementResult,
-                            () -> {
-                                draftVisualNpcEnabled = !Boolean.TRUE.equals(draftVisualNpcEnabled);
-                                saved = false;
-                            },
-                            value -> {
-                                draftVisualNpcName = value;
-                                saved = false;
-                            },
-                            () -> {
-                                draftVisualNpcProfession = (draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession).next();
-                                saved = false;
-                            },
-                            value -> {
-                                draftVisualPurchaseParticles = value;
-                                saved = false;
-                            },
-                            value -> {
-                                draftVisualPurchaseSounds = value;
-                                saved = false;
-                            },
-                            value -> {
-                                draftVisualPaymentSlotSounds = value;
-                                saved = false;
-                            },
-                            this::getNpcToggleLabel, this::getProfessionLabel
-                    );
+                    SingleOfferSettingsSections.VisualSectionWidgets widgets = SingleOfferSettingsSections.buildVisualSection(this, draft, visualPlacementResult, this::markDirty);
                     npcNameField = widgets.npcNameField();
                 }
             }
             case VISUALS -> {
                 npcNameField = null;
                 if (isOwner) {
-                    net.minecraft.world.level.block.Block block = be.getBlockState().getBlock();
-                    boolean isTradeStand = block instanceof de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
-                    boolean isMarketCrate = block instanceof de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
-
-                    if (isTradeStand || isMarketCrate) {
-                        SingleOfferSettingsSections.buildOfferItemSection(
-                            this,
-                            isTradeStand,
-                            isMarketCrate,
-                            be.isOfferItemRenderingGloballyEnabled(),
-                            draftOfferItemVisible,
-                            draftOfferItemFullbright,
-                            draftOfferItemScale,
-                            draftOfferItemSpeed,
-                            draftOfferItemHeightOffset,
-                            draftOfferItemBobbing,
-                            draftOfferItemCount,
-                            draftOfferItemRotation,
-                            draftOfferItemLayoutMode,
-                            draftOfferItemSpacing,
-                            draftOfferItemChaosRotation,
-                            Boolean.TRUE.equals(draftDynamicFillLevel),
-                            val -> { draftOfferItemVisible = val; saved = false; },
-                            val -> { draftOfferItemFullbright = val; saved = false; },
-                            val -> { draftOfferItemScale = val; saved = false; },
-                            val -> { draftOfferItemSpeed = val; saved = false; },
-                            val -> { draftOfferItemHeightOffset = val; saved = false; },
-                            val -> { draftOfferItemBobbing = val; saved = false; },
-                            val -> { draftOfferItemCount = val; saved = false; },
-                            val -> { draftOfferItemRotation = val; saved = false; },
-                            val -> { draftOfferItemLayoutMode = val; saved = false; },
-                            val -> { draftOfferItemSpacing = val; saved = false; },
-                            val -> { draftOfferItemChaosRotation = val; saved = false; },
-                            val -> { draftDynamicFillLevel = val; saved = false; rebuildUI(); }
-                        );
+                    ShopVisualType visualType = ShopVisualType.from(be.getBlockState().getBlock());
+                    if (visualType != ShopVisualType.UNKNOWN) {
+                        SingleOfferSettingsSections.buildOfferItemSection(this, visualType, draft, be.isOfferItemRenderingGloballyEnabled(), this::markDirty, this::rebuildUI);
                     }
                 }
             }
@@ -438,35 +312,17 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void buildSaveButton(SingleOfferShopBlockEntity be) {
         addRenderableWidget(Button.builder(Component.translatable("gui.marketblocks.save"), b -> {
-            if (nameField != null) draftShopName = nameField.getValue();
-            if (npcNameField != null) draftVisualNpcName = npcNameField.getValue();
+            ShopVisualSettings.Draft draft = ensureSettingsDraft(be);
+            if (nameField != null) draft.setShopName(nameField.getValue());
+            if (npcNameField != null) draft.setNpcName(npcNameField.getValue());
 
-            String name = draftShopName != null ? draftShopName : "";
-            boolean emit = emitRedstoneEnabled;
-            ShopVisualSettings currentVisuals = be.getVisualSettings();
-            ShopVisualSettings visuals = new ShopVisualSettings(
-                    Boolean.TRUE.equals(draftVisualNpcEnabled), draftVisualNpcName,
-                    draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession,
-                    Boolean.TRUE.equals(draftVisualPurchaseParticles), Boolean.TRUE.equals(draftVisualPurchaseSounds),
-                    Boolean.TRUE.equals(draftVisualPaymentSlotSounds),
-
-                    Boolean.TRUE.equals(draftOfferItemVisible),
-                    Boolean.TRUE.equals(draftOfferItemFullbright),
-                    draftOfferItemScale != null ? draftOfferItemScale : currentVisuals.offerItemScale(),
-                    draftOfferItemSpeed != null ? draftOfferItemSpeed : currentVisuals.offerItemSpeed(),
-                    draftOfferItemHeightOffset != null ? draftOfferItemHeightOffset : currentVisuals.offerItemHeightOffset(),
-                    Boolean.TRUE.equals(draftOfferItemBobbing),
-                    draftOfferItemCount != null ? draftOfferItemCount : currentVisuals.offerItemCount(),
-                    draftOfferItemRotation != null ? draftOfferItemRotation : currentVisuals.offerItemRotation(),
-                    draftOfferItemLayoutMode != null ? draftOfferItemLayoutMode : currentVisuals.offerItemLayoutMode(),
-                    draftOfferItemSpacing != null ? draftOfferItemSpacing : currentVisuals.offerItemSpacing(),
-                    draftOfferItemChaosRotation != null ? draftOfferItemChaosRotation : currentVisuals.offerItemChaosRotation(),
-                    Boolean.TRUE.equals(draftDynamicFillLevel)
-            );
+            String name = draft.shopName();
+            boolean emit = draft.emitRedstoneEnabled();
+            ShopVisualSettings visuals = draft.toVisualSettings();
 
             be.setShopNameClient(name);
             be.setEmitRedstoneClient(emit);
-            be.setPurchaseXpFeedbackSoundClient(Boolean.TRUE.equals(draftPurchaseXpFeedbackSound));
+            be.setPurchaseXpFeedbackSoundClient(draft.purchaseXpFeedbackSound());
             be.setVisualSettingsClient(visuals);
             be.setModeClient(leftDir, menu.getMode(leftDir));
             be.setModeClient(rightDir, menu.getMode(rightDir));
@@ -489,23 +345,16 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             NetworkHandler.sendToServer(new UpdateSettingsPacket(
                     be.getBlockPos(), menu.getMode(leftDir), menu.getMode(rightDir), menu.getMode(bottomDir), menu.getMode(backDir),
                     name, emit, visuals,
-                    Boolean.TRUE.equals(draftPurchaseXpFeedbackSound)
+                    draft.purchaseXpFeedbackSound()
             ));
             if (menu.isPrimaryOwner()) {
                 NetworkHandler.sendToServer(new UpdateOwnersPacket(be.getBlockPos(), selectedOwners));
             }
 
-            originalName = name; draftShopName = name; draftEmitRedstone = emit;
-            draftVisualNpcEnabled = visuals.npcEnabled(); draftVisualNpcName = visuals.npcName();
-            draftVisualNpcProfession = visuals.profession(); draftVisualPurchaseParticles = visuals.purchaseParticlesEnabled();
-            draftVisualPurchaseSounds = visuals.purchaseSoundsEnabled(); draftVisualPaymentSlotSounds = visuals.paymentSlotSoundsEnabled();
-            draftOfferItemVisible = visuals.offerItemVisible(); draftOfferItemFullbright = visuals.offerItemFullbright();
-            draftOfferItemScale = visuals.offerItemScale(); draftOfferItemSpeed = visuals.offerItemSpeed();
-            draftOfferItemHeightOffset = visuals.offerItemHeightOffset(); draftOfferItemBobbing = visuals.offerItemBobbing();
-            draftOfferItemCount = visuals.offerItemCount(); draftOfferItemRotation = visuals.offerItemRotation();
-            draftOfferItemLayoutMode = visuals.offerItemLayoutMode(); draftOfferItemSpacing = visuals.offerItemSpacing(); draftOfferItemChaosRotation = visuals.offerItemChaosRotation();
-            draftDynamicFillLevel = visuals.dynamicFillLevel();
-            draftPurchaseXpFeedbackSound = Boolean.TRUE.equals(draftPurchaseXpFeedbackSound);
+            originalName = name;
+            draft.setShopName(name);
+            draft.setEmitRedstoneEnabled(emit);
+            draft.applyVisualSettings(visuals);
             saved = true;
         }).bounds(leftPos + imageWidth - 50, topPos + imageHeight - 24, 44, 18).build());
     }
@@ -516,11 +365,23 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void switchSettingsCategory(SettingsCategory category) {
         if (activeSettingsCategory == category) return;
-        if (nameField != null) draftShopName = nameField.getValue();
-        if (npcNameField != null) draftVisualNpcName = npcNameField.getValue();
-        draftEmitRedstone = emitRedstoneEnabled;
+        if (settingsDraft != null) {
+            if (nameField != null) settingsDraft.setShopName(nameField.getValue());
+            if (npcNameField != null) settingsDraft.setNpcName(npcNameField.getValue());
+        }
         activeSettingsCategory = category;
         rebuildUI();
+    }
+
+    private ShopVisualSettings.Draft ensureSettingsDraft(SingleOfferShopBlockEntity be) {
+        if (settingsDraft == null) {
+            settingsDraft = be.getVisualSettings().toDraft(be.getShopName(), be.isEmitRedstone(), be.isPurchaseXpFeedbackSound());
+        }
+        return settingsDraft;
+    }
+
+    private void markDirty() {
+        saved = false;
     }
 
     private boolean canUseManagementTabs() {
@@ -1081,22 +942,13 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     @Override
     public void onClose() {
         if (!saved && menu.getActiveTab() == ShopTab.SETTINGS) menu.resetModes();
-        String shopNameDraft = nameField != null ? nameField.getValue() : (draftShopName != null ? draftShopName : "");
+        String shopNameDraft = nameField != null ? nameField.getValue() : (settingsDraft != null ? settingsDraft.shopName() : "");
         if (menu.getActiveTab() == ShopTab.SETTINGS && shopNameDraft.trim().isEmpty()) {
             menu.getBlockEntity().setShopNameClient(originalName);
         }
         super.onClose();
     }
 
-    private Component getNpcToggleLabel() {
-        return Component.literal(Boolean.TRUE.equals(draftVisualNpcEnabled) ? "ON" : "OFF");
-    }
-
-    private Component getProfessionLabel() {
-        VillagerVisualProfession profession = draftVisualNpcProfession == null ? VillagerVisualProfession.NONE : draftVisualNpcProfession;
-        return Component.translatable("gui.marketblocks.visuals.profession").append(": ")
-                .append(Component.translatable(profession.translationKey()));
-    }
 
     private VisualNpcPlacementResult resolveVisualPlacementResult(SingleOfferShopBlockEntity be) {
         if (be.getLevel() == null) return VisualNpcPlacementResult.OK;
