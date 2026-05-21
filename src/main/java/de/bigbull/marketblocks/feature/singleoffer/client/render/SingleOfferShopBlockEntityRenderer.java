@@ -182,6 +182,10 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                         }
                         poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation + (float) itemRotationOffset));
 
+                        // Fix: Items should lie flat in the basket, not stand upright.
+                        // This rotates them by 90 degrees around the X-axis to achieve a "lying down" effect.
+                        poseStack.mulPose(Axis.XP.rotationDegrees(90.0f));
+
                         // Scale nach Korb-Transform, direkt vor dem eigentlichen Item-Render.
                         poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
                         itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
