@@ -249,93 +249,99 @@ public final class SingleOfferSettingsSections {
         fullbrightCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_fullbright.tooltip")));
         y += 20;
 
-        if (visualType.isTradeStand()) {
-            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draft.offerItemScale(), value -> {
-                draft.setOfferItemScale(value);
-                onDirty.run();
-            }));
-            host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.speed"), 0.0f, 10.0f, draft.offerItemSpeed(), value -> {
-                draft.setOfferItemSpeed(value);
-                onDirty.run();
-            }));
-            y += 20;
-
-            host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"), -0.5f, 1.5f, draft.offerItemHeightOffset(), value -> {
-                draft.setOfferItemHeightOffset(value);
-                onDirty.run();
-            }));
-            host.addSettingsWidget(Checkbox.builder(
-                        Component.translatable("gui.marketblocks.visuals.bobbing"),
-                        host.settingsFont())
-                .pos(leftX + 85, y)
-                .selected(draft.offerItemBobbing())
-                .onValueChange((checkbox, value) -> {
-                    draft.setOfferItemBobbing(value);
+        switch (visualType) {
+            case TRADE_STAND -> {
+                host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draft.offerItemScale(), value -> {
+                    draft.setOfferItemScale(value);
                     onDirty.run();
-                })
-                .build());
-        } else if (visualType.isMarketCrate()) {
-            // Zeile 1: Count Slider + Dynamic Fill Checkbox
-            IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 32, draft.offerItemCount(), value -> {
-                draft.setOfferItemCount(value);
-                onDirty.run();
-            }));
-            if (draft.dynamicFillLevel()) {
-                countSlider.active = false;
-                countSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.count.dynamic_fill.tooltip")));
-            }
-
-            host.addSettingsWidget(Checkbox.builder(
-                        Component.translatable("gui.marketblocks.visuals.dynamic_fill_level"),
-                        host.settingsFont())
-                .pos(leftX + 85, y)
-                .selected(draft.dynamicFillLevel())
-                .onValueChange((checkbox, value) -> {
-                    draft.setDynamicFillLevel(value);
+                }));
+                host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.speed"), 0.0f, 10.0f, draft.offerItemSpeed(), value -> {
+                    draft.setOfferItemSpeed(value);
                     onDirty.run();
-                })
-                .build());
-            y += 20;
+                }));
+                y += 20;
 
-            // Zeile 2: Layout Mode Button
-            CrateLayoutMode currentMode = draft.offerItemLayoutMode();
-            Button layoutModeButton = host.addSettingsWidget(Button.builder(
-                    Component.translatable(currentMode.translationKey()),
-                    b -> {
-                        CrateLayoutMode nextMode = draft.offerItemLayoutMode().next();
-                        draft.setOfferItemLayoutMode(nextMode);
+                host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"), -0.5f, 1.5f, draft.offerItemHeightOffset(), value -> {
+                    draft.setOfferItemHeightOffset(value);
+                    onDirty.run();
+                }));
+                host.addSettingsWidget(Checkbox.builder(
+                            Component.translatable("gui.marketblocks.visuals.bobbing"),
+                            host.settingsFont())
+                    .pos(leftX + 85, y)
+                    .selected(draft.offerItemBobbing())
+                    .onValueChange((checkbox, value) -> {
+                        draft.setOfferItemBobbing(value);
                         onDirty.run();
-                        onRebuild.run();
-                    }
-            ).bounds(leftX, y, 158, 16).build());
-            layoutModeButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.layout_mode")));
-            y += 20;
-
-            // Zeile 3: Base Rotation for the whole pile
-            host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draft.offerItemRotation(), value -> {
-                draft.setOfferItemRotation(value);
-                onDirty.run();
-            }));
-            y += 20;
-
-            // Zeile 4: Scale slider
-            host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draft.offerItemScale(), value -> {
-                draft.setOfferItemScale(value);
-                onDirty.run();
-            }));
-            y += 20;
-
-            // Zeile 5 (DYNAMISCH): spacing OR chaos rotation depending on mode
-            if (currentMode == CrateLayoutMode.GESTAPELT) {
-                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.spacing"), 0.0f, 1.0f, draft.offerItemSpacing(), value -> {
-                    draft.setOfferItemSpacing(value);
+                    })
+                    .build());
+            }
+            case MARKET_CRATE -> {
+                // Zeile 1: Count Slider + Dynamic Fill Checkbox
+                IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 32, draft.offerItemCount(), value -> {
+                    draft.setOfferItemCount(value);
                     onDirty.run();
                 }));
-            } else {
-                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f, draft.offerItemChaosRotation(), value -> {
-                    draft.setOfferItemChaosRotation(value);
+                if (draft.dynamicFillLevel()) {
+                    countSlider.active = false;
+                    countSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.count.dynamic_fill.tooltip")));
+                }
+
+                host.addSettingsWidget(Checkbox.builder(
+                            Component.translatable("gui.marketblocks.visuals.dynamic_fill_level"),
+                            host.settingsFont())
+                    .pos(leftX + 85, y)
+                    .selected(draft.dynamicFillLevel())
+                    .onValueChange((checkbox, value) -> {
+                        draft.setDynamicFillLevel(value);
+                        onDirty.run();
+                    })
+                    .build());
+                y += 20;
+
+                // Zeile 2: Layout Mode Button
+                CrateLayoutMode currentMode = draft.offerItemLayoutMode();
+                Button layoutModeButton = host.addSettingsWidget(Button.builder(
+                        Component.translatable(currentMode.translationKey()),
+                        b -> {
+                            CrateLayoutMode nextMode = draft.offerItemLayoutMode().next();
+                            draft.setOfferItemLayoutMode(nextMode);
+                            onDirty.run();
+                            onRebuild.run();
+                        }
+                ).bounds(leftX, y, 158, 16).build());
+                layoutModeButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.layout_mode")));
+                y += 20;
+
+                // Zeile 3: Base Rotation for the whole pile
+                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draft.offerItemRotation(), value -> {
+                    draft.setOfferItemRotation(value);
                     onDirty.run();
                 }));
+                y += 20;
+
+                // Zeile 4: Scale slider
+                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draft.offerItemScale(), value -> {
+                    draft.setOfferItemScale(value);
+                    onDirty.run();
+                }));
+                y += 20;
+
+                // Zeile 5 (DYNAMISCH): spacing OR chaos rotation depending on mode
+                if (currentMode == CrateLayoutMode.GESTAPELT) {
+                    host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.spacing"), 0.0f, 1.0f, draft.offerItemSpacing(), value -> {
+                        draft.setOfferItemSpacing(value);
+                        onDirty.run();
+                    }));
+                } else {
+                    host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f, draft.offerItemChaosRotation(), value -> {
+                        draft.setOfferItemChaosRotation(value);
+                        onDirty.run();
+                    }));
+                }
+            }
+            case UNKNOWN -> {
+                // Keine visuellen Optionen für unbekannte Shop-Typen
             }
         }
     }
