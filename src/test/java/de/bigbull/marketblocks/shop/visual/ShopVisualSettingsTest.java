@@ -46,6 +46,7 @@ class ShopVisualSettingsTest {
                 CrateLayoutMode.GESTAPELT,
                 0.4f,
                 0.2f,
+                0.5f,
                 true
         );
 
@@ -70,7 +71,9 @@ class ShopVisualSettingsTest {
         assertEquals(5, loaded.offerItemCount());
         assertEquals(45.0f, loaded.offerItemRotation());
         assertEquals(CrateLayoutMode.GESTAPELT, loaded.offerItemLayoutMode());
-        assertEquals(0.4f, loaded.offerItemSpacing());
+        assertEquals(0.4f, loaded.offerItemSpacingXZ());
+        assertEquals(0.2f, loaded.offerItemSpacingY());
+        assertEquals(0.5f, loaded.offerItemChaosRotation());
         assertTrue(loaded.dynamicFillLevel());
     }
 
@@ -94,6 +97,7 @@ class ShopVisualSettingsTest {
                 CrateLayoutMode.LOSE,
                 -1.0f,
                 0.0f,
+                99.0f,
                 false
         );
 
@@ -103,7 +107,9 @@ class ShopVisualSettingsTest {
         assertEquals(1, settings.offerItemCount());
         assertEquals(0.0f, settings.offerItemRotation());
         assertEquals(CrateLayoutMode.LOSE, settings.offerItemLayoutMode());
-        assertEquals(0.0f, settings.offerItemSpacing());
+        assertEquals(0.0f, settings.offerItemSpacingXZ());
+        assertEquals(0.0f, settings.offerItemSpacingY());
+        assertEquals(1.0f, settings.offerItemChaosRotation());
     }
 
     @Test
