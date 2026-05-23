@@ -9,29 +9,29 @@ import java.util.function.Consumer;
 public class FloatSlider extends AbstractSliderButton {
     private final float min;
     private final float max;
+    private float currentValue;
     private final Consumer<Float> onValueChanged;
-    private final String prefix;
+    private final Component prefix;
 
-    public FloatSlider(int x, int y, int width, int height, Component prefix, float min, float max, float currentValue, Consumer<Float> onValueChanged) {
+    public FloatSlider(int x, int y, int width, int height, Component prefix, float min, float max, float value, Consumer<Float> onValueChanged) {
         super(x, y, width, height, Component.empty(), 0.0);
-        this.prefix = prefix.getString() + ": ";
         this.min = min;
         this.max = max;
+        this.currentValue = Mth.clamp(value, min, max);
+        this.value = (this.currentValue - min) / (max - min);
+        this.prefix = prefix;
         this.onValueChanged = onValueChanged;
-        float clampedVal = Mth.clamp(currentValue, min, max);
-        this.value = (clampedVal - min) / (max - min);
-        updateMessage();
+        this.updateMessage();
     }
 
     @Override
     protected void updateMessage() {
-        float val = min + (float) value * (max - min);
-        this.setMessage(Component.literal(prefix + String.format("%.2f", val)));
+        this.setMessage(this.prefix.copy().append(": ").append(String.format(java.util.Locale.US, "%.2f", this.currentValue)));
     }
 
     @Override
     protected void applyValue() {
-        float val = min + (float) value * (max - min);
-        onValueChanged.accept(val);
+        this.currentValue = this.min + (float) this.value * (this.max - this.min);
+        this.onValueChanged.accept(this.currentValue);
     }
 }

@@ -170,6 +170,8 @@
   "gui.marketblocks.visuals.rotation_z": "Rotation Z",
   "gui.marketblocks.visuals.scale": "Größe",
   "gui.marketblocks.visuals.spacing": "Item-Abstand",
+  "gui.marketblocks.visuals.spacing_xz": "Item-Abstand X/Z",
+  "gui.marketblocks.visuals.spacing_y": "Item-Abstand Y",
   "gui.marketblocks.visuals.speed": "Rotationsgeschw.",
   "item.marketblocks.trade_stand.with_showcase": "Handelsstand (Mit Vitrine)",
   "itemGroup.marketblocks": "MarketBlocks",

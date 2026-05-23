@@ -9,29 +9,29 @@ import java.util.function.Consumer;
 public class IntSlider extends AbstractSliderButton {
     private final int min;
     private final int max;
+    private int currentValue;
     private final Consumer<Integer> onValueChanged;
-    private final String prefix;
+    private final Component prefix;
 
-    public IntSlider(int x, int y, int width, int height, Component prefix, int min, int max, int currentValue, Consumer<Integer> onValueChanged) {
+    public IntSlider(int x, int y, int width, int height, Component prefix, int min, int max, int value, Consumer<Integer> onValueChanged) {
         super(x, y, width, height, Component.empty(), 0.0);
-        this.prefix = prefix.getString() + ": ";
         this.min = min;
         this.max = max;
+        this.currentValue = Mth.clamp(value, min, max);
+        this.value = (double)(this.currentValue - min) / (max - min);
+        this.prefix = prefix;
         this.onValueChanged = onValueChanged;
-        int clampedVal = Mth.clamp(currentValue, min, max);
-        this.value = (double) (clampedVal - min) / (max - min);
-        updateMessage();
+        this.updateMessage();
     }
 
     @Override
     protected void updateMessage() {
-        int val = min + (int) Math.round(value * (max - min));
-        this.setMessage(Component.literal(prefix + val));
+        this.setMessage(this.prefix.copy().append(": ").append(String.valueOf(this.currentValue)));
     }
 
     @Override
     protected void applyValue() {
-        int val = min + (int) Math.round(value * (max - min));
-        onValueChanged.accept(val);
+        this.currentValue = (int) Math.round(this.min + this.value * (this.max - this.min));
+        this.onValueChanged.accept(this.currentValue);
     }
 }

@@ -100,6 +100,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamischer Füllstand");
         add("gui.marketblocks.visuals.rotation", "Rotation");
         add("gui.marketblocks.visuals.spacing", "Item-Abstand");
+        add("gui.marketblocks.visuals.spacing_xz", "Item-Abstand X/Z");
+        add("gui.marketblocks.visuals.spacing_y", "Item-Abstand Y");
         add("gui.marketblocks.visuals.layout_mode", "Layout-Modus");
         add("gui.marketblocks.visuals.layout_mode.gestapelt", "Gestapelt");
         add("gui.marketblocks.visuals.layout_mode.lose", "Lose");

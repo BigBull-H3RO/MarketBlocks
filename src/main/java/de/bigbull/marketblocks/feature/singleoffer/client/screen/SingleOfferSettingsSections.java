@@ -321,7 +321,7 @@ public final class SingleOfferSettingsSections {
                 y += 20;
 
                 // Zeile 4: Scale slider
-                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draft.offerItemScale(), value -> {
+                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.75f, 3.5f, draft.offerItemScale(), value -> {
                     draft.setOfferItemScale(value);
                     onDirty.run();
                 }));
@@ -329,8 +329,13 @@ public final class SingleOfferSettingsSections {
 
                 // Zeile 5 (DYNAMISCH): spacing OR chaos rotation depending on mode
                 if (currentMode == CrateLayoutMode.GESTAPELT) {
-                    host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.spacing"), 0.0f, 1.0f, draft.offerItemSpacing(), value -> {
-                        draft.setOfferItemSpacing(value);
+                    // Zwei Slider nebeneinander (halbe Breite) für XZ und Y Spacing
+                    host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_xz"), -0.5f, 0.5f, draft.offerItemSpacingXZ(), value -> {
+                        draft.setOfferItemSpacingXZ(value);
+                        onDirty.run();
+                    }));
+                    host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.offerItemSpacingY(), value -> {
+                        draft.setOfferItemSpacingY(value);
                         onDirty.run();
                     }));
                 } else {

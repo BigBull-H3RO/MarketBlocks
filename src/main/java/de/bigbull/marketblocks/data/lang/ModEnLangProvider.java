@@ -112,6 +112,8 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamic Fill Level");
         add("gui.marketblocks.visuals.rotation", "Rotation");
         add("gui.marketblocks.visuals.spacing", "Item Spacing");
+        add("gui.marketblocks.visuals.spacing_xz", "Item Spacing X/Z");
+        add("gui.marketblocks.visuals.spacing_y", "Item Spacing Y");
         add("gui.marketblocks.visuals.layout_mode", "Layout Mode");
         add("gui.marketblocks.visuals.layout_mode.gestapelt", "Stacked");
         add("gui.marketblocks.visuals.layout_mode.lose", "Loose");

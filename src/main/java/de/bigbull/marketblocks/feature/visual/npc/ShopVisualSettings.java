@@ -22,7 +22,8 @@ public record ShopVisualSettings(
         int offerItemCount,
         float offerItemRotation,
         CrateLayoutMode offerItemLayoutMode,
-        float offerItemSpacing,
+        float offerItemSpacingXZ,
+        float offerItemSpacingY,
         float offerItemChaosRotation,
         boolean dynamicFillLevel
 ) {
@@ -36,8 +37,8 @@ public record ShopVisualSettings(
     private static final int MIN_OFFER_ITEM_COUNT = 1;
     private static final int MAX_OFFER_ITEM_COUNT = 64;
     // rotation bounds removed (unused) - rotation normalization uses modulo logic
-    private static final float MIN_OFFER_ITEM_SPACING = 0.0f;
-    private static final float MAX_OFFER_ITEM_SPACING = 1.0f;
+    private static final float MIN_OFFER_ITEM_SPACING = -0.5f;
+    private static final float MAX_OFFER_ITEM_SPACING = 2.0f;
     private static final float MIN_OFFER_ITEM_CHAOS_ROTATION = 0.0f;
     private static final float MAX_OFFER_ITEM_CHAOS_ROTATION = 1.0f;
     private static final float DEFAULT_OFFER_ITEM_SCALE = 1.0f;
@@ -46,7 +47,8 @@ public record ShopVisualSettings(
     private static final int DEFAULT_OFFER_ITEM_COUNT = 1;
     private static final float DEFAULT_OFFER_ITEM_ROTATION = 0.0f;
     private static final CrateLayoutMode DEFAULT_OFFER_ITEM_LAYOUT_MODE = CrateLayoutMode.LOSE;
-    private static final float DEFAULT_OFFER_ITEM_SPACING = 0.1f;
+    private static final float DEFAULT_OFFER_ITEM_SPACING_XZ = 0.1f;
+    private static final float DEFAULT_OFFER_ITEM_SPACING_Y = 0.1f;
     private static final float DEFAULT_OFFER_ITEM_CHAOS_ROTATION = 0.1f;
     private static final boolean DEFAULT_DYNAMIC_FILL_LEVEL = false;
 
@@ -66,7 +68,8 @@ public record ShopVisualSettings(
     private static final String KEY_OFFER_ITEM_COUNT = "OfferItemCount";
     private static final String KEY_OFFER_ITEM_ROTATION = "OfferItemRotation";
     private static final String KEY_OFFER_ITEM_LAYOUT_MODE = "OfferItemLayoutMode";
-    private static final String KEY_OFFER_ITEM_SPACING = "OfferItemSpacing";
+    private static final String KEY_OFFER_ITEM_SPACING_XZ = "OfferItemSpacingXZ";
+    private static final String KEY_OFFER_ITEM_SPACING_Y = "OfferItemSpacingY";
     private static final String KEY_OFFER_ITEM_CHAOS_ROTATION = "OfferItemChaosRotation";
     private static final String KEY_DYNAMIC_FILL_LEVEL = "DynamicFillLevel";
 
@@ -74,7 +77,7 @@ public record ShopVisualSettings(
             false, "", VillagerVisualProfession.NONE, true, true, true,
             true, false, DEFAULT_OFFER_ITEM_SCALE, DEFAULT_OFFER_ITEM_SPEED, DEFAULT_OFFER_ITEM_HEIGHT,
             true, DEFAULT_OFFER_ITEM_COUNT, DEFAULT_OFFER_ITEM_ROTATION, DEFAULT_OFFER_ITEM_LAYOUT_MODE,
-            DEFAULT_OFFER_ITEM_SPACING, DEFAULT_OFFER_ITEM_CHAOS_ROTATION, DEFAULT_DYNAMIC_FILL_LEVEL
+            DEFAULT_OFFER_ITEM_SPACING_XZ, DEFAULT_OFFER_ITEM_SPACING_Y, DEFAULT_OFFER_ITEM_CHAOS_ROTATION, DEFAULT_DYNAMIC_FILL_LEVEL
     );
 
     public static final StreamCodec<ByteBuf, ShopVisualSettings> STREAM_CODEC = StreamCodec.of(
@@ -95,7 +98,8 @@ public record ShopVisualSettings(
                 ByteBufCodecs.INT.encode(buf, settings.offerItemCount());
                 ByteBufCodecs.FLOAT.encode(buf, settings.offerItemRotation());
                 ByteBufCodecs.STRING_UTF8.encode(buf, settings.offerItemLayoutMode().serializedName());
-                ByteBufCodecs.FLOAT.encode(buf, settings.offerItemSpacing());
+                ByteBufCodecs.FLOAT.encode(buf, settings.offerItemSpacingXZ());
+                ByteBufCodecs.FLOAT.encode(buf, settings.offerItemSpacingY());
                 ByteBufCodecs.FLOAT.encode(buf, settings.offerItemChaosRotation());
                 ByteBufCodecs.BOOL.encode(buf, settings.dynamicFillLevel());
             },
@@ -118,6 +122,7 @@ public record ShopVisualSettings(
                     CrateLayoutMode.fromSerialized(ByteBufCodecs.STRING_UTF8.decode(buf)),
                     ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),
+                    ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf)
             )
     );
@@ -131,7 +136,8 @@ public record ShopVisualSettings(
         offerItemCount = Math.clamp(offerItemCount, MIN_OFFER_ITEM_COUNT, MAX_OFFER_ITEM_COUNT);
         offerItemRotation = normalizeDegrees(offerItemRotation);
         offerItemLayoutMode = offerItemLayoutMode == null ? DEFAULT_OFFER_ITEM_LAYOUT_MODE : offerItemLayoutMode;
-        offerItemSpacing = clampFinite(offerItemSpacing, MIN_OFFER_ITEM_SPACING, MAX_OFFER_ITEM_SPACING, DEFAULT_OFFER_ITEM_SPACING);
+        offerItemSpacingXZ = clampFinite(offerItemSpacingXZ, MIN_OFFER_ITEM_SPACING, MAX_OFFER_ITEM_SPACING, DEFAULT_OFFER_ITEM_SPACING_XZ);
+        offerItemSpacingY = clampFinite(offerItemSpacingY, MIN_OFFER_ITEM_SPACING, MAX_OFFER_ITEM_SPACING, DEFAULT_OFFER_ITEM_SPACING_Y);
         offerItemChaosRotation = clampFinite(offerItemChaosRotation, MIN_OFFER_ITEM_CHAOS_ROTATION, MAX_OFFER_ITEM_CHAOS_ROTATION, DEFAULT_OFFER_ITEM_CHAOS_ROTATION);
     }
 
@@ -143,7 +149,7 @@ public record ShopVisualSettings(
         return new ShopVisualSettings(
                 enabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled, paymentSlotSoundsEnabled,
                 offerItemVisible, offerItemFullbright, offerItemScale, offerItemSpeed, offerItemHeightOffset,
-                offerItemBobbing, offerItemCount, offerItemRotation, offerItemLayoutMode, offerItemSpacing, offerItemChaosRotation, dynamicFillLevel
+                offerItemBobbing, offerItemCount, offerItemRotation, offerItemLayoutMode, offerItemSpacingXZ, offerItemSpacingY, offerItemChaosRotation, dynamicFillLevel
         );
     }
 
@@ -168,7 +174,8 @@ public record ShopVisualSettings(
         private int offerItemCount;
         private float offerItemRotation;
         private CrateLayoutMode offerItemLayoutMode;
-        private float offerItemSpacing;
+        private float offerItemSpacingXZ;
+        private float offerItemSpacingY;
         private float offerItemChaosRotation;
         private boolean dynamicFillLevel;
 
@@ -351,12 +358,21 @@ public record ShopVisualSettings(
             return this;
         }
 
-        public float offerItemSpacing() {
-            return offerItemSpacing;
+        public float offerItemSpacingXZ() {
+            return offerItemSpacingXZ;
         }
 
-        public Draft setOfferItemSpacing(float offerItemSpacing) {
-            this.offerItemSpacing = offerItemSpacing;
+        public Draft setOfferItemSpacingXZ(float offerItemSpacingXZ) {
+            this.offerItemSpacingXZ = offerItemSpacingXZ;
+            return this;
+        }
+
+        public float offerItemSpacingY() {
+            return offerItemSpacingY;
+        }
+
+        public Draft setOfferItemSpacingY(float offerItemSpacingY) {
+            this.offerItemSpacingY = offerItemSpacingY;
             return this;
         }
 
@@ -395,7 +411,8 @@ public record ShopVisualSettings(
             this.offerItemCount = settings.offerItemCount();
             this.offerItemRotation = settings.offerItemRotation();
             this.offerItemLayoutMode = settings.offerItemLayoutMode();
-            this.offerItemSpacing = settings.offerItemSpacing();
+            this.offerItemSpacingXZ = settings.offerItemSpacingXZ();
+            this.offerItemSpacingY = settings.offerItemSpacingY();
             this.offerItemChaosRotation = settings.offerItemChaosRotation();
             this.dynamicFillLevel = settings.dynamicFillLevel();
         }
@@ -417,7 +434,8 @@ public record ShopVisualSettings(
                     offerItemCount,
                     offerItemRotation,
                     offerItemLayoutMode,
-                    offerItemSpacing,
+                    offerItemSpacingXZ,
+                    offerItemSpacingY,
                     offerItemChaosRotation,
                     dynamicFillLevel
             );
@@ -442,7 +460,8 @@ public record ShopVisualSettings(
         tag.putInt(KEY_OFFER_ITEM_COUNT, offerItemCount);
         tag.putFloat(KEY_OFFER_ITEM_ROTATION, offerItemRotation);
         tag.putString(KEY_OFFER_ITEM_LAYOUT_MODE, offerItemLayoutMode.serializedName());
-        tag.putFloat(KEY_OFFER_ITEM_SPACING, offerItemSpacing);
+        tag.putFloat(KEY_OFFER_ITEM_SPACING_XZ, offerItemSpacingXZ);
+        tag.putFloat(KEY_OFFER_ITEM_SPACING_Y, offerItemSpacingY);
         tag.putFloat(KEY_OFFER_ITEM_CHAOS_ROTATION, offerItemChaosRotation);
         tag.putBoolean(KEY_DYNAMIC_FILL_LEVEL, dynamicFillLevel);
         return tag;
@@ -469,7 +488,8 @@ public record ShopVisualSettings(
                 tag.contains(KEY_OFFER_ITEM_COUNT) ? tag.getInt(KEY_OFFER_ITEM_COUNT) : DEFAULT_OFFER_ITEM_COUNT,
                 tag.contains(KEY_OFFER_ITEM_ROTATION) ? tag.getFloat(KEY_OFFER_ITEM_ROTATION) : DEFAULT_OFFER_ITEM_ROTATION,
                 tag.contains(KEY_OFFER_ITEM_LAYOUT_MODE) ? CrateLayoutMode.fromSerialized(tag.getString(KEY_OFFER_ITEM_LAYOUT_MODE)) : DEFAULT_OFFER_ITEM_LAYOUT_MODE,
-                tag.contains(KEY_OFFER_ITEM_SPACING) ? tag.getFloat(KEY_OFFER_ITEM_SPACING) : DEFAULT_OFFER_ITEM_SPACING,
+                tag.contains(KEY_OFFER_ITEM_SPACING_XZ) ? tag.getFloat(KEY_OFFER_ITEM_SPACING_XZ) : DEFAULT_OFFER_ITEM_SPACING_XZ,
+                tag.contains(KEY_OFFER_ITEM_SPACING_Y) ? tag.getFloat(KEY_OFFER_ITEM_SPACING_Y) : DEFAULT_OFFER_ITEM_SPACING_Y,
                 tag.contains(KEY_OFFER_ITEM_CHAOS_ROTATION) ? tag.getFloat(KEY_OFFER_ITEM_CHAOS_ROTATION) : DEFAULT_OFFER_ITEM_CHAOS_ROTATION,
                 tag.contains(KEY_DYNAMIC_FILL_LEVEL) ? tag.getBoolean(KEY_DYNAMIC_FILL_LEVEL) : DEFAULT_DYNAMIC_FILL_LEVEL
         );
@@ -502,4 +522,3 @@ public record ShopVisualSettings(
         return sanitized;
     }
 }
-
