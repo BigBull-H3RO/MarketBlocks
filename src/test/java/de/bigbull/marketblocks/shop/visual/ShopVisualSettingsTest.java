@@ -107,7 +107,7 @@ class ShopVisualSettingsTest {
         assertEquals(1, settings.offerItemCount());
         assertEquals(0.0f, settings.offerItemRotation());
         assertEquals(CrateLayoutMode.LOSE, settings.offerItemLayoutMode());
-        assertEquals(0.0f, settings.offerItemSpacingXZ());
+        assertEquals(-0.5f, settings.offerItemSpacingXZ());
         assertEquals(0.0f, settings.offerItemSpacingY());
         assertEquals(1.0f, settings.offerItemChaosRotation());
     }
