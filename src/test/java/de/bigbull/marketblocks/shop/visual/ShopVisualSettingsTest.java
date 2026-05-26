@@ -101,7 +101,7 @@ class ShopVisualSettingsTest {
                 false
         );
 
-        assertEquals(1.0f, settings.offerItemScale());
+        assertEquals(0.75f, settings.offerItemScale());
         assertEquals(2.0f, settings.offerItemSpeed());
         assertEquals(-2.0f, settings.offerItemHeightOffset());
         assertEquals(1, settings.offerItemCount());
