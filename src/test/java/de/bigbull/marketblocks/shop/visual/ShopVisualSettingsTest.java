@@ -121,7 +121,7 @@ class ShopVisualSettingsTest {
         ShopVisualSettings loaded = ShopVisualSettings.load(tag);
 
         assertEquals(270.0f, loaded.offerItemRotation());
-        assertEquals(CrateLayoutMode.LOSE, loaded.offerItemLayoutMode());
+        assertEquals(CrateLayoutMode.GESTAPELT, loaded.offerItemLayoutMode());
     }
 
     @Test

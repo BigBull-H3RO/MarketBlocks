@@ -4,8 +4,6 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopBlockConfig;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;

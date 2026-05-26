@@ -35,20 +35,20 @@ public record ShopVisualSettings(
     private static final float MIN_OFFER_ITEM_HEIGHT = -2.0f;
     private static final float MAX_OFFER_ITEM_HEIGHT = 4.0f;
     private static final int MIN_OFFER_ITEM_COUNT = 1;
-    private static final int MAX_OFFER_ITEM_COUNT = 64;
+    public static final int MAX_OFFER_ITEM_COUNT = 96;
     // rotation bounds removed (unused) - rotation normalization uses modulo logic
     private static final float MIN_OFFER_ITEM_SPACING = -0.5f;
     private static final float MAX_OFFER_ITEM_SPACING = 2.0f;
     private static final float MIN_OFFER_ITEM_CHAOS_ROTATION = 0.0f;
     private static final float MAX_OFFER_ITEM_CHAOS_ROTATION = 1.0f;
-    private static final float DEFAULT_OFFER_ITEM_SCALE = 1.0f;
+    private static final float DEFAULT_OFFER_ITEM_SCALE = 0.75f;
     private static final float DEFAULT_OFFER_ITEM_SPEED = 2.0f;
     private static final float DEFAULT_OFFER_ITEM_HEIGHT = 0.0f;
     private static final int DEFAULT_OFFER_ITEM_COUNT = 1;
     private static final float DEFAULT_OFFER_ITEM_ROTATION = 0.0f;
-    private static final CrateLayoutMode DEFAULT_OFFER_ITEM_LAYOUT_MODE = CrateLayoutMode.LOSE;
-    private static final float DEFAULT_OFFER_ITEM_SPACING_XZ = 0.1f;
-    private static final float DEFAULT_OFFER_ITEM_SPACING_Y = 0.1f;
+    private static final CrateLayoutMode DEFAULT_OFFER_ITEM_LAYOUT_MODE = CrateLayoutMode.GESTAPELT;
+    private static final float DEFAULT_OFFER_ITEM_SPACING_XZ = 0.0f;
+    private static final float DEFAULT_OFFER_ITEM_SPACING_Y = 0.0f;
     private static final float DEFAULT_OFFER_ITEM_CHAOS_ROTATION = 0.1f;
     private static final boolean DEFAULT_DYNAMIC_FILL_LEVEL = false;
 

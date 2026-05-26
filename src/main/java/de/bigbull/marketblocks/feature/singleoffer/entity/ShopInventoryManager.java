@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.feature.singleoffer.entity;
 
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
-import de.bigbull.marketblocks.feature.singleoffer.entity.LockedChestWrapper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;

@@ -208,6 +208,14 @@ public final class SingleOfferSettingsSections {
     public record VisualSectionWidgets(EditBox npcNameField) {
     }
 
+    private static float mapToDisplayScale(float internal) {
+        return 0.5f + (internal - 0.75f) / (3.5f - 0.75f) * 1.0f;
+    }
+
+    private static float mapToInternalScale(float display) {
+        return 0.75f + (display - 0.5f) / 1.0f * (3.5f - 0.75f);
+    }
+
     public static void buildOfferItemSection(
             SingleOfferShopScreen host,
             ShopVisualType visualType,
@@ -219,27 +227,28 @@ public final class SingleOfferSettingsSections {
         int y = host.settingsTopPos() + 26;
         int leftX = host.settingsLeftPos() + 8;
 
-        Checkbox visibleCheckbox = host.addSettingsWidget(Checkbox.builder(
-                        Component.translatable("gui.marketblocks.visuals.offer_item_visible"),
-                        host.settingsFont())
-                .pos(leftX, y)
-                .selected(draft.offerItemVisible())
-                .onValueChange((checkbox, value) -> {
-                    draft.setOfferItemVisible(value);
-                    onDirty.run();
-                })
+        Button visibleButton = host.addSettingsWidget(Button.builder(
+                        Component.literal(draft.offerItemVisible() ? "ON" : "OFF"),
+                        b -> {
+                            boolean next = !draft.offerItemVisible();
+                            draft.setOfferItemVisible(next);
+                            onDirty.run();
+                            b.setMessage(Component.literal(next ? "ON" : "OFF"));
+                        })
+                .bounds(leftX, y, 35, 16)
                 .build());
+
         if (!offerItemRenderingGloballyEnabled) {
-            visibleCheckbox.active = false;
-            visibleCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_disabled_global")));
+            visibleButton.active = false;
+            visibleButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_disabled_global")));
         } else {
-            visibleCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_visible.tooltip")));
+            visibleButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_visible.tooltip")));
         }
 
         Checkbox fullbrightCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.offer_item_fullbright"),
                         host.settingsFont())
-                .pos(leftX + 100, y)
+                .pos(leftX + 40, y)
                 .selected(draft.offerItemFullbright())
                 .onValueChange((checkbox, value) -> {
                     draft.setOfferItemFullbright(value);
@@ -278,14 +287,10 @@ public final class SingleOfferSettingsSections {
             }
             case MARKET_CRATE -> {
                 // Zeile 1: Count Slider + Dynamic Fill Checkbox
-                IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, 32, draft.offerItemCount(), value -> {
+                IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, ShopVisualSettings.MAX_OFFER_ITEM_COUNT, draft.offerItemCount(), value -> {
                     draft.setOfferItemCount(value);
                     onDirty.run();
                 }));
-                if (draft.dynamicFillLevel()) {
-                    countSlider.active = false;
-                    countSlider.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.count.dynamic_fill.tooltip")));
-                }
 
                 host.addSettingsWidget(Checkbox.builder(
                             Component.translatable("gui.marketblocks.visuals.dynamic_fill_level"),
@@ -313,16 +318,13 @@ public final class SingleOfferSettingsSections {
                 layoutModeButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.layout_mode")));
                 y += 20;
 
-                // Zeile 3: Base Rotation for the whole pile
-                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draft.offerItemRotation(), value -> {
+                // Zeile 3: Base Rotation & Scale nebeneinander
+                host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draft.offerItemRotation(), value -> {
                     draft.setOfferItemRotation(value);
                     onDirty.run();
                 }));
-                y += 20;
-
-                // Zeile 4: Scale slider
-                host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.75f, 3.5f, draft.offerItemScale(), value -> {
-                    draft.setOfferItemScale(value);
+                host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 1.5f, mapToDisplayScale(draft.offerItemScale()), value -> {
+                    draft.setOfferItemScale(mapToInternalScale(value));
                     onDirty.run();
                 }));
                 y += 20;
@@ -339,8 +341,12 @@ public final class SingleOfferSettingsSections {
                         onDirty.run();
                     }));
                 } else {
-                    host.addSettingsWidget(new FloatSlider(leftX, y, 158, 16, Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f, draft.offerItemChaosRotation(), value -> {
+                    host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f, draft.offerItemChaosRotation(), value -> {
                         draft.setOfferItemChaosRotation(value);
+                        onDirty.run();
+                    }));
+                    host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.offerItemSpacingY(), value -> {
+                        draft.setOfferItemSpacingY(value);
                         onDirty.run();
                     }));
                 }

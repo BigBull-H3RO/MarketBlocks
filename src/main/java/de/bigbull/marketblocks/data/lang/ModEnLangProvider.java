@@ -101,7 +101,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.offer_item_visible", "Offer Item Visible");
         add("gui.marketblocks.visuals.offer_item_visible.tooltip", "Show or hide the floating/displayed offer item.");
         add("gui.marketblocks.visuals.offer_item_disabled_global", "Disabled by Server Admin.");
-        add("gui.marketblocks.visuals.offer_item_fullbright", "Glow (Fullbright)");
+        add("gui.marketblocks.visuals.offer_item_fullbright", "Glow");
         add("gui.marketblocks.visuals.offer_item_fullbright.tooltip", "Makes the item glow in the dark (no shadows).");
         add("gui.marketblocks.visuals.scale", "Scale");
         add("gui.marketblocks.visuals.speed", "Rotation Speed");
@@ -109,11 +109,11 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.bobbing", "Bobbing");
         add("gui.marketblocks.visuals.count", "Item Count");
         add("gui.marketblocks.visuals.count.dynamic_fill.tooltip", "Disabled while Dynamic Fill Level is enabled.");
-        add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamic Fill Level");
+        add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamic Fill");
         add("gui.marketblocks.visuals.rotation", "Rotation");
         add("gui.marketblocks.visuals.spacing", "Item Spacing");
-        add("gui.marketblocks.visuals.spacing_xz", "Item Spacing X/Z");
-        add("gui.marketblocks.visuals.spacing_y", "Item Spacing Y");
+        add("gui.marketblocks.visuals.spacing_xz", "Spacing X/Z");
+        add("gui.marketblocks.visuals.spacing_y", "Spacing Y");
         add("gui.marketblocks.visuals.layout_mode", "Layout Mode");
         add("gui.marketblocks.visuals.layout_mode.gestapelt", "Stacked");
         add("gui.marketblocks.visuals.layout_mode.lose", "Loose");

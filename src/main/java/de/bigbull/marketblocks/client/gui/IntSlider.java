@@ -34,4 +34,16 @@ public class IntSlider extends AbstractSliderButton {
         this.currentValue = (int) Math.round(this.min + this.value * (this.max - this.min));
         this.onValueChanged.accept(this.currentValue);
     }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.isValidClickButton(button)) {
+            double d0 = (mouseX - (double)(this.getX() + 4)) / (double)(this.width - 8);
+            this.value = net.minecraft.util.Mth.clamp(d0, 0.0D, 1.0D);
+            this.applyValue();
+            this.updateMessage();
+            return true;
+        }
+        return false;
+    }
 }

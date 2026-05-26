@@ -89,7 +89,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.offer_item_visible", "Angebot sichtbar");
         add("gui.marketblocks.visuals.offer_item_visible.tooltip", "Versteckt oder zeigt das schwebende/dargestellte Angebot.");
         add("gui.marketblocks.visuals.offer_item_disabled_global", "Vom Server-Admin deaktiviert.");
-        add("gui.marketblocks.visuals.offer_item_fullbright", "Leuchten (Fullbright)");
+        add("gui.marketblocks.visuals.offer_item_fullbright", "Leuchten");
         add("gui.marketblocks.visuals.offer_item_fullbright.tooltip", "Lässt das Item im Dunkeln leuchten.");
         add("gui.marketblocks.visuals.scale", "Größe");
         add("gui.marketblocks.visuals.speed", "Rotationsgeschw.");
@@ -97,11 +97,11 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.bobbing", "Wippen (Bobbing)");
         add("gui.marketblocks.visuals.count", "Anzahl");
         add("gui.marketblocks.visuals.count.dynamic_fill.tooltip", "Deaktiviert, solange Dynamischer Füllstand aktiv ist.");
-        add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamischer Füllstand");
+        add("gui.marketblocks.visuals.dynamic_fill_level", "Dyn. Füllstand");
         add("gui.marketblocks.visuals.rotation", "Rotation");
         add("gui.marketblocks.visuals.spacing", "Item-Abstand");
-        add("gui.marketblocks.visuals.spacing_xz", "Item-Abstand X/Z");
-        add("gui.marketblocks.visuals.spacing_y", "Item-Abstand Y");
+        add("gui.marketblocks.visuals.spacing_xz", "Abstand X/Z");
+        add("gui.marketblocks.visuals.spacing_y", "Abstand Y");
         add("gui.marketblocks.visuals.layout_mode", "Layout-Modus");
         add("gui.marketblocks.visuals.layout_mode.gestapelt", "Gestapelt");
         add("gui.marketblocks.visuals.layout_mode.lose", "Lose");

@@ -2,8 +2,6 @@ package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopBlockConfig;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;

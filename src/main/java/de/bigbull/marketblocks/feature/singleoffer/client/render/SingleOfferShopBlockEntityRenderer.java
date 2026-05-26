@@ -81,10 +81,12 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         int actualPackedLightFront = visualSettings.offerItemFullbright() ? LightTexture.FULL_BRIGHT : packedLight;
 
-        if (!result.isEmpty() && renderOfferItem) {
+        if (!result.isEmpty()) {
             ShopRenderConfig.SlotRenderConfig offerItem = config.getOfferItem();
             BakedModel offerModel = itemRenderer.getModel(result, blockEntity.getLevel(), null, 0);
             float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result) * visualSettings.offerItemScale();
+
+            if (renderOfferItem) {
 
             if (config.isOfferItemFloating()) {
                 poseStack.pushPose();
@@ -111,7 +113,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 poseStack.popPose();
             } else {
                 int displayCount = visualSettings.dynamicFillLevel()
-                        ? calculateDynamicOfferItemDisplayCount(blockEntity, result)
+                        ? calculateDynamicOfferItemDisplayCount(blockEntity, result, visualSettings)
                         : (visualSettings.offerItemCount() > 0 ? visualSettings.offerItemCount() : config.getOfferItemDisplayCount());
 
                 long seed = blockEntity.getBlockPos().asLong();
@@ -142,29 +144,39 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                     poseStack.translate(0.0f, -0.125f, -0.515f);
 
                     boolean isBlock = result.getItem() instanceof BlockItem;
+                    boolean isTool = !isBlock && isToolOrWeapon(result);
 
                     // Skalierung anpassen (Blöcke wirken standardmäßig oft klobiger als flache Items)
-                    float baseScale = isBlock ? 0.65f : 0.75f;
+                    // Waffen/Werkzeuge bekommen nochmal eine leicht angepasste Skalierung
+                    float baseScale = isBlock ? 0.55f : (isTool ? 0.60f : 0.45f);
                     float itemScale = finalOfferScale * baseScale;
 
                     // WICHTIG: Schicht-Höhe berechnen, damit sie physikalisch korrekt übereinander liegen
-                    float layerHeight = isBlock ? (itemScale * 0.9f) : (itemScale * 0.08f);
+                    float layerHeight = isBlock ? (itemScale * 0.55f) : (itemScale * 0.08f);
 
                     // Maximaler Raum im Korb laut Blockbench-Modell:
                     // X-Breite = 12 Pixel (Radius 0.375f), Z-Tiefe = 14 Pixel (Radius 0.4375f)
-                    // Abzüglich der skalierten Item-Größe
-                    float maxOffsetX = Math.max(0.01f, 0.375f - (itemScale * 0.5f) + 0.18f);
-                    float maxOffsetZ = Math.max(0.01f, 0.4375f - (itemScale * 0.5f) + 0.12f);
+                    // Abzüglich der physikalischen Item-Größe
+                    float radius = isBlock ? (itemScale * 0.2f) : (isTool ? itemScale * 0.35f : itemScale * 0.25f);
+                    float maxOffsetX = Math.max(0.01f, 0.395f - radius);
+                    float maxOffsetZ = Math.max(0.01f, 0.4265f - radius);
 
                     float baselineY = 0.01f;
+                    float maxHeightLimit = 0.5f;
 
                     for (int i = 0; i < displayCount; i++) {
                         poseStack.pushPose();
 
+                        float currentHeightOffset = 0f;
                         if (layoutMode == CrateLayoutMode.LOSE) {
-                            renderCrateItemLoose(poseStack, rand, i, layerHeight, maxOffsetX, maxOffsetZ, itemScale, baseRotation, chaosRotation, baselineY, isBlock);
+                            currentHeightOffset = renderCrateItemLoose(poseStack, rand, i, layerHeight, maxOffsetX, maxOffsetZ, itemScale, baseRotation, chaosRotation, baselineY, isBlock, spacingY);
                         } else if (layoutMode == CrateLayoutMode.GESTAPELT) {
-                            renderCrateItemStacked(poseStack, i, layerHeight, maxOffsetX, maxOffsetZ, itemScale, spacingXZ, spacingY, baseRotation, baselineY, isBlock);
+                            currentHeightOffset = renderCrateItemStacked(poseStack, i, displayCount, layerHeight, maxOffsetX, maxOffsetZ, itemScale, spacingXZ, spacingY, baseRotation, baselineY, isBlock);
+                        }
+
+                        if (currentHeightOffset > maxHeightLimit) {
+                            poseStack.popPose();
+                            break;
                         }
 
                         poseStack.scale(itemScale, itemScale, itemScale);
@@ -209,6 +221,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                     }
                 }
             }
+            }
 
             renderCountText(font, poseStack, defaultBufferSource, actualPackedLightFront,
                     result.getCount(), config.getOfferCountText(), dir);
@@ -237,12 +250,16 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         }
     }
 
-    private void renderCrateItemLoose(PoseStack poseStack, java.util.Random rand, int index, float layerHeight, float maxOffsetX, float maxOffsetZ, float itemScale, float baseRotation, float chaosRotation, float baselineY, boolean isBlock) {
+    private float renderCrateItemLoose(PoseStack poseStack, java.util.Random rand, int index, float layerHeight, float maxOffsetX, float maxOffsetZ, float itemScale, float baseRotation, float chaosRotation, float baselineY, boolean isBlock, float spacingY) {
         float rx = (rand.nextFloat() * 2.0f - 1.0f) * maxOffsetX;
         float rz = (rand.nextFloat() * 2.0f - 1.0f) * maxOffsetZ;
 
-        float hOffset = (index * layerHeight * 0.65f) + (rand.nextFloat() * layerHeight * 0.2f);
-        float yRest = hOffset + (isBlock ? itemScale / 2.0f : 0) + baselineY;
+        // Berechne, wie viele Items grob in eine "Schicht" passen, basierend auf Korbgröße und Skalierung
+        int looseItemsPerLayer = Math.max(2, (int) Math.floor((maxOffsetX * maxOffsetZ * 4.0f) / (itemScale * itemScale * 0.8f)));
+        int looseLayer = index / looseItemsPerLayer;
+        
+        float hOffset = (looseLayer * layerHeight * 0.8f) + (rand.nextFloat() * layerHeight * 0.4f);
+        float yRest = hOffset + (isBlock ? itemScale * 0.4f : 0) + baselineY + (spacingY * 0.5f);
 
         poseStack.translate(rx, yRest, rz);
         poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
@@ -256,32 +273,37 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         if (!isBlock) {
             poseStack.mulPose(Axis.XP.rotationDegrees(90f));
         }
+        return yRest;
     }
 
-    private void renderCrateItemStacked(PoseStack poseStack, int index, float layerHeight, float maxOffsetX, float maxOffsetZ, float itemScale, float spacingXZ, float spacingY, float baseRotation, float baselineY, boolean isBlock) {
+    private float renderCrateItemStacked(PoseStack poseStack, int index, int displayCount, float layerHeight, float maxOffsetX, float maxOffsetZ, float itemScale, float spacingXZ, float spacingY, float baseRotation, float baselineY, boolean isBlock) {
         // Raster-Abstand mit Raster-Abstände basierend auf Slider
         float stepX = itemScale * (1.0f + spacingXZ);
         float stepZ = itemScale * (1.0f + spacingXZ);
         // Vertikaler Schicht-Abstand: Basis-Dicke des Items + spacingY
         float verticalSpacing = layerHeight * (1.0f + spacingY);
 
-        int cols = Math.max(1, (int) Math.floor((maxOffsetX * 2.0f) / (itemScale + 0.02f)) + 1);
-        int rows = Math.max(1, (int) Math.floor((maxOffsetZ * 2.0f) / (itemScale + 0.02f)) + 1);
+        int cols = Math.max(1, (int) Math.floor((maxOffsetX * 2.0f) / Math.max(0.05f, stepX)));
+        int rows = Math.max(1, (int) Math.floor((maxOffsetZ * 2.0f) / Math.max(0.05f, stepZ)));
         int itemsPerLayer = cols * rows;
 
         int layer = index / itemsPerLayer;
         int indexInLayer = index % itemsPerLayer;
-        int col = indexInLayer % cols;
         int row = indexInLayer / cols;
+        int col = indexInLayer % cols;
 
-        float startX = -((cols - 1) * stepX) / 2.0f;
-        float startZ = -((rows - 1) * stepZ) / 2.0f;
+        int itemsInThisLayer = Math.min(itemsPerLayer, displayCount - layer * itemsPerLayer);
+        int usedRows = (int) Math.ceil((double) itemsInThisLayer / cols);
+        int colsInThisRow = Math.min(cols, itemsInThisLayer - row * cols);
 
-        float posX = startX + col * stepX;
+        float rowStartX = -((colsInThisRow - 1) * stepX) / 2.0f;
+        float startZ = -((usedRows - 1) * stepZ) / 2.0f;
+
+        float posX = rowStartX + col * stepX;
         float posZ = startZ + row * stepZ;
 
         float hOffset = layer * verticalSpacing;
-        float yRest = hOffset + (isBlock ? itemScale / 2.0f : 0) + baselineY;
+        float yRest = hOffset + (isBlock ? itemScale * 0.4f : 0) + baselineY;
 
         poseStack.translate(posX, yRest, posZ);
         poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
@@ -289,6 +311,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         if (!isBlock) {
             poseStack.mulPose(Axis.XP.rotationDegrees(90f));
         }
+        return yRest;
     }
 
     private static float getFinalOfferScale(BakedModel offerModel, ShopRenderConfig.SlotRenderConfig offerItem, ItemStack result) {
@@ -305,7 +328,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         return finalOfferScale;
     }
 
-    private static int calculateDynamicOfferItemDisplayCount(SingleOfferShopBlockEntity blockEntity, ItemStack result) {
+    private static int calculateDynamicOfferItemDisplayCount(SingleOfferShopBlockEntity blockEntity, ItemStack result, ShopVisualSettings visualSettings) {
         if (result.isEmpty()) {
             return 0;
         }
@@ -330,7 +353,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         }
 
         float fillRatio = Math.min(1.0f, (float) storedItems / (float) inventoryCapacity);
-        return Math.max(1, (int) Math.ceil(fillRatio * MAX_DYNAMIC_OFFER_ITEM_DISPLAY_COUNT));
+        return Math.max(1, (int) Math.ceil(fillRatio * visualSettings.offerItemCount()));
     }
 
     private void renderPaymentItem(ItemRenderer itemRenderer, Font font, PoseStack poseStack,
