@@ -37,7 +37,7 @@ public record UpdateRedstoneSettingPacket(BlockPos pos, boolean enabled) impleme
             }
             Level level = player.level();
             if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
-                blockEntity.setEmitRedstone(packet.enabled());
+                blockEntity.setEmitRedstone(packet.enabled(), true);
             }
         });
     }

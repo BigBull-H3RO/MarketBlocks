@@ -329,9 +329,9 @@ public final class SingleOfferSettingsSections {
                 }));
                 y += 20;
 
-                // Zeile 5 (DYNAMISCH): spacing OR chaos rotation depending on mode
+                // Row 5 (DYNAMIC): spacing OR chaos rotation depending on mode
                 if (currentMode == CrateLayoutMode.GESTAPELT) {
-                    // Zwei Slider nebeneinander (halbe Breite) für XZ und Y Spacing
+                    // Two sliders side-by-side (half width) for XZ and Y Spacing
                     host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_xz"), -0.5f, 0.5f, draft.offerItemSpacingXZ(), value -> {
                         draft.setOfferItemSpacingXZ(value);
                         onDirty.run();
@@ -352,7 +352,7 @@ public final class SingleOfferSettingsSections {
                 }
             }
             case UNKNOWN -> {
-                // Keine visuellen Optionen für unbekannte Shop-Typen
+                // No visual options for unknown shop types
             }
         }
     }

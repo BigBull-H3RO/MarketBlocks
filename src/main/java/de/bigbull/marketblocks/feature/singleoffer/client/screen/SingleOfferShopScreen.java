@@ -63,7 +63,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private static final int LOG_LIST_WIDTH = 155;
     private static final int LOG_LIST_HEIGHT = 121;
 
-    // Pixel-basiertes Layout für aufklappbare Zeilen
+    // Pixel-based layout for expandable rows
     private static final int ROW_HEIGHT_COLLAPSED = 20;
     private static final int ROW_HEIGHT_EXPANDED = 44;
 
@@ -107,7 +107,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
-    // Neue Variablen für Expandable UI & Pixel-Scroll
+    // New variables for Expandable UI & Pixel Scroll
     private int logScrollPixelOffset = 0;
     private int expandedLogIndex = -1;
     private boolean logDragging;
@@ -320,14 +320,14 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             boolean emit = draft.emitRedstoneEnabled();
             ShopVisualSettings visuals = draft.toVisualSettings();
 
-            be.setShopNameClient(name);
-            be.setEmitRedstoneClient(emit);
-            be.setPurchaseXpFeedbackSoundClient(draft.purchaseXpFeedbackSound());
-            be.setVisualSettingsClient(visuals);
-            be.setModeClient(leftDir, menu.getMode(leftDir));
-            be.setModeClient(rightDir, menu.getMode(rightDir));
-            be.setModeClient(bottomDir, menu.getMode(bottomDir));
-            be.setModeClient(backDir, menu.getMode(backDir));
+            be.setShopName(name, false);
+            be.setEmitRedstone(emit, false);
+            be.setPurchaseXpFeedbackSound(draft.purchaseXpFeedbackSound(), false);
+            be.setVisualSettings(visuals, false);
+            be.setMode(leftDir, menu.getMode(leftDir), false);
+            be.setMode(rightDir, menu.getMode(rightDir), false);
+            be.setMode(bottomDir, menu.getMode(bottomDir), false);
+            be.setMode(backDir, menu.getMode(backDir), false);
 
             List<UUID> selectedOwners = Collections.emptyList();
             if (menu.isPrimaryOwner()) {
@@ -935,16 +935,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     @Override
-    protected boolean isOwner() {
-        return menu.isOwner();
-    }
-
-    @Override
     public void onClose() {
         if (!saved && menu.getActiveTab() == ShopTab.SETTINGS) menu.resetModes();
         String shopNameDraft = nameField != null ? nameField.getValue() : (settingsDraft != null ? settingsDraft.shopName() : "");
         if (menu.getActiveTab() == ShopTab.SETTINGS && shopNameDraft.trim().isEmpty()) {
-            menu.getBlockEntity().setShopNameClient(originalName);
+            menu.getBlockEntity().setShopName(originalName, false);
         }
         super.onClose();
     }

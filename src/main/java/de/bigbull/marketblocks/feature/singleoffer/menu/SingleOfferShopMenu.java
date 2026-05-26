@@ -60,35 +60,25 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     // Server ctor
     public SingleOfferShopMenu(int containerId, Inventory inv, SingleOfferShopBlockEntity be) {
-        super(RegistriesInit.SINGLE_OFFER_SHOP_MENU.get(), containerId);
-        this.blockEntity = be;
-        this.player = inv.player;
-        this.paymentHandler = be.getPaymentHandler();
-        this.offerHandler = be.getOfferHandler();
-        this.inputHandler = be.getInputHandler();
-        this.outputHandler = be.getOutputHandler();
-        this.flags = be.createMenuFlags(player);
-
-        for (Direction dir : DIRECTIONS) {
-            SideMode mode = be.getMode(dir);
-            sideModes.put(dir, mode);
-            initialModes.put(dir, mode);
-        }
-
-        addDataSlots(this.flags);
-        addDataSlots(this.tabData);
-        blockEntity.ensureOwner(player);
-        initSlots(inv);
+        this(containerId, inv, be, true);
     }
 
     // Client ctor
     public SingleOfferShopMenu(int containerId, Inventory inv, RegistryFriendlyByteBuf buf) {
-        super(RegistriesInit.SINGLE_OFFER_SHOP_MENU.get(), containerId);
+        this(containerId, inv, getBlockEntity(inv, buf), false);
+    }
+
+    private static SingleOfferShopBlockEntity getBlockEntity(Inventory inv, RegistryFriendlyByteBuf buf) {
         SingleOfferShopBlockEntity be = readBlockEntity(inv, buf);
         if (be == null) {
             inv.player.closeContainer();
-            be = createClientFallbackBlockEntity();
+            return createClientFallbackBlockEntity();
         }
+        return be;
+    }
+
+    private SingleOfferShopMenu(int containerId, Inventory inv, SingleOfferShopBlockEntity be, boolean isServer) {
+        super(RegistriesInit.SINGLE_OFFER_SHOP_MENU.get(), containerId);
         this.blockEntity = be;
         this.player = inv.player;
         this.paymentHandler = be.getPaymentHandler();
@@ -105,7 +95,11 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         addDataSlots(this.flags);
         addDataSlots(this.tabData);
-        be.ensureOwner(player);
+        if (isServer) {
+            blockEntity.ensureOwner(player);
+        } else {
+            be.ensureOwner(player);
+        }
         initSlots(inv);
     }
 

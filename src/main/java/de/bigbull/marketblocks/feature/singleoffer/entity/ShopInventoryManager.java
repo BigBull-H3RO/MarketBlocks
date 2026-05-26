@@ -34,7 +34,7 @@ public class ShopInventoryManager {
         }
 
         for (Direction dir : DIRECTIONS) {
-            SideMode mode = blockEntity.getModeForSide(dir);
+            SideMode mode = blockEntity.getMode(dir);
 
             if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
                 IItemHandler handler = findNeighborHandler(level, blockEntity.getBlockPos(), dir);
@@ -108,7 +108,7 @@ public class ShopInventoryManager {
         if (level == null || level.isClientSide) return;
         if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) return;
         for (Direction dir : DIRECTIONS) {
-            if (blockEntity.getModeForSide(dir) == SideMode.INPUT) {
+            if (blockEntity.getMode(dir) == SideMode.INPUT) {
                 IItemHandler neighbour = getValidNeighborHandler(dir);
                 if (neighbour != null) {
                     transferItems(neighbour, inputHandler);
@@ -130,7 +130,7 @@ public class ShopInventoryManager {
         if (level == null || level.isClientSide) return;
         if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) return;
         for (Direction dir : DIRECTIONS) {
-            if (blockEntity.getModeForSide(dir) == SideMode.OUTPUT) {
+            if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
                 IItemHandler neighbour = getValidNeighborHandler(dir);
                 if (neighbour != null) {
                     transferItems(outputHandler, neighbour);

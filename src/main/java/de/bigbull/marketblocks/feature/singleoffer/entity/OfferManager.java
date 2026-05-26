@@ -9,10 +9,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
-
-import java.util.function.BiConsumer;
-import java.util.function.IntFunction;
-
 /**
  * Manages the logic for creating and validating trade offers within a {@link SingleOfferShopBlockEntity}.
  * This class performs server-side validation of the items used to create an offer,
@@ -98,20 +94,13 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     }
 
     /**
-     * A generic helper to iterate over a range of slots.
-     */
-    private void forRange(int start, int length, IntFunction<ItemStack> supplier, BiConsumer<Integer, ItemStack> consumer) {
-        for (int i = 0; i < length; i++) {
-            consumer.accept(i, supplier.apply(start + i));
-        }
-    }
-
-    /**
      * Copies items from an item handler to a destination array.
      */
     private void copyRange(IItemHandler handler, ItemStack[] dest, int destStart, int handlerStart, int length) {
-        forRange(handlerStart, length, handler::getStackInSlot,
-                (i, stack) -> dest[destStart + i] = stack.copy());
+        for (int i = 0; i < length; i++) {
+            ItemStack stack = handler.getStackInSlot(handlerStart + i);
+            dest[destStart + i] = stack.copy();
+        }
     }
 
     /**

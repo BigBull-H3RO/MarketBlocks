@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity> {
-    private static final int MAX_DYNAMIC_OFFER_ITEM_DISPLAY_COUNT = 10;
+    private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
 
     public SingleOfferShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
     }
@@ -88,15 +88,15 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
             if (renderOfferItem) {
 
-            if (config.isOfferItemFloating()) {
-                poseStack.pushPose();
+                if (config.isOfferItemFloating()) {
+                    poseStack.pushPose();
 
-                float heightOffset = visualSettings.offerItemHeightOffset();
-                float bobbingOffset = 0.0f;
-                if (visualSettings.offerItemBobbing()) {
-                    float bobTime = (blockEntity.getLevel().getGameTime() + partialTick) * 0.05f;
-                    bobbingOffset = net.minecraft.util.Mth.sin(bobTime) * 0.1f;
-                }
+                    float heightOffset = visualSettings.offerItemHeightOffset();
+                    float bobbingOffset = 0.0f;
+                    if (visualSettings.offerItemBobbing()) {
+                        float bobTime = (blockEntity.getLevel().getGameTime() + partialTick) * 0.05f;
+                        bobbingOffset = net.minecraft.util.Mth.sin(bobTime) * 0.1f;
+                    }
 
                 poseStack.translate(offerItem.x(), offerItem.y() + heightOffset + bobbingOffset, offerItem.z());
 
@@ -133,30 +133,35 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 if (visualType.isMarketCrate()) {
                     poseStack.pushPose();
 
-                    // Optionaler globaler Höhenversatz aus dem Visuals-Slider
+                    // Optional global height offset from visuals slider
                     poseStack.translate(0.0f, heightOffset, 0.0f);
 
-                    // 1. Zum Pivot-Punkt für die Korb-Neigung verschieben (laut JSON)
+                    // 0. Rotate the entire crate content to match block facing
+                    poseStack.translate(0.5f, 0.0f, 0.5f);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - dir.toYRot()));
+                    poseStack.translate(-0.5f, 0.0f, -0.5f);
+
+                    // 1. Translate to pivot point for basket tilt (as per JSON)
                     poseStack.translate(0.5f, 15.0f / 16.0f, 15.5f / 16.0f);
-                    // 2. Korb-Winkel anwenden
+                    // 2. Apply basket angle
                     poseStack.mulPose(Axis.XP.rotationDegrees(-22.5f));
-                    // 3. Zur Mitte des inneren Korb-Bodens verschieben (relativ zum Pivot)
+                    // 3. Translate to the center of the inner basket bottom (relative to pivot)
                     poseStack.translate(0.0f, -0.125f, -0.515f);
 
                     boolean isBlock = result.getItem() instanceof BlockItem;
                     boolean isTool = !isBlock && isToolOrWeapon(result);
 
-                    // Skalierung anpassen (Blöcke wirken standardmäßig oft klobiger als flache Items)
-                    // Waffen/Werkzeuge bekommen nochmal eine leicht angepasste Skalierung
+                    // Adjust scaling (blocks usually look bulkier than flat items)
+                    // Weapons/tools get a slightly adjusted scaling
                     float baseScale = isBlock ? 0.55f : (isTool ? 0.60f : 0.45f);
                     float itemScale = finalOfferScale * baseScale;
 
-                    // WICHTIG: Schicht-Höhe berechnen, damit sie physikalisch korrekt übereinander liegen
+                    // IMPORTANT: Calculate layer height so they physically stack correctly
                     float layerHeight = isBlock ? (itemScale * 0.55f) : (itemScale * 0.08f);
 
                     // Maximaler Raum im Korb laut Blockbench-Modell:
                     // X-Breite = 12 Pixel (Radius 0.375f), Z-Tiefe = 14 Pixel (Radius 0.4375f)
-                    // Abzüglich der physikalischen Item-Größe
+                    // Minus the physical item size
                     float radius = isBlock ? (itemScale * 0.2f) : (isTool ? itemScale * 0.35f : itemScale * 0.25f);
                     float maxOffsetX = Math.max(0.01f, 0.395f - radius);
                     float maxOffsetZ = Math.max(0.01f, 0.4265f - radius);
@@ -189,7 +194,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                     poseStack.popPose();
 
                 } else {
-                    // Fallback: Bisheriges Verhalten für TradeStand oder Generic beibehalten
+                    // Fallback: Keep existing behavior for TradeStand or Generic
                     for (int i = 0; i < displayCount; i++) {
                         poseStack.pushPose();
 
@@ -254,10 +259,10 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         float rx = (rand.nextFloat() * 2.0f - 1.0f) * maxOffsetX;
         float rz = (rand.nextFloat() * 2.0f - 1.0f) * maxOffsetZ;
 
-        // Berechne, wie viele Items grob in eine "Schicht" passen, basierend auf Korbgröße und Skalierung
+        // Calculate roughly how many items fit into a layer based on basket size and scaling
         int looseItemsPerLayer = Math.max(2, (int) Math.floor((maxOffsetX * maxOffsetZ * 4.0f) / (itemScale * itemScale * 0.8f)));
         int looseLayer = index / looseItemsPerLayer;
-        
+
         float hOffset = (looseLayer * layerHeight * 0.8f) + (rand.nextFloat() * layerHeight * 0.4f);
         float yRest = hOffset + (isBlock ? itemScale * 0.4f : 0) + baselineY + (spacingY * 0.5f);
 
@@ -277,10 +282,10 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
     }
 
     private float renderCrateItemStacked(PoseStack poseStack, int index, int displayCount, float layerHeight, float maxOffsetX, float maxOffsetZ, float itemScale, float spacingXZ, float spacingY, float baseRotation, float baselineY, boolean isBlock) {
-        // Raster-Abstand mit Raster-Abstände basierend auf Slider
+        // Grid spacing based on slider
         float stepX = itemScale * (1.0f + spacingXZ);
         float stepZ = itemScale * (1.0f + spacingXZ);
-        // Vertikaler Schicht-Abstand: Basis-Dicke des Items + spacingY
+        // Vertical layer spacing: Base thickness of item + spacingY
         float verticalSpacing = layerHeight * (1.0f + spacingY);
 
         int cols = Math.max(1, (int) Math.floor((maxOffsetX * 2.0f) / Math.max(0.05f, stepX)));
@@ -395,7 +400,6 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
     private void renderTradeArrow(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
                                   Direction dir, ShopRenderConfig.SlotRenderConfig arrowConfig) {
-        ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
 
         Direction right = dir.getClockWise();
         double sideOffset = arrowConfig.x() - 0.5D;

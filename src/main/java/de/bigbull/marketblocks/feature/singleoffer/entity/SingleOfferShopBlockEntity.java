@@ -107,14 +107,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private final ShopInventoryManager inventoryManager = new ShopInventoryManager(this);
 
     // Shop Settings
-    private String shopName = "";
-    private boolean emitRedstone = false;
-    private boolean outputAlmostFull = false;
-    private boolean outputFull = false;
-    private boolean adminShopEnabled = false;
-    private boolean purchaseXpFeedbackSound = true;
-    private boolean globalOfferItemRenderingEnabled = true;
-    private ShopVisualSettings visualSettings = ShopVisualSettings.DEFAULT;
+    private final ShopSettingsManager settingsManager = new ShopSettingsManager(this);
+
+    // Side Configuration
+    private final ShopSideManager sideManager = new ShopSideManager(this);
     private int visualAnimationNonce = 0;
     private byte visualAnimationEvent = VisualNpcAnimationEvent.NONE;
     private int visualPurchaseCounter = 0;
@@ -124,8 +120,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private final ItemStack[] paymentFeedbackSnapshot = new ItemStack[] {ItemStack.EMPTY, ItemStack.EMPTY};
     private long lastPurchaseXpSoundTick = -1L;
 
-    // Side Configuration
-    private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
+
 
     // --- CORE HANDLERS ---
 
@@ -239,9 +234,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public SingleOfferShopBlockEntity(BlockPos pos, BlockState state) {
         super(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), pos, state);
-        for (Direction dir : DIRECTIONS) {
-            sideModes.put(dir, SideMode.DISABLED);
-        }
     }
 
     // --- Sided Wrapper for Item Handlers ---
@@ -424,46 +416,11 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     // --- Shop Settings ---
     public String getShopName() {
-        return shopName;
-    }
-
-    public void setShopName(String name) {
-        if (name.length() > MAX_SHOP_NAME_LENGTH) {
-            name = name.substring(0, MAX_SHOP_NAME_LENGTH);
-        }
-        this.shopName = name;
-        sync();
-    }
-
-    /**
-     * Sets the shop name on the client side.
-     * Client setters should ONLY update state, no side effects.
-     */
-    @ApiStatus.Internal
-    public void setShopNameClient(String name) {
-        this.shopName = name;
-    }
-
-    public boolean isEmitRedstone() {
-        return emitRedstone;
-    }
-
-    public void setEmitRedstone(boolean emitRedstone) {
-        this.emitRedstone = emitRedstone;
-        sync();
-    }
-
-    /**
-     * Sets the redstone emit flag on the client side.
-     * Client setters should ONLY update state, no side effects.
-     */
-    @ApiStatus.Internal
-    public void setEmitRedstoneClient(boolean emitRedstone) {
-        this.emitRedstone = emitRedstone;
+        return settingsManager.getShopName();
     }
 
     public boolean isAdminShopEnabled() {
-        return adminShopEnabled;
+        return settingsManager.isAdminShopEnabled();
     }
 
     public boolean isGlobalAdminModeEnabled() {
@@ -471,19 +428,19 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean isOfferItemRenderingGloballyEnabled() {
-        return level != null && level.isClientSide ? globalOfferItemRenderingEnabled : Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get();
+        return level != null && level.isClientSide ? settingsManager.isGlobalOfferItemRenderingEnabled() : Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get();
     }
 
     @ApiStatus.Internal
     public void setOfferItemRenderingGloballyEnabledClient(boolean enabled) {
-        this.globalOfferItemRenderingEnabled = enabled;
+        settingsManager.setGlobalOfferItemRenderingEnabled(enabled);
     }
 
     public void setAdminShopEnabled(boolean enabled) {
-        if (this.adminShopEnabled == enabled) {
+        if (settingsManager.isAdminShopEnabled() == enabled) {
             return;
         }
-        this.adminShopEnabled = enabled;
+        settingsManager.setAdminShopEnabled(enabled);
         needsOfferRefresh = true;
         updateOfferSlot(false);
         sync();
@@ -491,50 +448,18 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     @ApiStatus.Internal
     public void setAdminShopEnabledClient(boolean enabled) {
-        this.adminShopEnabled = enabled;
+        settingsManager.setAdminShopEnabled(enabled);
         needsOfferRefresh = true;
         updateOfferSlot(false);
     }
 
     // --- Side Configuration ---
     public SideMode getMode(Direction dir) {
-        return sideModes.getOrDefault(dir, SideMode.DISABLED);
+        return sideManager.getMode(dir);
     }
 
-    public void setMode(Direction dir, SideMode mode) {
-        SideMode oldMode = getMode(dir);
-        sideModes.put(dir, mode);
-        setChanged();
-        if (level != null) {
-            level.invalidateCapabilities(worldPosition);
-        }
-        sync();
-        invalidateNeighbor(dir);
-        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
-            lockAdjacentChest(dir);
-        } else if (oldMode != SideMode.DISABLED) {
-            unlockAdjacentChests();
-        }
-        updateNeighborCache();
-    }
-
-    /**
-     * Sets the mode for a direction without triggering sync().
-     * Used internally for batch updates to reduce network traffic.
-     */
-    public void setModeNoSync(Direction dir, SideMode mode) {
-        SideMode oldMode = getMode(dir);
-        sideModes.put(dir, mode);
-        setChanged();
-        if (level != null) {
-            level.invalidateCapabilities(worldPosition);
-        }
-        invalidateNeighbor(dir);
-        if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
-            lockAdjacentChest(dir);
-        } else if (oldMode != SideMode.DISABLED) {
-            unlockAdjacentChests();
-        }
+    public void setMode(Direction dir, SideMode mode, boolean sync) {
+        sideManager.setMode(dir, mode, sync);
     }
 
     /**
@@ -548,98 +473,55 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                                     String name, boolean redstone,
                                     ShopVisualSettings visuals,
                                     boolean xpFeedbackSound) {
-        boolean wasNpcEnabled = this.visualSettings.npcEnabled();
-        setModeNoSync(left, leftMode);
-        setModeNoSync(right, rightMode);
-        setModeNoSync(bottom, bottomMode);
-        setModeNoSync(back, backMode);
-        setShopNameNoSync(name);
-        setEmitRedstoneNoSync(redstone);
-        setVisualSettingsNoSync(visuals);
-        setPurchaseXpFeedbackSoundNoSync(xpFeedbackSound);
-        if (wasNpcEnabled != this.visualSettings.npcEnabled()) {
-            visualAnimationEvent = this.visualSettings.npcEnabled() ? VisualNpcAnimationEvent.SPAWN : VisualNpcAnimationEvent.DESPAWN;
-            visualAnimationNonce++;
-        }
+        setMode(left, leftMode, false);
+        setMode(right, rightMode, false);
+        setMode(bottom, bottomMode, false);
+        setMode(back, backMode, false);
+        settingsManager.setShopName(name, false);
+        settingsManager.setEmitRedstone(redstone, false);
+        settingsManager.setVisualSettings(visuals, false);
+        settingsManager.setPurchaseXpFeedbackSound(xpFeedbackSound, false);
         updateNeighborCache();
         sync();
     }
 
     public ShopVisualSettings getVisualSettings() {
-        return visualSettings;
+        return settingsManager.getVisualSettings();
     }
 
-    public void setVisualSettings(ShopVisualSettings visualSettings) {
-        ShopVisualSettings previous = this.visualSettings;
-        setVisualSettingsNoSync(visualSettings);
-        if (previous.npcEnabled() != this.visualSettings.npcEnabled()) {
-            visualAnimationEvent = this.visualSettings.npcEnabled() ? VisualNpcAnimationEvent.SPAWN : VisualNpcAnimationEvent.DESPAWN;
-            visualAnimationNonce++;
-        }
-        sync();
+    public void setVisualSettings(ShopVisualSettings visualSettings, boolean sync) {
+        settingsManager.setVisualSettings(visualSettings, sync);
     }
 
-    public void setVisualSettingsNoSync(ShopVisualSettings visualSettings) {
-        this.visualSettings = visualSettings == null ? ShopVisualSettings.DEFAULT : visualSettings;
+    public void setShopName(String name, boolean sync) {
+        settingsManager.setShopName(name, sync);
     }
 
-    @ApiStatus.Internal
-    public void setVisualSettingsClient(ShopVisualSettings visualSettings) {
-        this.visualSettings = visualSettings == null ? ShopVisualSettings.DEFAULT : visualSettings;
+    public boolean isEmitRedstone() {
+        return settingsManager.isEmitRedstone();
     }
 
-    /**
-     * Sets the shop name without triggering sync().
-     * Used internally for batch updates.
-     */
-    public void setShopNameNoSync(String name) {
-        if (name.length() > MAX_SHOP_NAME_LENGTH) {
-            name = name.substring(0, MAX_SHOP_NAME_LENGTH);
-        }
-        this.shopName = name;
-    }
-
-    /**
-     * Sets the redstone emit flag without triggering sync().
-     * Used internally for batch updates.
-     */
-    public void setEmitRedstoneNoSync(boolean emitRedstone) {
-        this.emitRedstone = emitRedstone;
+    public void setEmitRedstone(boolean emitRedstone, boolean sync) {
+        settingsManager.setEmitRedstone(emitRedstone, sync);
     }
 
     public boolean isPurchaseXpFeedbackSound() {
-        return purchaseXpFeedbackSound;
+        return settingsManager.isPurchaseXpFeedbackSound();
     }
 
-    public void setPurchaseXpFeedbackSound(boolean enabled) {
-        this.purchaseXpFeedbackSound = enabled;
-        sync();
-    }
-
-    public void setPurchaseXpFeedbackSoundNoSync(boolean enabled) {
-        this.purchaseXpFeedbackSound = enabled;
+    public void setPurchaseXpFeedbackSound(boolean enabled, boolean sync) {
+        settingsManager.setPurchaseXpFeedbackSound(enabled, sync);
     }
 
     @ApiStatus.Internal
-    public void setPurchaseXpFeedbackSoundClient(boolean enabled) {
-        this.purchaseXpFeedbackSound = enabled;
+    public void triggerNpcAnimationEvent(byte event) {
+        this.visualAnimationEvent = event;
+        this.visualAnimationNonce++;
     }
 
-    /**
-     * Sets the side mode on the client side.
-     * Client setters should ONLY update state, no side effects.
-     */
-    @ApiStatus.Internal
-    public void setModeClient(Direction dir, SideMode mode) {
-        sideModes.put(dir, mode);
-    }
-
-    public SideMode getModeForSide(Direction side) {
-        return getMode(side);
-    }
-
-    private void invalidateNeighbor(Direction dir) {
+    public void invalidateCapabilitiesAndNeighbor(Direction dir) {
         if (level != null) {
+            level.invalidateCapabilities(worldPosition);
             BlockPos neighbour = worldPosition.relative(dir);
             level.invalidateCapabilities(neighbour);
         }
@@ -707,12 +589,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
      * @return Total count of matching items, or 0 if target is null/empty
      */
     private int countMatchingPayment(ItemStack target) {
-        if (target == null || target.isEmpty()) return 0;
+        if (target.isEmpty()) return 0;
 
         int total = 0;
         for (int i = 0; i < paymentHandler.getSlots(); i++) {
             ItemStack stack = paymentHandler.getStackInSlot(i);
-            if (stack != null && ItemStack.isSameItemSameComponents(stack, target)) {
+            if (ItemStack.isSameItemSameComponents(stack, target)) {
                 total += stack.getCount();
             }
         }
@@ -767,47 +649,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public boolean hasResultItemInInput(boolean checkNeighbors) {
         ItemStack result = getOfferResult();
-        if (result == null || result.isEmpty()) return false;
-        if (isAdminShopEnabled()) {
-            return true;
-        }
+        if (result.isEmpty()) return false;
+        if (isAdminShopEnabled()) return true;
 
-        int found = 0;
-        // Check internal inventory first
-        for (int i = 0; i < inputHandler.getSlots(); i++) {
-            ItemStack stack = inputHandler.getStackInSlot(i);
-            if (stack != null && ItemStack.isSameItemSameComponents(stack, result)) {
-                found += stack.getCount();
-                if (found >= result.getCount()) {
-                    return true;
-                }
-            }
-        }
-
-        // Check neighbor inventories if enabled
-        if (checkNeighbors && isChestIoExtensionEnabled() && level != null) {
-            for (Direction dir : DIRECTIONS) {
-                if (getModeForSide(dir) == SideMode.INPUT) {
-                    IItemHandler neighbour = getValidNeighborHandler(dir);
-                    if (neighbour == null) continue;
-
-                    for (int i = 0; i < neighbour.getSlots(); i++) {
-                        ItemStack stack = neighbour.getStackInSlot(i);
-                        if (stack != null && ItemStack.isSameItemSameComponents(stack, result)) {
-                            found += stack.getCount();
-                            if (found >= result.getCount()) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return false;
+        return countMatchingInput(result, checkNeighbors) >= result.getCount();
     }
 
     public int getAnalogSignal(Direction readSide) {
-        SideMode mode = getModeForSide(readSide);
+        SideMode mode = getMode(readSide);
         if (mode == SideMode.OUTPUT) {
             return calculateComparatorSignal(outputHandler);
         } else if (mode == SideMode.INPUT) {
@@ -893,7 +742,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         if (p1.isEmpty() && p2.isEmpty()) affordable = maxAmount; // Free
 
         // 2. Calculate how many we have in stock (Input)
-        int inStock = adminShop ? Integer.MAX_VALUE : countMatchingInput(result) / result.getCount();
+        int inStock = adminShop ? Integer.MAX_VALUE : countMatchingInput(result, true) / result.getCount();
 
         // 3. Calculate output space
         int actualAmount = Math.min(maxAmount, Math.min(affordable, inStock));
@@ -918,7 +767,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         executeTrades(p1, p2, result, actualAmount, adminShop);
         visualPurchaseCounter += actualAmount;
 
-        if (purchaseXpFeedbackSound && level != null) {
+        if (isPurchaseXpFeedbackSound() && level != null) {
             long now = level.getGameTime();
             if (now - lastPurchaseXpSoundTick > 4L) {
                 // Pitch increases with purchase amount - sounds satisfying for bulk purchases
@@ -1034,26 +883,26 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
      * SAFETY: Creates defensive copies when reading from neighbor inventories to prevent
      * ConcurrentModificationException if neighbor inventory is modified during iteration.
      */
-    private int countMatchingInput(ItemStack target) {
-        if (target == null || target.isEmpty()) return 0;
+    private int countMatchingInput(ItemStack target, boolean checkNeighbors) {
+        if (target.isEmpty()) return 0;
 
         int found = 0;
         // Check internal inventory
         for (int i = 0; i < inputHandler.getSlots(); i++) {
             ItemStack stack = inputHandler.getStackInSlot(i);
-            if (stack != null && ItemStack.isSameItemSameComponents(stack, target)) {
+            if (ItemStack.isSameItemSameComponents(stack, target)) {
                 found += stack.getCount();
             }
         }
         // Check neighbor inventories (with defensive copies)
-        if (isChestIoExtensionEnabled() && level != null) {
+        if (checkNeighbors && isChestIoExtensionEnabled() && level != null) {
             for (Direction dir : DIRECTIONS) {
-                if (getModeForSide(dir) == SideMode.INPUT) {
+                if (getMode(dir) == SideMode.INPUT) {
                     IItemHandler neighbour = getValidNeighborHandler(dir);
                     if (neighbour != null) {
                         for (int i = 0; i < neighbour.getSlots(); i++) {
                             ItemStack stack = neighbour.getStackInSlot(i);
-                            if (stack != null && !stack.isEmpty()) {
+                            if (!stack.isEmpty()) {
                                 // Defensive copy to prevent concurrent modification issues
                                 ItemStack safeCopy = stack.copy();
                                 if (ItemStack.isSameItemSameComponents(safeCopy, target)) {
@@ -1134,7 +983,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     private void triggerRedstonePulse() {
-        if (level == null || level.isClientSide || !emitRedstone) {
+        if (level == null || level.isClientSide || !isEmitRedstone()) {
             return;
         }
         BlockState state = level.getBlockState(worldPosition);
@@ -1154,7 +1003,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // First, remove from internal inventory
         for (int i = 0; i < inputHandler.getSlots() && remaining > 0; i++) {
             ItemStack stack = inputHandler.getStackInSlot(i);
-            if (stack != null && ItemStack.isSameItemSameComponents(stack, toRemove)) {
+            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
                 int toTake = Math.min(remaining, stack.getCount());
                 inputHandler.extractItem(i, toTake, false);
                 remaining -= toTake;
@@ -1164,14 +1013,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Then, remove from connected neighbor inventories
         if (isChestIoExtensionEnabled() && remaining > 0 && level != null && !level.isClientSide) {
             for (Direction dir : DIRECTIONS) {
-                if (getModeForSide(dir) != SideMode.INPUT) continue;
+                if (getMode(dir) != SideMode.INPUT) continue;
 
                 IItemHandler neighbour = getValidNeighborHandler(dir);
                 if (neighbour == null) continue;
 
                 for (int i = 0; i < neighbour.getSlots() && remaining > 0; i++) {
                     ItemStack stack = neighbour.getStackInSlot(i);
-                    if (stack != null && ItemStack.isSameItemSameComponents(stack, toRemove)) {
+                    if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
                         int toTake = Math.min(remaining, stack.getCount());
                         neighbour.extractItem(i, toTake, false);
                         remaining -= toTake;
@@ -1193,7 +1042,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Iterate through both payment slots and remove the required amount
         for (int i = 0; i < paymentHandler.getSlots() && remaining > 0; i++) {
             ItemStack stack = paymentHandler.getStackInSlot(i);
-            if (stack != null && ItemStack.isSameItemSameComponents(stack, required)) {
+            if (ItemStack.isSameItemSameComponents(stack, required)) {
                 int toTake = Math.min(remaining, stack.getCount());
                 paymentHandler.extractItem(i, toTake, false);
                 remaining -= toTake;
@@ -1226,12 +1075,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean isOutputAlmostFull() {
-        return outputAlmostFull;
+        return settingsManager.isOutputAlmostFull();
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isOutputFull() {
-        return outputFull;
+        return settingsManager.isOutputFull();
     }
 
     public boolean isOutputSpaceMissing() {
@@ -1266,7 +1115,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         if (isChestIoExtensionEnabled()) {
             for (Direction dir : DIRECTIONS) {
-                if (getModeForSide(dir) != SideMode.OUTPUT) continue;
+                if (getMode(dir) != SideMode.OUTPUT) continue;
                 IItemHandler neighbour = getValidNeighborHandler(dir);
                 if (neighbour == null) continue;
                 for (int i = 0; i < neighbour.getSlots(); i++) {
@@ -1289,9 +1138,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             newOutputAlmostFull = total > 0 && (filled * 100 >= total * threshold);
         }
 
-        if (newOutputFull != outputFull || newOutputAlmostFull != outputAlmostFull) {
-            outputFull = newOutputFull;
-            outputAlmostFull = newOutputAlmostFull;
+        if (newOutputFull != settingsManager.isOutputFull() || newOutputAlmostFull != settingsManager.isOutputAlmostFull()) {
+            settingsManager.setOutputFullness(newOutputFull, newOutputAlmostFull);
             sync();
         }
     }
@@ -1353,13 +1201,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public void unlockAdjacentChests() {
         if (level == null || !isChestIoExtensionEnabled()) return;
         for (Direction dir : DIRECTIONS) {
-            BlockPos neighbour = worldPosition.relative(dir);
-            level.invalidateCapabilities(neighbour);
+            invalidateNeighbor(dir);
         }
     }
 
-    private void lockAdjacentChest(Direction dir) {
+    public void lockAdjacentChest(Direction side) {
         if (level == null || !isChestIoExtensionEnabled()) return;
+        invalidateNeighbor(side);
+    }
+
+    private void invalidateNeighbor(Direction dir) {
         BlockPos neighbour = worldPosition.relative(dir);
         level.invalidateCapabilities(neighbour);
     }
@@ -1367,7 +1218,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public void lockAdjacentChests() {
         if (level == null || !isChestIoExtensionEnabled()) return;
         for (Direction dir : DIRECTIONS) {
-            if (getModeForSide(dir) == SideMode.INPUT || getModeForSide(dir) == SideMode.OUTPUT) {
+            if (getMode(dir) == SideMode.INPUT || getMode(dir) == SideMode.OUTPUT) {
                 lockAdjacentChest(dir);
             }
         }
@@ -1444,10 +1295,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         loadHandlers(tag, registries);
         ownerManager.load(tag);
         loadOffer(tag, registries);
-        loadSettings(tag);
-        loadSideModes(tag);
-        outputAlmostFull = tag.getBoolean(NBT_OUTPUT_WARNING);
-        outputFull = tag.getBoolean(NBT_OUTPUT_FULL);
+        settingsManager.load(tag);
+        sideManager.load(tag);
+
+        this.visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
+        this.visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
+        this.visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
+        this.visualPaymentSuccessCounter = tag.getInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER);
+        this.visualPaymentFailCounter = tag.getInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER);
 
         // Moved to onLoad(): lockAdjacentChests() and invalidateCapabilities()
         // This ensures level is not null and neighbor chunks are loaded
@@ -1460,10 +1315,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         saveHandlers(tag, registries);
         ownerManager.save(tag);
         saveOffer(tag, registries);
-        saveSettings(tag);
-        saveSideModes(tag);
-        tag.putBoolean(NBT_OUTPUT_WARNING, outputAlmostFull);
-        tag.putBoolean(NBT_OUTPUT_FULL, outputFull);
+        settingsManager.save(tag);
+        sideManager.save(tag);
+
+        tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
+        tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
+        tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
+        tag.putInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, visualPaymentSuccessCounter);
+        tag.putInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER, visualPaymentFailCounter);
     }
 
     private void loadHandlers(CompoundTag tag, HolderLookup.Provider registries) {
@@ -1492,74 +1351,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         tag.putBoolean(NBT_HAS_OFFER, hasOffer);
     }
 
-    private void loadSettings(CompoundTag tag) {
-        String name = tag.getString(NBT_SHOP_NAME);
-        // Validate shop name length
-        if (name.length() > MAX_SHOP_NAME_LENGTH) {
-            MarketBlocks.LOGGER.warn("Shop name exceeds max length at {}, truncating from {} to {} chars",
-                    worldPosition, name.length(), MAX_SHOP_NAME_LENGTH);
-            name = name.substring(0, MAX_SHOP_NAME_LENGTH);
-        }
-        this.shopName = name;
-        this.emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
-        this.adminShopEnabled = tag.getBoolean(NBT_ADMIN_SHOP_ENABLED);
-        this.purchaseXpFeedbackSound = !tag.contains(NBT_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND);
-        this.globalOfferItemRenderingEnabled = Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get();
-        if (tag.contains(NBT_VISUALS, 10)) {
-            this.visualSettings = ShopVisualSettings.load(tag.getCompound(NBT_VISUALS));
-        } else {
-            this.visualSettings = ShopVisualSettings.DEFAULT;
-        }
-        this.visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
-        this.visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
-        this.visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
-        this.visualPaymentSuccessCounter = tag.getInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER);
-        this.visualPaymentFailCounter = tag.getInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER);
-    }
 
-    private void saveSettings(CompoundTag tag) {
-        tag.putString(NBT_SHOP_NAME, shopName);
-        tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
-        tag.putBoolean(NBT_ADMIN_SHOP_ENABLED, adminShopEnabled);
-        tag.putBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND, purchaseXpFeedbackSound);
-        tag.put(NBT_VISUALS, visualSettings.save());
-        tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
-        tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
-        tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
-        tag.putInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, visualPaymentSuccessCounter);
-        tag.putInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER, visualPaymentFailCounter);
-    }
-
-    private void loadSideModes(CompoundTag tag) {
-        sideModes.clear();
-        for (Direction dir : DIRECTIONS) {
-            sideModes.put(dir, SideMode.DISABLED);
-        }
-        ListTag sideList = tag.getList(NBT_SIDE_MODES, 10);
-        for (int i = 0; i < sideList.size(); i++) {
-            CompoundTag sideTag = sideList.getCompound(i);
-            try {
-                Direction dir = Direction.valueOf(sideTag.getString(NBT_DIRECTION));
-                SideMode mode = SideMode.valueOf(sideTag.getString(NBT_MODE));
-                sideModes.put(dir, mode);
-            } catch (IllegalArgumentException e) {
-                MarketBlocks.LOGGER.warn("Invalid side mode data for direction/mode at position {}: {}",
-                        worldPosition, e.getMessage());
-                // Fallback: Direction already set to DISABLED above
-            }
-        }
-    }
-
-    private void saveSideModes(CompoundTag tag) {
-        ListTag sideList = new ListTag();
-        for (Map.Entry<Direction, SideMode> entry : sideModes.entrySet()) {
-            CompoundTag sideTag = new CompoundTag();
-            sideTag.putString(NBT_DIRECTION, entry.getKey().name());
-            sideTag.putString(NBT_MODE, entry.getValue().name());
-            sideList.add(sideTag);
-        }
-        tag.put(NBT_SIDE_MODES, sideList);
-    }
 
 
     @Override
@@ -1581,12 +1373,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
 
         // Shop settings (needed for UI)
-        tag.putString(NBT_SHOP_NAME, shopName);
-        tag.putBoolean(NBT_EMIT_REDSTONE, emitRedstone);
-        tag.putBoolean(NBT_ADMIN_SHOP_ENABLED, adminShopEnabled);
-        tag.putBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND, purchaseXpFeedbackSound);
-        tag.putBoolean(NBT_GLOBAL_OFFER_ITEM_RENDERING, Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get());
-        tag.put(NBT_VISUALS, visualSettings.save());
+        settingsManager.save(tag);
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
         tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
         tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
@@ -1597,11 +1384,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         ownerManager.save(tag);
 
         // Side modes (needed for rendering/capabilities)
-        saveSideModes(tag);
-
-        // Output status flags (needed for UI indicators)
-        tag.putBoolean(NBT_OUTPUT_WARNING, outputAlmostFull);
-        tag.putBoolean(NBT_OUTPUT_FULL, outputFull);
+        sideManager.save(tag);
 
         // Note: Inventory handlers (input/output/payment) are NOT sent to clients
         // for security reasons - they contain owner's items
@@ -1621,12 +1404,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         hasOffer = tag.getBoolean(NBT_HAS_OFFER);
 
         // Shop settings
-        shopName = tag.getString(NBT_SHOP_NAME);
-        emitRedstone = tag.getBoolean(NBT_EMIT_REDSTONE);
-        adminShopEnabled = tag.getBoolean(NBT_ADMIN_SHOP_ENABLED);
-        purchaseXpFeedbackSound = !tag.contains(NBT_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(NBT_PURCHASE_XP_FEEDBACK_SOUND);
-        globalOfferItemRenderingEnabled = !tag.contains(NBT_GLOBAL_OFFER_ITEM_RENDERING) || tag.getBoolean(NBT_GLOBAL_OFFER_ITEM_RENDERING);
-        visualSettings = tag.contains(NBT_VISUALS, 10) ? ShopVisualSettings.load(tag.getCompound(NBT_VISUALS)) : ShopVisualSettings.DEFAULT;
+        settingsManager.load(tag);
         visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
         visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
         visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
@@ -1637,11 +1415,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         ownerManager.load(tag);
 
         // Side modes
-        loadSideModes(tag);
-
-        // Output status
-        outputAlmostFull = tag.getBoolean(NBT_OUTPUT_WARNING);
-        outputFull = tag.getBoolean(NBT_OUTPUT_FULL);
+        sideManager.load(tag);
 
         // Update client-side state
         updateOfferSlot();
@@ -1692,7 +1466,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public boolean isVisualXpPurchaseFeedbackEnabled() {
-        return purchaseXpFeedbackSound;
+        return isPurchaseXpFeedbackSound();
     }
 
     @Override
@@ -1709,7 +1483,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         ItemStack current = paymentHandler.getStackInSlot(slot).copy();
         paymentFeedbackSnapshot[slot] = current.copy();
 
-        if (level == null || level.isClientSide || !hasOffer || !visualSettings.paymentSlotSoundsEnabled()) {
+        if (level == null || level.isClientSide || !hasOffer || !getVisualSettings().paymentSlotSoundsEnabled()) {
             return;
         }
 
