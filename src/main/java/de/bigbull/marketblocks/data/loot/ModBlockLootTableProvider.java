@@ -25,6 +25,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     protected void generate() {
         dropSelf(RegistriesInit.SHOP_BLOCK_TEST.get());
         dropSelf(RegistriesInit.MARKETCRATE_BLOCK.get());
+        dropSelf(RegistriesInit.MARKETPLACE_BLOCK.get());
 
         // 1. Top-Block droppt überhaupt nichts (das Item wird vom Base-Block gemanagt)
         this.add(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), noDrop());

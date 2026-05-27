@@ -231,6 +231,7 @@ public class ModDeLangProvider extends LanguageProvider {
         // Blocks
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Handelsstand");
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Marktkiste");
+        addBlock(RegistriesInit.MARKETPLACE_BLOCK, "Marktplatz");
         addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

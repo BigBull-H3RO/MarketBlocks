@@ -1,10 +1,8 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.log.ShopTransactionLogSavedData;
-import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
@@ -21,13 +19,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -38,9 +33,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
@@ -120,10 +113,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private int visualPaymentSuccessCounter = 0;
     private int visualPaymentFailCounter = 0;
     private final ShopNpcAnimationState visualAnimationState = new ShopNpcAnimationState();
-    private final ItemStack[] paymentFeedbackSnapshot = new ItemStack[] {ItemStack.EMPTY, ItemStack.EMPTY};
+    private final ItemStack[] paymentFeedbackSnapshot = new ItemStack[] { ItemStack.EMPTY, ItemStack.EMPTY };
     private long lastPurchaseXpSoundTick = -1L;
-
-
 
     // --- CORE HANDLERS ---
 
@@ -173,7 +164,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
     };
 
-    // Reused snapshot handler to avoid per-call allocations during output-space simulations.
+    // Reused snapshot handler to avoid per-call allocations during output-space
+    // simulations.
     private final ItemStackHandler outputSimulationHandler = new ItemStackHandler(outputHandler.getSlots());
 
     private final ItemStackHandler offerHandler = new ItemStackHandler(1) {
@@ -186,10 +178,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
             boolean offerActive = hasOffer();
 
-            // Ensure we only allow extraction of the FULL offer amount while an offer is active.
+            // Ensure we only allow extraction of the FULL offer amount while an offer is
+            // active.
             if (offerActive) {
                 ItemStack currentOffer = getOfferResult();
-                if (currentOffer.isEmpty()) return ItemStack.EMPTY;
+                if (currentOffer.isEmpty())
+                    return ItemStack.EMPTY;
 
                 // Enforce all-or-nothing extraction to prevent partial payment
                 if (amount < currentOffer.getCount()) {
@@ -223,8 +217,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             HANDLER_INPUT, inputHandler,
             HANDLER_OUTPUT, outputHandler,
             HANDLER_PAYMENT, paymentHandler,
-            HANDLER_OFFER, offerHandler
-    );
+            HANDLER_OFFER, offerHandler);
 
     private final IItemHandler inputOnly = new SidedWrapper(inputHandler, false);
     private final IItemHandler outputOnly = new SidedWrapper(outputHandler, true);
@@ -234,7 +227,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private int tickCounter = 0;
     private boolean needsOfferRefresh = false;
 
-
     public SingleOfferShopBlockEntity(BlockPos pos, BlockState state) {
         super(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), pos, state);
     }
@@ -242,8 +234,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     // --- Sided Wrapper for Item Handlers ---
     /**
      * A wrapper for IItemHandler that restricts insertion or extraction.
-     * @param backing The backing item handler.
-     * @param extractOnly If true, only extraction is allowed. If false, only insertion is allowed.
+     * 
+     * @param backing     The backing item handler.
+     * @param extractOnly If true, only extraction is allowed. If false, only
+     *                    insertion is allowed.
      */
     record SidedWrapper(IItemHandler backing, boolean extractOnly) implements IItemHandler {
         @Override
@@ -323,7 +317,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return outputOnly;
     }
 
-
     // --- Core BlockEntity Methods ---
     public void sync() {
         setChanged();
@@ -354,7 +347,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     // --- Owner System ---
     public void setOwner(Player player) {
-        settingsManager.setAccessSettings(settingsManager.getAccessSettings().withOwner(player.getUUID(), player.getName().getString()), true);
+        settingsManager.setAccessSettings(
+                settingsManager.getAccessSettings().withOwner(player.getUUID(), player.getName().getString()), true);
     }
 
     @SuppressWarnings("unused")
@@ -375,14 +369,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public void removeOwner(UUID id) {
         Map<UUID, String> newOwners = new HashMap<>(settingsManager.getAccessSettings().additionalOwners());
         if (newOwners.remove(id) != null) {
-            settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdditionalOwners(newOwners), true);
+            settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdditionalOwners(newOwners),
+                    true);
         }
     }
 
     public Set<UUID> getOwners() {
         Set<UUID> set = new HashSet<>();
         UUID ownerId = settingsManager.getAccessSettings().ownerId();
-        if (ownerId != null) set.add(ownerId);
+        if (ownerId != null)
+            set.add(ownerId);
         set.addAll(settingsManager.getAccessSettings().additionalOwners().keySet());
         return set;
     }
@@ -396,14 +392,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean isOwner(Player player) {
-        if (isAdminShopEnabled() && player.hasPermissions(2)) return true;
+        if (isAdminShopEnabled() && player.hasPermissions(2))
+            return true;
         UUID id = player.getUUID();
         AccessSettings acc = settingsManager.getAccessSettings();
         return id.equals(acc.ownerId()) || acc.additionalOwners().containsKey(id);
     }
 
     public boolean isPrimaryOwner(Player player) {
-        if (isAdminShopEnabled() && player.hasPermissions(2)) return true;
+        if (isAdminShopEnabled() && player.hasPermissions(2))
+            return true;
         return player.getUUID().equals(settingsManager.getAccessSettings().ownerId());
     }
 
@@ -436,7 +434,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     // --- Shop Settings ---
 
-
     public boolean isAdminShopEnabled() {
         return settingsManager.isAdminShopEnabled();
     }
@@ -446,7 +443,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean isOfferItemRenderingGloballyEnabled() {
-        return level != null && level.isClientSide ? settingsManager.isGlobalOfferItemRenderingEnabled() : Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get();
+        return level != null && level.isClientSide ? settingsManager.isGlobalOfferItemRenderingEnabled()
+                : Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get();
     }
 
     @ApiStatus.Internal
@@ -509,30 +507,30 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
      * Used by UpdateSettingsPacket to update all settings at once.
      */
     public void updateSettingsBatch(IoSettings io,
-                                    GeneralSettings general,
-                                    VillagerSettings villager,
-                                    OfferItemSettings offerItem,
-                                    AccessSettings access) {
+            GeneralSettings general,
+            VillagerSettings villager,
+            OfferItemSettings offerItem,
+            AccessSettings access) {
         Direction facing = getBlockState().getValue(BaseShopBlock.FACING);
         // Track mode changes to lock/unlock chests
         boolean chestStateChanged = false;
-        
+
         SideMode oldLeft = getMode(facing.getCounterClockWise());
         SideMode oldRight = getMode(facing.getClockWise());
         SideMode oldBottom = getMode(Direction.DOWN);
         SideMode oldBack = getMode(facing.getOpposite());
-        
+
         settingsManager.setIoSettings(io, false);
         settingsManager.setGeneralSettings(general, false);
         settingsManager.setVillagerSettings(villager, false);
         settingsManager.setOfferItemSettings(offerItem, false);
         settingsManager.setAccessSettings(access, false);
-        
+
         if (level != null && !level.isClientSide) {
             unlockAdjacentChests(); // Safe reset
             lockAdjacentChests();
         }
-        
+
         setChanged();
         sync();
         updateNeighborCache();
@@ -563,7 +561,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void setEmitRedstone(boolean emitRedstone, boolean sync) {
         GeneralSettings current = getGeneralSettings();
-        setGeneralSettings(new GeneralSettings(current.shopName(), emitRedstone, current.purchaseXpFeedbackSound()), sync);
+        setGeneralSettings(new GeneralSettings(current.shopName(), emitRedstone, current.purchaseXpFeedbackSound()),
+                sync);
     }
 
     public boolean isPurchaseXpFeedbackSound() {
@@ -747,10 +746,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     private int calculateComparatorSignal(IItemHandler handler) {
-        if (handler == null) return 0;
+        if (handler == null)
+            return 0;
 
         int totalSlots = handler.getSlots();
-        if (totalSlots == 0) return 0;
+        if (totalSlots == 0)
+            return 0;
 
         float fullness = 0.0F;
         boolean hasItem = false;
@@ -758,7 +759,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         for (int i = 0; i < totalSlots; i++) {
             ItemStack stack = handler.getStackInSlot(i);
             if (!stack.isEmpty()) {
-                fullness += (float) stack.getCount() / (float) Math.min(handler.getSlotLimit(i), stack.getMaxStackSize());
+                fullness += (float) stack.getCount()
+                        / (float) Math.min(handler.getSlotLimit(i), stack.getMaxStackSize());
                 hasItem = true;
             }
         }
@@ -821,12 +823,18 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             public int get(int index) {
                 if (index == 0) {
                     int flags = 0;
-                    if (hasOffer()) flags |= HAS_OFFER_FLAG;
-                    if (isOfferAvailable()) flags |= OFFER_AVAILABLE_FLAG;
-                    if (isOwner(player)) flags |= OWNER_FLAG;
-                    if (isPrimaryOwner(player)) flags |= PRIMARY_OWNER_FLAG;
-                    if (player != null && player.hasPermissions(2)) flags |= OPERATOR_FLAG;
-                    if (isGlobalAdminModeEnabled()) flags |= GLOBAL_ADMIN_MODE_FLAG;
+                    if (hasOffer())
+                        flags |= HAS_OFFER_FLAG;
+                    if (isOfferAvailable())
+                        flags |= OFFER_AVAILABLE_FLAG;
+                    if (isOwner(player))
+                        flags |= OWNER_FLAG;
+                    if (isPrimaryOwner(player))
+                        flags |= PRIMARY_OWNER_FLAG;
+                    if (player != null && player.hasPermissions(2))
+                        flags |= OPERATOR_FLAG;
+                    if (isGlobalAdminModeEnabled())
+                        flags |= GLOBAL_ADMIN_MODE_FLAG;
                     return flags;
                 }
                 return 0;
@@ -866,14 +874,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void unlockAdjacentChests() {
-        if (level == null || !isChestIoExtensionEnabled()) return;
+        if (level == null || !isChestIoExtensionEnabled())
+            return;
         for (Direction dir : DIRECTIONS) {
             invalidateNeighbor(dir);
         }
     }
 
     public void lockAdjacentChest(Direction side) {
-        if (level == null || !isChestIoExtensionEnabled()) return;
+        if (level == null || !isChestIoExtensionEnabled())
+            return;
         invalidateNeighbor(side);
     }
 
@@ -883,7 +893,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void lockAdjacentChests() {
-        if (level == null || !isChestIoExtensionEnabled()) return;
+        if (level == null || !isChestIoExtensionEnabled())
+            return;
         for (Direction dir : DIRECTIONS) {
             if (getMode(dir) == SideMode.INPUT || getMode(dir) == SideMode.OUTPUT) {
                 lockAdjacentChest(dir);
@@ -1008,14 +1019,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     private void saveOffer(CompoundTag tag, HolderLookup.Provider registries) {
-        if (!offerPayment1.isEmpty()) tag.put(KEY_PAYMENT1, offerPayment1.save(registries));
-        if (!offerPayment2.isEmpty()) tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
-        if (!offerResult.isEmpty()) tag.put(KEY_RESULT, offerResult.save(registries));
+        if (!offerPayment1.isEmpty())
+            tag.put(KEY_PAYMENT1, offerPayment1.save(registries));
+        if (!offerPayment2.isEmpty())
+            tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
+        if (!offerResult.isEmpty())
+            tag.put(KEY_RESULT, offerResult.save(registries));
         tag.putBoolean(NBT_HAS_OFFER, hasOffer);
     }
-
-
-
 
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
@@ -1030,9 +1041,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         // Offer data (needed for rendering)
         tag.putBoolean(NBT_HAS_OFFER, hasOffer);
         if (hasOffer) {
-            if (!offerPayment1.isEmpty()) tag.put(KEY_PAYMENT1, offerPayment1.save(registries));
-            if (!offerPayment2.isEmpty()) tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
-            if (!offerResult.isEmpty()) tag.put(KEY_RESULT, offerResult.save(registries));
+            if (!offerPayment1.isEmpty())
+                tag.put(KEY_PAYMENT1, offerPayment1.save(registries));
+            if (!offerPayment2.isEmpty())
+                tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
+            if (!offerResult.isEmpty())
+                tag.put(KEY_RESULT, offerResult.save(registries));
         }
 
         // Shop settings (includes I/O and Access)
@@ -1176,6 +1190,3 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
     }
 }
-
-
-
