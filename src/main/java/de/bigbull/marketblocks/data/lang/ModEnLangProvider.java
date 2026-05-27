@@ -67,7 +67,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop Settings");
         add("gui.marketblocks.settings.category.general", "General");
         add("gui.marketblocks.settings.category.io", "I/O");
-        add("gui.marketblocks.settings.category.villager", "Villager");
+        add("gui.marketblocks.settings.category.villager", "NPC");
         add("gui.marketblocks.settings.category.visual", "Visual");
         add("gui.marketblocks.settings.category.access", "Access");
         add("gui.marketblocks.settings.visual.placeholder", "More visual settings coming soon.");
@@ -190,7 +190,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.move_offer", "Move Offer");
         add("gui.marketblocks.marketplace.move_offer_up", "Move offer up");
         add("gui.marketblocks.marketplace.move_offer_down", "Move offer down");
-        add("gui.marketblocks.marketplace.no_pages", "No pages available");
+        add("gui.marketblocks.marketplace.no_pages", "No pages\navailable");
         add("gui.marketblocks.marketplace.collapsed", "Collapsed");
         add("gui.marketblocks.marketplace.no_offers", "No offers");
         add("gui.marketblocks.marketplace.select_offer_hint", "Select an offer from the list");

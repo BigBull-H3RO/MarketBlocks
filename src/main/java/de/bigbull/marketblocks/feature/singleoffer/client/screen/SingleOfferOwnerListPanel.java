@@ -16,7 +16,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Encapsulates owner list data, rendering and scrolling for the access settings section.
+ * Encapsulates owner list data, rendering and scrolling for the access settings
+ * section.
  */
 public class SingleOfferOwnerListPanel {
     private static final int OWNER_VISIBLE_ROWS = 2;
@@ -41,13 +42,14 @@ public class SingleOfferOwnerListPanel {
 
     private SingleOfferShopScreen host;
     private Map<UUID, String> storedNames = Map.of();
-    private Runnable onDirty = () -> {};
+    private Runnable onDirty = () -> {
+    };
 
     public void prepareAndRender(SingleOfferShopScreen host,
-                                 AccessSettings.Draft accessDraft,
-                                 int listBaseY,
-                                 boolean isPrimaryOwner,
-                                 Runnable onDirty) {
+            AccessSettings.Draft accessDraft,
+            int listBaseY,
+            boolean isPrimaryOwner,
+            Runnable onDirty) {
         this.host = host;
         this.ownerListBaseY = listBaseY;
         this.onDirty = onDirty;
@@ -70,10 +72,10 @@ public class SingleOfferOwnerListPanel {
     }
 
     public void renderBackground(GuiGraphics graphics,
-                                 int leftPos,
-                                 ResourceLocation panelTexture,
-                                 ResourceLocation scrollerSprite,
-                                 ResourceLocation scrollerDisabledSprite) {
+            int leftPos,
+            ResourceLocation panelTexture,
+            ResourceLocation scrollerSprite,
+            ResourceLocation scrollerDisabledSprite) {
         graphics.blit(
                 panelTexture,
                 leftPos + OWNER_PANEL_X_OFFSET,
@@ -83,8 +85,7 @@ public class SingleOfferOwnerListPanel {
                 OWNER_PANEL_WIDTH,
                 OWNER_PANEL_HEIGHT,
                 OWNER_PANEL_WIDTH,
-                OWNER_PANEL_HEIGHT
-        );
+                OWNER_PANEL_HEIGHT);
 
         if (isOwnerScrollActive()) {
             int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
@@ -260,6 +261,3 @@ public class SingleOfferOwnerListPanel {
         }
     }
 }
-
-
-

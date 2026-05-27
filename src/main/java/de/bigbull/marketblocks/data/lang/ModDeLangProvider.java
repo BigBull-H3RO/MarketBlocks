@@ -55,7 +55,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");
         add("gui.marketblocks.settings.category.general", "Allgemein");
         add("gui.marketblocks.settings.category.io", "I/O");
-        add("gui.marketblocks.settings.category.villager", "Dorfbewohner");
+        add("gui.marketblocks.settings.category.villager", "NPC");
         add("gui.marketblocks.settings.category.visual", "Visual");
         add("gui.marketblocks.settings.category.access", "Zugriff");
         add("gui.marketblocks.settings.visual.placeholder", "Weitere Visual-Einstellungen folgen.");
@@ -177,7 +177,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.move_offer", "Angebot verschieben");
         add("gui.marketblocks.marketplace.move_offer_up", "Angebot nach oben verschieben");
         add("gui.marketblocks.marketplace.move_offer_down", "Angebot nach unten verschieben");
-        add("gui.marketblocks.marketplace.no_pages", "Keine Seiten vorhanden");
+        add("gui.marketblocks.marketplace.no_pages", "Keine Seiten\nvorhanden");
         add("gui.marketblocks.marketplace.collapsed", "Eingeklappt");
         add("gui.marketblocks.marketplace.no_offers", "Keine Angebote");
         add("gui.marketblocks.marketplace.select_offer_hint", "Wähle links ein Angebot aus");
