@@ -13,12 +13,10 @@ public enum SideMode {
         this.translationKey = translationKey;
     }
 
+    private static final SideMode[] VALUES = values();
+
     public SideMode next() {
-        return switch (this) {
-            case DISABLED -> INPUT;
-            case INPUT -> OUTPUT;
-            case OUTPUT -> DISABLED;
-        };
+        return VALUES[(ordinal() + 1) % VALUES.length];
     }
 
     public Component getDisplayName() {

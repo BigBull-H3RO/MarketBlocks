@@ -67,7 +67,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop Settings");
         add("gui.marketblocks.settings.category.general", "General");
         add("gui.marketblocks.settings.category.io", "I/O");
-        add("gui.marketblocks.settings.category.villager", "Villager");
+        add("gui.marketblocks.settings.category.villager", "NPC");
         add("gui.marketblocks.settings.category.visual", "Visual");
         add("gui.marketblocks.settings.category.access", "Access");
         add("gui.marketblocks.settings.visual.placeholder", "More visual settings coming soon.");
@@ -98,6 +98,29 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.purchase_particles", "Purchase Particles");
         add("gui.marketblocks.visuals.purchase_sounds", "Purchase Sounds");
         add("gui.marketblocks.visuals.payment_sounds", "Payment Sounds");
+        add("gui.marketblocks.visuals.offer_item_visible", "Offer Item Visible");
+        add("gui.marketblocks.visuals.offer_item_visible.tooltip", "Show or hide the floating/displayed offer item.");
+        add("gui.marketblocks.visuals.offer_item_disabled_global", "Disabled by Server Admin.");
+        add("gui.marketblocks.visuals.offer_item_fullbright", "Glow");
+        add("gui.marketblocks.visuals.offer_item_fullbright.tooltip", "Makes the item glow in the dark (no shadows).");
+        add("gui.marketblocks.visuals.scale", "Scale");
+        add("gui.marketblocks.visuals.speed", "Rotation Speed");
+        add("gui.marketblocks.visuals.height", "Height");
+        add("gui.marketblocks.visuals.bobbing", "Bobbing");
+        add("gui.marketblocks.visuals.count", "Item Count");
+        add("gui.marketblocks.visuals.count.dynamic_fill.tooltip", "Disabled while Dynamic Fill Level is enabled.");
+        add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamic Fill");
+        add("gui.marketblocks.visuals.rotation", "Rotation");
+        add("gui.marketblocks.visuals.spacing", "Item Spacing");
+        add("gui.marketblocks.visuals.spacing_xz", "Spacing X/Z");
+        add("gui.marketblocks.visuals.spacing_y", "Spacing Y");
+        add("gui.marketblocks.visuals.layout_mode", "Layout Mode");
+        add("gui.marketblocks.visuals.layout_mode.gestapelt", "Stacked");
+        add("gui.marketblocks.visuals.layout_mode.lose", "Loose");
+        add("gui.marketblocks.visuals.chaos_rotation", "Chaos Rotation");
+        add("gui.marketblocks.visuals.rotation_x", "Rotation X");
+        add("gui.marketblocks.visuals.rotation_y", "Rotation Y");
+        add("gui.marketblocks.visuals.rotation_z", "Rotation Z");
         add("gui.marketblocks.visuals.error.no_surface", "No stand surface behind the shop!");
         add("gui.marketblocks.visuals.error.space_blocked", "Space blocked!");
         add("gui.marketblocks.visuals.profession.none", "Unemployed");
@@ -167,7 +190,7 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.move_offer", "Move Offer");
         add("gui.marketblocks.marketplace.move_offer_up", "Move offer up");
         add("gui.marketblocks.marketplace.move_offer_down", "Move offer down");
-        add("gui.marketblocks.marketplace.no_pages", "No pages available");
+        add("gui.marketblocks.marketplace.no_pages", "No pages\navailable");
         add("gui.marketblocks.marketplace.collapsed", "Collapsed");
         add("gui.marketblocks.marketplace.no_offers", "No offers");
         add("gui.marketblocks.marketplace.select_offer_hint", "Select an offer from the list");
@@ -221,6 +244,7 @@ public class ModEnLangProvider extends LanguageProvider {
         // Blocks
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Trade Stand");
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Market Crate");
+        addBlock(RegistriesInit.MARKETPLACE_BLOCK, "Marketplace");
         addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

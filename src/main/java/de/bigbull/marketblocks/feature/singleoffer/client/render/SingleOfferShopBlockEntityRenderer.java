@@ -1,30 +1,35 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
-import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
+import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
+import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
 import de.bigbull.marketblocks.feature.visual.render.VisualShopNpcRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.*;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
-import de.bigbull.marketblocks.MarketBlocks;
 
 public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity> {
+    private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
 
     public SingleOfferShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
     }
@@ -71,46 +76,159 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         // --- 1. Offer-Item schwebend ueber dem Block ---
         ItemStack result = blockEntity.getOfferResult();
+        OfferItemSettings offerSettings = blockEntity.getOfferItemSettings();
+        boolean renderOfferItem = blockEntity.isOfferItemRenderingGloballyEnabled() && offerSettings.visible();
+
+        int actualPackedLightFront = offerSettings.fullbright() ? LightTexture.FULL_BRIGHT : packedLight;
+
         if (!result.isEmpty()) {
             ShopRenderConfig.SlotRenderConfig offerItem = config.getOfferItem();
             BakedModel offerModel = itemRenderer.getModel(result, blockEntity.getLevel(), null, 0);
-            float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result);
+            float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result) * offerSettings.scale();
 
-            if (config.isOfferItemFloating()) {
-                poseStack.pushPose();
-                poseStack.translate(offerItem.x(), offerItem.y(), offerItem.z());
-                float time = (blockEntity.getLevel().getGameTime() + partialTick) * 2.0f;
-                poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
+            if (renderOfferItem) {
+
+                if (config.isOfferItemFloating()) {
+                    poseStack.pushPose();
+
+                    float heightOffset = offerSettings.heightOffset();
+                    float bobbingOffset = 0.0f;
+                    if (offerSettings.bobbing()) {
+                        float bobTime = (blockEntity.getLevel().getGameTime() + partialTick) * 0.05f;
+                        bobbingOffset = net.minecraft.util.Mth.sin(bobTime) * 0.1f;
+                    }
+
+                poseStack.translate(offerItem.x(), offerItem.y() + heightOffset + bobbingOffset, offerItem.z());
+
+                float speed = offerSettings.speed();
+                if (speed > 0) {
+                    float time = (blockEntity.getLevel().getGameTime() + partialTick) * speed;
+                    poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
+                }
+
                 applySlotRotation(poseStack, offerItem);
                 poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, packedLight, packedOverlay,
+                itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
                         poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
                 poseStack.popPose();
             } else {
-                int displayCount = config.getOfferItemDisplayCount();
+                int displayCount = offerSettings.dynamicFillLevel()
+                        ? calculateDynamicOfferItemDisplayCount(blockEntity, result, offerSettings)
+                        : (offerSettings.count() > 0 ? offerSettings.count() : config.getOfferItemDisplayCount());
+
                 long seed = blockEntity.getBlockPos().asLong();
                 java.util.Random rand = new java.util.Random(seed);
 
-                for (int i = 0; i < displayCount; i++) {
+                 float heightOffset = offerSettings.heightOffset();
+                 float spacingXZ = offerSettings.spacingXZ();
+                 float spacingY = offerSettings.spacingY();
+                 float chaosRotation = offerSettings.chaosRotation();
+                 float baseRotation = offerSettings.rotation();
+
+                CrateLayoutMode layoutMode = offerSettings.layoutMode();
+                if (layoutMode == null) layoutMode = CrateLayoutMode.LOSE;
+
+                ShopVisualType visualType = ShopVisualType.from(blockEntity.getBlockState().getBlock());
+
+                if (visualType.isMarketCrate()) {
                     poseStack.pushPose();
-                    double offsetX = (rand.nextDouble() - 0.5) * 0.4;
-                    double offsetZ = (rand.nextDouble() - 0.5) * 0.4;
-                    double offsetY = i * 0.05; // Stack them slightly
 
-                    poseStack.translate(offerItem.x() + offsetX, offerItem.y() + offsetY, offerItem.z() + offsetZ);
+                    // Optional global height offset from visuals slider
+                    poseStack.translate(0.0f, heightOffset, 0.0f);
 
-                    float randomYaw = rand.nextFloat() * 360.0f;
-                    poseStack.mulPose(Axis.YP.rotationDegrees(randomYaw));
+                    // 0. Rotate the entire crate content to match block facing
+                    poseStack.translate(0.5f, 0.0f, 0.5f);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - dir.toYRot()));
+                    poseStack.translate(-0.5f, 0.0f, -0.5f);
 
-                    applySlotRotation(poseStack, offerItem);
-                    poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                    itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, packedLight, packedOverlay,
-                            poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
+                    // 1. Translate to pivot point for basket tilt (as per JSON)
+                    poseStack.translate(0.5f, 15.0f / 16.0f, 15.5f / 16.0f);
+                    // 2. Apply basket angle
+                    poseStack.mulPose(Axis.XP.rotationDegrees(-22.5f));
+                    // 3. Translate to the center of the inner basket bottom (relative to pivot)
+                    poseStack.translate(0.0f, -0.125f, -0.515f);
+
+                    boolean isBlock = result.getItem() instanceof BlockItem;
+                    boolean isTool = !isBlock && isToolOrWeapon(result);
+
+                    // Adjust scaling (blocks usually look bulkier than flat items)
+                    // Weapons/tools get a slightly adjusted scaling
+                    float baseScale = isBlock ? 0.55f : (isTool ? 0.60f : 0.45f);
+                    float itemScale = finalOfferScale * baseScale;
+
+                    // IMPORTANT: Calculate layer height so they physically stack correctly
+                    float layerHeight = isBlock ? (itemScale * 0.55f) : (itemScale * 0.08f);
+
+                    // Maximaler Raum im Korb laut Blockbench-Modell:
+                    // X-Breite = 12 Pixel (Radius 0.375f), Z-Tiefe = 14 Pixel (Radius 0.4375f)
+                    // Minus the physical item size
+                    float radius = isBlock ? (itemScale * 0.2f) : (isTool ? itemScale * 0.35f : itemScale * 0.25f);
+                    float maxOffsetX = Math.max(0.01f, 0.395f - radius);
+                    float maxOffsetZ = Math.max(0.01f, 0.4265f - radius);
+
+                    float baselineY = 0.01f;
+                    float maxHeightLimit = 0.5f;
+
+                    for (int i = 0; i < displayCount; i++) {
+                        poseStack.pushPose();
+
+                        float currentHeightOffset = 0f;
+                        if (layoutMode == CrateLayoutMode.LOSE) {
+                            currentHeightOffset = renderCrateItemLoose(poseStack, rand, i, layerHeight, maxOffsetX, maxOffsetZ, itemScale, baseRotation, chaosRotation, baselineY, isBlock, spacingY);
+                        } else if (layoutMode == CrateLayoutMode.GESTAPELT) {
+                            currentHeightOffset = renderCrateItemStacked(poseStack, i, displayCount, layerHeight, maxOffsetX, maxOffsetZ, itemScale, spacingXZ, spacingY, baseRotation, baselineY, isBlock);
+                        }
+
+                        if (currentHeightOffset > maxHeightLimit) {
+                            poseStack.popPose();
+                            break;
+                        }
+
+                        poseStack.scale(itemScale, itemScale, itemScale);
+
+                        itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
+                                poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
+
+                        poseStack.popPose();
+                    }
                     poseStack.popPose();
+
+                } else {
+                    // Fallback: Keep existing behavior for TradeStand or Generic
+                    for (int i = 0; i < displayCount; i++) {
+                        poseStack.pushPose();
+
+                        poseStack.translate(offerItem.x(), offerItem.y() + heightOffset, offerItem.z());
+                        poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
+
+                        double offsetX = 0;
+                        double offsetY = 0;
+                        double offsetZ = 0;
+
+                        if (layoutMode == CrateLayoutMode.GESTAPELT) {
+                            int gridSize = (int) Math.ceil(Math.sqrt(displayCount));
+                            int x = i % gridSize;
+                            int z = i / gridSize;
+                            offsetX = (x - (gridSize - 1) / 2.0) * spacingXZ;
+                            offsetZ = (z - (gridSize - 1) / 2.0) * spacingXZ;
+                        } else if (layoutMode == CrateLayoutMode.LOSE) {
+                            offsetX = (rand.nextDouble() - 0.5) * spacingXZ * 2;
+                            offsetZ = (rand.nextDouble() - 0.5) * spacingXZ * 2;
+                        }
+
+                        poseStack.translate(offsetX, offsetY, offsetZ);
+
+                        applySlotRotation(poseStack, offerItem);
+                        poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
+                        itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
+                                poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
+                        poseStack.popPose();
+                    }
                 }
             }
+            }
 
-            renderCountText(font, poseStack, defaultBufferSource, packedLight,
+            renderCountText(font, poseStack, defaultBufferSource, actualPackedLightFront,
                     result.getCount(), config.getOfferCountText(), dir);
         }
 
@@ -119,22 +237,86 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         ItemStack payment2 = blockEntity.getOfferPayment2();
 
         if (config.isShowFrontOffer() && !result.isEmpty()) {
-            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, packedLight, packedOverlay,
+            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, actualPackedLightFront, packedOverlay,
                     result, dir, config.getFrontOfferItem(), null);
         }
 
         if (config.isShowTradeArrow()) {
-            renderTradeArrow(poseStack, defaultBufferSource, packedLight, dir, config.getTradeArrow());
+            renderTradeArrow(poseStack, defaultBufferSource, actualPackedLightFront, dir, config.getTradeArrow());
         }
 
         if (!payment1.isEmpty()) {
-            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, packedLight, packedOverlay,
+            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, actualPackedLightFront, packedOverlay,
                     payment1, dir, config.getPayment1Item(), config.getPayment1CountText());
         }
         if (!payment2.isEmpty()) {
-            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, packedLight, packedOverlay,
+            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, actualPackedLightFront, packedOverlay,
                     payment2, dir, config.getPayment2Item(), config.getPayment2CountText());
         }
+    }
+
+    private float renderCrateItemLoose(PoseStack poseStack, java.util.Random rand, int index, float layerHeight, float maxOffsetX, float maxOffsetZ, float itemScale, float baseRotation, float chaosRotation, float baselineY, boolean isBlock, float spacingY) {
+        float rx = (rand.nextFloat() * 2.0f - 1.0f) * maxOffsetX;
+        float rz = (rand.nextFloat() * 2.0f - 1.0f) * maxOffsetZ;
+
+        // Calculate roughly how many items fit into a layer based on basket size and scaling
+        int looseItemsPerLayer = Math.max(2, (int) Math.floor((maxOffsetX * maxOffsetZ * 4.0f) / (itemScale * itemScale * 0.8f)));
+        int looseLayer = index / looseItemsPerLayer;
+
+        float hOffset = (looseLayer * layerHeight * 0.8f) + (rand.nextFloat() * layerHeight * 0.4f);
+        float yRest = hOffset + (isBlock ? itemScale * 0.4f : 0) + baselineY + (spacingY * 0.5f);
+
+        poseStack.translate(rx, yRest, rz);
+        poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
+
+        if (chaosRotation > 0) {
+            poseStack.mulPose(Axis.YP.rotationDegrees(rand.nextFloat() * 360f * chaosRotation));
+            poseStack.mulPose(Axis.XP.rotationDegrees((rand.nextFloat() - 0.5f) * 45f * chaosRotation));
+            poseStack.mulPose(Axis.ZP.rotationDegrees((rand.nextFloat() - 0.5f) * 45f * chaosRotation));
+        }
+
+        if (!isBlock) {
+            poseStack.mulPose(Axis.XP.rotationDegrees(90f));
+        }
+        return yRest;
+    }
+
+    private float renderCrateItemStacked(PoseStack poseStack, int index, int displayCount, float layerHeight, float maxOffsetX, float maxOffsetZ, float itemScale, float spacingXZ, float spacingY, float baseRotation, float baselineY, boolean isBlock) {
+        // Grid spacing based on slider
+        float stepX = itemScale * (1.0f + spacingXZ);
+        float stepZ = itemScale * (1.0f + spacingXZ);
+        // Vertical layer spacing: Base thickness of item + spacingY
+        float verticalSpacing = layerHeight * (1.0f + spacingY);
+
+        int cols = Math.max(1, (int) Math.floor((maxOffsetX * 2.0f) / Math.max(0.05f, stepX)));
+        int rows = Math.max(1, (int) Math.floor((maxOffsetZ * 2.0f) / Math.max(0.05f, stepZ)));
+        int itemsPerLayer = cols * rows;
+
+        int layer = index / itemsPerLayer;
+        int indexInLayer = index % itemsPerLayer;
+        int row = indexInLayer / cols;
+        int col = indexInLayer % cols;
+
+        int itemsInThisLayer = Math.min(itemsPerLayer, displayCount - layer * itemsPerLayer);
+        int usedRows = (int) Math.ceil((double) itemsInThisLayer / cols);
+        int colsInThisRow = Math.min(cols, itemsInThisLayer - row * cols);
+
+        float rowStartX = -((colsInThisRow - 1) * stepX) / 2.0f;
+        float startZ = -((usedRows - 1) * stepZ) / 2.0f;
+
+        float posX = rowStartX + col * stepX;
+        float posZ = startZ + row * stepZ;
+
+        float hOffset = layer * verticalSpacing;
+        float yRest = hOffset + (isBlock ? itemScale * 0.4f : 0) + baselineY;
+
+        poseStack.translate(posX, yRest, posZ);
+        poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
+
+        if (!isBlock) {
+            poseStack.mulPose(Axis.XP.rotationDegrees(90f));
+        }
+        return yRest;
     }
 
     private static float getFinalOfferScale(BakedModel offerModel, ShopRenderConfig.SlotRenderConfig offerItem, ItemStack result) {
@@ -149,6 +331,34 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
             }
         }
         return finalOfferScale;
+    }
+
+    private static int calculateDynamicOfferItemDisplayCount(SingleOfferShopBlockEntity blockEntity, ItemStack result, OfferItemSettings offerSettings) {
+        if (result.isEmpty()) {
+            return 0;
+        }
+
+        int storedItems = 0;
+        int inventoryCapacity = 0;
+
+        for (int slot = 0; slot < blockEntity.getInputHandler().getSlots(); slot++) {
+            ItemStack stack = blockEntity.getInputHandler().getStackInSlot(slot);
+            int slotCapacity = Math.min(blockEntity.getInputHandler().getSlotLimit(slot), result.getMaxStackSize());
+
+            if (stack.isEmpty()) {
+                inventoryCapacity += slotCapacity;
+            } else if (ItemStack.isSameItemSameComponents(stack, result)) {
+                storedItems += stack.getCount();
+                inventoryCapacity += slotCapacity;
+            }
+        }
+
+        if (storedItems <= 0 || inventoryCapacity <= 0) {
+            return 0;
+        }
+
+        float fillRatio = Math.min(1.0f, (float) storedItems / (float) inventoryCapacity);
+        return Math.max(1, (int) Math.ceil(fillRatio * offerSettings.count()));
     }
 
     private void renderPaymentItem(ItemRenderer itemRenderer, Font font, PoseStack poseStack,
@@ -190,7 +400,6 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
     private void renderTradeArrow(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
                                   Direction dir, ShopRenderConfig.SlotRenderConfig arrowConfig) {
-        ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
 
         Direction right = dir.getClockWise();
         double sideOffset = arrowConfig.x() - 0.5D;

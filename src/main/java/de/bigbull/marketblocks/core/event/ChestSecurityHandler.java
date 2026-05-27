@@ -93,7 +93,7 @@ public class ChestSecurityHandler {
             BlockPos neighbor = pos.relative(dir);
             BlockEntity be = level.getBlockEntity(neighbor);
             if (be instanceof SingleOfferShopBlockEntity shop) {
-                SideMode mode = shop.getModeForSide(dir.getOpposite());
+                SideMode mode = shop.getMode(dir.getOpposite());
                 if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
                     return shop;
                 }

@@ -3,16 +3,18 @@ package de.bigbull.marketblocks.feature.singleoffer.entity;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 
+import java.util.UUID;
+
 public class LockedChestWrapper implements IItemHandler {
     private final IItemHandler delegate;
-    private final java.util.UUID owner;
+    private final UUID owner;
 
-    public LockedChestWrapper(IItemHandler delegate, java.util.UUID owner) {
+    public LockedChestWrapper(IItemHandler delegate, UUID owner) {
         this.delegate = delegate;
         this.owner = owner;
     }
 
-    public java.util.UUID getOwnerId() {
+    public UUID getOwnerId() {
         return owner;
     }
 
@@ -47,6 +49,6 @@ public class LockedChestWrapper implements IItemHandler {
 
     @Override
     public boolean isItemValid(int slot, ItemStack stack) {
-        return delegate.isItemValid(slot, stack);
+        return false;
     }
 }

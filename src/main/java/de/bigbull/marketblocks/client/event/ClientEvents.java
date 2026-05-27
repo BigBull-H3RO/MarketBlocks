@@ -48,6 +48,7 @@ public class ClientEvents {
         event.register(OPEN_MARKETPLACE);
     }
 
+    @SuppressWarnings("deprecation")
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
