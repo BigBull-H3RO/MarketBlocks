@@ -435,7 +435,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             NetworkHandler.sendToServer(new ToggleAdminShopModePacket(be.getBlockPos(), next));
             b.setMessage(getAdminShopToggleLabel(be));
             rebuildUI();
-        }).bounds(leftPos + 8, topPos + 90, 158, 18).build());
+        }).bounds(leftPos + 84, topPos + 4, 88, 16).build());
     }
 
     @Override
