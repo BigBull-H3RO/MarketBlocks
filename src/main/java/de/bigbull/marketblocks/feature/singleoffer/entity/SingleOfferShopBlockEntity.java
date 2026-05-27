@@ -103,10 +103,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public static final int MAX_TRANSACTION_LOG_ENTRIES = 100;
 
     @Nullable
-    private UUID purchaseContextBuyerId;
-    private String purchaseContextBuyerName = "";
+    public UUID purchaseContextBuyerId;
+    public String purchaseContextBuyerName = "";
 
     private final ShopInventoryManager inventoryManager = new ShopInventoryManager(this);
+
+    public ShopInventoryManager getInventoryManager() {
+        return inventoryManager;
+    }
 
     // Shop Settings
     private final ShopSettingsManager settingsManager = new ShopSettingsManager(this);
@@ -666,37 +670,52 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
      * @param target The target ItemStack to match (must not be null)
      * @return Total count of matching items, or 0 if target is null/empty
      */
-    private int countMatchingPayment(ItemStack target) {
-        if (target.isEmpty()) return 0;
-
-        int total = 0;
-        for (int i = 0; i < paymentHandler.getSlots(); i++) {
-            ItemStack stack = paymentHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, target)) {
-                total += stack.getCount();
-            }
-        }
-        return total;
+    public ShopSettingsManager getSettingsManager() {
+        return settingsManager;
     }
 
-    private boolean hasEnoughPayment(ItemStack required) {
-        return required.isEmpty() || countMatchingPayment(required) >= required.getCount();
+    public void incrementVisualPurchaseCounter(int amount) {
+        visualPurchaseCounter += amount;
+    }
+
+    public void playPurchaseXpSound(int actualAmount) {
+        if (isPurchaseXpFeedbackSound() && level != null) {
+            long now = level.getGameTime();
+            if (now - lastPurchaseXpSoundTick > 4L) {
+                float pitch = Math.min(0.7F + actualAmount * 0.06F, 1.6F);
+                level.playSound(null, worldPosition, net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP,
+                        net.minecraft.sounds.SoundSource.BLOCKS, 0.4F, pitch);
+                lastPurchaseXpSoundTick = now;
+            }
+        }
+    }
+
+    public void triggerRedstonePulse() {
+        if (level == null || level.isClientSide || !isEmitRedstone()) {
+            return;
+        }
+        BlockState state = level.getBlockState(worldPosition);
+        if (state.getBlock() instanceof BaseShopBlock block) {
+            level.setBlock(worldPosition, state.setValue(BaseShopBlock.POWERED, true), 3);
+            level.updateNeighborsAt(worldPosition, block);
+            level.scheduleTick(worldPosition, block, 20);
+        }
     }
 
     public void updateOfferSlot() {
         updateOfferSlot(false);
     }
 
-    private void updateOfferSlot(boolean checkNeighbors) {
+    public void updateOfferSlot(boolean checkNeighbors) {
         if (!hasOffer) {
             return;
         }
 
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
-        boolean stockAvailable = isAdminShopEnabled() || hasResultItemInInput(checkNeighbors);
-        boolean outputReady = isAdminShopEnabled() || (!isOutputFull() && hasOutputSpace(p1, p2));
-        if (canAfford() && stockAvailable && outputReady) {
+        boolean stockAvailable = isAdminShopEnabled() || offerManager.hasResultItemInInput(checkNeighbors);
+        boolean outputReady = isAdminShopEnabled() || (!isOutputFull() && inventoryManager.hasOutputSpace(p1, p2));
+        if (offerManager.canAfford() && stockAvailable && outputReady) {
             if (offerHandler.getStackInSlot(0).isEmpty()) {
                 offerHandler.setStackInSlot(0, getOfferResult().copy());
             }
@@ -705,32 +724,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
     }
 
-    public boolean canAfford() {
+    public boolean hasResultItemInInput(boolean checkNeighbors) {
+        return offerManager.hasResultItemInInput(checkNeighbors);
+    }
+
+    private boolean isReadyToPurchase() {
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
-        if (p1.isEmpty() && p2.isEmpty()) {
-            return true; // Free trade
-        }
-
-        if (!p1.isEmpty() && ItemStack.isSameItemSameComponents(p1, p2)) {
-            int required = p1.getCount() + p2.getCount();
-            return countMatchingPayment(p1) >= required;
-        }
-
-        return hasEnoughPayment(p1) && hasEnoughPayment(p2);
-    }
-
-    @SuppressWarnings("unused")
-    public boolean hasResultItemInInput() {
-        return hasResultItemInInput(false);
-    }
-
-    public boolean hasResultItemInInput(boolean checkNeighbors) {
-        ItemStack result = getOfferResult();
-        if (result.isEmpty()) return false;
-        if (isAdminShopEnabled()) return true;
-
-        return countMatchingInput(result, checkNeighbors) >= result.getCount();
+        boolean stockReady = isAdminShopEnabled() || offerManager.hasResultItemInInput(false);
+        boolean outputReady = isAdminShopEnabled() || (!isOutputFull() && inventoryManager.hasOutputSpace(p1, p2));
+        return hasOffer && offerManager.canAfford() && stockReady && outputReady;
     }
 
     public int getAnalogSignal(Direction readSide) {
@@ -765,398 +768,29 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void processPurchase() {
-        processPurchase(null);
+        offerManager.processBulkPurchase(1, null, false);
     }
 
     public void processPurchase(@Nullable Player buyer) {
-        processBulkPurchase(1, buyer, false);
+        offerManager.processBulkPurchase(1, buyer, false);
     }
 
-    /**
-     * Executes the purchase logic for a specified maximum amount of trades.
-     * This logic relies on pre-calculating the exact number of possible trades using three constraints:
-     * 1) Affordability (based on matching items in the payment slots)
-     * 2) In-stock limits (based on the output stack count in the input handler)
-     * 3) Output space limits (based on space availability in the output handler)
-     * Output space is simulated iteratively to ensure accurate evaluation of max stacking.
-     */
     public int processBulkPurchase(int maxAmount) {
-        return processBulkPurchase(maxAmount, null, false);
+        return offerManager.processBulkPurchase(maxAmount, null, false);
     }
 
     public int processBulkPurchase(int maxAmount, @Nullable Player buyer) {
-        return processBulkPurchase(maxAmount, buyer, false);
+        return offerManager.processBulkPurchase(maxAmount, buyer, false);
     }
 
     public int processBulkPurchase(int maxAmount, @Nullable Player buyer, boolean shiftPurchase) {
-        if (maxAmount <= 0) return 0;
-        boolean adminShop = isAdminShopEnabled();
-
-        if (!adminShop && isChestIoExtensionEnabled()) {
-            updateNeighborCache();
-            inventoryManager.pullFromInputChest(inputHandler);
-        }
-
-        if (!hasOffer) return 0;
-        ItemStack p1 = getOfferPayment1();
-        ItemStack p2 = getOfferPayment2();
-        ItemStack result = getOfferResult();
-        if (result.isEmpty()) return 0;
-
-        // 1. Calculate how many we can afford
-        int affordable = Integer.MAX_VALUE;
-        if (!p1.isEmpty()) {
-            affordable = Math.min(affordable, countMatchingPayment(p1) / p1.getCount());
-        }
-        if (!p2.isEmpty()) {
-            // Special handling if p1 and p2 are same item type
-            if (!p1.isEmpty() && ItemStack.isSameItemSameComponents(p1, p2)) {
-                int totalReqPerUnit = p1.getCount() + p2.getCount();
-                affordable = countMatchingPayment(p1) / totalReqPerUnit;
-            } else {
-                affordable = Math.min(affordable, countMatchingPayment(p2) / p2.getCount());
-            }
-        }
-        if (p1.isEmpty() && p2.isEmpty()) affordable = maxAmount; // Free
-
-        // 2. Calculate how many we have in stock (Input)
-        int inStock = adminShop ? Integer.MAX_VALUE : countMatchingInput(result, true) / result.getCount();
-
-        // 3. Calculate output space
-        int actualAmount = Math.min(maxAmount, Math.min(affordable, inStock));
-        if (actualAmount <= 0) return 0;
-
-        // Fast path for single transactions; run iterative simulation only for bulk purchases.
-        int validAmount = adminShop
-                ? actualAmount
-                : (actualAmount == 1
-                ? (hasOutputSpace(p1, p2) ? 1 : 0)
-                : simulateOutputSpace(p1, p2, actualAmount));
-        actualAmount = validAmount;
-
-        if (actualAmount <= 0) {
-            if (!adminShop) {
-                // Output full
-                updateOutputFullness();
-            }
-            return 0;
-        }
-
-        executeTrades(p1, p2, result, actualAmount, adminShop);
-        visualPurchaseCounter += actualAmount;
-
-        if (isPurchaseXpFeedbackSound() && level != null) {
-            long now = level.getGameTime();
-            if (now - lastPurchaseXpSoundTick > 4L) {
-                // Pitch increases with purchase amount - sounds satisfying for bulk purchases
-                float pitch = Math.min(0.7F + actualAmount * 0.06F, 1.6F);
-                level.playSound(null, worldPosition, SoundEvents.EXPERIENCE_ORB_PICKUP,
-                        SoundSource.BLOCKS, 0.4F, pitch);
-                lastPurchaseXpSoundTick = now;
-            }
-        }
-
-        appendTransactionEntry(resolveBuyerIdentity(buyer), p1, p2, result, actualAmount, shiftPurchase);
-
-        sync();
-        triggerRedstonePulse();
-        needsOfferRefresh = true;
-        return actualAmount;
-    }
-
-    private void appendTransactionEntry(@Nullable BuyerIdentity buyer, ItemStack payment1, ItemStack payment2, ItemStack result, int tradeCount, boolean shiftPurchase) {
-        if (!(level instanceof ServerLevel serverLevel) || tradeCount <= 0) {
-            return;
-        }
-
-        List<ItemStack> paidStacks = new ArrayList<>(2);
-        ItemStack paidOne = TransactionLogEntry.scaleStack(payment1, tradeCount);
-        ItemStack paidTwo = TransactionLogEntry.scaleStack(payment2, tradeCount);
-        if (!paidOne.isEmpty()) {
-            paidStacks.add(paidOne);
-        }
-        if (!paidTwo.isEmpty()) {
-            paidStacks.add(paidTwo);
-        }
-
-        List<ItemStack> boughtStacks = new ArrayList<>(1);
-        ItemStack bought = TransactionLogEntry.scaleStack(result, tradeCount);
-        if (!bought.isEmpty()) {
-            boughtStacks.add(bought);
-        }
-
-        UUID buyerId = buyer != null ? buyer.uuid() : new UUID(0L, 0L);
-        String buyerName = buyer != null ? buyer.name() : "";
-
-        TransactionLogEntry entry = TransactionLogEntry.now(
-                buyerId,
-                buyerName,
-                paidStacks,
-                boughtStacks,
-                shiftPurchase ? TransactionLogEntry.PurchaseKind.SHIFT : TransactionLogEntry.PurchaseKind.SINGLE
-        );
-
-        ShopTransactionLogSavedData.get(serverLevel).appendEntry(
-                SHOP_LOG_TYPE,
-                serverLevel.dimension(),
-                worldPosition,
-                entry,
-                MAX_TRANSACTION_LOG_ENTRIES
-        );
-    }
-
-    private @Nullable BuyerIdentity resolveBuyerIdentity(@Nullable Player directBuyer) {
-        if (directBuyer != null) {
-            return new BuyerIdentity(directBuyer.getUUID(), directBuyer.getGameProfile().getName());
-        }
-        if (purchaseContextBuyerId != null) {
-            return new BuyerIdentity(purchaseContextBuyerId, purchaseContextBuyerName);
-        }
-        return null;
-    }
-
-    private record BuyerIdentity(UUID uuid, String name) {
-    }
-
-    /**
-     * Simulates how many transactions can fit in output inventory.
-     *
-     * @param p1 First payment item (can be empty)
-     * @param p2 Second payment item (can be empty)
-     * @param maxTransactions Maximum number of transactions to simulate
-     * @return Number of transactions that actually fit (may be less than maxTransactions)
-     */
-    private int simulateOutputSpace(ItemStack p1, ItemStack p2, int maxTransactions) {
-        ItemStackHandler testHandler = prepareOutputSimulationHandler();
-
-        int validAmount = 0;
-        for (int i = 0; i < maxTransactions; i++) {
-            boolean fits = true;
-
-            if (!p1.isEmpty()) {
-                if (!ItemHandlerHelper.insertItem(testHandler, p1.copy(), false).isEmpty()) {
-                    fits = false;
-                }
-            }
-
-            if (fits && !p2.isEmpty()) {
-                if (!ItemHandlerHelper.insertItem(testHandler, p2.copy(), false).isEmpty()) {
-                    fits = false;
-                }
-            }
-
-            if (fits) {
-                validAmount++;
-            } else {
-                break; // No more space
-            }
-        }
-
-        return validAmount;
-    }
-
-    /**
-     * Counts how many items of the target type exist in input inventory and neighbor chests.
-     *
-     * SAFETY: Creates defensive copies when reading from neighbor inventories to prevent
-     * ConcurrentModificationException if neighbor inventory is modified during iteration.
-     */
-    private int countMatchingInput(ItemStack target, boolean checkNeighbors) {
-        if (target.isEmpty()) return 0;
-
-        int found = 0;
-        // Check internal inventory
-        for (int i = 0; i < inputHandler.getSlots(); i++) {
-            ItemStack stack = inputHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, target)) {
-                found += stack.getCount();
-            }
-        }
-        // Check neighbor inventories (with defensive copies)
-        if (checkNeighbors && isChestIoExtensionEnabled() && level != null) {
-            for (Direction dir : DIRECTIONS) {
-                if (getMode(dir) == SideMode.INPUT) {
-                    IItemHandler neighbour = getValidNeighborHandler(dir);
-                    if (neighbour != null) {
-                        for (int i = 0; i < neighbour.getSlots(); i++) {
-                            ItemStack stack = neighbour.getStackInSlot(i);
-                            if (!stack.isEmpty()) {
-                                // Defensive copy to prevent concurrent modification issues
-                                ItemStack safeCopy = stack.copy();
-                                if (ItemStack.isSameItemSameComponents(safeCopy, target)) {
-                                    found += safeCopy.getCount();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return found;
-    }
-
-    private boolean isReadyToPurchase() {
-        ItemStack p1 = getOfferPayment1();
-        ItemStack p2 = getOfferPayment2();
-        boolean stockReady = isAdminShopEnabled() || hasResultItemInInput(false);
-        boolean outputReady = isAdminShopEnabled() || (!isOutputFull() && hasOutputSpace(p1, p2));
-        return hasOffer && canAfford() && stockReady && outputReady;
-    }
-
-    private void executeTrades(ItemStack p1, ItemStack p2, ItemStack result, int tradeCount, boolean adminShop) {
-        if (tradeCount <= 0) {
-            return;
-        }
-
-        ItemStack totalP1 = multiplyStackForTrades(p1, tradeCount);
-        ItemStack totalP2 = multiplyStackForTrades(p2, tradeCount);
-        ItemStack totalResult = multiplyStackForTrades(result, tradeCount);
-
-        if (!totalP1.isEmpty()) {
-            removePayment(totalP1);
-        }
-        if (!totalP2.isEmpty()) {
-            removePayment(totalP2);
-        }
-        if (!adminShop && !totalResult.isEmpty()) {
-            removeFromInput(totalResult);
-        }
-
-        if (!adminShop) {
-            addToOutputBatched(p1, tradeCount);
-            addToOutputBatched(p2, tradeCount);
-        }
-    }
-
-    private ItemStack multiplyStackForTrades(ItemStack stack, int tradeCount) {
-        if (stack == null || stack.isEmpty() || tradeCount <= 0) {
-            return ItemStack.EMPTY;
-        }
-        long total = (long) stack.getCount() * tradeCount;
-        if (total <= 0L) {
-            return ItemStack.EMPTY;
-        }
-        ItemStack multiplied = stack.copy();
-        multiplied.setCount((int) Math.min(Integer.MAX_VALUE, total));
-        return multiplied;
-    }
-
-    private void addToOutputBatched(ItemStack stack, int times) {
-        if (stack == null || stack.isEmpty() || times <= 0) {
-            return;
-        }
-
-        long total = (long) stack.getCount() * times;
-        if (total <= 0L) {
-            return;
-        }
-
-        int maxStack = stack.getMaxStackSize();
-        while (total > 0L) {
-            ItemStack chunk = stack.copy();
-            chunk.setCount((int) Math.min(total, maxStack));
-            addToOutput(chunk);
-            total -= chunk.getCount();
-        }
-    }
-
-    private void triggerRedstonePulse() {
-        if (level == null || level.isClientSide || !isEmitRedstone()) {
-            return;
-        }
-        BlockState state = level.getBlockState(worldPosition);
-        if (state.getBlock() instanceof BaseShopBlock block) {
-            level.setBlock(worldPosition, state.setValue(BaseShopBlock.POWERED, true), 3);
-            level.updateNeighborsAt(worldPosition, block);
-            level.scheduleTick(worldPosition, block, 20);
-        }
-    }
-
-    private void removeFromInput(ItemStack toRemove) {
-        if (toRemove == null || toRemove.isEmpty()) return;
-
-        int remaining = toRemove.getCount();
-        if (remaining <= 0) return;
-
-        // First, remove from internal inventory
-        for (int i = 0; i < inputHandler.getSlots() && remaining > 0; i++) {
-            ItemStack stack = inputHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
-                int toTake = Math.min(remaining, stack.getCount());
-                inputHandler.extractItem(i, toTake, false);
-                remaining -= toTake;
-            }
-        }
-
-        // Then, remove from connected neighbor inventories
-        if (isChestIoExtensionEnabled() && remaining > 0 && level != null && !level.isClientSide) {
-            for (Direction dir : DIRECTIONS) {
-                if (getMode(dir) != SideMode.INPUT) continue;
-
-                IItemHandler neighbour = getValidNeighborHandler(dir);
-                if (neighbour == null) continue;
-
-                for (int i = 0; i < neighbour.getSlots() && remaining > 0; i++) {
-                    ItemStack stack = neighbour.getStackInSlot(i);
-                    if (ItemStack.isSameItemSameComponents(stack, toRemove)) {
-                        int toTake = Math.min(remaining, stack.getCount());
-                        neighbour.extractItem(i, toTake, false);
-                        remaining -= toTake;
-                    }
-                }
-                if (remaining <= 0) break;
-            }
-        }
-    }
-
-    private void removePayment(ItemStack required) {
-        if (required == null || required.isEmpty()) return;
-
-        int remaining = required.getCount();
-        if (remaining <= 0) {
-            return;
-        }
-
-        // Iterate through both payment slots and remove the required amount
-        for (int i = 0; i < paymentHandler.getSlots() && remaining > 0; i++) {
-            ItemStack stack = paymentHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(stack, required)) {
-                int toTake = Math.min(remaining, stack.getCount());
-                paymentHandler.extractItem(i, toTake, false);
-                remaining -= toTake;
-            }
-        }
-    }
-
-    private boolean hasOutputSpace(ItemStack... stacks) {
-        ItemStackHandler testHandler = prepareOutputSimulationHandler();
-
-        for (ItemStack stack : stacks) {
-            if (stack == null || stack.isEmpty()) continue;
-            ItemStack remaining = ItemHandlerHelper.insertItem(testHandler, stack.copy(), false);
-            if (!remaining.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private ItemStackHandler prepareOutputSimulationHandler() {
-        for (int i = 0; i < outputHandler.getSlots(); i++) {
-            outputSimulationHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
-        }
-        return outputSimulationHandler;
-    }
-
-    private void addToOutput(ItemStack toAdd) {
-        ItemHandlerHelper.insertItem(outputHandler, toAdd, false);
+        return offerManager.processBulkPurchase(maxAmount, buyer, shiftPurchase);
     }
 
     public boolean isOutputAlmostFull() {
         return settingsManager.isOutputAlmostFull();
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isOutputFull() {
         return settingsManager.isOutputFull();
     }
@@ -1165,61 +799,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         if (isAdminShopEnabled()) {
             return false;
         }
-        if (!hasResultItemInInput(false)) {
+        if (!offerManager.hasResultItemInInput(false)) {
             return false;
         }
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
-        return !hasOutputSpace(p1, p2);
+        return !inventoryManager.hasOutputSpace(p1, p2);
     }
 
-    private void updateOutputFullness() {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        int total = 0;
-        int filled = 0;
-
-        for (int i = 0; i < outputHandler.getSlots(); i++) {
-            ItemStack stack = outputHandler.getStackInSlot(i);
-            int limit = outputHandler.getSlotLimit(i);
-            if (!stack.isEmpty()) {
-                limit = Math.min(limit, stack.getMaxStackSize());
-            }
-            total += limit;
-            filled += stack.getCount();
-        }
-
-        if (isChestIoExtensionEnabled()) {
-            for (Direction dir : DIRECTIONS) {
-                if (getMode(dir) != SideMode.OUTPUT) continue;
-                IItemHandler neighbour = getValidNeighborHandler(dir);
-                if (neighbour == null) continue;
-                for (int i = 0; i < neighbour.getSlots(); i++) {
-                    ItemStack stack = neighbour.getStackInSlot(i);
-                    int limit = neighbour.getSlotLimit(i);
-                    if (!stack.isEmpty()) {
-                        limit = Math.min(limit, stack.getMaxStackSize());
-                    }
-                    total += limit;
-                    filled += stack.getCount();
-                }
-            }
-        }
-
-        boolean newOutputFull = total > 0 && filled >= total;
-
-        boolean newOutputAlmostFull = false;
-        if (Config.ENABLE_OUTPUT_WARNING.get()) {
-            int threshold = Config.OUTPUT_WARNING_PERCENT.get();
-            newOutputAlmostFull = total > 0 && (filled * 100 >= total * threshold);
-        }
-
-        if (newOutputFull != settingsManager.isOutputFull() || newOutputAlmostFull != settingsManager.isOutputAlmostFull()) {
-            settingsManager.setOutputFullness(newOutputFull, newOutputAlmostFull);
-            sync();
-        }
+    public void updateOutputFullness() {
+        inventoryManager.updateOutputFullness();
     }
 
     public boolean isOfferAvailable() {
