@@ -5,7 +5,7 @@ import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.visual.npc.IVisualShopNPC;
 import de.bigbull.marketblocks.feature.visual.npc.ShopNpcAnimationState;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
-import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacement;
 import net.minecraft.client.Minecraft;
@@ -44,7 +44,7 @@ public final class VisualShopNpcRenderer {
             return;
         }
 
-        ShopVisualSettings settings = host.getVisualSettings();
+        VillagerSettings settings = host.getVillagerSettings();
         ShopNpcAnimationState state = host.getVisualAnimationState();
         long now = level.getGameTime();
 
@@ -120,7 +120,7 @@ public final class VisualShopNpcRenderer {
         );
     }
 
-    private static void processAnimationEvents(IVisualShopNPC host, ShopVisualSettings settings, ShopNpcAnimationState state, Level level, long now) {
+    private static void processAnimationEvents(IVisualShopNPC host, VillagerSettings settings, ShopNpcAnimationState state, Level level, long now) {
         int currentNonce = host.getVisualAnimationNonce();
         if (!state.isAnimationNonceInitialized()) {
             // First client sync: adopt nonce without replaying stale animation events.
@@ -159,7 +159,7 @@ public final class VisualShopNpcRenderer {
         }
     }
 
-    private static void processPurchaseEffects(IVisualShopNPC host, ShopVisualSettings settings, ShopNpcAnimationState state, Level level, long now) {
+    private static void processPurchaseEffects(IVisualShopNPC host, VillagerSettings settings, ShopNpcAnimationState state, Level level, long now) {
         int currentCounter = host.getVisualPurchaseCounter();
         if (!state.isPurchaseCounterInitialized()) {
             state.primePurchaseCounter(currentCounter);
@@ -205,7 +205,7 @@ public final class VisualShopNpcRenderer {
         state.setLastPurchaseCounter(currentCounter);
     }
 
-    private static void processPaymentFeedbackEffects(IVisualShopNPC host, ShopVisualSettings settings, ShopNpcAnimationState state, Level level, long now) {
+    private static void processPaymentFeedbackEffects(IVisualShopNPC host, VillagerSettings settings, ShopNpcAnimationState state, Level level, long now) {
         int currentSuccessCounter = host.getVisualPaymentSuccessCounter();
         int currentFailCounter = host.getVisualPaymentFailCounter();
 

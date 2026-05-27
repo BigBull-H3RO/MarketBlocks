@@ -34,7 +34,12 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
 
     private boolean lastIsOwner;
 
-    protected abstract boolean isOwner();
+    protected boolean isOwner() {
+        if (menu instanceof ShopMenu shopMenu) {
+            return shopMenu.isOwner();
+        }
+        return false;
+    }
 
     @Override
     protected void init() {

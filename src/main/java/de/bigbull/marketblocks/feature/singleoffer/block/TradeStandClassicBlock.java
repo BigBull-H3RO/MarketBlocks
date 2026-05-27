@@ -1,7 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopBlockConfig;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class TradeStandClassicBlock extends BaseShopBlock {

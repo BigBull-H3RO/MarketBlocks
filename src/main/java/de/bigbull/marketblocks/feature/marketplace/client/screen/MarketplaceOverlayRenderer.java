@@ -31,9 +31,9 @@ public final class MarketplaceOverlayRenderer {
     private void renderEmptyState(GuiGraphics guiGraphics, Context context) {
         if (!context.hasPages()) {
             Component noPagesText = Component.translatable("gui.marketblocks.marketplace.no_pages");
-            int textX = context.previewX() + 10;
-            int textY = context.previewY() + 34;
-            guiGraphics.drawString(context.font(), noPagesText, textX, textY, 0x555555, false);
+            int textX = context.previewX() - 118;
+            int textY = context.previewY() + 55;
+            guiGraphics.drawWordWrap(context.font(), noPagesText, textX, textY, 200, 0x555555);
         } else if (context.visibleOffers().isEmpty()) {
             Component noOffersText = Component.translatable("gui.marketblocks.marketplace.no_offers");
             int textX = context.listStartX() + (context.listWidth() - context.font().width(noOffersText)) / 2;

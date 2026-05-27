@@ -2,8 +2,6 @@ package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopBlockConfig;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -34,13 +32,13 @@ public class TradeStandBlock extends BaseShopBlock {
     public static final MapCodec<TradeStandBlock> CODEC = simpleCodec(TradeStandBlock::new);
     public static final BooleanProperty HAS_SHOWCASE = BooleanProperty.create("has_showcase");
 
-    // Feste Shape ohne Vitrine (Y geht nur bis 11)
+    // Static shape without showcase (Y goes only up to 11)
     private static final VoxelShape SHAPE_NO_SHOWCASE = Block.box(0, 0, 0, 16, 11, 16);
 
-    // Zusammengesetzte Shape: Basis-Block + schmälere Vitrine oben drauf
+    // Combined shape: Base block + narrower showcase on top
     private static final VoxelShape SHAPE_WITH_SHOWCASE = Shapes.or(
-            SHAPE_NO_SHOWCASE,                                          // Der untere Basis-Teil (Y=0 bis 11)
-            Block.box(1, 11, 1, 15, 16, 15)     // Die Vitrine (1 Pixel nach innen versetzt, Y=11 bis 16)
+            SHAPE_NO_SHOWCASE,                                          // The lower base part (Y=0 to 11)
+            Block.box(1, 11, 1, 15, 16, 15)     // The showcase (inset by 1 pixel, Y=11 to 16)
     );
 
     public TradeStandBlock(BlockBehaviour.Properties properties) {

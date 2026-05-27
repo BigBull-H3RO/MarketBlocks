@@ -4,8 +4,6 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopBlockConfig;
-import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -104,13 +102,22 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
+        // 'direction' is "backwards" per Minecraft convention — the actual side of
+        // our block that faces the querying neighbour is direction.getOpposite().
+        if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop && shop.isEmitRedstone()) {
             Direction side = direction.getOpposite();
+            // Comparators always receive the analog fill level for their side,
+            // never the short purchase pulse — check this BEFORE the POWERED state.
             if (hasComparatorReadPath(level, pos, side)) {
                 return shop.getAnalogSignal(side);
             }
         }
-        return state.getValue(POWERED) ? 15 : 0;
+
+        // Purchase pulse for plain redstone dust / repeaters (not comparators)
+        if (state.getValue(POWERED)) {
+            return 15;
+        }
+        return 0;
     }
 
     @Override
@@ -120,29 +127,14 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public boolean hasAnalogOutputSignal(BlockState state) {
+        // Return false so that Comparators fall through to getSignal(),
+        // which carries direction information for per-side I/O resolution.
         return false;
     }
 
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
-            int maxSignal = 0;
-            boolean foundComparator = false;
-
-            for (Direction dir : Direction.Plane.HORIZONTAL) {
-                if (hasComparatorReadPath(level, pos, dir)) {
-                    maxSignal = Math.max(maxSignal, shop.getAnalogSignal(dir));
-                    foundComparator = true;
-                }
-            }
-
-            // Fallback: Return signal for the back side if no dedicated comparator is detected
-            if (!foundComparator) {
-                Direction back = state.getValue(FACING).getOpposite();
-                return shop.getAnalogSignal(back);
-            }
-            return maxSignal;
-        }
+        // Not used — comparators are served via getSignal() instead.
         return 0;
     }
 

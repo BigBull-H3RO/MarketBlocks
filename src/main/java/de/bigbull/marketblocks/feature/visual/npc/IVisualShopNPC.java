@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.feature.visual.npc;
 
+import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
@@ -13,7 +14,7 @@ public interface IVisualShopNPC {
 
     Direction getVisualFacing();
 
-    ShopVisualSettings getVisualSettings();
+    VillagerSettings getVillagerSettings();
 
     int getVisualAnimationNonce();
 
@@ -29,4 +30,3 @@ public interface IVisualShopNPC {
 
     ShopNpcAnimationState getVisualAnimationState();
 }
-

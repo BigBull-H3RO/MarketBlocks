@@ -2,6 +2,8 @@ package de.bigbull.marketblocks.core.init;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
+import de.bigbull.marketblocks.feature.marketplace.block.MarketplaceBlock;
+import de.bigbull.marketblocks.feature.marketplace.entity.MarketplaceBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.block.MarketCrateBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandTopBlock;
@@ -45,34 +47,34 @@ public final class RegistriesInit {
         SOUND_EVENTS.register(bus);
     }
 
+    public static BlockBehaviour.Properties tradeStandProperties() {
+        return BlockBehaviour.Properties.of()
+                .noOcclusion()
+                .mapColor(MapColor.PODZOL)
+                .instrument(NoteBlockInstrument.BASS)
+                .strength(2.5F, 3600000.0F)
+                .sound(SoundType.WOOD);
+    }
+
     // Block Registrierung
     public static final DeferredBlock<Block> SHOP_BLOCK_TEST = registerBlock("shop_block_test",
-            () -> new TradeStandBlock(BlockBehaviour.Properties.of()
-                    .noOcclusion()
-                    .mapColor(MapColor.PODZOL)
-                    .instrument(NoteBlockInstrument.BASS)
-                    .strength(2.5F, 3600000.0F)
-                    .sound(SoundType.WOOD)));
+            () -> new TradeStandBlock(tradeStandProperties()));
 
     // TradeStandBlock Neu (Tall Showcase Design)
     public static final DeferredBlock<Block> TRADE_STAND_BLOCK = registerBlock("trade_stand",
-            () -> new TradeStandBlock(BlockBehaviour.Properties.of()
-                    .noOcclusion()
-                    .mapColor(MapColor.PODZOL)
-                    .instrument(NoteBlockInstrument.BASS)
-                    .strength(2.5F, 3600000.0F)
-                    .sound(SoundType.WOOD)));
+            () -> new TradeStandBlock(tradeStandProperties()));
 
     public static final DeferredBlock<Block> TRADE_STAND_BLOCK_TOP = registerInternalBlock("trade_stand_top",
-            () -> new TradeStandTopBlock(BlockBehaviour.Properties.of()
-                    .noOcclusion()
-                    .mapColor(MapColor.PODZOL)
-                    .instrument(NoteBlockInstrument.BASS)
-                    .strength(2.5F, 3600000.0F)
-                    .sound(SoundType.WOOD)));
+            () -> new TradeStandTopBlock(tradeStandProperties()));
 
     public static final DeferredBlock<Block> MARKETCRATE_BLOCK = registerBlock("marketcrate",
             () -> new MarketCrateBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
+                    .noOcclusion()
+                    .strength(2.0f, 3.0f)
+                    .sound(SoundType.WOOD)));
+
+    public static final DeferredBlock<Block> MARKETPLACE_BLOCK = registerBlock("marketplace",
+            () -> new MarketplaceBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
                     .noOcclusion()
                     .strength(2.0f, 3.0f)
                     .sound(SoundType.WOOD)));
@@ -81,6 +83,10 @@ public final class RegistriesInit {
     public static final Supplier<BlockEntityType<SingleOfferShopBlockEntity>> SINGLE_OFFER_SHOP_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("single_offer_shop", () -> BlockEntityType.Builder.of(
                     SingleOfferShopBlockEntity::new, SHOP_BLOCK_TEST.get(), TRADE_STAND_BLOCK.get(), MARKETCRATE_BLOCK.get()).build(null));
+
+    public static final Supplier<BlockEntityType<MarketplaceBlockEntity>> MARKETPLACE_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("marketplace", () -> BlockEntityType.Builder.of(
+                    MarketplaceBlockEntity::new, MARKETPLACE_BLOCK.get()).build(null));
 
     // Menu Registrierungen
     public static final Supplier<MenuType<SingleOfferShopMenu>> SINGLE_OFFER_SHOP_MENU =

@@ -1,7 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
-import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Checkbox;
@@ -17,7 +16,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Encapsulates owner list data, rendering and scrolling for the access settings section.
+ * Encapsulates owner list data, rendering and scrolling for the access settings
+ * section.
  */
 public class SingleOfferOwnerListPanel {
     private static final int OWNER_VISIBLE_ROWS = 2;
@@ -42,14 +42,14 @@ public class SingleOfferOwnerListPanel {
 
     private SingleOfferShopScreen host;
     private Map<UUID, String> storedNames = Map.of();
-    private Runnable onDirty = () -> {};
+    private Runnable onDirty = () -> {
+    };
 
     public void prepareAndRender(SingleOfferShopScreen host,
-                                 SingleOfferShopMenu menu,
-                                 SingleOfferShopBlockEntity be,
-                                 int listBaseY,
-                                 boolean isPrimaryOwner,
-                                 Runnable onDirty) {
+            AccessSettings.Draft accessDraft,
+            int listBaseY,
+            boolean isPrimaryOwner,
+            Runnable onDirty) {
         this.host = host;
         this.ownerListBaseY = listBaseY;
         this.onDirty = onDirty;
@@ -62,20 +62,20 @@ public class SingleOfferOwnerListPanel {
         }
 
         if (ownerOrder.isEmpty() && ownerSelected.isEmpty()) {
-            populateOwnerData(menu, be);
+            populateOwnerData(accessDraft);
         }
 
-        this.storedNames = menu.getAdditionalOwners();
+        this.storedNames = accessDraft.additionalOwners();
         this.ownerStartIndex = net.minecraft.util.Mth.clamp(ownerStartIndex, 0, getOwnerOffscreenRows());
         renderOwnerWindow();
         this.noPlayers = ownerOrder.isEmpty();
     }
 
     public void renderBackground(GuiGraphics graphics,
-                                 int leftPos,
-                                 ResourceLocation panelTexture,
-                                 ResourceLocation scrollerSprite,
-                                 ResourceLocation scrollerDisabledSprite) {
+            int leftPos,
+            ResourceLocation panelTexture,
+            ResourceLocation scrollerSprite,
+            ResourceLocation scrollerDisabledSprite) {
         graphics.blit(
                 panelTexture,
                 leftPos + OWNER_PANEL_X_OFFSET,
@@ -85,8 +85,7 @@ public class SingleOfferOwnerListPanel {
                 OWNER_PANEL_WIDTH,
                 OWNER_PANEL_HEIGHT,
                 OWNER_PANEL_WIDTH,
-                OWNER_PANEL_HEIGHT
-        );
+                OWNER_PANEL_HEIGHT);
 
         if (isOwnerScrollActive()) {
             int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
@@ -187,17 +186,17 @@ public class SingleOfferOwnerListPanel {
         ownerScrollOffs = 0.0F;
     }
 
-    private void populateOwnerData(SingleOfferShopMenu menu, SingleOfferShopBlockEntity be) {
+    private void populateOwnerData(AccessSettings.Draft accessDraft) {
         ownerOrder.clear();
         ownerSelected.clear();
 
-        Map<UUID, String> current = new HashMap<>(menu.getAdditionalOwners());
+        Map<UUID, String> current = new HashMap<>(accessDraft.additionalOwners());
 
         if (Minecraft.getInstance().getConnection() != null) {
             Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();
             for (PlayerInfo info : players) {
                 UUID id = info.getProfile().getId();
-                if (id.equals(be.getOwnerId())) {
+                if (id.equals(accessDraft.ownerId())) {
                     continue;
                 }
                 ownerOrder.add(id);
@@ -262,6 +261,3 @@ public class SingleOfferOwnerListPanel {
         }
     }
 }
-
-
-

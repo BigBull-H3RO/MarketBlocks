@@ -32,7 +32,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.trade_unavailable", "Handel nicht verfügbar");
         add("gui.marketblocks.available", "Verfügbar");
         add("gui.marketblocks.no_offers", "Keine Angebote verfügbar");
-        add("gui.marketblocks.no_players_available", "Keine Spieler verf\u00fcgbar");
+        add("gui.marketblocks.no_players_available", "Keine Spieler verfügbar");
         add("gui.marketblocks.out_of_stock", "Nicht auf Lager");
         add("gui.marketblocks.output_full", "Ausgabe voll");
         add("gui.marketblocks.owner", "Besitzer: %s");
@@ -55,15 +55,15 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");
         add("gui.marketblocks.settings.category.general", "Allgemein");
         add("gui.marketblocks.settings.category.io", "I/O");
-        add("gui.marketblocks.settings.category.villager", "Dorfbewohner");
+        add("gui.marketblocks.settings.category.villager", "NPC");
         add("gui.marketblocks.settings.category.visual", "Visual");
         add("gui.marketblocks.settings.category.access", "Zugriff");
         add("gui.marketblocks.settings.visual.placeholder", "Weitere Visual-Einstellungen folgen.");
         add("gui.marketblocks.log_title", "Transaktions-Log");
         add("gui.marketblocks.log.empty", "Keine Transaktionen vorhanden");
         add("gui.marketblocks.log.clear", "Log leeren");
-        add("gui.marketblocks.log.count", "Eintr\u00e4ge: %s");
-        add("gui.marketblocks.log.buyer", "K\u00e4ufer: %s");
+        add("gui.marketblocks.log.count", "Einträge: %s");
+        add("gui.marketblocks.log.buyer", "Käufer: %s");
         add("gui.marketblocks.log.none", "Nichts");
         add("gui.marketblocks.log.time.just_now", "Gerade eben");
         add("gui.marketblocks.log.time.seconds", "Vor %s Sek.");
@@ -86,6 +86,29 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.purchase_particles", "Kauf-Partikel");
         add("gui.marketblocks.visuals.purchase_sounds", "Kauf-Sounds");
         add("gui.marketblocks.visuals.payment_sounds", "Bezahl-Sounds");
+        add("gui.marketblocks.visuals.offer_item_visible", "Angebot sichtbar");
+        add("gui.marketblocks.visuals.offer_item_visible.tooltip", "Versteckt oder zeigt das schwebende/dargestellte Angebot.");
+        add("gui.marketblocks.visuals.offer_item_disabled_global", "Vom Server-Admin deaktiviert.");
+        add("gui.marketblocks.visuals.offer_item_fullbright", "Leuchten");
+        add("gui.marketblocks.visuals.offer_item_fullbright.tooltip", "Lässt das Item im Dunkeln leuchten.");
+        add("gui.marketblocks.visuals.scale", "Größe");
+        add("gui.marketblocks.visuals.speed", "Rotationsgeschw.");
+        add("gui.marketblocks.visuals.height", "Höhe");
+        add("gui.marketblocks.visuals.bobbing", "Wippen (Bobbing)");
+        add("gui.marketblocks.visuals.count", "Anzahl");
+        add("gui.marketblocks.visuals.count.dynamic_fill.tooltip", "Deaktiviert, solange Dynamischer Füllstand aktiv ist.");
+        add("gui.marketblocks.visuals.dynamic_fill_level", "Dyn. Füllstand");
+        add("gui.marketblocks.visuals.rotation", "Rotation");
+        add("gui.marketblocks.visuals.spacing", "Item-Abstand");
+        add("gui.marketblocks.visuals.spacing_xz", "Abstand X/Z");
+        add("gui.marketblocks.visuals.spacing_y", "Abstand Y");
+        add("gui.marketblocks.visuals.layout_mode", "Layout-Modus");
+        add("gui.marketblocks.visuals.layout_mode.gestapelt", "Gestapelt");
+        add("gui.marketblocks.visuals.layout_mode.lose", "Lose");
+        add("gui.marketblocks.visuals.chaos_rotation", "Chaos-Rotation");
+        add("gui.marketblocks.visuals.rotation_x", "Rotation X");
+        add("gui.marketblocks.visuals.rotation_y", "Rotation Y");
+        add("gui.marketblocks.visuals.rotation_z", "Rotation Z");
         add("gui.marketblocks.visuals.error.no_surface", "Kein Standblock hinter dem Shop!");
         add("gui.marketblocks.visuals.error.space_blocked", "Platz blockiert!");
         add("gui.marketblocks.visuals.profession.none", "Arbeitslos");
@@ -154,7 +177,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.move_offer", "Angebot verschieben");
         add("gui.marketblocks.marketplace.move_offer_up", "Angebot nach oben verschieben");
         add("gui.marketblocks.marketplace.move_offer_down", "Angebot nach unten verschieben");
-        add("gui.marketblocks.marketplace.no_pages", "Keine Seiten vorhanden");
+        add("gui.marketblocks.marketplace.no_pages", "Keine Seiten\nvorhanden");
         add("gui.marketblocks.marketplace.collapsed", "Eingeklappt");
         add("gui.marketblocks.marketplace.no_offers", "Keine Angebote");
         add("gui.marketblocks.marketplace.select_offer_hint", "Wähle links ein Angebot aus");
@@ -200,7 +223,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.no_connection", "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.marketplace.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
         add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte verwenden Sie nur Zahlen (Punkt oder Komma erlaubt).");
-        add("message.marketblocks.visual_npc.space_blocked", "Der dekorative Villager kann nicht spawnen: Es m\u00fcssen zwei freie Bl\u00f6cke dar\u00fcber sein.");
+        add("message.marketblocks.visual_npc.space_blocked", "Der dekorative Villager kann nicht spawnen: Es müssen zwei freie Blöcke darüber sein.");
         add("subtitles.marketblocks.visual_npc_fall", "Villager landet");
 
         add("item.marketblocks.trade_stand.with_showcase", "Handelsstand (Mit Vitrine)");
@@ -208,6 +231,7 @@ public class ModDeLangProvider extends LanguageProvider {
         // Blocks
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Handelsstand");
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Marktkiste");
+        addBlock(RegistriesInit.MARKETPLACE_BLOCK, "Marktplatz");
         addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

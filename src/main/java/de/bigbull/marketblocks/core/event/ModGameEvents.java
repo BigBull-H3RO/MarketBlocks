@@ -66,7 +66,7 @@ public class ModGameEvents {
                 RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(),
                 (be, side) -> {
                     if (side == null) return null;
-                    SideMode mode = be.getModeForSide(side);
+                    SideMode mode = be.getMode(side);
                     if (mode == SideMode.INPUT)  return be.getInputOnly();
                     if (mode == SideMode.OUTPUT) return be.getOutputOnly();
                     return null;
