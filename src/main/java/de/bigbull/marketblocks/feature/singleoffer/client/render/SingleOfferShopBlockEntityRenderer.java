@@ -9,7 +9,7 @@ import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
 import de.bigbull.marketblocks.feature.visual.render.VisualShopNpcRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -76,31 +76,31 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         // --- 1. Offer-Item schwebend ueber dem Block ---
         ItemStack result = blockEntity.getOfferResult();
-        ShopVisualSettings visualSettings = blockEntity.getVisualSettings();
-        boolean renderOfferItem = blockEntity.isOfferItemRenderingGloballyEnabled() && visualSettings.offerItemVisible();
+        OfferItemSettings offerSettings = blockEntity.getOfferItemSettings();
+        boolean renderOfferItem = blockEntity.isOfferItemRenderingGloballyEnabled() && offerSettings.visible();
 
-        int actualPackedLightFront = visualSettings.offerItemFullbright() ? LightTexture.FULL_BRIGHT : packedLight;
+        int actualPackedLightFront = offerSettings.fullbright() ? LightTexture.FULL_BRIGHT : packedLight;
 
         if (!result.isEmpty()) {
             ShopRenderConfig.SlotRenderConfig offerItem = config.getOfferItem();
             BakedModel offerModel = itemRenderer.getModel(result, blockEntity.getLevel(), null, 0);
-            float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result) * visualSettings.offerItemScale();
+            float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result) * offerSettings.scale();
 
             if (renderOfferItem) {
 
                 if (config.isOfferItemFloating()) {
                     poseStack.pushPose();
 
-                    float heightOffset = visualSettings.offerItemHeightOffset();
+                    float heightOffset = offerSettings.heightOffset();
                     float bobbingOffset = 0.0f;
-                    if (visualSettings.offerItemBobbing()) {
+                    if (offerSettings.bobbing()) {
                         float bobTime = (blockEntity.getLevel().getGameTime() + partialTick) * 0.05f;
                         bobbingOffset = net.minecraft.util.Mth.sin(bobTime) * 0.1f;
                     }
 
                 poseStack.translate(offerItem.x(), offerItem.y() + heightOffset + bobbingOffset, offerItem.z());
 
-                float speed = visualSettings.offerItemSpeed();
+                float speed = offerSettings.speed();
                 if (speed > 0) {
                     float time = (blockEntity.getLevel().getGameTime() + partialTick) * speed;
                     poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
@@ -112,20 +112,20 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                         poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
                 poseStack.popPose();
             } else {
-                int displayCount = visualSettings.dynamicFillLevel()
-                        ? calculateDynamicOfferItemDisplayCount(blockEntity, result, visualSettings)
-                        : (visualSettings.offerItemCount() > 0 ? visualSettings.offerItemCount() : config.getOfferItemDisplayCount());
+                int displayCount = offerSettings.dynamicFillLevel()
+                        ? calculateDynamicOfferItemDisplayCount(blockEntity, result, offerSettings)
+                        : (offerSettings.count() > 0 ? offerSettings.count() : config.getOfferItemDisplayCount());
 
                 long seed = blockEntity.getBlockPos().asLong();
                 java.util.Random rand = new java.util.Random(seed);
 
-                 float heightOffset = visualSettings.offerItemHeightOffset();
-                 float spacingXZ = visualSettings.offerItemSpacingXZ();
-                 float spacingY = visualSettings.offerItemSpacingY();
-                 float chaosRotation = visualSettings.offerItemChaosRotation();
-                 float baseRotation = visualSettings.offerItemRotation();
+                 float heightOffset = offerSettings.heightOffset();
+                 float spacingXZ = offerSettings.spacingXZ();
+                 float spacingY = offerSettings.spacingY();
+                 float chaosRotation = offerSettings.chaosRotation();
+                 float baseRotation = offerSettings.rotation();
 
-                CrateLayoutMode layoutMode = visualSettings.offerItemLayoutMode();
+                CrateLayoutMode layoutMode = offerSettings.layoutMode();
                 if (layoutMode == null) layoutMode = CrateLayoutMode.LOSE;
 
                 ShopVisualType visualType = ShopVisualType.from(blockEntity.getBlockState().getBlock());
@@ -333,7 +333,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         return finalOfferScale;
     }
 
-    private static int calculateDynamicOfferItemDisplayCount(SingleOfferShopBlockEntity blockEntity, ItemStack result, ShopVisualSettings visualSettings) {
+    private static int calculateDynamicOfferItemDisplayCount(SingleOfferShopBlockEntity blockEntity, ItemStack result, OfferItemSettings offerSettings) {
         if (result.isEmpty()) {
             return 0;
         }
@@ -358,7 +358,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         }
 
         float fillRatio = Math.min(1.0f, (float) storedItems / (float) inventoryCapacity);
-        return Math.max(1, (int) Math.ceil(fillRatio * visualSettings.offerItemCount()));
+        return Math.max(1, (int) Math.ceil(fillRatio * offerSettings.count()));
     }
 
     private void renderPaymentItem(ItemRenderer itemRenderer, Font font, PoseStack poseStack,

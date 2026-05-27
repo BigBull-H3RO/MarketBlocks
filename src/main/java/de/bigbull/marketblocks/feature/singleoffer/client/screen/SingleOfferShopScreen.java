@@ -12,7 +12,11 @@ import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
-import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import de.bigbull.marketblocks.client.gui.GuiConstants;
 import de.bigbull.marketblocks.client.gui.IconButton;
@@ -103,7 +107,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private Direction leftDir, rightDir, bottomDir, backDir;
     private boolean saved;
     private String originalName;
-    private ShopVisualSettings.Draft settingsDraft;
+    private GeneralSettings.Draft generalDraft;
+    private VillagerSettings.Draft villagerDraft;
+    private OfferItemSettings.Draft offerItemDraft;
+    private IoSettings.Draft ioDraft;
+    private AccessSettings.Draft accessDraft;
 
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
@@ -253,14 +261,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void buildSettingsUI() {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        Direction facing = be.getBlockState().getValue(BaseShopBlock.FACING);
-        leftDir = facing.getCounterClockWise();
-        rightDir = facing.getClockWise();
-        bottomDir = Direction.DOWN;
-        backDir = facing.getOpposite();
 
         if (originalName == null) originalName = be.getShopName();
-        ShopVisualSettings.Draft draft = ensureSettingsDraft(be);
+        ensureSettingsDrafts(be);
         visualPlacementResult = resolveVisualPlacementResult(be);
 
         boolean isOwner = menu.isOwner();
@@ -276,7 +279,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         switch (activeSettingsCategory) {
             case GENERAL -> {
                 if (isOwner) {
-                    nameField = SingleOfferSettingsSections.buildGeneralSection(this, draft, this::markDirty);
+                    nameField = SingleOfferSettingsSections.buildGeneralSection(this, generalDraft, this::markDirty);
                 }
                 if (canToggleAdminShop) {
                     buildAdminShopToggleButton(be);
@@ -284,12 +287,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
             case IO -> {
                 if (isOwner) {
-                    SingleOfferSettingsSections.buildIoSection(this, menu, leftDir, rightDir, bottomDir, backDir, this::markDirty);
+                    SingleOfferSettingsSections.buildIoSection(this, ioDraft, this::markDirty);
                 }
             }
             case VILLAGER -> {
                 if (isOwner) {
-                    SingleOfferSettingsSections.VisualSectionWidgets widgets = SingleOfferSettingsSections.buildVisualSection(this, draft, visualPlacementResult, this::markDirty);
+                    SingleOfferSettingsSections.VillagerSectionWidgets widgets = SingleOfferSettingsSections.buildVillagerSection(this, villagerDraft, visualPlacementResult, this::markDirty);
                     npcNameField = widgets.npcNameField();
                 }
             }
@@ -298,7 +301,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 if (isOwner) {
                     ShopVisualType visualType = ShopVisualType.from(be.getBlockState().getBlock());
                     if (visualType != ShopVisualType.UNKNOWN) {
-                        SingleOfferSettingsSections.buildOfferItemSection(this, visualType, draft, be.isOfferItemRenderingGloballyEnabled(), this::markDirty, this::rebuildUI);
+                        SingleOfferSettingsSections.buildOfferItemSection(this, visualType, offerItemDraft, be.isOfferItemRenderingGloballyEnabled(), this::markDirty, this::rebuildUI);
                     }
                 }
             }
@@ -312,72 +315,64 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void buildSaveButton(SingleOfferShopBlockEntity be) {
         addRenderableWidget(Button.builder(Component.translatable("gui.marketblocks.save"), b -> {
-            ShopVisualSettings.Draft draft = ensureSettingsDraft(be);
-            if (nameField != null) draft.setShopName(nameField.getValue());
-            if (npcNameField != null) draft.setNpcName(npcNameField.getValue());
+            ensureSettingsDrafts(be);
+            if (nameField != null) generalDraft.setShopName(nameField.getValue());
+            if (npcNameField != null) villagerDraft.setNpcName(npcNameField.getValue());
 
-            String name = draft.shopName();
-            boolean emit = draft.emitRedstoneEnabled();
-            ShopVisualSettings visuals = draft.toVisualSettings();
-
-            be.setShopName(name, false);
-            be.setEmitRedstone(emit, false);
-            be.setPurchaseXpFeedbackSound(draft.purchaseXpFeedbackSound(), false);
-            be.setVisualSettings(visuals, false);
-            be.setMode(leftDir, menu.getMode(leftDir), false);
-            be.setMode(rightDir, menu.getMode(rightDir), false);
-            be.setMode(bottomDir, menu.getMode(bottomDir), false);
-            be.setMode(backDir, menu.getMode(backDir), false);
+            GeneralSettings general = generalDraft.toSettings();
+            VillagerSettings villager = villagerDraft.toSettings();
+            OfferItemSettings offerItem = offerItemDraft.toSettings();
+            IoSettings io = ioDraft.toSettings();
 
             List<UUID> selectedOwners = Collections.emptyList();
             if (menu.isPrimaryOwner()) {
                 selectedOwners = new ArrayList<>();
-                be.getAdditionalOwners().clear();
-                Map<UUID, String> stored = menu.getAdditionalOwners();
-
+                Map<UUID, String> stored = accessDraft.additionalOwners();
+                Map<UUID, String> newAdditionalOwners = new java.util.HashMap<>();
+                
                 for (UUID id : ownerListPanel.collectSelectedOwners()) {
                     selectedOwners.add(id);
                     String n = ownerListPanel.resolveName(id, stored);
-                    be.addOwnerClient(id, n);
+                    newAdditionalOwners.put(id, n);
                 }
+                accessDraft.setAdditionalOwners(newAdditionalOwners);
             }
+            
+            AccessSettings access = accessDraft.toSettings();
+
+            be.setGeneralSettings(general, false);
+            be.setVillagerSettings(villager, false);
+            be.setOfferItemSettings(offerItem, false);
+            be.setIoSettings(io, false);
+            be.setAccessSettings(access, false);
 
             NetworkHandler.sendToServer(new UpdateSettingsPacket(
-                    be.getBlockPos(), menu.getMode(leftDir), menu.getMode(rightDir), menu.getMode(bottomDir), menu.getMode(backDir),
-                    name, emit, visuals,
-                    draft.purchaseXpFeedbackSound()
+                    be.getBlockPos(), io, general, villager, offerItem, access
             ));
-            if (menu.isPrimaryOwner()) {
-                NetworkHandler.sendToServer(new UpdateOwnersPacket(be.getBlockPos(), selectedOwners));
-            }
 
-            originalName = name;
-            draft.setShopName(name);
-            draft.setEmitRedstoneEnabled(emit);
-            draft.applyVisualSettings(visuals);
+            originalName = general.shopName();
             saved = true;
         }).bounds(leftPos + imageWidth - 50, topPos + imageHeight - 24, 44, 18).build());
     }
 
     private void buildSettingsAccessSection(SingleOfferShopBlockEntity be) {
-        ownerListPanel.prepareAndRender(this, menu, be, topPos + 20, menu.isPrimaryOwner(), () -> saved = false);
+        ownerListPanel.prepareAndRender(this, accessDraft, topPos + 20, menu.isPrimaryOwner(), () -> saved = false);
     }
 
     private void switchSettingsCategory(SettingsCategory category) {
         if (activeSettingsCategory == category) return;
-        if (settingsDraft != null) {
-            if (nameField != null) settingsDraft.setShopName(nameField.getValue());
-            if (npcNameField != null) settingsDraft.setNpcName(npcNameField.getValue());
-        }
+        if (generalDraft != null && nameField != null) generalDraft.setShopName(nameField.getValue());
+        if (villagerDraft != null && npcNameField != null) villagerDraft.setNpcName(npcNameField.getValue());
         activeSettingsCategory = category;
         rebuildUI();
     }
 
-    private ShopVisualSettings.Draft ensureSettingsDraft(SingleOfferShopBlockEntity be) {
-        if (settingsDraft == null) {
-            settingsDraft = be.getVisualSettings().toDraft(be.getShopName(), be.isEmitRedstone(), be.isPurchaseXpFeedbackSound());
-        }
-        return settingsDraft;
+    private void ensureSettingsDrafts(SingleOfferShopBlockEntity be) {
+        if (generalDraft == null) generalDraft = new GeneralSettings.Draft(be.getGeneralSettings());
+        if (villagerDraft == null) villagerDraft = new VillagerSettings.Draft(be.getVillagerSettings());
+        if (offerItemDraft == null) offerItemDraft = new OfferItemSettings.Draft(be.getOfferItemSettings());
+        if (ioDraft == null) ioDraft = new IoSettings.Draft(be.getIoSettings());
+        if (accessDraft == null) accessDraft = new AccessSettings.Draft(be.getAccessSettings());
     }
 
     private void markDirty() {
@@ -936,8 +931,14 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public void onClose() {
-        if (!saved && menu.getActiveTab() == ShopTab.SETTINGS) menu.resetModes();
-        String shopNameDraft = nameField != null ? nameField.getValue() : (settingsDraft != null ? settingsDraft.shopName() : "");
+        if (!saved && menu.getActiveTab() == ShopTab.SETTINGS) {
+            // Restore from blocks entity if not saved
+            if (ioDraft != null) {
+                SingleOfferShopBlockEntity be = menu.getBlockEntity();
+                ioDraft = new IoSettings.Draft(be.getIoSettings());
+            }
+        }
+        String shopNameDraft = nameField != null ? nameField.getValue() : (generalDraft != null ? generalDraft.shopName() : "");
         if (menu.getActiveTab() == ShopTab.SETTINGS && shopNameDraft.trim().isEmpty()) {
             menu.getBlockEntity().setShopName(originalName, false);
         }

@@ -11,7 +11,11 @@ import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.feature.visual.npc.IVisualShopNPC;
 import de.bigbull.marketblocks.feature.visual.npc.ShopNpcAnimationState;
-import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -102,15 +106,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private UUID purchaseContextBuyerId;
     private String purchaseContextBuyerName = "";
 
-    // Owner System
-    private final ShopOwnerManager ownerManager = new ShopOwnerManager(this);
     private final ShopInventoryManager inventoryManager = new ShopInventoryManager(this);
 
     // Shop Settings
     private final ShopSettingsManager settingsManager = new ShopSettingsManager(this);
-
-    // Side Configuration
-    private final ShopSideManager sideManager = new ShopSideManager(this);
     private int visualAnimationNonce = 0;
     private byte visualAnimationEvent = VisualNpcAnimationEvent.NONE;
     private int visualPurchaseCounter = 0;
@@ -351,54 +350,71 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     // --- Owner System ---
     public void setOwner(Player player) {
-        ownerManager.setOwner(player);
+        settingsManager.setAccessSettings(settingsManager.getAccessSettings().withOwner(player.getUUID(), player.getName().getString()), true);
     }
 
     @SuppressWarnings("unused")
     public void addOwner(UUID id, String name) {
-        ownerManager.addOwner(id, name);
+        Map<UUID, String> newOwners = new HashMap<>(settingsManager.getAccessSettings().additionalOwners());
+        newOwners.put(id, name);
+        settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdditionalOwners(newOwners), true);
     }
 
     @ApiStatus.Internal
     public void addOwnerClient(UUID id, String name) {
-        ownerManager.addOwnerClient(id, name);
+        Map<UUID, String> newOwners = new HashMap<>(settingsManager.getAccessSettings().additionalOwners());
+        newOwners.put(id, name);
+        settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdditionalOwners(newOwners), false);
     }
 
     @SuppressWarnings("unused")
     public void removeOwner(UUID id) {
-        ownerManager.removeOwner(id);
+        Map<UUID, String> newOwners = new HashMap<>(settingsManager.getAccessSettings().additionalOwners());
+        if (newOwners.remove(id) != null) {
+            settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdditionalOwners(newOwners), true);
+        }
     }
 
     public Set<UUID> getOwners() {
-        return ownerManager.getOwners();
+        Set<UUID> set = new HashSet<>();
+        UUID ownerId = settingsManager.getAccessSettings().ownerId();
+        if (ownerId != null) set.add(ownerId);
+        set.addAll(settingsManager.getAccessSettings().additionalOwners().keySet());
+        return set;
     }
 
     public Map<UUID, String> getAdditionalOwners() {
-        return ownerManager.getAdditionalOwners();
+        return new HashMap<>(settingsManager.getAccessSettings().additionalOwners());
     }
 
     public void setAdditionalOwners(Map<UUID, String> owners) {
-        ownerManager.setAdditionalOwners(owners);
+        settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdditionalOwners(owners), true);
     }
 
     public boolean isOwner(Player player) {
-        return ownerManager.isOwner(player);
+        if (isAdminShopEnabled() && player.hasPermissions(2)) return true;
+        UUID id = player.getUUID();
+        AccessSettings acc = settingsManager.getAccessSettings();
+        return id.equals(acc.ownerId()) || acc.additionalOwners().containsKey(id);
     }
 
     public boolean isPrimaryOwner(Player player) {
-        return ownerManager.isPrimaryOwner(player);
+        if (isAdminShopEnabled() && player.hasPermissions(2)) return true;
+        return player.getUUID().equals(settingsManager.getAccessSettings().ownerId());
     }
 
     public void ensureOwner(Player player) {
-        ownerManager.ensureOwner(player);
+        if (settingsManager.getAccessSettings().ownerId() == null) {
+            setOwner(player);
+        }
     }
 
     public UUID getOwnerId() {
-        return ownerManager.getOwnerId();
+        return settingsManager.getAccessSettings().ownerId();
     }
 
     public String getOwnerName() {
-        return ownerManager.getOwnerName();
+        return settingsManager.getAccessSettings().ownerName();
     }
 
     public void beginPurchaseContext(@Nullable Player player) {
@@ -415,9 +431,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     // --- Shop Settings ---
-    public String getShopName() {
-        return settingsManager.getShopName();
-    }
+
 
     public boolean isAdminShopEnabled() {
         return settingsManager.isAdminShopEnabled();
@@ -440,61 +454,103 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         if (settingsManager.isAdminShopEnabled() == enabled) {
             return;
         }
-        settingsManager.setAdminShopEnabled(enabled);
+        settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdminShopEnabled(enabled), true);
         needsOfferRefresh = true;
         updateOfferSlot(false);
-        sync();
     }
 
     @ApiStatus.Internal
     public void setAdminShopEnabledClient(boolean enabled) {
-        settingsManager.setAdminShopEnabled(enabled);
+        settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdminShopEnabled(enabled), false);
         needsOfferRefresh = true;
         updateOfferSlot(false);
     }
 
-    // --- Side Configuration ---
-    public SideMode getMode(Direction dir) {
-        return sideManager.getMode(dir);
+    public AccessSettings getAccessSettings() {
+        return settingsManager.getAccessSettings();
     }
 
-    public void setMode(Direction dir, SideMode mode, boolean sync) {
-        sideManager.setMode(dir, mode, sync);
+    public void setAccessSettings(AccessSettings accessSettings, boolean sync) {
+        settingsManager.setAccessSettings(accessSettings, sync);
+    }
+
+    public IoSettings getIoSettings() {
+        return settingsManager.getIoSettings();
+    }
+
+    public void setIoSettings(IoSettings ioSettings, boolean sync) {
+        settingsManager.setIoSettings(ioSettings, sync);
+    }
+
+    // --- Side Configuration ---
+    public SideMode getMode(Direction absoluteDir) {
+        return settingsManager.getIoSettings().getMode(absoluteDir, getBlockState().getValue(BaseShopBlock.FACING));
+    }
+
+    public void setMode(Direction absoluteDir, SideMode mode, boolean sync) {
+        Direction facing = getBlockState().getValue(BaseShopBlock.FACING);
+        SideMode oldMode = getMode(absoluteDir);
+        settingsManager.setIoSettings(settingsManager.getIoSettings().withMode(absoluteDir, facing, mode), sync);
+        if (level != null && !level.isClientSide) {
+            if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
+                lockAdjacentChest(absoluteDir);
+            } else if (oldMode != SideMode.DISABLED) {
+                unlockAdjacentChests();
+            }
+        }
     }
 
     /**
      * Batch update for shop settings to avoid multiple sync() calls.
      * Used by UpdateSettingsPacket to update all settings at once.
      */
-    public void updateSettingsBatch(Direction left, SideMode leftMode,
-                                    Direction right, SideMode rightMode,
-                                    Direction bottom, SideMode bottomMode,
-                                    Direction back, SideMode backMode,
-                                    String name, boolean redstone,
-                                    ShopVisualSettings visuals,
-                                    boolean xpFeedbackSound) {
-        setMode(left, leftMode, false);
-        setMode(right, rightMode, false);
-        setMode(bottom, bottomMode, false);
-        setMode(back, backMode, false);
-        settingsManager.setShopName(name, false);
-        settingsManager.setEmitRedstone(redstone, false);
-        settingsManager.setVisualSettings(visuals, false);
-        settingsManager.setPurchaseXpFeedbackSound(xpFeedbackSound, false);
-        updateNeighborCache();
+    public void updateSettingsBatch(IoSettings io,
+                                    GeneralSettings general,
+                                    VillagerSettings villager,
+                                    OfferItemSettings offerItem,
+                                    AccessSettings access) {
+        Direction facing = getBlockState().getValue(BaseShopBlock.FACING);
+        // Track mode changes to lock/unlock chests
+        boolean chestStateChanged = false;
+        
+        SideMode oldLeft = getMode(facing.getCounterClockWise());
+        SideMode oldRight = getMode(facing.getClockWise());
+        SideMode oldBottom = getMode(Direction.DOWN);
+        SideMode oldBack = getMode(facing.getOpposite());
+        
+        settingsManager.setIoSettings(io, false);
+        settingsManager.setGeneralSettings(general, false);
+        settingsManager.setVillagerSettings(villager, false);
+        settingsManager.setOfferItemSettings(offerItem, false);
+        settingsManager.setAccessSettings(access, false);
+        
+        if (level != null && !level.isClientSide) {
+            unlockAdjacentChests(); // Safe reset
+            lockAdjacentChests();
+        }
+        
+        setChanged();
         sync();
+        updateNeighborCache();
     }
 
-    public ShopVisualSettings getVisualSettings() {
-        return settingsManager.getVisualSettings();
+    // --- General Settings Accessors ---
+
+    public GeneralSettings getGeneralSettings() {
+        return settingsManager.getGeneralSettings();
     }
 
-    public void setVisualSettings(ShopVisualSettings visualSettings, boolean sync) {
-        settingsManager.setVisualSettings(visualSettings, sync);
+    public void setGeneralSettings(GeneralSettings settings, boolean sync) {
+        settingsManager.setGeneralSettings(settings, sync);
+    }
+
+    public String getShopName() {
+        return settingsManager.getShopName();
     }
 
     public void setShopName(String name, boolean sync) {
-        settingsManager.setShopName(name, sync);
+        GeneralSettings current = getGeneralSettings();
+        setGeneralSettings(new GeneralSettings(name, current.emitRedstone(), current.purchaseXpFeedbackSound()), sync);
     }
 
     public boolean isEmitRedstone() {
@@ -502,7 +558,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void setEmitRedstone(boolean emitRedstone, boolean sync) {
-        settingsManager.setEmitRedstone(emitRedstone, sync);
+        GeneralSettings current = getGeneralSettings();
+        setGeneralSettings(new GeneralSettings(current.shopName(), emitRedstone, current.purchaseXpFeedbackSound()), sync);
     }
 
     public boolean isPurchaseXpFeedbackSound() {
@@ -510,7 +567,28 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void setPurchaseXpFeedbackSound(boolean enabled, boolean sync) {
-        settingsManager.setPurchaseXpFeedbackSound(enabled, sync);
+        GeneralSettings current = getGeneralSettings();
+        setGeneralSettings(new GeneralSettings(current.shopName(), current.emitRedstone(), enabled), sync);
+    }
+
+    // --- Villager Settings Accessors ---
+
+    public VillagerSettings getVillagerSettings() {
+        return settingsManager.getVillagerSettings();
+    }
+
+    public void setVillagerSettings(VillagerSettings settings, boolean sync) {
+        settingsManager.setVillagerSettings(settings, sync);
+    }
+
+    // --- Offer Item Settings Accessors ---
+
+    public OfferItemSettings getOfferItemSettings() {
+        return settingsManager.getOfferItemSettings();
+    }
+
+    public void setOfferItemSettings(OfferItemSettings settings, boolean sync) {
+        settingsManager.setOfferItemSettings(settings, sync);
     }
 
     @ApiStatus.Internal
@@ -1293,10 +1371,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         loadHandlers(tag, registries);
-        ownerManager.load(tag);
         loadOffer(tag, registries);
         settingsManager.load(tag);
-        sideManager.load(tag);
 
         this.visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
         this.visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
@@ -1313,10 +1389,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         saveHandlers(tag, registries);
-        ownerManager.save(tag);
         saveOffer(tag, registries);
         settingsManager.save(tag);
-        sideManager.save(tag);
 
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
         tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
@@ -1372,19 +1446,13 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             if (!offerResult.isEmpty()) tag.put(KEY_RESULT, offerResult.save(registries));
         }
 
-        // Shop settings (needed for UI)
+        // Shop settings (includes I/O and Access)
         settingsManager.save(tag);
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
         tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
         tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
         tag.putInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, visualPaymentSuccessCounter);
         tag.putInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER, visualPaymentFailCounter);
-
-        // Owner info (needed for permissions check)
-        ownerManager.save(tag);
-
-        // Side modes (needed for rendering/capabilities)
-        sideManager.save(tag);
 
         // Note: Inventory handlers (input/output/payment) are NOT sent to clients
         // for security reasons - they contain owner's items
@@ -1403,19 +1471,13 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         offerResult = ItemStack.parseOptional(registries, tag.getCompound(KEY_RESULT));
         hasOffer = tag.getBoolean(NBT_HAS_OFFER);
 
-        // Shop settings
+        // Shop settings (includes I/O and Access)
         settingsManager.load(tag);
         visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
         visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
         visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
         visualPaymentSuccessCounter = tag.getInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER);
         visualPaymentFailCounter = tag.getInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER);
-
-        // Owner info
-        ownerManager.load(tag);
-
-        // Side modes
-        sideManager.load(tag);
 
         // Update client-side state
         updateOfferSlot();
@@ -1483,7 +1545,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         ItemStack current = paymentHandler.getStackInSlot(slot).copy();
         paymentFeedbackSnapshot[slot] = current.copy();
 
-        if (level == null || level.isClientSide || !hasOffer || !getVisualSettings().paymentSlotSoundsEnabled()) {
+        if (level == null || level.isClientSide || !hasOffer || !getVillagerSettings().paymentSlotSoundsEnabled()) {
             return;
         }
 

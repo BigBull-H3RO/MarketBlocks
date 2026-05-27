@@ -1,7 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
-import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
-import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
+import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Checkbox;
@@ -45,8 +44,7 @@ public class SingleOfferOwnerListPanel {
     private Runnable onDirty = () -> {};
 
     public void prepareAndRender(SingleOfferShopScreen host,
-                                 SingleOfferShopMenu menu,
-                                 SingleOfferShopBlockEntity be,
+                                 AccessSettings.Draft accessDraft,
                                  int listBaseY,
                                  boolean isPrimaryOwner,
                                  Runnable onDirty) {
@@ -62,10 +60,10 @@ public class SingleOfferOwnerListPanel {
         }
 
         if (ownerOrder.isEmpty() && ownerSelected.isEmpty()) {
-            populateOwnerData(menu, be);
+            populateOwnerData(accessDraft);
         }
 
-        this.storedNames = menu.getAdditionalOwners();
+        this.storedNames = accessDraft.additionalOwners();
         this.ownerStartIndex = net.minecraft.util.Mth.clamp(ownerStartIndex, 0, getOwnerOffscreenRows());
         renderOwnerWindow();
         this.noPlayers = ownerOrder.isEmpty();
@@ -187,17 +185,17 @@ public class SingleOfferOwnerListPanel {
         ownerScrollOffs = 0.0F;
     }
 
-    private void populateOwnerData(SingleOfferShopMenu menu, SingleOfferShopBlockEntity be) {
+    private void populateOwnerData(AccessSettings.Draft accessDraft) {
         ownerOrder.clear();
         ownerSelected.clear();
 
-        Map<UUID, String> current = new HashMap<>(menu.getAdditionalOwners());
+        Map<UUID, String> current = new HashMap<>(accessDraft.additionalOwners());
 
         if (Minecraft.getInstance().getConnection() != null) {
             Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();
             for (PlayerInfo info : players) {
                 UUID id = info.getProfile().getId();
-                if (id.equals(be.getOwnerId())) {
+                if (id.equals(accessDraft.ownerId())) {
                     continue;
                 }
                 ownerOrder.add(id);

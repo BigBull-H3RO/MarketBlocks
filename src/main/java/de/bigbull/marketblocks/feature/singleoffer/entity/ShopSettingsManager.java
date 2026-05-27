@@ -1,60 +1,132 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
 import de.bigbull.marketblocks.core.config.Config;
-import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import net.minecraft.nbt.CompoundTag;
 
 public class ShopSettingsManager {
-    private static final int MAX_SHOP_NAME_LENGTH = 32;
+    private static final String KEY_GENERAL = "General";
+    private static final String KEY_VILLAGER = "Villager";
+    private static final String KEY_OFFER_ITEM = "OfferItem";
+    private static final String KEY_IO = "IO";
+    private static final String KEY_ACCESS = "Access";
 
     private final SingleOfferShopBlockEntity blockEntity;
-    private String shopName = "";
-    private boolean emitRedstone = false;
+    private GeneralSettings generalSettings = GeneralSettings.DEFAULT;
+    private VillagerSettings villagerSettings = VillagerSettings.DEFAULT;
+    private OfferItemSettings offerItemSettings = OfferItemSettings.DEFAULT;
+    private IoSettings ioSettings = IoSettings.DEFAULT;
+    private AccessSettings accessSettings = AccessSettings.DEFAULT;
+
     private boolean outputAlmostFull = false;
     private boolean outputFull = false;
-    private boolean adminShopEnabled = false;
-    private boolean purchaseXpFeedbackSound = true;
     private boolean globalOfferItemRenderingEnabled = true;
-    private ShopVisualSettings visualSettings = ShopVisualSettings.DEFAULT;
 
     public ShopSettingsManager(SingleOfferShopBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
     }
 
-    public String getShopName() {
-        return shopName;
+    // --- General Settings ---
+
+    public GeneralSettings getGeneralSettings() {
+        return generalSettings;
     }
 
-    public void setShopName(String name, boolean sync) {
-        if (name.length() > MAX_SHOP_NAME_LENGTH) {
-            name = name.substring(0, MAX_SHOP_NAME_LENGTH);
-        }
-        this.shopName = name;
+    public void setGeneralSettings(GeneralSettings settings, boolean sync) {
+        this.generalSettings = settings == null ? GeneralSettings.DEFAULT : settings;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) return;
         blockEntity.setChanged();
         if (sync) blockEntity.sync();
     }
 
-    public boolean isEmitRedstone() {
-        return emitRedstone;
+    public String getShopName() {
+        return generalSettings.shopName();
     }
 
-    public void setEmitRedstone(boolean emitRedstone, boolean sync) {
-        this.emitRedstone = emitRedstone;
+    public boolean isEmitRedstone() {
+        return generalSettings.emitRedstone();
+    }
+
+    public boolean isPurchaseXpFeedbackSound() {
+        return generalSettings.purchaseXpFeedbackSound();
+    }
+
+    // --- Villager Settings ---
+
+    public VillagerSettings getVillagerSettings() {
+        return villagerSettings;
+    }
+
+    public void setVillagerSettings(VillagerSettings settings, boolean sync) {
+        VillagerSettings previous = this.villagerSettings;
+        this.villagerSettings = settings == null ? VillagerSettings.DEFAULT : settings;
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) return;
+        if (previous.npcEnabled() != this.villagerSettings.npcEnabled()) {
+            blockEntity.triggerNpcAnimationEvent(this.villagerSettings.npcEnabled() ? VisualNpcAnimationEvent.SPAWN : VisualNpcAnimationEvent.DESPAWN);
+        }
+        blockEntity.setChanged();
+        if (sync) blockEntity.sync();
+    }
+
+    // --- Offer Item Settings ---
+
+    public OfferItemSettings getOfferItemSettings() {
+        return offerItemSettings;
+    }
+
+    public void setOfferItemSettings(OfferItemSettings settings, boolean sync) {
+        this.offerItemSettings = settings == null ? OfferItemSettings.DEFAULT : settings;
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) return;
+        blockEntity.setChanged();
+        if (sync) blockEntity.sync();
+    }
+
+    // --- I/O Settings ---
+
+    public IoSettings getIoSettings() {
+        return ioSettings;
+    }
+
+    public void setIoSettings(IoSettings settings, boolean sync) {
+        this.ioSettings = settings == null ? IoSettings.DEFAULT : settings;
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) return;
+        
+        blockEntity.setChanged();
+        
+        // Notify capabilities of potential access changes
+        for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.values()) {
+            blockEntity.invalidateCapabilitiesAndNeighbor(dir);
+        }
+        
+        if (sync) {
+            blockEntity.sync();
+            blockEntity.updateNeighborCache();
+        }
+    }
+
+    // --- Access Settings ---
+
+    public AccessSettings getAccessSettings() {
+        return accessSettings;
+    }
+
+    public void setAccessSettings(AccessSettings settings, boolean sync) {
+        this.accessSettings = settings == null ? AccessSettings.DEFAULT : settings;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) return;
         blockEntity.setChanged();
         if (sync) blockEntity.sync();
     }
 
     public boolean isAdminShopEnabled() {
-        return adminShopEnabled;
+        return accessSettings.adminShopEnabled();
     }
 
-    public void setAdminShopEnabled(boolean enabled) {
-        this.adminShopEnabled = enabled;
-        blockEntity.setChanged();
-    }
+    // --- Global/Runtime Data ---
 
     public boolean isGlobalOfferItemRenderingEnabled() {
         return globalOfferItemRenderingEnabled;
@@ -63,32 +135,6 @@ public class ShopSettingsManager {
     public void setGlobalOfferItemRenderingEnabled(boolean enabled) {
         this.globalOfferItemRenderingEnabled = enabled;
         blockEntity.setChanged();
-    }
-
-    public boolean isPurchaseXpFeedbackSound() {
-        return purchaseXpFeedbackSound;
-    }
-
-    public void setPurchaseXpFeedbackSound(boolean enabled, boolean sync) {
-        this.purchaseXpFeedbackSound = enabled;
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) return;
-        blockEntity.setChanged();
-        if (sync) blockEntity.sync();
-    }
-
-    public ShopVisualSettings getVisualSettings() {
-        return visualSettings;
-    }
-
-    public void setVisualSettings(ShopVisualSettings visualSettings, boolean sync) {
-        ShopVisualSettings previous = this.visualSettings;
-        this.visualSettings = visualSettings == null ? ShopVisualSettings.DEFAULT : visualSettings;
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) return;
-        if (previous.npcEnabled() != this.visualSettings.npcEnabled()) {
-            blockEntity.triggerNpcAnimationEvent(this.visualSettings.npcEnabled() ? VisualNpcAnimationEvent.SPAWN : VisualNpcAnimationEvent.DESPAWN);
-        }
-        blockEntity.setChanged();
-        if (sync) blockEntity.sync();
     }
 
     public boolean isOutputFull() {
@@ -104,13 +150,16 @@ public class ShopSettingsManager {
         this.outputAlmostFull = almostFull;
     }
 
+    // --- NBT ---
+
     public void save(CompoundTag tag) {
-        tag.putString("ShopName", shopName);
-        tag.putBoolean("EmitRedstone", emitRedstone);
-        tag.putBoolean("AdminShopEnabled", adminShopEnabled);
-        tag.putBoolean("PurchaseXpFeedbackSound", purchaseXpFeedbackSound);
+        tag.put(KEY_GENERAL, generalSettings.save());
+        tag.put(KEY_VILLAGER, villagerSettings.save());
+        tag.put(KEY_OFFER_ITEM, offerItemSettings.save());
+        tag.put(KEY_IO, ioSettings.save());
+        tag.put(KEY_ACCESS, accessSettings.save());
+        
         tag.putBoolean("GlobalOfferItemRendering", globalOfferItemRenderingEnabled);
-        tag.put("Visuals", visualSettings.save());
         if (Config.ENABLE_OUTPUT_WARNING.get()) {
             tag.putBoolean("OutputWarning", outputAlmostFull);
         }
@@ -118,23 +167,36 @@ public class ShopSettingsManager {
     }
 
     public void load(CompoundTag tag) {
-        shopName = tag.getString("ShopName");
-        emitRedstone = tag.getBoolean("EmitRedstone");
-        adminShopEnabled = tag.getBoolean("AdminShopEnabled");
-        if (tag.contains("PurchaseXpFeedbackSound")) {
-            purchaseXpFeedbackSound = tag.getBoolean("PurchaseXpFeedbackSound");
+        if (tag.contains(KEY_GENERAL)) {
+            generalSettings = GeneralSettings.load(tag.getCompound(KEY_GENERAL));
         } else {
-            purchaseXpFeedbackSound = true;
+            generalSettings = GeneralSettings.DEFAULT;
         }
+        if (tag.contains(KEY_VILLAGER)) {
+            villagerSettings = VillagerSettings.load(tag.getCompound(KEY_VILLAGER));
+        } else {
+            villagerSettings = VillagerSettings.DEFAULT;
+        }
+        if (tag.contains(KEY_OFFER_ITEM)) {
+            offerItemSettings = OfferItemSettings.load(tag.getCompound(KEY_OFFER_ITEM));
+        } else {
+            offerItemSettings = OfferItemSettings.DEFAULT;
+        }
+        if (tag.contains(KEY_IO)) {
+            ioSettings = IoSettings.load(tag.getCompound(KEY_IO));
+        } else {
+            ioSettings = IoSettings.DEFAULT;
+        }
+        if (tag.contains(KEY_ACCESS)) {
+            accessSettings = AccessSettings.load(tag.getCompound(KEY_ACCESS));
+        } else {
+            accessSettings = AccessSettings.DEFAULT;
+        }
+        
         if (tag.contains("GlobalOfferItemRendering")) {
             globalOfferItemRenderingEnabled = tag.getBoolean("GlobalOfferItemRendering");
         } else {
             globalOfferItemRenderingEnabled = true;
-        }
-        if (tag.contains("Visuals")) {
-            visualSettings = ShopVisualSettings.load(tag.getCompound("Visuals"));
-        } else {
-            visualSettings = ShopVisualSettings.DEFAULT;
         }
         outputAlmostFull = tag.getBoolean("OutputWarning");
         outputFull = tag.getBoolean("OutputFull");

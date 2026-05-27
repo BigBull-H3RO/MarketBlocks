@@ -7,7 +7,10 @@ import de.bigbull.marketblocks.client.gui.SideModeButton;
 import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.feature.visual.npc.ShopVisualSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
@@ -55,7 +58,7 @@ public final class SingleOfferSettingsSections {
     }
 
     public static EditBox buildGeneralSection(SingleOfferShopScreen host,
-                                              ShopVisualSettings.Draft draft,
+                                              GeneralSettings.Draft draft,
                                               Runnable onDirty) {
         EditBox nameField = host.addSettingsWidget(new EditBox(host.settingsFont(), host.settingsLeftPos() + 8, host.settingsTopPos() + 28, 120, 18,
                 Component.translatable("gui.marketblocks.shop_name")));
@@ -70,9 +73,9 @@ public final class SingleOfferSettingsSections {
                         Component.translatable("gui.marketblocks.emit_redstone"),
                         host.settingsFont())
                 .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 50)
-                .selected(draft.emitRedstoneEnabled())
+                .selected(draft.emitRedstone())
                 .onValueChange((checkbox, value) -> {
-                    draft.setEmitRedstoneEnabled(value);
+                    draft.setEmitRedstone(value);
                     onDirty.run();
                 })
                 .build());
@@ -94,47 +97,43 @@ public final class SingleOfferSettingsSections {
     }
 
     public static void buildIoSection(SingleOfferShopScreen host,
-                                      SingleOfferShopMenu menu,
-                                      Direction leftDir,
-                                      Direction rightDir,
-                                      Direction bottomDir,
-                                      Direction backDir,
+                                      IoSettings.Draft draft,
                                       Runnable onDirty) {
         int sideCenterX = host.settingsLeftPos() + 28;
         int sideBaseY = host.settingsTopPos() + 65;
 
-        SideModeButton leftButton = host.addSettingsWidget(new SideModeButton(sideCenterX - 20, sideBaseY, 16, 16, menu.getMode(leftDir), m -> {
-            menu.setMode(leftDir, m);
+        SideModeButton leftButton = host.addSettingsWidget(new SideModeButton(sideCenterX - 20, sideBaseY, 16, 16, draft.getMode(Direction.WEST), m -> {
+            draft.setMode(Direction.WEST, m);
             onDirty.run();
         }));
         leftButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.left")));
         leftButton.setMessage(Component.translatable("gui.marketblocks.side.left"));
 
-        SideModeButton bottomButton = host.addSettingsWidget(new SideModeButton(sideCenterX, sideBaseY, 16, 16, menu.getMode(bottomDir), m -> {
-            menu.setMode(bottomDir, m);
+        SideModeButton bottomButton = host.addSettingsWidget(new SideModeButton(sideCenterX, sideBaseY, 16, 16, draft.getMode(Direction.DOWN), m -> {
+            draft.setMode(Direction.DOWN, m);
             onDirty.run();
         }));
         bottomButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.bottom")));
         bottomButton.setMessage(Component.translatable("gui.marketblocks.side.bottom"));
 
-        SideModeButton rightButton = host.addSettingsWidget(new SideModeButton(sideCenterX + 20, sideBaseY, 16, 16, menu.getMode(rightDir), m -> {
-            menu.setMode(rightDir, m);
+        SideModeButton rightButton = host.addSettingsWidget(new SideModeButton(sideCenterX + 20, sideBaseY, 16, 16, draft.getMode(Direction.EAST), m -> {
+            draft.setMode(Direction.EAST, m);
             onDirty.run();
         }));
         rightButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.right")));
         rightButton.setMessage(Component.translatable("gui.marketblocks.side.right"));
 
-        SideModeButton backButton = host.addSettingsWidget(new SideModeButton(sideCenterX, sideBaseY + 20, 16, 16, menu.getMode(backDir), m -> {
-            menu.setMode(backDir, m);
+        SideModeButton backButton = host.addSettingsWidget(new SideModeButton(sideCenterX, sideBaseY + 20, 16, 16, draft.getMode(Direction.NORTH), m -> {
+            draft.setMode(Direction.NORTH, m);
             onDirty.run();
         }));
         backButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.side.back")));
         backButton.setMessage(Component.translatable("gui.marketblocks.side.back"));
     }
 
-    public static VisualSectionWidgets buildVisualSection(
+    public static VillagerSectionWidgets buildVillagerSection(
             SingleOfferShopScreen host,
-            ShopVisualSettings.Draft draft,
+            VillagerSettings.Draft draft,
             VisualNpcPlacementResult placementResult,
             Runnable onDirty
     ) {
@@ -202,10 +201,10 @@ public final class SingleOfferSettingsSections {
             npcToggle.setTooltip(Tooltip.create(Component.translatable(placementResult.translationKey())));
         }
 
-        return new VisualSectionWidgets(npcNameField);
+        return new VillagerSectionWidgets(npcNameField);
     }
 
-    public record VisualSectionWidgets(EditBox npcNameField) {
+    public record VillagerSectionWidgets(EditBox npcNameField) {
     }
 
     private static float mapToDisplayScale(float internal) {
@@ -219,7 +218,7 @@ public final class SingleOfferSettingsSections {
     public static void buildOfferItemSection(
             SingleOfferShopScreen host,
             ShopVisualType visualType,
-            ShopVisualSettings.Draft draft,
+            OfferItemSettings.Draft draft,
             boolean offerItemRenderingGloballyEnabled,
             Runnable onDirty,
             Runnable onRebuild
@@ -228,10 +227,10 @@ public final class SingleOfferSettingsSections {
         int leftX = host.settingsLeftPos() + 8;
 
         Button visibleButton = host.addSettingsWidget(Button.builder(
-                        Component.literal(draft.offerItemVisible() ? "ON" : "OFF"),
+                        Component.literal(draft.visible() ? "ON" : "OFF"),
                         b -> {
-                            boolean next = !draft.offerItemVisible();
-                            draft.setOfferItemVisible(next);
+                            boolean next = !draft.visible();
+                            draft.setVisible(next);
                             onDirty.run();
                             b.setMessage(Component.literal(next ? "ON" : "OFF"));
                         })
@@ -249,9 +248,9 @@ public final class SingleOfferSettingsSections {
                         Component.translatable("gui.marketblocks.visuals.offer_item_fullbright"),
                         host.settingsFont())
                 .pos(leftX + 40, y)
-                .selected(draft.offerItemFullbright())
+                .selected(draft.fullbright())
                 .onValueChange((checkbox, value) -> {
-                    draft.setOfferItemFullbright(value);
+                    draft.setFullbright(value);
                     onDirty.run();
                 })
                 .build());
@@ -260,35 +259,35 @@ public final class SingleOfferSettingsSections {
 
         switch (visualType) {
             case TRADE_STAND -> {
-                host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draft.offerItemScale(), value -> {
-                    draft.setOfferItemScale(value);
+                host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 2.0f, draft.scale(), value -> {
+                    draft.setScale(value);
                     onDirty.run();
                 }));
-                host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.speed"), 0.0f, 10.0f, draft.offerItemSpeed(), value -> {
-                    draft.setOfferItemSpeed(value);
+                host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16, Component.translatable("gui.marketblocks.visuals.speed"), 0.0f, 10.0f, draft.speed(), value -> {
+                    draft.setSpeed(value);
                     onDirty.run();
                 }));
                 y += 20;
 
-                host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"), -0.5f, 1.5f, draft.offerItemHeightOffset(), value -> {
-                    draft.setOfferItemHeightOffset(value);
+                host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"), -0.5f, 1.5f, draft.heightOffset(), value -> {
+                    draft.setHeightOffset(value);
                     onDirty.run();
                 }));
                 host.addSettingsWidget(Checkbox.builder(
                             Component.translatable("gui.marketblocks.visuals.bobbing"),
                             host.settingsFont())
                     .pos(leftX + 85, y)
-                    .selected(draft.offerItemBobbing())
+                    .selected(draft.bobbing())
                     .onValueChange((checkbox, value) -> {
-                        draft.setOfferItemBobbing(value);
+                        draft.setBobbing(value);
                         onDirty.run();
                     })
                     .build());
             }
             case MARKET_CRATE -> {
                 // Zeile 1: Count Slider + Dynamic Fill Checkbox
-                IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, ShopVisualSettings.MAX_OFFER_ITEM_COUNT, draft.offerItemCount(), value -> {
-                    draft.setOfferItemCount(value);
+                IntSlider countSlider = host.addSettingsWidget(new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1, OfferItemSettings.MAX_COUNT, draft.count(), value -> {
+                    draft.setCount(value);
                     onDirty.run();
                 }));
 
@@ -305,12 +304,12 @@ public final class SingleOfferSettingsSections {
                 y += 20;
 
                 // Zeile 2: Layout Mode Button
-                CrateLayoutMode currentMode = draft.offerItemLayoutMode();
+                CrateLayoutMode currentMode = draft.layoutMode();
                 Button layoutModeButton = host.addSettingsWidget(Button.builder(
                         Component.translatable(currentMode.translationKey()),
                         b -> {
-                            CrateLayoutMode nextMode = draft.offerItemLayoutMode().next();
-                            draft.setOfferItemLayoutMode(nextMode);
+                            CrateLayoutMode nextMode = draft.layoutMode().next();
+                            draft.setLayoutMode(nextMode);
                             onDirty.run();
                             onRebuild.run();
                         }
@@ -319,12 +318,12 @@ public final class SingleOfferSettingsSections {
                 y += 20;
 
                 // Zeile 3: Base Rotation & Scale nebeneinander
-                host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draft.offerItemRotation(), value -> {
-                    draft.setOfferItemRotation(value);
+                host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draft.rotation(), value -> {
+                    draft.setRotation(value);
                     onDirty.run();
                 }));
-                host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 1.5f, mapToDisplayScale(draft.offerItemScale()), value -> {
-                    draft.setOfferItemScale(mapToInternalScale(value));
+                host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 1.5f, mapToDisplayScale(draft.scale()), value -> {
+                    draft.setScale(mapToInternalScale(value));
                     onDirty.run();
                 }));
                 y += 20;
@@ -332,21 +331,21 @@ public final class SingleOfferSettingsSections {
                 // Row 5 (DYNAMIC): spacing OR chaos rotation depending on mode
                 if (currentMode == CrateLayoutMode.GESTAPELT) {
                     // Two sliders side-by-side (half width) for XZ and Y Spacing
-                    host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_xz"), -0.5f, 0.5f, draft.offerItemSpacingXZ(), value -> {
-                        draft.setOfferItemSpacingXZ(value);
+                    host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_xz"), -0.5f, 0.5f, draft.spacingXZ(), value -> {
+                        draft.setSpacingXZ(value);
                         onDirty.run();
                     }));
-                    host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.offerItemSpacingY(), value -> {
-                        draft.setOfferItemSpacingY(value);
+                    host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.spacingY(), value -> {
+                        draft.setSpacingY(value);
                         onDirty.run();
                     }));
                 } else {
-                    host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f, draft.offerItemChaosRotation(), value -> {
-                        draft.setOfferItemChaosRotation(value);
+                    host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f, draft.chaosRotation(), value -> {
+                        draft.setChaosRotation(value);
                         onDirty.run();
                     }));
-                    host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.offerItemSpacingY(), value -> {
-                        draft.setOfferItemSpacingY(value);
+                    host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.spacingY(), value -> {
+                        draft.setSpacingY(value);
                         onDirty.run();
                     }));
                 }
@@ -357,11 +356,11 @@ public final class SingleOfferSettingsSections {
         }
     }
 
-    private static Component npcToggleLabel(ShopVisualSettings.Draft draft) {
+    private static Component npcToggleLabel(VillagerSettings.Draft draft) {
         return Component.literal(draft.npcEnabled() ? "ON" : "OFF");
     }
 
-    private static Component professionLabel(ShopVisualSettings.Draft draft) {
+    private static Component professionLabel(VillagerSettings.Draft draft) {
         return Component.translatable("gui.marketblocks.visuals.profession").append(": ")
                 .append(Component.translatable(draft.profession().translationKey()));
     }
