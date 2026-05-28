@@ -212,9 +212,13 @@ public class ShopNpcAnimationState {
             if (profile == null) {
                 if (parsedUuid != null) {
                     profile = new GameProfile(parsedUuid, "");
-                    SkullBlockEntity.fetchGameProfile(parsedUuid).thenAcceptAsync(optProfile -> {
-                        if (optProfile.isPresent() && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
-                            this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, optProfile.get());
+                    final UUID asyncUuid = parsedUuid;
+                    java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        var result = Minecraft.getInstance().getMinecraftSessionService().fetchProfile(asyncUuid, false);
+                        return result != null ? result.profile() : null;
+                    }, net.minecraft.Util.backgroundExecutor()).thenAcceptAsync(filledProfile -> {
+                        if (filledProfile != null && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
+                            this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, filledProfile);
                         }
                     }, Minecraft.getInstance());
                 } else {
