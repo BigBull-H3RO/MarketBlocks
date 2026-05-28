@@ -212,10 +212,19 @@ public class ShopNpcAnimationState {
             if (profile == null) {
                 if (parsedUuid != null) {
                     profile = new GameProfile(parsedUuid, "");
+                    final UUID asyncUuid = parsedUuid;
+                    java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        var result = Minecraft.getInstance().getMinecraftSessionService().fetchProfile(asyncUuid, false);
+                        return result != null ? result.profile() : null;
+                    }, net.minecraft.Util.backgroundExecutor()).thenAcceptAsync(filledProfile -> {
+                        if (filledProfile != null && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
+                            this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, filledProfile);
+                        }
+                    }, Minecraft.getInstance());
                 } else {
                     profile = new GameProfile(UUIDUtil.createOfflinePlayerUUID(input), input);
                     SkullBlockEntity.fetchGameProfile(input).thenAcceptAsync(optProfile -> {
-                        if (optProfile.isPresent()) {
+                        if (optProfile.isPresent() && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
                             this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, optProfile.get());
                         }
                     }, Minecraft.getInstance());
@@ -237,6 +246,11 @@ public class ShopNpcAnimationState {
             @Override
             public boolean isModelPartShown(PlayerModelPart part) {
                 return true; // Show hat, jacket, sleeves, pants, etc.
+            }
+
+            @Override
+            public boolean isInvisibleTo(net.minecraft.world.entity.player.Player player) {
+                return !this.isCustomNameVisible() || !super.hasCustomName();
             }
 
             @Override
