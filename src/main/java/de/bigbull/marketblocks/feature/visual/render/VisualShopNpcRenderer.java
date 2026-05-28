@@ -83,41 +83,74 @@ public final class VisualShopNpcRenderer {
         float headYaw = state.smoothRenderYaw(lookTarget.yaw());
         float headPitch = state.smoothRenderPitch(lookTarget.pitch());
 
-        Villager villager = state.getOrCreateRenderVillager(level);
-        villager.noCulling = true;
-        VillagerData data = villager.getVillagerData().setProfession(settings.profession().toVillagerProfession());
-        villager.setVillagerData(data);
-        villager.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
-        villager.setYRot(bodyYaw);
-        villager.yBodyRot = bodyYaw;
-        villager.yBodyRotO = bodyYaw;
-        villager.setYHeadRot(headYaw);
-        villager.yHeadRot = headYaw;
-        villager.yHeadRotO = headYaw;
-        villager.setXRot(headPitch);
-        villager.xRotO = headPitch;
-        villager.tickCount = (int) now;
-        if (!settings.npcName().isBlank()) {
-            villager.setCustomNameVisible(true);
-            villager.setCustomName(net.minecraft.network.chat.Component.literal(settings.npcName()));
-        } else {
-            villager.setCustomNameVisible(false);
-            villager.setCustomName(null);
-        }
-
         BlockPos shopPos = host.getVisualShopPos();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        dispatcher.render(
-                villager,
-                spawnPos.x - shopPos.getX(),
-                spawnPos.y - shopPos.getY() + animationYOffset,
-                spawnPos.z - shopPos.getZ(),
-                bodyYaw,
-                partialTick,
-                poseStack,
-                bufferSource,
-                packedLight
-        );
+
+        if (settings.usePlayerSkin() && !settings.playerSkinName().isBlank()) {
+            net.minecraft.client.player.RemotePlayer player = state.getOrCreateRenderPlayer(level, settings.playerSkinName());
+            player.noCulling = true;
+            player.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+            player.setYRot(bodyYaw);
+            player.yBodyRot = bodyYaw;
+            player.yBodyRotO = bodyYaw;
+            player.setYHeadRot(headYaw);
+            player.yHeadRot = headYaw;
+            player.yHeadRotO = headYaw;
+            player.setXRot(headPitch);
+            player.xRotO = headPitch;
+            player.tickCount = (int) now;
+            if (!settings.npcName().isBlank()) {
+                player.setCustomNameVisible(true);
+                player.setCustomName(net.minecraft.network.chat.Component.literal(settings.npcName()));
+            } else {
+                player.setCustomNameVisible(false);
+                player.setCustomName(null);
+            }
+            dispatcher.render(
+                    player,
+                    spawnPos.x - shopPos.getX(),
+                    spawnPos.y - shopPos.getY() + animationYOffset,
+                    spawnPos.z - shopPos.getZ(),
+                    bodyYaw,
+                    partialTick,
+                    poseStack,
+                    bufferSource,
+                    packedLight
+            );
+        } else {
+            Villager villager = state.getOrCreateRenderVillager(level);
+            villager.noCulling = true;
+            VillagerData data = villager.getVillagerData().setProfession(settings.profession().toVillagerProfession());
+            villager.setVillagerData(data);
+            villager.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+            villager.setYRot(bodyYaw);
+            villager.yBodyRot = bodyYaw;
+            villager.yBodyRotO = bodyYaw;
+            villager.setYHeadRot(headYaw);
+            villager.yHeadRot = headYaw;
+            villager.yHeadRotO = headYaw;
+            villager.setXRot(headPitch);
+            villager.xRotO = headPitch;
+            villager.tickCount = (int) now;
+            if (!settings.npcName().isBlank()) {
+                villager.setCustomNameVisible(true);
+                villager.setCustomName(net.minecraft.network.chat.Component.literal(settings.npcName()));
+            } else {
+                villager.setCustomNameVisible(false);
+                villager.setCustomName(null);
+            }
+            dispatcher.render(
+                    villager,
+                    spawnPos.x - shopPos.getX(),
+                    spawnPos.y - shopPos.getY() + animationYOffset,
+                    spawnPos.z - shopPos.getZ(),
+                    bodyYaw,
+                    partialTick,
+                    poseStack,
+                    bufferSource,
+                    packedLight
+            );
+        }
     }
 
     private static void processAnimationEvents(IVisualShopNPC host, VillagerSettings settings, ShopNpcAnimationState state, Level level, long now) {

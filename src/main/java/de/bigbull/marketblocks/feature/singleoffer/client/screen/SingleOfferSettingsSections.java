@@ -69,10 +69,22 @@ public final class SingleOfferSettingsSections {
             onDirty.run();
         });
 
+        Checkbox closedCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.shop_closed"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 50)
+                .selected(draft.isClosed())
+                .onValueChange((checkbox, value) -> {
+                    draft.setIsClosed(value);
+                    onDirty.run();
+                })
+                .build());
+        closedCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.shop_closed.tooltip")));
+
         Checkbox emitCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.emit_redstone"),
                         host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 50)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 70)
                 .selected(draft.emitRedstone())
                 .onValueChange((checkbox, value) -> {
                     draft.setEmitRedstone(value);
@@ -84,7 +96,7 @@ public final class SingleOfferSettingsSections {
         Checkbox xpSoundCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.purchase_xp_sound"),
                         host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 70)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 90)
                 .selected(draft.purchaseXpFeedbackSound())
                 .onValueChange((checkbox, value) -> {
                     draft.setPurchaseXpFeedbackSound(value);
@@ -153,17 +165,38 @@ public final class SingleOfferSettingsSections {
             onDirty.run();
         });
 
+        Checkbox usePlayerSkinCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.use_player_skin"),
+                        host.settingsFont())
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 48)
+                .selected(draft.usePlayerSkin())
+                .onValueChange((checkbox, value) -> {
+                    draft.setUsePlayerSkin(value);
+                    onDirty.run();
+                })
+                .build());
+        usePlayerSkinCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.use_player_skin.tooltip")));
+
+        EditBox playerSkinNameField = host.addSettingsWidget(new EditBox(host.settingsFont(), host.settingsLeftPos() + 104, host.settingsTopPos() + 48, 62, 16,
+                Component.translatable("gui.marketblocks.visuals.player_skin_name")));
+        playerSkinNameField.setMaxLength(36);
+        playerSkinNameField.setValue(draft.playerSkinName());
+        playerSkinNameField.setResponder(value -> {
+            draft.setPlayerSkinName(value);
+            onDirty.run();
+        });
+
         Button professionButton = host.addSettingsWidget(Button.builder(professionLabel(draft), b -> {
             draft.cycleProfession();
             onDirty.run();
             b.setMessage(professionLabel(draft));
-        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 48, 158, 16).build());
+        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 68, 158, 16).build());
         professionButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.profession")));
 
         Checkbox particlesCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.purchase_particles"),
                         host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 68)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 88)
                 .selected(draft.purchaseParticlesEnabled())
                 .onValueChange((checkbox, value) -> {
                     draft.setPurchaseParticlesEnabled(value);
@@ -175,7 +208,7 @@ public final class SingleOfferSettingsSections {
         Checkbox soundsCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.purchase_sounds"),
                         host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 88)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 108)
                 .selected(draft.purchaseSoundsEnabled())
                 .onValueChange((checkbox, value) -> {
                     draft.setPurchaseSoundsEnabled(value);
@@ -187,7 +220,7 @@ public final class SingleOfferSettingsSections {
         Checkbox paymentSoundsCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.payment_sounds"),
                         host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 108)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 128)
                 .selected(draft.paymentSlotSoundsEnabled())
                 .onValueChange((checkbox, value) -> {
                     draft.setPaymentSlotSoundsEnabled(value);
@@ -201,10 +234,10 @@ public final class SingleOfferSettingsSections {
             npcToggle.setTooltip(Tooltip.create(Component.translatable(placementResult.translationKey())));
         }
 
-        return new VillagerSectionWidgets(npcNameField);
+        return new VillagerSectionWidgets(npcNameField, playerSkinNameField, professionButton);
     }
 
-    public record VillagerSectionWidgets(EditBox npcNameField) {
+    public record VillagerSectionWidgets(EditBox npcNameField, EditBox playerSkinNameField, Button professionButton) {
     }
 
     private static float mapToDisplayScale(float internal) {

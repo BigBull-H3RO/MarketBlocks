@@ -152,6 +152,14 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
     public int processBulkPurchase(int maxAmount, @Nullable Player buyer, boolean shiftPurchase) {
         if (maxAmount <= 0) return 0;
+        
+        BuyerIdentity buyerIdentity = resolveBuyerIdentity(buyer);
+        if (buyerIdentity != null) {
+            if (!shopEntity.canPlayerBuyByUUID(buyerIdentity.uuid())) return 0;
+        } else if (shopEntity.getGeneralSettings().isClosed()) {
+            return 0;
+        }
+
         boolean adminShop = shopEntity.isAdminShopEnabled();
 
         ShopInventoryManager inv = shopEntity.getInventoryManager();
