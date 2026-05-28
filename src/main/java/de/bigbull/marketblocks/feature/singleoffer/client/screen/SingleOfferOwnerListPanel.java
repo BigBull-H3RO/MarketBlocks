@@ -20,6 +20,16 @@ import java.util.UUID;
  * section.
  */
 public class SingleOfferOwnerListPanel {
+    public enum ListMode {
+        OWNERS("gui.marketblocks.access.edit_owners"),
+        ACCESS_LIST("gui.marketblocks.access.edit_access_list");
+
+        private final String key;
+        ListMode(String key) { this.key = key; }
+        public Component title() { return Component.translatable(key); }
+        public ListMode next() { return this == OWNERS ? ACCESS_LIST : OWNERS; }
+    }
+
     private static final int OWNER_VISIBLE_ROWS = 2;
     private static final int OWNER_ROW_HEIGHT = 20;
     private static final int OWNER_PANEL_X_OFFSET = 7;
@@ -42,8 +52,18 @@ public class SingleOfferOwnerListPanel {
 
     private SingleOfferShopScreen host;
     private Map<UUID, String> storedNames = Map.of();
-    private Runnable onDirty = () -> {
-    };
+    private Runnable onDirty = () -> {};
+    private ListMode listMode = ListMode.OWNERS;
+
+    public ListMode getListMode() { return listMode; }
+    public void setListMode(ListMode mode) {
+        if (this.listMode != mode) {
+            this.listMode = mode;
+            clearData();
+        }
+    }
+
+    public Map<UUID, String> getStoredNames() { return storedNames; }
 
     public void prepareAndRender(SingleOfferShopScreen host,
             AccessSettings.Draft accessDraft,
@@ -65,7 +85,7 @@ public class SingleOfferOwnerListPanel {
             populateOwnerData(accessDraft);
         }
 
-        this.storedNames = accessDraft.additionalOwners();
+        this.storedNames = listMode == ListMode.OWNERS ? accessDraft.additionalOwners() : accessDraft.accessList();
         this.ownerStartIndex = net.minecraft.util.Mth.clamp(ownerStartIndex, 0, getOwnerOffscreenRows());
         renderOwnerWindow();
         this.noPlayers = ownerOrder.isEmpty();
@@ -190,7 +210,7 @@ public class SingleOfferOwnerListPanel {
         ownerOrder.clear();
         ownerSelected.clear();
 
-        Map<UUID, String> current = new HashMap<>(accessDraft.additionalOwners());
+        Map<UUID, String> current = new HashMap<>(listMode == ListMode.OWNERS ? accessDraft.additionalOwners() : accessDraft.accessList());
 
         if (Minecraft.getInstance().getConnection() != null) {
             Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();

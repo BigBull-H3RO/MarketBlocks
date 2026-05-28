@@ -11,24 +11,28 @@ import net.minecraft.network.codec.StreamCodec;
 public record GeneralSettings(
         String shopName,
         boolean emitRedstone,
-        boolean purchaseXpFeedbackSound
+        boolean purchaseXpFeedbackSound,
+        boolean isClosed
 ) {
     private static final int MAX_SHOP_NAME_LENGTH = 32;
 
     private static final String KEY_SHOP_NAME = "ShopName";
     private static final String KEY_EMIT_REDSTONE = "EmitRedstone";
     private static final String KEY_PURCHASE_XP_FEEDBACK_SOUND = "PurchaseXpFeedbackSound";
+    private static final String KEY_IS_CLOSED = "IsClosed";
 
-    public static final GeneralSettings DEFAULT = new GeneralSettings("", false, true);
+    public static final GeneralSettings DEFAULT = new GeneralSettings("", false, true, false);
 
     public static final StreamCodec<ByteBuf, GeneralSettings> STREAM_CODEC = StreamCodec.of(
             (buf, settings) -> {
                 ByteBufCodecs.STRING_UTF8.encode(buf, settings.shopName());
                 ByteBufCodecs.BOOL.encode(buf, settings.emitRedstone());
                 ByteBufCodecs.BOOL.encode(buf, settings.purchaseXpFeedbackSound());
+                ByteBufCodecs.BOOL.encode(buf, settings.isClosed());
             },
             buf -> new GeneralSettings(
                     ByteBufCodecs.STRING_UTF8.decode(buf),
+                    ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf)
             )
@@ -43,6 +47,7 @@ public record GeneralSettings(
         tag.putString(KEY_SHOP_NAME, shopName);
         tag.putBoolean(KEY_EMIT_REDSTONE, emitRedstone);
         tag.putBoolean(KEY_PURCHASE_XP_FEEDBACK_SOUND, purchaseXpFeedbackSound);
+        tag.putBoolean(KEY_IS_CLOSED, isClosed);
         return tag;
     }
 
@@ -51,7 +56,8 @@ public record GeneralSettings(
         return new GeneralSettings(
                 tag.getString(KEY_SHOP_NAME),
                 tag.getBoolean(KEY_EMIT_REDSTONE),
-                !tag.contains(KEY_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(KEY_PURCHASE_XP_FEEDBACK_SOUND)
+                !tag.contains(KEY_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(KEY_PURCHASE_XP_FEEDBACK_SOUND),
+                tag.getBoolean(KEY_IS_CLOSED)
         );
     }
 
@@ -71,12 +77,14 @@ public record GeneralSettings(
         private String shopName;
         private boolean emitRedstone;
         private boolean purchaseXpFeedbackSound;
+        private boolean isClosed;
 
         public Draft(GeneralSettings settings) {
             GeneralSettings s = settings == null ? DEFAULT : settings;
             this.shopName = s.shopName();
             this.emitRedstone = s.emitRedstone();
             this.purchaseXpFeedbackSound = s.purchaseXpFeedbackSound();
+            this.isClosed = s.isClosed();
         }
 
         public String shopName() { return shopName; }
@@ -88,8 +96,11 @@ public record GeneralSettings(
         public boolean purchaseXpFeedbackSound() { return purchaseXpFeedbackSound; }
         public Draft setPurchaseXpFeedbackSound(boolean v) { this.purchaseXpFeedbackSound = v; return this; }
 
+        public boolean isClosed() { return isClosed; }
+        public Draft setIsClosed(boolean isClosed) { this.isClosed = isClosed; return this; }
+
         public GeneralSettings toSettings() {
-            return new GeneralSettings(shopName, emitRedstone, purchaseXpFeedbackSound);
+            return new GeneralSettings(shopName, emitRedstone, purchaseXpFeedbackSound, isClosed);
         }
     }
 }

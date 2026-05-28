@@ -59,6 +59,17 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings.category.visual", "Visual");
         add("gui.marketblocks.settings.category.access", "Zugriff");
         add("gui.marketblocks.settings.visual.placeholder", "Weitere Visual-Einstellungen folgen.");
+        add("gui.marketblocks.shop_closed", "Shop Geschlossen");
+        add("gui.marketblocks.shop_closed.tooltip", "Ist dies aktiv, können nur Besitzer einkaufen.");
+        add("gui.marketblocks.visuals.use_player_skin", "Spieler-Skin");
+        add("gui.marketblocks.visuals.use_player_skin.tooltip", "Einen Spieler anstelle eines Villagers anzeigen.");
+        add("gui.marketblocks.visuals.player_skin_name", "Spielername");
+        add("gui.marketblocks.visuals.player_skin_name.tooltip", "Name des Spielers, dessen Skin geladen werden soll.");
+        add("gui.marketblocks.access.edit_owners", "Bearbeite: Besitzer");
+        add("gui.marketblocks.access.edit_access_list", "Bearbeite: Zugriffsliste");
+        add("gui.marketblocks.access.mode.everyone", "Modus: Jeder");
+        add("gui.marketblocks.access.mode.whitelist", "Modus: Whitelist");
+        add("gui.marketblocks.access.mode.blacklist", "Modus: Blacklist");
         add("gui.marketblocks.log_title", "Transaktions-Log");
         add("gui.marketblocks.log.empty", "Keine Transaktionen vorhanden");
         add("gui.marketblocks.log.clear", "Log leeren");

@@ -10,6 +10,7 @@ import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.feature.visual.npc.IVisualShopNPC;
 import de.bigbull.marketblocks.feature.visual.npc.ShopNpcAnimationState;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode;
 import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
@@ -394,9 +395,35 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public boolean isOwner(Player player) {
         if (isAdminShopEnabled() && player.hasPermissions(2))
             return true;
-        UUID id = player.getUUID();
+        return isOwnerByUUID(player.getUUID());
+    }
+
+    public boolean isOwnerByUUID(UUID uuid) {
         AccessSettings acc = settingsManager.getAccessSettings();
-        return id.equals(acc.ownerId()) || acc.additionalOwners().containsKey(id);
+        return uuid.equals(acc.ownerId()) || acc.additionalOwners().containsKey(uuid);
+    }
+
+    public boolean canPlayerBuy(Player player) {
+        if (player == null) return !getGeneralSettings().isClosed();
+        if (isAdminShopEnabled() && player.hasPermissions(2)) return true;
+        return canPlayerBuyByUUID(player.getUUID());
+    }
+
+    public boolean canPlayerBuyByUUID(UUID uuid) {
+        if (getGeneralSettings().isClosed()) {
+            return false;
+        }
+        if (uuid == null || isOwnerByUUID(uuid)) {
+            return true;
+        }
+        AccessSettings acc = getAccessSettings();
+        AccessMode mode = acc.accessMode();
+        if (mode == AccessMode.WHITELIST) {
+            return acc.accessList().containsKey(uuid);
+        } else if (mode == AccessMode.BLACKLIST) {
+            return !acc.accessList().containsKey(uuid);
+        }
+        return true;
     }
 
     public boolean isPrimaryOwner(Player player) {
@@ -552,7 +579,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void setShopName(String name, boolean sync) {
         GeneralSettings current = getGeneralSettings();
-        setGeneralSettings(new GeneralSettings(name, current.emitRedstone(), current.purchaseXpFeedbackSound()), sync);
+        setGeneralSettings(new GeneralSettings(name, current.emitRedstone(), current.purchaseXpFeedbackSound(), current.isClosed()), sync);
     }
 
     public boolean isEmitRedstone() {
@@ -561,7 +588,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void setEmitRedstone(boolean emitRedstone, boolean sync) {
         GeneralSettings current = getGeneralSettings();
-        setGeneralSettings(new GeneralSettings(current.shopName(), emitRedstone, current.purchaseXpFeedbackSound()),
+        setGeneralSettings(new GeneralSettings(current.shopName(), emitRedstone, current.purchaseXpFeedbackSound(), current.isClosed()),
                 sync);
     }
 
@@ -571,7 +598,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void setPurchaseXpFeedbackSound(boolean enabled, boolean sync) {
         GeneralSettings current = getGeneralSettings();
-        setGeneralSettings(new GeneralSettings(current.shopName(), current.emitRedstone(), enabled), sync);
+        setGeneralSettings(new GeneralSettings(current.shopName(), current.emitRedstone(), enabled, current.isClosed()), sync);
     }
 
     // --- Villager Settings Accessors ---
@@ -728,6 +755,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     private boolean isReadyToPurchase() {
+        if (getGeneralSettings().isClosed()) return false;
+        if (purchaseContextBuyerId != null) {
+            if (!canPlayerBuyByUUID(purchaseContextBuyerId)) return false;
+        }
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
         boolean stockReady = isAdminShopEnabled() || offerManager.hasResultItemInInput(false);

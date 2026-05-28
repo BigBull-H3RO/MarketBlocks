@@ -351,18 +351,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             OfferItemSettings offerItem = offerItemDraft.toSettings();
             IoSettings io = ioDraft.toSettings();
 
-            List<UUID> selectedOwners = Collections.emptyList();
             if (menu.isPrimaryOwner()) {
-                selectedOwners = new ArrayList<>();
-                Map<UUID, String> stored = accessDraft.additionalOwners();
-                Map<UUID, String> newAdditionalOwners = new java.util.HashMap<>();
-
-                for (UUID id : ownerListPanel.collectSelectedOwners()) {
-                    selectedOwners.add(id);
-                    String n = ownerListPanel.resolveName(id, stored);
-                    newAdditionalOwners.put(id, n);
-                }
-                accessDraft.setAdditionalOwners(newAdditionalOwners);
+                saveListPanelToDraft();
             }
 
             AccessSettings access = accessDraft.toSettings();
@@ -381,8 +371,34 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }).bounds(leftPos + imageWidth - 50, topPos + imageHeight - 24, 44, 18).build());
     }
 
+    private void saveListPanelToDraft() {
+        if (!menu.isPrimaryOwner()) return;
+        Map<UUID, String> newMap = new java.util.HashMap<>();
+        for (UUID id : ownerListPanel.collectSelectedOwners()) {
+            newMap.put(id, ownerListPanel.resolveName(id, ownerListPanel.getStoredNames()));
+        }
+        if (ownerListPanel.getListMode() == SingleOfferOwnerListPanel.ListMode.OWNERS) {
+            accessDraft.setAdditionalOwners(newMap);
+        } else {
+            accessDraft.setAccessList(newMap);
+        }
+    }
+
     private void buildSettingsAccessSection(SingleOfferShopBlockEntity be) {
-        ownerListPanel.prepareAndRender(this, accessDraft, topPos + 20, menu.isPrimaryOwner(), () -> saved = false);
+        addSettingsWidget(Button.builder(accessDraft.accessMode().title(), b -> {
+            accessDraft.setAccessMode(accessDraft.accessMode().next());
+            b.setMessage(accessDraft.accessMode().title());
+            markDirty();
+        }).bounds(leftPos + 8, topPos + 22, 158, 16).build());
+
+        addSettingsWidget(Button.builder(ownerListPanel.getListMode().title(), b -> {
+            saveListPanelToDraft();
+            ownerListPanel.setListMode(ownerListPanel.getListMode().next());
+            b.setMessage(ownerListPanel.getListMode().title());
+            rebuildUI();
+        }).bounds(leftPos + 8, topPos + 40, 158, 16).build());
+
+        ownerListPanel.prepareAndRender(this, accessDraft, topPos + 60, menu.isPrimaryOwner(), () -> saved = false);
     }
 
     private void switchSettingsCategory(SettingsCategory category) {
@@ -463,14 +479,19 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (nameField != null && nameField.isFocused()) {
-            if (nameField.keyPressed(keyCode, scanCode, modifiers))
+    public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
+        if (this.getFocused() instanceof net.minecraft.client.gui.components.EditBox editBox && editBox.canConsumeInput()) {
+            if (pKeyCode == 256) { // Escape
+                this.setFocused(null);
                 return true;
-            if (Minecraft.getInstance().options.keyInventory.matches(keyCode, scanCode))
-                return true;
+            }
+            if (pKeyCode == 258) { // Tab
+                return super.keyPressed(pKeyCode, pScanCode, pModifiers);
+            }
+            editBox.keyPressed(pKeyCode, pScanCode, pModifiers);
+            return true; // Consume all keys to prevent AbstractContainerScreen from triggering 'E' (inventory)
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
 
     @Override

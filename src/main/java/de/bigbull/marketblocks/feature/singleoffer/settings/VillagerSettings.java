@@ -15,9 +15,12 @@ public record VillagerSettings(
         VillagerVisualProfession profession,
         boolean purchaseParticlesEnabled,
         boolean purchaseSoundsEnabled,
-        boolean paymentSlotSoundsEnabled
+        boolean paymentSlotSoundsEnabled,
+        boolean usePlayerSkin,
+        String playerSkinName
 ) {
     private static final int MAX_NPC_NAME_LENGTH = 32;
+    private static final int MAX_PLAYER_SKIN_NAME_LENGTH = 36;
 
     private static final String KEY_NPC_ENABLED = "NpcEnabled";
     private static final String KEY_NPC_NAME = "NpcName";
@@ -25,9 +28,11 @@ public record VillagerSettings(
     private static final String KEY_PURCHASE_PARTICLES = "PurchaseParticles";
     private static final String KEY_PURCHASE_SOUNDS = "PurchaseSounds";
     private static final String KEY_PAYMENT_SLOT_SOUNDS = "PaymentSlotSounds";
+    private static final String KEY_USE_PLAYER_SKIN = "UsePlayerSkin";
+    private static final String KEY_PLAYER_SKIN_NAME = "PlayerSkinName";
 
     public static final VillagerSettings DEFAULT = new VillagerSettings(
-            false, "", VillagerVisualProfession.NONE, true, true, true
+            false, "", VillagerVisualProfession.NONE, true, true, true, false, ""
     );
 
     public static final StreamCodec<ByteBuf, VillagerSettings> STREAM_CODEC = StreamCodec.of(
@@ -38,6 +43,8 @@ public record VillagerSettings(
                 ByteBufCodecs.BOOL.encode(buf, settings.purchaseParticlesEnabled());
                 ByteBufCodecs.BOOL.encode(buf, settings.purchaseSoundsEnabled());
                 ByteBufCodecs.BOOL.encode(buf, settings.paymentSlotSoundsEnabled());
+                ByteBufCodecs.BOOL.encode(buf, settings.usePlayerSkin());
+                ByteBufCodecs.STRING_UTF8.encode(buf, settings.playerSkinName());
             },
             buf -> new VillagerSettings(
                     ByteBufCodecs.BOOL.decode(buf),
@@ -45,17 +52,20 @@ public record VillagerSettings(
                     VillagerVisualProfession.fromSerialized(ByteBufCodecs.STRING_UTF8.decode(buf)),
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
-                    ByteBufCodecs.BOOL.decode(buf)
+                    ByteBufCodecs.BOOL.decode(buf),
+                    ByteBufCodecs.BOOL.decode(buf),
+                    ByteBufCodecs.STRING_UTF8.decode(buf)
             )
     );
 
     public VillagerSettings {
         npcName = sanitizeNpcName(npcName);
         profession = profession == null ? VillagerVisualProfession.NONE : profession;
+        playerSkinName = sanitizePlayerSkinName(playerSkinName);
     }
 
     public VillagerSettings withNpcEnabled(boolean enabled) {
-        return new VillagerSettings(enabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled, paymentSlotSoundsEnabled);
+        return new VillagerSettings(enabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled, paymentSlotSoundsEnabled, usePlayerSkin, playerSkinName);
     }
 
     public CompoundTag save() {
@@ -66,6 +76,8 @@ public record VillagerSettings(
         tag.putBoolean(KEY_PURCHASE_PARTICLES, purchaseParticlesEnabled);
         tag.putBoolean(KEY_PURCHASE_SOUNDS, purchaseSoundsEnabled);
         tag.putBoolean(KEY_PAYMENT_SLOT_SOUNDS, paymentSlotSoundsEnabled);
+        tag.putBoolean(KEY_USE_PLAYER_SKIN, usePlayerSkin);
+        tag.putString(KEY_PLAYER_SKIN_NAME, playerSkinName);
         return tag;
     }
 
@@ -77,7 +89,9 @@ public record VillagerSettings(
                 VillagerVisualProfession.fromSerialized(tag.getString(KEY_PROFESSION)),
                 !tag.contains(KEY_PURCHASE_PARTICLES) || tag.getBoolean(KEY_PURCHASE_PARTICLES),
                 !tag.contains(KEY_PURCHASE_SOUNDS) || tag.getBoolean(KEY_PURCHASE_SOUNDS),
-                !tag.contains(KEY_PAYMENT_SLOT_SOUNDS) || tag.getBoolean(KEY_PAYMENT_SLOT_SOUNDS)
+                !tag.contains(KEY_PAYMENT_SLOT_SOUNDS) || tag.getBoolean(KEY_PAYMENT_SLOT_SOUNDS),
+                tag.getBoolean(KEY_USE_PLAYER_SKIN),
+                tag.getString(KEY_PLAYER_SKIN_NAME)
         );
     }
 
@@ -86,6 +100,15 @@ public record VillagerSettings(
         String sanitized = raw.strip().replaceAll("[^\\p{L}\\p{N} _-]", "");
         if (sanitized.length() > MAX_NPC_NAME_LENGTH) {
             sanitized = sanitized.substring(0, MAX_NPC_NAME_LENGTH);
+        }
+        return sanitized;
+    }
+
+    public static String sanitizePlayerSkinName(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        String sanitized = raw.strip().replaceAll("[^\\p{L}\\p{N} _-]", "");
+        if (sanitized.length() > MAX_PLAYER_SKIN_NAME_LENGTH) {
+            sanitized = sanitized.substring(0, MAX_PLAYER_SKIN_NAME_LENGTH);
         }
         return sanitized;
     }
@@ -100,6 +123,8 @@ public record VillagerSettings(
         private boolean purchaseParticlesEnabled;
         private boolean purchaseSoundsEnabled;
         private boolean paymentSlotSoundsEnabled;
+        private boolean usePlayerSkin;
+        private String playerSkinName;
 
         public Draft(VillagerSettings settings) {
             VillagerSettings s = settings == null ? DEFAULT : settings;
@@ -109,6 +134,8 @@ public record VillagerSettings(
             this.purchaseParticlesEnabled = s.purchaseParticlesEnabled();
             this.purchaseSoundsEnabled = s.purchaseSoundsEnabled();
             this.paymentSlotSoundsEnabled = s.paymentSlotSoundsEnabled();
+            this.usePlayerSkin = s.usePlayerSkin();
+            this.playerSkinName = s.playerSkinName();
         }
 
         public boolean npcEnabled() { return npcEnabled; }
@@ -134,8 +161,14 @@ public record VillagerSettings(
         public boolean paymentSlotSoundsEnabled() { return paymentSlotSoundsEnabled; }
         public Draft setPaymentSlotSoundsEnabled(boolean v) { this.paymentSlotSoundsEnabled = v; return this; }
 
+        public boolean usePlayerSkin() { return usePlayerSkin; }
+        public Draft setUsePlayerSkin(boolean v) { this.usePlayerSkin = v; return this; }
+
+        public String playerSkinName() { return playerSkinName; }
+        public Draft setPlayerSkinName(String name) { this.playerSkinName = sanitizePlayerSkinName(name); return this; }
+
         public VillagerSettings toSettings() {
-            return new VillagerSettings(npcEnabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled, paymentSlotSoundsEnabled);
+            return new VillagerSettings(npcEnabled, npcName, profession, purchaseParticlesEnabled, purchaseSoundsEnabled, paymentSlotSoundsEnabled, usePlayerSkin, playerSkinName);
         }
     }
 }

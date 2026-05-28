@@ -3,7 +3,19 @@ package de.bigbull.marketblocks.feature.visual.npc;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
+import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.Minecraft;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.chat.Component;
+
+import java.util.UUID;
 
 /**
  * Client-only runtime state for BER-based visual NPC animations.
@@ -27,6 +39,8 @@ public class ShopNpcAnimationState {
     private float smoothedPitch = 0.0F;
     private boolean pitchInitialized = false;
     private Villager cachedRenderVillager;
+    private RemotePlayer cachedRenderPlayer;
+    private String lastPlayerSkinInput;
 
     public int getLastAnimationNonce() {
         return lastAnimationNonce;
@@ -116,7 +130,6 @@ public class ShopNpcAnimationState {
         this.lastPaymentFeedbackTick = lastPaymentFeedbackTick;
     }
 
-
     public boolean isSpawnLandSoundPlayed() {
         return spawnLandSoundPlayed;
     }
@@ -162,7 +175,86 @@ public class ShopNpcAnimationState {
         }
         return cachedRenderVillager;
     }
+
+    public RemotePlayer getOrCreateRenderPlayer(Level level, String input) {
+        if (cachedRenderPlayer == null || cachedRenderPlayer.level() != level || !input.equals(lastPlayerSkinInput)) {
+            lastPlayerSkinInput = input;
+
+            GameProfile profile = null;
+            UUID parsedUuid = null;
+
+            try {
+                if (input.length() == 36 || input.length() == 32) {
+                    String uuidStr = input;
+                    if (uuidStr.length() == 32) {
+                        uuidStr = uuidStr.replaceFirst(
+                                "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+                                "$1-$2-$3-$4-$5");
+                    }
+                    parsedUuid = UUID.fromString(uuidStr);
+                }
+            } catch (IllegalArgumentException e) {
+                // Not a UUID
+            }
+
+            if (Minecraft.getInstance().getConnection() != null) {
+                for (PlayerInfo info : Minecraft.getInstance().getConnection().getOnlinePlayers()) {
+                    if (parsedUuid != null && info.getProfile().getId().equals(parsedUuid)) {
+                        profile = info.getProfile();
+                        break;
+                    } else if (input.equalsIgnoreCase(info.getProfile().getName())) {
+                        profile = info.getProfile();
+                        break;
+                    }
+                }
+            }
+
+            if (profile == null) {
+                if (parsedUuid != null) {
+                    profile = new GameProfile(parsedUuid, "");
+                } else {
+                    profile = new GameProfile(UUIDUtil.createOfflinePlayerUUID(input), input);
+                    SkullBlockEntity.fetchGameProfile(input).thenAcceptAsync(optProfile -> {
+                        if (optProfile.isPresent()) {
+                            this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, optProfile.get());
+                        }
+                    }, Minecraft.getInstance());
+                }
+            }
+
+            this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, profile);
+        }
+        return cachedRenderPlayer;
+    }
+
+    private RemotePlayer createCustomSkinPlayer(ClientLevel level, GameProfile profile) {
+        RemotePlayer player = new RemotePlayer(level, profile) {
+            @Override
+            public PlayerSkin getSkin() {
+                return Minecraft.getInstance().getSkinManager().getInsecureSkin(this.getGameProfile());
+            }
+
+            @Override
+            public boolean isModelPartShown(PlayerModelPart part) {
+                return true; // Show hat, jacket, sleeves, pants, etc.
+            }
+
+            @Override
+            public boolean shouldShowName() {
+                return super.hasCustomName() && this.isCustomNameVisible();
+            }
+
+            @Override
+            public boolean hasCustomName() {
+                return super.hasCustomName() && this.isCustomNameVisible();
+            }
+
+            @Override
+            public Component getDisplayName() {
+                return super.hasCustomName() ? this.getCustomName() : Component.empty();
+            }
+        };
+        player.noPhysics = true;
+        return player;
+    }
 }
-
-
-

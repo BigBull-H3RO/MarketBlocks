@@ -71,6 +71,17 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings.category.visual", "Visual");
         add("gui.marketblocks.settings.category.access", "Access");
         add("gui.marketblocks.settings.visual.placeholder", "More visual settings coming soon.");
+        add("gui.marketblocks.shop_closed", "Shop Paused");
+        add("gui.marketblocks.shop_closed.tooltip", "If active, only owners can buy items.");
+        add("gui.marketblocks.visuals.use_player_skin", "Player Skin");
+        add("gui.marketblocks.visuals.use_player_skin.tooltip", "Render a player instead of a villager.");
+        add("gui.marketblocks.visuals.player_skin_name", "Player Name");
+        add("gui.marketblocks.visuals.player_skin_name.tooltip", "Name of the player to load the skin from.");
+        add("gui.marketblocks.access.edit_owners", "Editing: Owners");
+        add("gui.marketblocks.access.edit_access_list", "Editing: Access List");
+        add("gui.marketblocks.access.mode.everyone", "Mode: Everyone");
+        add("gui.marketblocks.access.mode.whitelist", "Mode: Whitelist");
+        add("gui.marketblocks.access.mode.blacklist", "Mode: Blacklist");
         add("gui.marketblocks.log_title", "Transaction Log");
         add("gui.marketblocks.log.empty", "No transactions yet");
         add("gui.marketblocks.log.clear", "Clear log");
