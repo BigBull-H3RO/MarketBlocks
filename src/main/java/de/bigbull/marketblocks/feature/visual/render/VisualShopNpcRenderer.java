@@ -86,8 +86,9 @@ public final class VisualShopNpcRenderer {
         BlockPos shopPos = host.getVisualShopPos();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
 
-        if (settings.usePlayerSkin() && !settings.playerSkinName().isBlank()) {
-            net.minecraft.client.player.RemotePlayer player = state.getOrCreateRenderPlayer(level, settings.playerSkinName());
+        if (settings.usePlayerSkin()) {
+            String skinName = settings.playerSkinName();
+            net.minecraft.client.player.RemotePlayer player = state.getOrCreateRenderPlayer(level, skinName == null ? "" : skinName);
             player.noCulling = true;
             player.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
             player.setYRot(bodyYaw);
@@ -106,6 +107,9 @@ public final class VisualShopNpcRenderer {
                 player.setCustomNameVisible(false);
                 player.setCustomName(null);
             }
+
+            dispatcher.setRenderShadow(false);
+
             dispatcher.render(
                     player,
                     spawnPos.x - shopPos.getX(),
@@ -117,6 +121,8 @@ public final class VisualShopNpcRenderer {
                     bufferSource,
                     packedLight
             );
+
+            dispatcher.setRenderShadow(true);
         } else {
             Villager villager = state.getOrCreateRenderVillager(level);
             villager.noCulling = true;
@@ -341,8 +347,3 @@ public final class VisualShopNpcRenderer {
         }
     }
 }
-
-
-
-
-
