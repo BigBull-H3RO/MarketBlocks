@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceUpdateOfferLimitsPacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceUpdateOfferLimitsPacket;
 import de.bigbull.marketblocks.feature.marketplace.data.OfferLimit;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceSerialization;
 import net.minecraft.client.Minecraft;

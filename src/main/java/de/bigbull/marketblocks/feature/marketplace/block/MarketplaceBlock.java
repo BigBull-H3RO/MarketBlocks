@@ -1,11 +1,13 @@
 package de.bigbull.marketblocks.feature.marketplace.block;
 
+import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.marketplace.entity.MarketplaceBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.MapCodec;
@@ -32,5 +34,15 @@ public class MarketplaceBlock extends BaseEntityBlock {
     @Override
     protected RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
+    }
+
+    @Override
+    public PushReaction getPistonPushReaction(BlockState state) {
+        return PushReaction.BLOCK;
+    }
+
+    @Override
+    public float getExplosionResistance() {
+        return Config.SHOP_BLAST_RESISTANCE.get().floatValue();
     }
 }

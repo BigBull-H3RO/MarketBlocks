@@ -232,7 +232,7 @@ public final class VisualShopNpcRenderer {
             if (settings.purchaseSoundsEnabled()) {
                 if (now - state.getLastPurchaseFeedbackTick() > 4L) {
                     int delta = currentCounter - state.getLastPurchaseCounter();
-                    // Höherer Ton bei mehr Käufen auf einmal (wie Vanilla XP-Orbs)
+                    // Higher pitch for more purchases at once (like vanilla XP orbs)
                     float pitch = Math.min(0.9F + delta * 0.08F, 1.8F);
                     level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
                             SoundEvents.VILLAGER_YES, SoundSource.BLOCKS, 0.6F, pitch, false);

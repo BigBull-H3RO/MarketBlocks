@@ -248,6 +248,25 @@ public class ModEnLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.invalid_data", "Could not save pricing: invalid data.");
         add("message.marketblocks.marketplace.pricing.invalid_number_format", "Please use numbers only (dot or comma allowed).");
         add("message.marketblocks.visual_npc.space_blocked", "The decorative villager cannot spawn: two free blocks above are required.");
+        add("message.marketblocks.visual_npc.profession_not_found", "The specified profession could not be found.");
+
+        // Notifications
+        add("gui.marketblocks.settings.category.notifications", "Notifications");
+        add("gui.marketblocks.notifications.purchase", "Purchase Notifications");
+        add("gui.marketblocks.notifications.purchase.tooltip", "Get notified in chat when someone buys from your shop.");
+        add("gui.marketblocks.notifications.out_of_stock", "Out of Stock Warning");
+        add("gui.marketblocks.notifications.out_of_stock.tooltip", "Get warned when the shop runs out of items.");
+        add("gui.marketblocks.notifications.output_full", "Output Full Warning");
+        add("gui.marketblocks.notifications.output_full.tooltip", "Get warned when the shop's output inventory is full.");
+        add("gui.marketblocks.notifications.co_owners", "Notify Co-Owners");
+        add("gui.marketblocks.notifications.co_owners.tooltip", "Also send notifications to additional shop owners.");
+
+        add("gui.marketblocks.notifications.login.out_of_stock", "§cWarning: %s of your shops are out of stock!§r");
+        add("gui.marketblocks.notifications.login.output_full", "§cWarning: %s of your shops have a full output inventory!§r");
+
+        add("message.marketblocks.notifications.purchase", "§a%s bought %sx %s from your shop.§r");
+        add("message.marketblocks.notifications.out_of_stock", "§cYour shop is out of stock!§r");
+        add("message.marketblocks.notifications.output_full", "§cYour shop's output inventory is full!§r");
         add("subtitles.marketblocks.visual_npc_fall", "Villager lands");
 
         add("item.marketblocks.trade_stand.with_showcase", "Trade Stand (With Showcase)");
@@ -256,6 +275,5 @@ public class ModEnLangProvider extends LanguageProvider {
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Trade Stand");
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Market Crate");
         addBlock(RegistriesInit.MARKETPLACE_BLOCK, "Marketplace");
-        addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

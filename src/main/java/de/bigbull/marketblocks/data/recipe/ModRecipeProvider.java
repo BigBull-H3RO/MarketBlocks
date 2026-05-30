@@ -21,7 +21,7 @@ public class ModRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
-        // Aktueller Shop-Block (trade_stand)
+        // Trade Stand
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.TRADE_STAND_BLOCK.get(), 1)
                 .pattern("#D#")
                 .pattern("IEI")
@@ -31,8 +31,19 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('E', Items.EMERALD)
                 .define('I', Items.IRON_INGOT)
                 .define('S', ItemTags.SIGNS)
-                .unlockedBy("has_oak_planks", has(Items.OAK_PLANKS))
+                .unlockedBy("has_emerald", has(Items.EMERALD))
                 .save(recipeOutput, getModId("trade_stand"));
+
+        // Market Crate
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.MARKETCRATE_BLOCK.get(), 1)
+                .pattern("#C#")
+                .pattern("#E#")
+                .pattern("###")
+                .define('#', ItemTags.PLANKS)
+                .define('C', Items.CHEST)
+                .define('E', Items.EMERALD)
+                .unlockedBy("has_emerald", has(Items.EMERALD))
+                .save(recipeOutput, getModId("marketcrate"));
     }
 
     public ResourceLocation getModId(String path) {

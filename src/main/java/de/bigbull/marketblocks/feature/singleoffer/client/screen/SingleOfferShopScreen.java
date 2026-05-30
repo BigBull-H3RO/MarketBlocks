@@ -4,7 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.singleoffer.*;
+import de.bigbull.marketblocks.feature.singleoffer.network.*;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
@@ -120,7 +120,14 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private ShopTab lastTab;
     private boolean lastHasOffer;
     private int lastMenuFlags;
-    private SettingsCategory activeSettingsCategory = SettingsCategory.GENERAL;
+    private SettingsCategory activeSettingsCategory = getFirstEnabledCategory();
+
+    private static SettingsCategory getFirstEnabledCategory() {
+        for (SettingsCategory cat : SettingsCategory.values()) {
+            if (cat.isEnabled()) return cat;
+        }
+        return SettingsCategory.GENERAL;
+    }
 
     private OfferTemplateButton offerButton;
     private EditBox nameField;
@@ -133,6 +140,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private OfferItemSettings.Draft offerItemDraft;
     private IoSettings.Draft ioDraft;
     private AccessSettings.Draft accessDraft;
+    private de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.Draft notificationDraft;
 
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
@@ -296,7 +304,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     this::switchSettingsCategory);
             buildSaveButton(be);
         } else {
-            activeSettingsCategory = SettingsCategory.GENERAL;
+            activeSettingsCategory = getFirstEnabledCategory();
         }
 
         switch (activeSettingsCategory) {
@@ -330,11 +338,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     }
                 }
             }
-            case ACCESS -> {
-                if (isOwner) {
-                    buildSettingsAccessSection(be);
-                }
-            }
+            case ACCESS -> buildSettingsAccessSection(be);
+            case NOTIFICATIONS -> buildSettingsNotificationSection(be);
         }
     }
 
@@ -356,15 +361,17 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
 
             AccessSettings access = accessDraft.toSettings();
+            de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings notifications = notificationDraft.toSettings();
 
             be.setGeneralSettings(general, false);
             be.setVillagerSettings(villager, false);
             be.setOfferItemSettings(offerItem, false);
             be.setIoSettings(io, false);
             be.setAccessSettings(access, false);
+            be.setNotificationSettings(notifications, false);
 
             NetworkHandler.sendToServer(new UpdateSettingsPacket(
-                    be.getBlockPos(), io, general, villager, offerItem, access));
+                    be.getBlockPos(), io, general, villager, offerItem, access, notifications));
 
             originalName = general.shopName();
             saved = true;
@@ -401,6 +408,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         ownerListPanel.prepareAndRender(this, accessDraft, topPos + 60, menu.isPrimaryOwner(), () -> saved = false);
     }
 
+    private void buildSettingsNotificationSection(SingleOfferShopBlockEntity be) {
+        SingleOfferSettingsSections.buildNotificationSection(this, notificationDraft, this::markDirty);
+    }
+
     private void switchSettingsCategory(SettingsCategory category) {
         if (activeSettingsCategory == category)
             return;
@@ -423,6 +434,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             ioDraft = new IoSettings.Draft(be.getIoSettings());
         if (accessDraft == null)
             accessDraft = new AccessSettings.Draft(be.getAccessSettings());
+        if (notificationDraft == null)
+            notificationDraft = new de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.Draft(be.getNotificationSettings());
     }
 
     private void markDirty() {
@@ -581,7 +594,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 boolean isExpanded = (i == expandedLogIndex);
                 int rowHeight = isExpanded ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
 
-                // Nur rendern, was sichtbar ist
+                // Only render what is visible
                 if (currentY + rowHeight > listY && currentY < listY + LOG_LIST_HEIGHT) {
                     renderLogRow(graphics, entries.get(i), listX, currentY, i, isExpanded);
                 }
@@ -731,7 +744,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     /**
-     * Nativer Skin Loading Weg ohne Reflection oder asynchrone Threads!
+     * Native skin loading path without reflection or asynchronous threads!
      */
     private ResourceLocation resolveLogSkinTexture(TransactionLogEntry entry) {
         UUID buyerId = entry.buyerUuid();
@@ -767,8 +780,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     /**
-     * Zeigt jetzt statt langweiligem Text die ECHTEN Tooltips für die gezeichneten
-     * ItemStacks an.
+     * Shows the actual ItemStack tooltips for the rendered items instead of boring text.
      */
     private void renderLogHoverTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         if (expandedLogIndex == -1)
@@ -961,7 +973,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (menu.getActiveTab() == ShopTab.LOG) {
             if (getMaxLogScroll() > 0) {
-                logScrollPixelOffset -= (int) (scrollY * 16); // Scroll-Geschwindigkeit (16 Pixel pro Raster)
+                logScrollPixelOffset -= (int) (scrollY * 16); // Scroll speed (16 pixels per step)
                 clampLogScroll();
                 return true;
             }

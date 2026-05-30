@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.network;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.network.marketplace.*;
-import de.bigbull.marketblocks.network.singleoffer.*;
+import de.bigbull.marketblocks.feature.marketplace.network.*;
+import de.bigbull.marketblocks.feature.singleoffer.network.*;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,7 +16,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
  * This class ensures that all custom packets are known to NeoForge's networking system
  * and can be sent between the client and server.
  */
-@EventBusSubscriber(modid = MarketBlocks.MODID)
+@EventBusSubscriber(modid = MarketBlocks.MODID, bus = EventBusSubscriber.Bus.MOD)
 public class NetworkHandler {
     private static final String PROTOCOL_VERSION = "1.0.0";
 

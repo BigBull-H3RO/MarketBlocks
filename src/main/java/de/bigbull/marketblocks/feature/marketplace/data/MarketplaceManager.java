@@ -6,7 +6,7 @@ import com.mojang.serialization.JsonOps;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceSyncPacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSyncPacket;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenuProvider;
 import net.minecraft.core.RegistryAccess;
@@ -32,7 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Zentrale Verwaltungsinstanz für den blocklosen Marktplatz.
+ * Central management instance for the blockless marketplace.
  */
 public final class MarketplaceManager {
     private static final Logger LOGGER = MarketBlocks.LOGGER;
@@ -81,7 +81,7 @@ public final class MarketplaceManager {
                 try {
                     Files.createDirectories(dir);
                 } catch (IOException e) {
-                    LOGGER.error("Konnte Verzeichnis {} nicht erstellen", dir, e);
+                    LOGGER.error("Could not create directory {}", dir, e);
                 }
             }
             loadFromDisk();
@@ -145,8 +145,8 @@ public final class MarketplaceManager {
     }
 
     /**
-     * Variante für GUI-basierte Käufe (Items liegen in Slots, nicht im Inventar).
-     * Hier prüfen wir Limits, Restock und Preiszustand; die Bezahlung muss vom Caller (Menu) abgezogen werden.
+     * Variant for GUI-based purchases (items are in slots, not in the player inventory).
+     * Checks limits, restock and price state; payment must be deducted by the caller (Menu).
      */
     public boolean processPurchaseTransactionSlotBased(ServerPlayer player, UUID offerId, int amount) {
         boolean shouldSyncViewers = false;
@@ -356,7 +356,7 @@ public final class MarketplaceManager {
 
             DataResult<Void> validation = offer.validate();
             if (validation.error().isPresent()) {
-                LOGGER.warn("Ungültiges Angebot: {}", validation.error().get().message());
+                LOGGER.warn("Invalid offer: {}", validation.error().get().message());
                 return MutationResult.failure(Component.translatable("gui.marketblocks.error.invalid_offer"));
             }
             page.internalOffers().add(offer.copy());
@@ -776,7 +776,7 @@ public final class MarketplaceManager {
                     success = true;
                 }
             } catch (IOException ex) {
-                LOGGER.error("Konnte temporaere Marktplatz-Datei {} nicht schreiben", tempFile, ex);
+                LOGGER.error("Could not write temporary marketplace file {}", tempFile, ex);
             }
 
             if (success) {
@@ -790,7 +790,7 @@ public final class MarketplaceManager {
                         Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
                     }
                 } catch (IOException ex) {
-                    LOGGER.error("Konnte Marktplatz-Datei {} nicht atomar speichern", targetFile, ex);
+                    LOGGER.error("Could not atomically save marketplace file {}", targetFile, ex);
                     success = false;
                 }
             }

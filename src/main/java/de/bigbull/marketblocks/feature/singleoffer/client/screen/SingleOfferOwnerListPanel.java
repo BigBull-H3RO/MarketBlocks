@@ -257,6 +257,9 @@ public class SingleOfferOwnerListPanel {
         ownerCheckboxes.values().forEach(host::removeSettingsWidget);
         ownerCheckboxes.clear();
 
+        int maxOwners = de.bigbull.marketblocks.core.config.Config.MAX_CO_OWNERS_PER_SHOP.get();
+        boolean limitReached = listMode == ListMode.OWNERS && collectSelectedOwners().size() >= maxOwners;
+
         int visible = Math.min(OWNER_VISIBLE_ROWS, ownerOrder.size());
         for (int row = 0; row < visible; row++) {
             int idx = ownerStartIndex + row;
@@ -273,9 +276,16 @@ public class SingleOfferOwnerListPanel {
                     .selected(selected)
                     .onValueChange((btn, value) -> {
                         ownerSelected.put(id, value);
+                        if (listMode == ListMode.OWNERS) {
+                            renderOwnerWindow();
+                        }
                         onDirty.run();
                     })
                     .build());
+            
+            if (limitReached && !selected) {
+                cb.active = false;
+            }
 
             ownerCheckboxes.put(id, cb);
         }

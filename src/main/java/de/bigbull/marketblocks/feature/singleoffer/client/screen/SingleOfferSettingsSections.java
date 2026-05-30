@@ -38,6 +38,7 @@ public final class SingleOfferSettingsSections {
         int x = host.settingsLeftPos() + SETTINGS_CATEGORY_BUTTON_X_OFFSET;
         int y = host.settingsTopPos() + SETTINGS_CATEGORY_BUTTON_Y_OFFSET;
         for (SettingsCategory category : SettingsCategory.values()) {
+            if (!category.isEnabled()) continue;
             host.addSettingsWidget(new IconButton(
                     x,
                     y,
@@ -396,5 +397,61 @@ public final class SingleOfferSettingsSections {
     private static Component professionLabel(VillagerSettings.Draft draft) {
         return Component.translatable("gui.marketblocks.visuals.profession").append(": ")
                 .append(Component.translatable(draft.profession().translationKey()));
+    }
+
+    public static void buildNotificationSection(SingleOfferShopScreen host, de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.Draft draft, Runnable onDirty) {
+        int leftX = host.settingsLeftPos() + 8;
+        int y = host.settingsTopPos() + 26;
+
+        Checkbox purchaseCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.notifications.purchase"),
+                        host.settingsFont())
+                .pos(leftX, y)
+                .selected(draft.notifyOnPurchase())
+                .onValueChange((checkbox, value) -> {
+                    draft.setNotifyOnPurchase(value);
+                    onDirty.run();
+                })
+                .build());
+        purchaseCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.notifications.purchase.tooltip")));
+        y += 20;
+
+        Checkbox outOfStockCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.notifications.out_of_stock"),
+                        host.settingsFont())
+                .pos(leftX, y)
+                .selected(draft.notifyOnOutOfStock())
+                .onValueChange((checkbox, value) -> {
+                    draft.setNotifyOnOutOfStock(value);
+                    onDirty.run();
+                })
+                .build());
+        outOfStockCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.notifications.out_of_stock.tooltip")));
+        y += 20;
+
+        Checkbox outputFullCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.notifications.output_full"),
+                        host.settingsFont())
+                .pos(leftX, y)
+                .selected(draft.notifyOnOutputFull())
+                .onValueChange((checkbox, value) -> {
+                    draft.setNotifyOnOutputFull(value);
+                    onDirty.run();
+                })
+                .build());
+        outputFullCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.notifications.output_full.tooltip")));
+        y += 20;
+
+        Checkbox coOwnersCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.notifications.co_owners"),
+                        host.settingsFont())
+                .pos(leftX, y)
+                .selected(draft.notifyCoOwners())
+                .onValueChange((checkbox, value) -> {
+                    draft.setNotifyCoOwners(value);
+                    onDirty.run();
+                })
+                .build());
+        coOwnersCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.notifications.co_owners.tooltip")));
     }
 }

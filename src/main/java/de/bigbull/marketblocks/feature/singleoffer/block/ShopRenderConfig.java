@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
 /**
- * Render-Konfiguration fuer Shop-Block-Designs.
- * Enthaelt getrennte Slot-Konfigurationen fuer:
+ * Render configuration for shop block designs.
+ * Contains separate slot configurations for:
  * - Offer Item + Offer Count-Text
  * - Payment1 Item + Payment1 Count-Text
  * - Payment2 Item + Payment2 Count-Text

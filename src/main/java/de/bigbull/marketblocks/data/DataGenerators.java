@@ -5,6 +5,8 @@ import de.bigbull.marketblocks.data.lang.ModDeLangProvider;
 import de.bigbull.marketblocks.data.lang.ModEnLangProvider;
 import de.bigbull.marketblocks.data.loot.ModLootTableProvider;
 import de.bigbull.marketblocks.data.recipe.ModRecipeProvider;
+import de.bigbull.marketblocks.data.tag.ModBlockTagProvider;
+import de.bigbull.marketblocks.data.tag.ModItemTagProvider;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
@@ -20,6 +22,11 @@ public class DataGenerators {
             generator.addProvider(true, new ModBlockStateProvider(output, event.getExistingFileHelper()));
         }
         if (event.includeServer()) {
+            ModBlockTagProvider blockTagProvider = new ModBlockTagProvider(output, event.getLookupProvider(),
+                    event.getExistingFileHelper());
+            generator.addProvider(true, blockTagProvider);
+            generator.addProvider(true, new ModItemTagProvider(output, event.getLookupProvider(),
+                    blockTagProvider.contentsGetter(), event.getExistingFileHelper()));
             generator.addProvider(true, new ModRecipeProvider(output, event.getLookupProvider()));
             generator.addProvider(true, ModLootTableProvider.create(output, event.getLookupProvider()));
         }

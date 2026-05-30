@@ -4,26 +4,26 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * Shape-Konfiguration fuer Shop-Block-Designs.
+ * Shape configuration for shop block designs.
  *
- * Diese Klasse enthaelt bewusst nur Geometrie (VoxelShape) fuer
+ * This class intentionally only contains geometry (VoxelShape) for
  * getShape/getCollisionShape/getInteractionShape.
  *
- * Render-Positionen fuer Offer/Payment/Count-Text sind in ShopRenderConfig ausgelagert.
+ * Render positions for Offer/Payment/Count-Text are defined in ShopRenderConfig.
  */
 public record ShopBlockConfig(VoxelShape shape) {
     public VoxelShape getShape() {
         return shape;
     }
 
-    /** TradeStandBlock (1 Block hoch, klassisches Design). */
+    /** TradeStandBlock (1 block tall, classic design). */
     public static final ShopBlockConfig TRADE_STAND_DEFAULT_SHAPE = new ShopBlockConfig(Block.box(0, 0, 0, 16, 13, 16));
 
     /**
-     * TradeStandBlockNeu – gemeinsame Shape-Config fuer den Basissockel.
+     * TradeStandBlock – shared shape config for the base pedestal.
      *
-     * Hinweis: TradeStandBlockNeu ueberschreibt getShape/getCollisionShape/getInteractionShape
-     * state-abhaengig selbst, daher ist diese Config dort nur ein konsistenter Fallback.
+     * Note: TradeStandBlock overrides getShape/getCollisionShape/getInteractionShape
+     * state-dependently itself, so this config is only a consistent fallback there.
      */
     public static final ShopBlockConfig TRADE_STAND_SHAPE = new ShopBlockConfig(Block.box(0, 0, 0, 16, 11, 16));
 

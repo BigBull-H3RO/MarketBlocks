@@ -235,6 +235,26 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
         add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte verwenden Sie nur Zahlen (Punkt oder Komma erlaubt).");
         add("message.marketblocks.visual_npc.space_blocked", "Der dekorative Villager kann nicht spawnen: Es müssen zwei freie Blöcke darüber sein.");
+        add("message.marketblocks.visual_npc.profession_not_found", "Die angegebene Profession konnte nicht gefunden werden.");
+
+        // Notifications
+        add("gui.marketblocks.settings.category.notifications", "Benachrichtigungen");
+        add("gui.marketblocks.notifications.purchase", "Kaufbenachrichtigung");
+        add("gui.marketblocks.notifications.purchase.tooltip", "Werde im Chat benachrichtigt, wenn jemand aus deinem Shop kauft.");
+        add("gui.marketblocks.notifications.out_of_stock", "Leer-Warnung");
+        add("gui.marketblocks.notifications.out_of_stock.tooltip", "Werde gewarnt, wenn der Shop leer ist.");
+        add("gui.marketblocks.notifications.output_full", "Ausgabe Voll-Warnung");
+        add("gui.marketblocks.notifications.output_full.tooltip", "Werde gewarnt, wenn das Ausgabe-Inventar des Shops voll ist.");
+        add("gui.marketblocks.notifications.co_owners", "Co-Owner benachrichtigen");
+        add("gui.marketblocks.notifications.co_owners.tooltip", "Sende Benachrichtigungen auch an zusätzliche Shop-Besitzer.");
+
+        add("gui.marketblocks.notifications.login.out_of_stock", "§cWarnung: %s deiner Shops sind leer!§r");
+        add("gui.marketblocks.notifications.login.output_full", "§cWarnung: Bei %s deiner Shops ist das Ausgabe-Inventar voll!§r");
+
+        add("message.marketblocks.notifications.purchase", "§a%s kaufte %sx %s aus deinem Shop.§r");
+        add("message.marketblocks.notifications.out_of_stock", "§cDein Shop ist leer!§r");
+        add("message.marketblocks.notifications.output_full", "§cDas Ausgabe-Inventar deines Shops ist voll!§r");
+
         add("subtitles.marketblocks.visual_npc_fall", "Villager landet");
 
         add("item.marketblocks.trade_stand.with_showcase", "Handelsstand (Mit Vitrine)");
@@ -243,6 +263,5 @@ public class ModDeLangProvider extends LanguageProvider {
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Handelsstand");
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Marktkiste");
         addBlock(RegistriesInit.MARKETPLACE_BLOCK, "Marktplatz");
-        addBlock(RegistriesInit.SHOP_BLOCK_TEST, "Shop Block Test");
     }
 }

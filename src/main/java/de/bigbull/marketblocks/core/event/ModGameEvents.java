@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.core.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,8 +14,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 @EventBusSubscriber(modid = MarketBlocks.MODID)
@@ -57,20 +54,5 @@ public class ModGameEvents {
             event.setCanceled(true);
             event.setCancellationResult(result);
         }
-    }
-
-    @SubscribeEvent
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(
-                Capabilities.ItemHandler.BLOCK,
-                RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(),
-                (be, side) -> {
-                    if (side == null) return null;
-                    SideMode mode = be.getMode(side);
-                    if (mode == SideMode.INPUT)  return be.getInputOnly();
-                    if (mode == SideMode.OUTPUT) return be.getOutputOnly();
-                    return null;
-                }
-        );
     }
 }

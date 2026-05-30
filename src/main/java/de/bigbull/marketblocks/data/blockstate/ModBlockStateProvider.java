@@ -19,7 +19,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        registerShopBlock(RegistriesInit.SHOP_BLOCK_TEST.get(), "shop_block_test", 0, false);
         registerShopBlock(RegistriesInit.MARKETCRATE_BLOCK.get(), "marketcrate", 180, true);
         registerTradeStandBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), 0);
 

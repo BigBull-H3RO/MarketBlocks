@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.singleoffer.SwitchTabPacket;
+import de.bigbull.marketblocks.feature.singleoffer.network.SwitchTabPacket;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopMenu;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;

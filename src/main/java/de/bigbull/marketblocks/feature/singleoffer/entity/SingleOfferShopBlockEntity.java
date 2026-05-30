@@ -227,6 +227,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     private int tickCounter = 0;
     private boolean needsOfferRefresh = false;
+    
+    private long lastOutOfStockNotifyTime = -1;
+    private long lastOutputFullNotifyTime = -1;
 
     public SingleOfferShopBlockEntity(BlockPos pos, BlockState state) {
         super(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), pos, state);
@@ -275,6 +278,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
             return !extractOnly && backing.isItemValid(slot, stack);
+        }
+    }
+
+    public void updateShopDirectory() {
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            de.bigbull.marketblocks.core.data.ShopDirectorySavedData data = de.bigbull.marketblocks.core.data.ShopDirectorySavedData.get(serverLevel);
+            net.minecraft.core.GlobalPos globalPos = net.minecraft.core.GlobalPos.of(serverLevel.dimension(), getBlockPos());
+            data.registerOrUpdateShop(globalPos, getOwnerId(), getOwnerName(), getShopName(), getGeneralSettings().isClosed());
         }
     }
 
@@ -350,6 +361,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public void setOwner(Player player) {
         settingsManager.setAccessSettings(
                 settingsManager.getAccessSettings().withOwner(player.getUUID(), player.getName().getString()), true);
+        if (level != null && !level.isClientSide) {
+            updateShopDirectory();
+        }
     }
 
     @SuppressWarnings("unused")
@@ -461,6 +475,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     // --- Shop Settings ---
 
+    public de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings getNotificationSettings() {
+        return settingsManager.getNotificationSettings();
+    }
+
+    public void setNotificationSettings(de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings settings, boolean sync) {
+        settingsManager.setNotificationSettings(settings, sync);
+    }
+
     public boolean isAdminShopEnabled() {
         return settingsManager.isAdminShopEnabled();
     }
@@ -537,21 +559,15 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             GeneralSettings general,
             VillagerSettings villager,
             OfferItemSettings offerItem,
-            AccessSettings access) {
-        Direction facing = getBlockState().getValue(BaseShopBlock.FACING);
-        // Track mode changes to lock/unlock chests
-        boolean chestStateChanged = false;
-
-        SideMode oldLeft = getMode(facing.getCounterClockWise());
-        SideMode oldRight = getMode(facing.getClockWise());
-        SideMode oldBottom = getMode(Direction.DOWN);
-        SideMode oldBack = getMode(facing.getOpposite());
+            AccessSettings access,
+            de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings notifications) {
 
         settingsManager.setIoSettings(io, false);
         settingsManager.setGeneralSettings(general, false);
         settingsManager.setVillagerSettings(villager, false);
         settingsManager.setOfferItemSettings(offerItem, false);
         settingsManager.setAccessSettings(access, false);
+        settingsManager.setNotificationSettings(notifications, false);
 
         if (level != null && !level.isClientSide) {
             unlockAdjacentChests(); // Safe reset
@@ -561,7 +577,23 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         setChanged();
         sync();
         updateNeighborCache();
+        
+        if (level != null && !level.isClientSide) {
+            updateShopDirectory();
+        }
     }
+
+    public void onAccessSettingsChanged() {
+        if (level != null && !level.isClientSide) {
+            updateShopDirectory();
+        }
+    }
+
+    public long getLastOutOfStockNotifyTime() { return lastOutOfStockNotifyTime; }
+    public void setLastOutOfStockNotifyTime(long time) { this.lastOutOfStockNotifyTime = time; }
+
+    public long getLastOutputFullNotifyTime() { return lastOutputFullNotifyTime; }
+    public void setLastOutputFullNotifyTime(long time) { this.lastOutputFullNotifyTime = time; }
 
     // --- General Settings Accessors ---
 
@@ -580,6 +612,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public void setShopName(String name, boolean sync) {
         GeneralSettings current = getGeneralSettings();
         setGeneralSettings(new GeneralSettings(name, current.emitRedstone(), current.purchaseXpFeedbackSound(), current.isClosed()), sync);
+        if (level != null && !level.isClientSide) {
+            updateShopDirectory();
+        }
     }
 
     public boolean isEmitRedstone() {
@@ -995,6 +1030,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         lockAdjacentChests();
         if (level != null) {
             level.invalidateCapabilities(worldPosition);
+            if (!level.isClientSide) {
+                updateShopDirectory();
+            }
         }
     }
 

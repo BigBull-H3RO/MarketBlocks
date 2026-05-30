@@ -57,10 +57,6 @@ public final class RegistriesInit {
     }
 
     // Block Registrierung
-    public static final DeferredBlock<Block> SHOP_BLOCK_TEST = registerBlock("shop_block_test",
-            () -> new TradeStandBlock(tradeStandProperties()));
-
-    // TradeStandBlock Neu (Tall Showcase Design)
     public static final DeferredBlock<Block> TRADE_STAND_BLOCK = registerBlock("trade_stand",
             () -> new TradeStandBlock(tradeStandProperties()));
 
@@ -70,19 +66,23 @@ public final class RegistriesInit {
     public static final DeferredBlock<Block> MARKETCRATE_BLOCK = registerBlock("marketcrate",
             () -> new MarketCrateBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
                     .noOcclusion()
+                    .mapColor(MapColor.WOOD)
+                    .instrument(NoteBlockInstrument.BASS)
                     .strength(2.0f, 3.0f)
                     .sound(SoundType.WOOD)));
 
     public static final DeferredBlock<Block> MARKETPLACE_BLOCK = registerBlock("marketplace",
             () -> new MarketplaceBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
                     .noOcclusion()
+                    .mapColor(MapColor.WOOD)
+                    .instrument(NoteBlockInstrument.BASS)
                     .strength(2.0f, 3.0f)
                     .sound(SoundType.WOOD)));
 
     // BlockEntity Registrierung
     public static final Supplier<BlockEntityType<SingleOfferShopBlockEntity>> SINGLE_OFFER_SHOP_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("single_offer_shop", () -> BlockEntityType.Builder.of(
-                    SingleOfferShopBlockEntity::new, SHOP_BLOCK_TEST.get(), TRADE_STAND_BLOCK.get(), MARKETCRATE_BLOCK.get()).build(null));
+                    SingleOfferShopBlockEntity::new, TRADE_STAND_BLOCK.get(), MARKETCRATE_BLOCK.get()).build(null));
 
     public static final Supplier<BlockEntityType<MarketplaceBlockEntity>> MARKETPLACE_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("marketplace", () -> BlockEntityType.Builder.of(
