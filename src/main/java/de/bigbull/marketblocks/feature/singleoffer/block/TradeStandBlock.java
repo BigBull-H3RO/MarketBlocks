@@ -56,7 +56,7 @@ public class TradeStandBlock extends BaseShopBlock {
         return ShopRenderConfig.TRADE_STAND;
     }
 
-    /** * Hilfsmethode: Prüft, ob der übergebene BlockState dieser Shop ist und eine Vitrine hat.
+    /** * Helper method: checks whether the given BlockState is this shop and has a showcase.
      */
     public static boolean hasShowcase(BlockState state) {
         return state.is(RegistriesInit.TRADE_STAND_BLOCK.get()) && state.getValue(HAS_SHOWCASE);

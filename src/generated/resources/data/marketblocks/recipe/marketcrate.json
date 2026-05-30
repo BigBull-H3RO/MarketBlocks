@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "tag": "minecraft:planks"
+    },
+    "C": {
+      "item": "minecraft:chest"
+    },
+    "E": {
+      "item": "minecraft:emerald"
+    }
+  },
+  "pattern": [
+    "#C#",
+    "#E#",
+    "###"
+  ],
+  "result": {
+    "count": 1,
+    "id": "marketblocks:marketcrate"
+  }
+}

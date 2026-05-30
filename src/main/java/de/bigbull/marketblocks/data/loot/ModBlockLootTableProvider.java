@@ -23,21 +23,20 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
-        dropSelf(RegistriesInit.SHOP_BLOCK_TEST.get());
         dropSelf(RegistriesInit.MARKETCRATE_BLOCK.get());
         dropSelf(RegistriesInit.MARKETPLACE_BLOCK.get());
 
-        // 1. Top-Block droppt überhaupt nichts (das Item wird vom Base-Block gemanagt)
+        // 1. Top block drops nothing (the item is managed by the base block)
         this.add(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), noDrop());
 
-        // 2. Custom Loot-Logik für den Trade Stand Block
+        // 2. Custom loot logic for the Trade Stand block
         this.add(RegistriesInit.TRADE_STAND_BLOCK.get(), block -> LootTable.lootTable()
                 .withPool(LootPool.lootPool()
                         .setRolls(ConstantValue.exactly(1.0F))
                         .add(
                                 // applyExplosionCondition automatically adds the "survives_explosion" condition
                                 this.applyExplosionCondition(block,
-                                        // WENN: Behutsamkeit + Vitrine aktiv
+                                        // IF: Silk Touch + showcase active
                                         LootItem.lootTableItem(block)
                                                 .when(this.hasSilkTouch())
                                                 .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(block)
@@ -45,7 +44,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                                                                 .hasProperty(TradeStandBlock.HAS_SHOWCASE, true)))
                                                 .apply(CopyBlockState.copyState(block).copy(TradeStandBlock.HAS_SHOWCASE))
 
-                                                // ANSONSTEN: Standard-Drop (ohne NBT/Vitrine)
+                                                // OTHERWISE: Standard drop (without NBT/showcase)
                                                 .otherwise(LootItem.lootTableItem(block))
                                 )
                         )

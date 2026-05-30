@@ -17,11 +17,12 @@ public class ShopSettingsManager {
     private static final String KEY_ACCESS = "Access";
 
     private final SingleOfferShopBlockEntity blockEntity;
-    private GeneralSettings generalSettings = GeneralSettings.DEFAULT;
-    private VillagerSettings villagerSettings = VillagerSettings.DEFAULT;
-    private OfferItemSettings offerItemSettings = OfferItemSettings.DEFAULT;
-    private IoSettings ioSettings = IoSettings.DEFAULT;
-    private AccessSettings accessSettings = AccessSettings.DEFAULT;
+    private GeneralSettings generalSettings;
+    private VillagerSettings villagerSettings;
+    private OfferItemSettings offerItemSettings;
+    private IoSettings ioSettings;
+    private AccessSettings accessSettings;
+    private de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings notificationSettings;
 
     private boolean outputAlmostFull = false;
     private boolean outputFull = false;
@@ -29,6 +30,61 @@ public class ShopSettingsManager {
 
     public ShopSettingsManager(SingleOfferShopBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
+        this.generalSettings = createDefaultGeneralSettings();
+        this.villagerSettings = createDefaultVillagerSettings();
+        this.offerItemSettings = createDefaultOfferItemSettings();
+        this.ioSettings = IoSettings.DEFAULT; // Not configurable per user request
+        this.accessSettings = AccessSettings.DEFAULT; // Not configurable
+        this.notificationSettings = createDefaultNotificationSettings();
+    }
+
+    private GeneralSettings createDefaultGeneralSettings() {
+        return new GeneralSettings(
+            "",
+            Config.SHOP_DEFAULT_EMIT_REDSTONE.get(),
+            Config.SHOP_DEFAULT_PURCHASE_XP_SOUND.get(),
+            Config.SHOP_DEFAULT_IS_CLOSED.get()
+        );
+    }
+
+    private VillagerSettings createDefaultVillagerSettings() {
+        return new VillagerSettings(
+            Config.SHOP_DEFAULT_VILLAGER_NPC_ENABLED.get(),
+            "",
+            Config.SHOP_DEFAULT_VILLAGER_PROFESSION.get(),
+            Config.SHOP_DEFAULT_PURCHASE_PARTICLES.get(),
+            Config.SHOP_DEFAULT_PURCHASE_SOUNDS.get(),
+            Config.SHOP_DEFAULT_PAYMENT_SLOT_SOUNDS.get(),
+            Config.SHOP_DEFAULT_USE_PLAYER_SKIN.get(),
+            ""
+        );
+    }
+
+    private OfferItemSettings createDefaultOfferItemSettings() {
+        return new OfferItemSettings(
+            Config.SHOP_DEFAULT_ITEM_VISIBLE.get(),
+            Config.SHOP_DEFAULT_ITEM_FULLBRIGHT.get(),
+            Config.SHOP_DEFAULT_ITEM_SCALE.get().floatValue(),
+            Config.SHOP_DEFAULT_ITEM_SPEED.get().floatValue(),
+            Config.SHOP_DEFAULT_ITEM_HEIGHT_OFFSET.get().floatValue(),
+            Config.SHOP_DEFAULT_ITEM_BOBBING.get(),
+            Config.SHOP_DEFAULT_ITEM_COUNT.get(),
+            0.0f,
+            Config.SHOP_DEFAULT_ITEM_LAYOUT_MODE.get(),
+            0.0f,
+            0.0f,
+            0.1f,
+            Config.SHOP_DEFAULT_ITEM_DYNAMIC_FILL.get()
+        );
+    }
+
+    private de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings createDefaultNotificationSettings() {
+        return new de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings(
+            Config.SHOP_DEFAULT_NOTIFY_PURCHASE.get(),
+            Config.SHOP_DEFAULT_NOTIFY_OUT_OF_STOCK.get(),
+            Config.SHOP_DEFAULT_NOTIFY_OUTPUT_FULL.get(),
+            Config.SHOP_DEFAULT_NOTIFY_CO_OWNERS.get()
+        );
     }
 
     // --- General Settings ---
@@ -126,6 +182,19 @@ public class ShopSettingsManager {
         return accessSettings.adminShopEnabled();
     }
 
+    // --- Notification Settings ---
+
+    public de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings getNotificationSettings() {
+        return notificationSettings;
+    }
+
+    public void setNotificationSettings(de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings settings, boolean sync) {
+        this.notificationSettings = settings == null ? de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.DEFAULT : settings;
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) return;
+        blockEntity.setChanged();
+        if (sync) blockEntity.sync();
+    }
+
     // --- Global/Runtime Data ---
 
     public boolean isGlobalOfferItemRenderingEnabled() {
@@ -158,6 +227,7 @@ public class ShopSettingsManager {
         tag.put(KEY_OFFER_ITEM, offerItemSettings.save());
         tag.put(KEY_IO, ioSettings.save());
         tag.put(KEY_ACCESS, accessSettings.save());
+        tag.put("Notification", notificationSettings.save());
         
         tag.putBoolean("GlobalOfferItemRendering", globalOfferItemRenderingEnabled);
         if (Config.ENABLE_OUTPUT_WARNING.get()) {
@@ -170,17 +240,17 @@ public class ShopSettingsManager {
         if (tag.contains(KEY_GENERAL)) {
             generalSettings = GeneralSettings.load(tag.getCompound(KEY_GENERAL));
         } else {
-            generalSettings = GeneralSettings.DEFAULT;
+            generalSettings = createDefaultGeneralSettings();
         }
         if (tag.contains(KEY_VILLAGER)) {
             villagerSettings = VillagerSettings.load(tag.getCompound(KEY_VILLAGER));
         } else {
-            villagerSettings = VillagerSettings.DEFAULT;
+            villagerSettings = createDefaultVillagerSettings();
         }
         if (tag.contains(KEY_OFFER_ITEM)) {
             offerItemSettings = OfferItemSettings.load(tag.getCompound(KEY_OFFER_ITEM));
         } else {
-            offerItemSettings = OfferItemSettings.DEFAULT;
+            offerItemSettings = createDefaultOfferItemSettings();
         }
         if (tag.contains(KEY_IO)) {
             ioSettings = IoSettings.load(tag.getCompound(KEY_IO));
@@ -191,6 +261,11 @@ public class ShopSettingsManager {
             accessSettings = AccessSettings.load(tag.getCompound(KEY_ACCESS));
         } else {
             accessSettings = AccessSettings.DEFAULT;
+        }
+        if (tag.contains("Notification")) {
+            notificationSettings = de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.load(tag.getCompound("Notification"));
+        } else {
+            notificationSettings = createDefaultNotificationSettings();
         }
         
         if (tag.contains("GlobalOfferItemRendering")) {

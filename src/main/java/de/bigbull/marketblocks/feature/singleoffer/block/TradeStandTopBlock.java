@@ -102,7 +102,7 @@ public class TradeStandTopBlock extends Block {
         return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
     }
 
-    // Leitet den eigentlichen Abbau inklusive Loot/Enchantment-Verhalten auf den Basisblock um.
+    // Redirects the actual break including loot/enchantment behaviour to the base block.
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         BlockPos basePos = pos.below();
@@ -111,7 +111,7 @@ public class TradeStandTopBlock extends Block {
         if (baseState.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             baseState.getBlock().playerWillDestroy(level, basePos, baseState, player);
 
-            // Zeigt Partikel/Sound des Shop-Basisblocks statt des Top-Helferblocks.
+            // Show particles/sound of the shop base block instead of the top helper block.
             level.levelEvent(player, 2001, basePos, Block.getId(baseState));
 
             if (!level.isClientSide()) {

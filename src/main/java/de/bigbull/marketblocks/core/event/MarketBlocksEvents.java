@@ -15,6 +15,10 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import de.bigbull.marketblocks.feature.notification.PendingNotificationsSavedData;
+import net.minecraft.core.BlockPos;
+import java.util.Set;
 
 /**
  * Binds the marketplace lifecycle to server events.
@@ -40,6 +44,28 @@ public final class MarketBlocksEvents {
     @SubscribeEvent
     public static void handleServerTick(ServerTickEvent.Post event) {
         MarketplaceManager.get().tick();
+    }
+
+    @SubscribeEvent
+    public static void handlePlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            PendingNotificationsSavedData data = PendingNotificationsSavedData.get(player.serverLevel());
+            Set<BlockPos> emptyShops = data.getAndClearOutOfStock(player.getUUID());
+            Set<BlockPos> fullShops = data.getAndClearOutputFull(player.getUUID());
+
+            if (!emptyShops.isEmpty()) {
+                player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.out_of_stock", emptyShops.size()));
+                for (BlockPos pos : emptyShops) {
+                    player.sendSystemMessage(Component.literal(" - [X: " + pos.getX() + ", Y: " + pos.getY() + ", Z: " + pos.getZ() + "]"));
+                }
+            }
+            if (!fullShops.isEmpty()) {
+                player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.output_full", fullShops.size()));
+                for (BlockPos pos : fullShops) {
+                    player.sendSystemMessage(Component.literal(" - [X: " + pos.getX() + ", Y: " + pos.getY() + ", Z: " + pos.getZ() + "]"));
+                }
+            }
+        }
     }
 
     @SubscribeEvent

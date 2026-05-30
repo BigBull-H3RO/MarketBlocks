@@ -65,10 +65,10 @@ public record TransactionLogEntry(
     }
 
     /**
-     * Prüft, ob dieser Eintrag mit einem neueren zusammengeführt werden kann (Smart Stacking).
+     * Checks whether this entry can be merged with a newer one (smart stacking).
      */
     public boolean canMergeWith(TransactionLogEntry other) {
-        // Muss derselbe Käufer sein
+        // Must be the same buyer
         if (!this.buyerUuid().equals(other.buyerUuid())) return false;
 
         if (this.purchaseKind() != other.purchaseKind()) return false;
@@ -79,7 +79,7 @@ public record TransactionLogEntry(
     }
 
     /**
-     * Führt zwei Einträge zusammen, indem nur der Wiederholungszähler erhöht wird.
+     * Merges two entries by incrementing only the repetition counter.
      */
     public TransactionLogEntry mergeWith(TransactionLogEntry newer) {
         return new TransactionLogEntry(

@@ -2,10 +2,10 @@ package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceAutoFillPacket;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceSelectPagePacket;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceSetOfferPacket;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceToggleEditModePacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceAutoFillPacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSelectPagePacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSetOfferPacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceToggleEditModePacket;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.client.gui.IconButton;
 import de.bigbull.marketblocks.client.gui.OfferTemplateButton;

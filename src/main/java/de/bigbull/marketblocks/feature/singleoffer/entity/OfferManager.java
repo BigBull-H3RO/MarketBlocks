@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.singleoffer.entity;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.log.ShopTransactionLogSavedData;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
-import de.bigbull.marketblocks.network.singleoffer.OfferStatusPacket;
+import de.bigbull.marketblocks.feature.singleoffer.network.OfferStatusPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -14,6 +14,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
+import de.bigbull.marketblocks.feature.notification.PendingNotificationsSavedData;
+import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,9 +131,6 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         ItemStack p2 = shopEntity.getOfferPayment2();
         if (p1.isEmpty() && p2.isEmpty()) return true;
 
-        ShopInventoryManager invManager = new ShopInventoryManager(shopEntity); // Using temporary instance is fine, but better to get from ShopEntity
-        // Wait, ShopEntity has private final ShopInventoryManager inventoryManager; I need an accessor.
-        // Or I can just pass it or get it. Let's create `getInventoryManager()` in ShopEntity.
         ShopInventoryManager inv = shopEntity.getInventoryManager();
 
         if (!p1.isEmpty() && ItemStack.isSameItemSameComponents(p1, p2)) {
@@ -211,7 +210,91 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         shopEntity.triggerRedstonePulse();
         // Since needsOfferRefresh is private, we can call updateOfferSlot
         shopEntity.updateOfferSlot();
+
+        triggerNotifications(buyerIdentity, result, actualAmount, adminShop, inv, p1, p2);
+
         return actualAmount;
+    }
+
+    private void triggerNotifications(@Nullable BuyerIdentity buyer, ItemStack result, int tradeCount, boolean adminShop, ShopInventoryManager inv, ItemStack p1, ItemStack p2) {
+        if (!(shopEntity.getLevel() instanceof ServerLevel serverLevel)) return;
+        NotificationSettings notifSettings = shopEntity.getNotificationSettings();
+
+        String shopName = shopEntity.getGeneralSettings().shopName();
+        if (shopName == null || shopName.isEmpty()) shopName = "MarketBlocks";
+        Component shopPrefix = Component.literal("[" + shopName + "] ");
+
+        // 1. Purchase Notification
+        if (notifSettings.notifyOnPurchase() && tradeCount > 0) {
+            String buyerName = buyer != null ? buyer.name() : "Unbekannt";
+            Component msg = shopPrefix.copy().append(Component.translatable("message.marketblocks.notifications.purchase", buyerName, tradeCount, result.getHoverName()));
+            sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
+        }
+
+        if (adminShop) return; // Admin shops don't run out of stock or get full
+
+        // 2. Out of Stock
+        boolean isOutOfStock = inv.countMatchingInput(result, true) < result.getCount();
+        if (isOutOfStock && notifSettings.notifyOnOutOfStock()) {
+            long currentTime = serverLevel.getGameTime();
+            long lastNotify = shopEntity.getLastOutOfStockNotifyTime();
+            int cooldown = de.bigbull.marketblocks.core.config.Config.NOTIFICATION_COOLDOWN.get();
+
+            if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
+                shopEntity.setLastOutOfStockNotifyTime(currentTime);
+                Component msg = shopPrefix.copy().append(Component.translatable("message.marketblocks.notifications.out_of_stock"));
+                boolean online = sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
+                if (!online) { // Primary owner offline
+                    PendingNotificationsSavedData.get(serverLevel).addOutOfStock(shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
+                    if (notifSettings.notifyCoOwners()) {
+                        for (UUID coOwner : shopEntity.getAccessSettings().additionalOwners().keySet()) {
+                            PendingNotificationsSavedData.get(serverLevel).addOutOfStock(coOwner, shopEntity.getBlockPos());
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Output Full
+        boolean isOutputFull = !inv.hasOutputSpace(p1, p2);
+        if (isOutputFull && notifSettings.notifyOnOutputFull()) {
+            long currentTime = serverLevel.getGameTime();
+            long lastNotify = shopEntity.getLastOutputFullNotifyTime();
+            int cooldown = de.bigbull.marketblocks.core.config.Config.NOTIFICATION_COOLDOWN.get();
+
+            if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
+                shopEntity.setLastOutputFullNotifyTime(currentTime);
+                Component msg = shopPrefix.copy().append(Component.translatable("message.marketblocks.notifications.output_full"));
+                boolean online = sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
+                if (!online) { // Primary owner offline
+                    PendingNotificationsSavedData.get(serverLevel).addOutputFull(shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
+                    if (notifSettings.notifyCoOwners()) {
+                        for (UUID coOwner : shopEntity.getAccessSettings().additionalOwners().keySet()) {
+                            PendingNotificationsSavedData.get(serverLevel).addOutputFull(coOwner, shopEntity.getBlockPos());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean sendToOwners(ServerLevel level, boolean notifyCoOwners, Component message) {
+        boolean primaryOnline = false;
+        ServerPlayer primary = level.getServer().getPlayerList().getPlayer(shopEntity.getAccessSettings().ownerId());
+        if (primary != null) {
+            primary.sendSystemMessage(message);
+            primaryOnline = true;
+        }
+
+        if (notifyCoOwners) {
+            for (UUID coOwnerId : shopEntity.getAccessSettings().additionalOwners().keySet()) {
+                ServerPlayer coOwner = level.getServer().getPlayerList().getPlayer(coOwnerId);
+                if (coOwner != null) {
+                    coOwner.sendSystemMessage(message);
+                }
+            }
+        }
+        return primaryOnline;
     }
 
     private void executeTrades(ItemStack p1, ItemStack p2, ItemStack result, int tradeCount, boolean adminShop, ShopInventoryManager inv) {

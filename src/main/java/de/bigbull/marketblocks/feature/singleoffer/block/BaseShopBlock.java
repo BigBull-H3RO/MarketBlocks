@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
@@ -37,10 +38,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Basisklasse für alle Shop-Blöcke.
- * Beinhaltet allgemeine Logik für Besitzer, Redstone-Signale und Interaktionen.
- * Shape- und Render-Konfiguration sind getrennt, damit Anzeige-Offsets je Variante
- * unabhängig von Collision/Interaction-Shape gepflegt werden können.
+ * Base class for all shop blocks.
+ * Contains shared logic for ownership, redstone signals and interactions.
+ * Shape and render configuration are separated so that display offsets per variant
+ * can be maintained independently from collision/interaction shapes.
  */
 public abstract class BaseShopBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
@@ -266,6 +267,11 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
                 shopEntity.dropContents(level, pos);
                 shopEntity.unlockAdjacentChests();
+                if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                    de.bigbull.marketblocks.core.data.ShopDirectorySavedData data = de.bigbull.marketblocks.core.data.ShopDirectorySavedData.get(serverLevel);
+                    net.minecraft.core.GlobalPos globalPos = net.minecraft.core.GlobalPos.of(serverLevel.dimension(), pos);
+                    data.unregisterShop(globalPos);
+                }
             }
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
@@ -274,6 +280,11 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     @Override
     public PushReaction getPistonPushReaction(BlockState state) {
         return PushReaction.BLOCK;
+    }
+
+    @Override
+    public float getExplosionResistance() {
+        return Config.SHOP_BLAST_RESISTANCE.get().floatValue();
     }
 
     @Override

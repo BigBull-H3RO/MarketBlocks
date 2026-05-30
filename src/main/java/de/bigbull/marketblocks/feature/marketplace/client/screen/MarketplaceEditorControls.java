@@ -1,12 +1,12 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceAddOfferPacket;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceCreatePagePacket;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceDeleteOfferPacket;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceDeletePagePacket;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceMoveOfferPacket;
-import de.bigbull.marketblocks.network.marketplace.MarketplaceRenamePagePacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceAddOfferPacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceCreatePagePacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceDeleteOfferPacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceDeletePagePacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceMoveOfferPacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceRenamePagePacket;
 import de.bigbull.marketblocks.client.gui.IconButton;
 import de.bigbull.marketblocks.client.gui.VanillaIconButton;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;

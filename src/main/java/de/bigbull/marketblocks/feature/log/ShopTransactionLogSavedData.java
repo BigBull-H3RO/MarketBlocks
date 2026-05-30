@@ -129,7 +129,7 @@ public final class ShopTransactionLogSavedData extends SavedData {
             deque.pollFirst();
             deque.addFirst(last.mergeWith(entry));
         } else {
-            // Regulär hinzufügen
+            // Add as new entry
             deque.addFirst(entry);
         }
 
