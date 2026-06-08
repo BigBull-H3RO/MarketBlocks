@@ -13,7 +13,6 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.UUID;
 
-// direction: -1 for up, +1 for down
 public record MarketplaceMoveOfferPacket(UUID offerId, String targetPage, int direction) implements CustomPacketPayload {
     public static final Type<MarketplaceMoveOfferPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "marketplace_move_offer"));

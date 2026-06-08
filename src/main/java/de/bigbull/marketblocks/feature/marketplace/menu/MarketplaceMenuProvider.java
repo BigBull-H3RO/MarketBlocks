@@ -7,7 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
 /**
- * MenuProvider für den blocklosen Marktplatz.
+ * MenuProvider for the blockless Marketplace.
  */
 public record MarketplaceMenuProvider(boolean canEdit, boolean globalEditModeEnabled) implements MenuProvider {
     private static final Component TITLE = Component.translatable("menu.marketblocks.marketplace");

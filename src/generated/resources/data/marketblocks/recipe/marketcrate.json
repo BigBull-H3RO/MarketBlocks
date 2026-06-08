@@ -5,17 +5,23 @@
     "#": {
       "tag": "minecraft:planks"
     },
+    "B": {
+      "item": "minecraft:barrel"
+    },
     "C": {
       "item": "minecraft:chest"
     },
     "E": {
       "item": "minecraft:emerald"
+    },
+    "S": {
+      "tag": "minecraft:signs"
     }
   },
   "pattern": [
-    "#C#",
     "#E#",
-    "###"
+    "#C#",
+    "BSB"
   ],
   "result": {
     "count": 1,

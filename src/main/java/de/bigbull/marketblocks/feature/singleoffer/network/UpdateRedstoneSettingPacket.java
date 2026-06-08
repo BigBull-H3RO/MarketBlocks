@@ -12,18 +12,21 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+/**
+ * A packet sent from the client to the server to update the redstone emission
+ * state of the shop.
+ */
 public record UpdateRedstoneSettingPacket(BlockPos pos, boolean enabled) implements CustomPacketPayload {
 
-    public static final CustomPacketPayload.Type<UpdateRedstoneSettingPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_redstone_setting"));
+    public static final CustomPacketPayload.Type<UpdateRedstoneSettingPacket> TYPE = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_redstone_setting"));
 
     public static final StreamCodec<ByteBuf, UpdateRedstoneSettingPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             UpdateRedstoneSettingPacket::pos,
             ByteBufCodecs.BOOL,
             UpdateRedstoneSettingPacket::enabled,
-            UpdateRedstoneSettingPacket::new
-    );
+            UpdateRedstoneSettingPacket::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -36,7 +39,8 @@ public record UpdateRedstoneSettingPacket(BlockPos pos, boolean enabled) impleme
                 return;
             }
             Level level = player.level();
-            if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
+            if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity blockEntity
+                    && blockEntity.isOwner(player)) {
                 blockEntity.setEmitRedstone(packet.enabled(), true);
             }
         });

@@ -17,6 +17,11 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
+/**
+ * Handles security for vanilla chests placed next to shop blocks.
+ * If I/O extensions are enabled, this handler prevents players who are not
+ * owners or co-owners of a shop from opening chests connected as input/output buffers.
+ */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public class ChestSecurityHandler {
     @SubscribeEvent

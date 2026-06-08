@@ -6,14 +6,13 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Clientseitiger Cache für die Marktplatz-Daten.
+ * Client-side cache for the marketplace data.
  */
 public final class MarketplaceClientState {
     private static MarketplaceData data = MarketplaceData.empty();
     private static Map<UUID, MarketplaceOfferViewState> offerViewStates = Collections.emptyMap();
     private static long lastSyncTimeMillis;
 
-    // Stores the last mode (true = Edit, false = Normal)
     private static boolean lastEditMode = false;
 
     private MarketplaceClientState() {

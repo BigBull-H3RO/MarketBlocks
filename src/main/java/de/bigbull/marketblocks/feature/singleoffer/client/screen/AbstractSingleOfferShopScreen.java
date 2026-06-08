@@ -19,12 +19,18 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
+/**
+ * Base screen class for the single-offer shop UI.
+ * Provides the shared tab navigation system and renders the shop owner's information.
+ *
+ * @param <T> The container menu type.
+ */
 public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
     protected static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_disabled"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_highlighted"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_selected")
     );
 
     private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/home.png");

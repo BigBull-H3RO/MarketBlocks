@@ -5,14 +5,15 @@ import de.bigbull.marketblocks.client.gui.GuiConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Base class for single-offer shop menus.
+ * Provides shared functionality for initializing player and custom inventory slots.
+ */
 public abstract class AbstractSingleOfferShopMenu extends AbstractContainerMenu {
     protected static final int PLAYER_INV_SLOTS = 27;
     protected static final int HOTBAR_SLOTS = 9;

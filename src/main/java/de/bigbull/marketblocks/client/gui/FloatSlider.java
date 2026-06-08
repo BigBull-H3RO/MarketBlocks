@@ -6,6 +6,10 @@ import net.minecraft.util.Mth;
 
 import java.util.function.Consumer;
 
+/**
+ * A custom slider widget for selecting floating-point values within a specific range.
+ * Formats the displayed value to two decimal places.
+ */
 public class FloatSlider extends AbstractSliderButton {
     private final float min;
     private final float max;

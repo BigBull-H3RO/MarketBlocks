@@ -41,7 +41,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     private final ContainerData flags;
     private final ContainerData tabData = new SimpleContainerData(1);
 
-    // Side mode handling for settings tab
     private final EnumMap<Direction, SideMode> sideModes = new EnumMap<>(Direction.class);
     private final EnumMap<Direction, SideMode> initialModes = new EnumMap<>(Direction.class);
     private List<TransactionLogEntry> transactionLogEntries = List.of();
@@ -51,19 +50,17 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     private static final int INPUT_SLOTS = 12;
     private static final int OUTPUT_SLOTS = 12;
     private static final int TOTAL_SLOTS = PAYMENT_SLOTS + OFFER_SLOTS + INPUT_SLOTS + OUTPUT_SLOTS;
-    private static final int OFFER_SLOT_INDEX = PAYMENT_SLOTS; // after payment slots
+    private static final int OFFER_SLOT_INDEX = PAYMENT_SLOTS;
     private static final Direction[] DIRECTIONS = Direction.values();
 
     private static SingleOfferShopBlockEntity createClientFallbackBlockEntity() {
         return new SingleOfferShopBlockEntity(BlockPos.ZERO, RegistriesInit.TRADE_STAND_BLOCK.get().defaultBlockState());
     }
 
-    // Server ctor
     public SingleOfferShopMenu(int containerId, Inventory inv, SingleOfferShopBlockEntity be) {
         this(containerId, inv, be, true);
     }
 
-    // Client ctor
     public SingleOfferShopMenu(int containerId, Inventory inv, RegistryFriendlyByteBuf buf) {
         this(containerId, inv, getBlockEntity(inv, buf), false);
     }
@@ -105,14 +102,11 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     @Override
     protected void addCustomSlots(Inventory playerInventory) {
-        // Payment slots
         addSlot(new GatedSlot(paymentHandler, 0, 36, 52, ShopTab.OFFERS));
         addSlot(new GatedSlot(paymentHandler, 1, 62, 52, ShopTab.OFFERS));
 
-        // Offer slot
         addSlot(new OfferSlot(offerHandler, 0, 120, 52));
 
-        // Input inventory (4x3 grid starting at 8,18)
         int index = 0;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
@@ -120,7 +114,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             }
         }
 
-        // Output inventory (4x3 grid starting at 98,18)
         index = 0;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 4; col++) {
@@ -181,7 +174,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         return totalSpace;
     }
 
-    // --- Tab API ---
     public ShopTab getActiveTab() {
         return ShopTab.fromId(tabData.get(0));
     }
@@ -229,7 +221,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         return isOwner();
     }
 
-    // --- Settings helpers ---
     public SideMode getMode(Direction dir) {
         return sideModes.getOrDefault(dir, SideMode.DISABLED);
     }
@@ -274,7 +265,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             Slot s = this.slots.get(i);
             ItemStack stack = s.getItem();
             if (!stack.isEmpty() && this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
-                s.set(stack); // Stack is already EMPTY if fully moved, no need for ternary
+                s.set(stack);
                 s.setChanged();
             }
         }
@@ -293,7 +284,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         ItemStack cur = targetSlot.getItem();
         int maxTargetStack = Math.min(required.getMaxStackSize(), targetSlot.getMaxStackSize());
 
-        // Early exit if target slot is already full
         if (!cur.isEmpty() && cur.getCount() >= maxTargetStack) {
             return;
         }
@@ -305,19 +295,19 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             if (!invStack.isEmpty() && ItemStack.isSameItemSameComponents(invStack, required)) {
                 if (cur.isEmpty() || ItemStack.isSameItemSameComponents(invStack, cur)) {
                     int space = maxTargetStack - cur.getCount();
-                    if (space <= 0) break; // Slot is full
+                    if (space <= 0) break;
 
                     int move = Math.min(space, invStack.getCount());
                     if (move > 0) {
                         ItemStack newStack = invStack.copy();
                         newStack.setCount(cur.getCount() + move);
                         invStack.shrink(move);
-                        sourceSlot.set(invStack); // Already EMPTY if fully moved
+                        sourceSlot.set(invStack);
                         targetSlot.set(newStack);
-                        cur = newStack; // Update reference for next iteration
+                        cur = newStack;
 
                         if (cur.getCount() >= maxTargetStack) {
-                            break; // Slot is now full
+                            break;
                         }
                     }
                 }
@@ -325,7 +315,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         }
     }
 
-    // --- Quick move / shift click ---
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         if (isTab(ShopTab.SETTINGS) || isTab(ShopTab.LOG)) return ItemStack.EMPTY;
@@ -340,7 +329,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                     return ItemStack.EMPTY;
                 }
 
-                // SAFETY: Only owner can remove items from offer slot in template mode
                 if (!isOwner()) {
                     return ItemStack.EMPTY;
                 }
@@ -373,21 +361,15 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 return ItemStack.EMPTY;
             }
 
-            // NEW: Efficient bulk purchase with atomicity guarantee
             ItemStack offerResult = blockEntity.getOfferResult();
             if (offerResult.isEmpty()) return ItemStack.EMPTY;
 
-            // 1. Calculate how many transactions fit in player inventory
             int maxPlayerFit = calculateMaxFitInPlayerInventory(offerResult);
             if (maxPlayerFit <= 0) return ItemStack.EMPTY;
 
-            // 2. Execute bulk purchase on the server block entity
-            // The BlockEntity handles payment reduction, stock reduction, and output space check.
-            // It returns the actual number of transactions performed.
             int bought = blockEntity.processBulkPurchase(maxPlayerFit, player, true);
 
             if (bought > 0) {
-                // 3. Give items to player (capacity was precomputed from exact slot limits)
                 long remaining = (long) offerResult.getCount() * bought;
                 if (remaining <= 0L) {
                     return ItemStack.EMPTY;
@@ -403,24 +385,22 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                     chunk.setCount(chunkSize);
 
                     if (!this.moveItemStackTo(chunk, TOTAL_SLOTS, this.slots.size(), true)) {
-                        // This should not happen due to pre-check, but failsafe: drop items
                         if (!chunk.isEmpty()) {
                             player.drop(chunk, false);
                             MarketBlocks.LOGGER.warn("Had to drop items during bulk purchase - pre-check failed for player {}", player.getName().getString());
                         }
                     } else {
-                         // Double check if moveItemStackTo left something in chunk
-                         if (!chunk.isEmpty()) {
-                              player.drop(chunk, false);
-                          }
+                        if (!chunk.isEmpty()) {
+                            player.drop(chunk, false);
+                        }
                     }
                     remaining -= (long) chunkSize;
                 }
 
                 blockEntity.updateOfferSlot();
-                return totalBoughtCopy; // Return full amount for UI/Sound
+                return totalBoughtCopy;
             } else {
-                 return ItemStack.EMPTY;
+                return ItemStack.EMPTY;
             }
         }
 
@@ -499,31 +479,31 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         }
 
         try {
-        if (!player.level().isClientSide
-                && slotId == OFFER_SLOT_INDEX
-                && type == ClickType.PICKUP
-                && blockEntity.hasOffer()
-                && blockEntity.getOfferHandler().getStackInSlot(0).isEmpty()) {
-            boolean adminShop = blockEntity.isAdminShopEnabled();
-            if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
-                player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
-                return;
+            if (!player.level().isClientSide
+                    && slotId == OFFER_SLOT_INDEX
+                    && type == ClickType.PICKUP
+                    && blockEntity.hasOffer()
+                    && blockEntity.getOfferHandler().getStackInSlot(0).isEmpty()) {
+                boolean adminShop = blockEntity.isAdminShopEnabled();
+                if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                    return;
+                }
+                if (!adminShop && blockEntity.isOutputSpaceMissing()) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                    return;
+                }
             }
-            if (!adminShop && blockEntity.isOutputSpaceMissing()) {
-                player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
-                return;
-            }
-        }
 
-        if (type == ClickType.PICKUP_ALL) {
-            if (slotId >= 0 && slotId < PAYMENT_SLOTS) {
-                return; // Block double-click collect for payment slots
+            if (type == ClickType.PICKUP_ALL) {
+                if (slotId >= 0 && slotId < PAYMENT_SLOTS) {
+                    return;
+                }
+                if (slotId == OFFER_SLOT_INDEX && !blockEntity.hasOffer()) {
+                    return;
+                }
             }
-            if (slotId == OFFER_SLOT_INDEX && !blockEntity.hasOffer()) {
-                return; // Block double-click collect for offer preview slot
-            }
-        }
-        super.clicked(slotId, button, type, player);
+            super.clicked(slotId, button, type, player);
         } finally {
             if (trackBuyerContext) {
                 blockEntity.clearPurchaseContext();
@@ -531,7 +511,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         }
     }
 
-    // --- ShopMenu impl ---
     @Override
     public SingleOfferShopBlockEntity getBlockEntity() {
         return blockEntity;
@@ -547,7 +526,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         return blockEntity.stillValid(player);
     }
 
-    // --- Slot wrappers ---
     private abstract class BaseSlot extends SlotItemHandler {
         private final ShopTab tab;
         BaseSlot(IItemHandler handler, int slot, int x, int y, ShopTab tab) {
@@ -598,9 +576,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            // Offer exists -> never overwrite
             if (blockEntity.hasOffer()) return false;
-            // Template mode: only owners can place items
             return isOwner();
         }
 
@@ -613,9 +589,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 return true;
             }
 
-            // Server-side: Full validation with messages
             if (!blockEntity.hasOffer()) {
-                // Template mode: owners can take out incorrectly placed items
                 return isOwner();
             }
 
@@ -630,17 +604,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 return false;
             }
 
-            // Offer mode: purchase allowed if available (owner can also purchase)
             return blockEntity.isOfferAvailable();
         }
 
         @Override
         public ItemStack remove(int amount) {
             if (!blockEntity.hasOffer()) {
-                // Template mode: normal removal (owner check handled by mayPickup)
                 return super.remove(amount);
             }
-            // Offer mode: only if available
             if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) {
                 return super.remove(amount);
             }
@@ -649,9 +620,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         @Override
         public void set(ItemStack stack) {
-            // Never overwrite existing offer via set
             if (blockEntity.hasOffer()) return;
-            // Template mode: only owners can set
             if (!isOwner()) return;
             super.set(stack);
         }
@@ -686,6 +655,3 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         }
     }
 }
-
-
-

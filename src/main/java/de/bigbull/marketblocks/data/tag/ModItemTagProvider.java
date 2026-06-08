@@ -23,7 +23,6 @@ public class ModItemTagProvider extends ItemTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
-        // Copy block tags to item tags where needed
         copy(net.minecraft.tags.TagKey.create(
                 net.minecraft.core.registries.Registries.BLOCK,
                 ModBlockTagProvider.SHOP_BLOCKS_TAG_ID),

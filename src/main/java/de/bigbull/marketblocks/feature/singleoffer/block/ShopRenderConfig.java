@@ -143,8 +143,7 @@ public class ShopRenderConfig {
         public Builder showTradeArrow(boolean v) { this.showTradeArrow = v; return this; }
 
         public ShopRenderConfig build() {
-            ShopRenderConfig config = new ShopRenderConfig(this);
-            return config;
+            return new ShopRenderConfig(this);
         }
     }
 }

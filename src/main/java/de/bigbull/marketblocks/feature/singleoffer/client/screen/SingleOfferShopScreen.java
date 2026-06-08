@@ -27,7 +27,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
@@ -38,15 +37,23 @@ import net.minecraft.world.item.ItemStack;
 import java.time.Instant;
 import java.util.*;
 
+/**
+ * Main GUI screen for the single-offer shop.
+ * Handles the display of the offer, inventory, log, and settings tabs.
+ */
 public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleOfferShopMenu> {
     private static final ResourceLocation OFFERS_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
-            "textures/gui/trade_stand_offers.png");
+            "textures/gui/singleoffer/singleoffer_offers.png");
     private static final ResourceLocation INVENTORY_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
-            "textures/gui/trade_stand_inventory.png");
+            "textures/gui/singleoffer/singleoffer_inventory.png");
     private static final ResourceLocation SETTINGS_BG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
-            "textures/gui/trade_stand_settings.png");
-    private static final ResourceLocation OWNER_LIST_PANEL_BG = ResourceLocation
-            .fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/trade_stand/owner_list_panel.png");
+            "textures/gui/singleoffer/singleoffer_settings.png");
+    private static final ResourceLocation OWNER_LIST_PANEL_BG = ResourceLocation.fromNamespaceAndPath(
+            MarketBlocks.MODID,
+            "textures/gui/singleoffer/owner_list_panel.png");
+    private static final ResourceLocation OWNER_LIST_PANEL_DISABLE_BG = ResourceLocation.fromNamespaceAndPath(
+            MarketBlocks.MODID,
+            "textures/gui/singleoffer/owner_list_panel_disable.png");
     private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
             "textures/gui/icon/out_of_stock.png");
     private static final ResourceLocation OUTPUT_FULL_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
@@ -74,19 +81,19 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             .withDefaultNamespace("container/stonecutter/scroller");
     private static final ResourceLocation ACCESS_SCROLLER_DISABLED_SPRITE = ResourceLocation
             .withDefaultNamespace("container/stonecutter/scroller_disabled");
+    private static final ResourceLocation ACCESS_SCROLLER_LIST_DISABLED_SPRITE = ResourceLocation
+            .fromNamespaceAndPath(MarketBlocks.MODID, "scroller_disabled");
     private static final WidgetSprites BUTTON_SPRITES_18 = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/18x18/button.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/18x18/button_disabled.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
-                    "textures/gui/button/18x18/button_highlighted.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/18x18/button_selected.png"));
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button_disabled"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button_highlighted"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button_selected"));
 
     private static final int LOG_LIST_X_OFFSET = 7;
     private static final int LOG_LIST_Y_OFFSET = 19;
     private static final int LOG_LIST_WIDTH = 155;
     private static final int LOG_LIST_HEIGHT = 121;
 
-    // Pixel-based layout for expandable rows
     private static final int ROW_HEIGHT_COLLAPSED = 20;
     private static final int ROW_HEIGHT_EXPANDED = 44;
 
@@ -124,7 +131,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private static SettingsCategory getFirstEnabledCategory() {
         for (SettingsCategory cat : SettingsCategory.values()) {
-            if (cat.isEnabled()) return cat;
+            if (cat.isEnabled())
+                return cat;
         }
         return SettingsCategory.GENERAL;
     }
@@ -132,7 +140,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private OfferTemplateButton offerButton;
     private EditBox nameField;
     private EditBox npcNameField;
-    private Direction leftDir, rightDir, bottomDir, backDir;
+
     private boolean saved;
     private String originalName;
     private GeneralSettings.Draft generalDraft;
@@ -144,7 +152,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
-    // New variables for Expandable UI & Pixel Scroll
     private int logScrollPixelOffset = 0;
     private int expandedLogIndex = -1;
     private boolean logDragging;
@@ -338,7 +345,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     }
                 }
             }
-            case ACCESS -> buildSettingsAccessSection(be);
+            case ACCESS -> {
+                if (menu.isPrimaryOwner() || activeSettingsCategory == SettingsCategory.ACCESS) {
+                    SingleOfferSettingsSections.buildAccessSection(this, accessDraft, ownerListPanel,
+                            menu.isPrimaryOwner(), this::saveListPanelToDraft, this::rebuildUI, this::markDirty);
+                }
+            }
             case NOTIFICATIONS -> buildSettingsNotificationSection(be);
         }
     }
@@ -361,7 +373,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
 
             AccessSettings access = accessDraft.toSettings();
-            de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings notifications = notificationDraft.toSettings();
+            de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings notifications = notificationDraft
+                    .toSettings();
 
             be.setGeneralSettings(general, false);
             be.setVillagerSettings(villager, false);
@@ -379,8 +392,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private void saveListPanelToDraft() {
-        if (!menu.isPrimaryOwner()) return;
-        Map<UUID, String> newMap = new java.util.HashMap<>();
+        if (!menu.isPrimaryOwner())
+            return;
+        Map<UUID, String> newMap = new HashMap<>();
         for (UUID id : ownerListPanel.collectSelectedOwners()) {
             newMap.put(id, ownerListPanel.resolveName(id, ownerListPanel.getStoredNames()));
         }
@@ -389,23 +403,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         } else {
             accessDraft.setAccessList(newMap);
         }
-    }
-
-    private void buildSettingsAccessSection(SingleOfferShopBlockEntity be) {
-        addSettingsWidget(Button.builder(accessDraft.accessMode().title(), b -> {
-            accessDraft.setAccessMode(accessDraft.accessMode().next());
-            b.setMessage(accessDraft.accessMode().title());
-            markDirty();
-        }).bounds(leftPos + 8, topPos + 22, 158, 16).build());
-
-        addSettingsWidget(Button.builder(ownerListPanel.getListMode().title(), b -> {
-            saveListPanelToDraft();
-            ownerListPanel.setListMode(ownerListPanel.getListMode().next());
-            b.setMessage(ownerListPanel.getListMode().title());
-            rebuildUI();
-        }).bounds(leftPos + 8, topPos + 40, 158, 16).build());
-
-        ownerListPanel.prepareAndRender(this, accessDraft, topPos + 60, menu.isPrimaryOwner(), () -> saved = false);
     }
 
     private void buildSettingsNotificationSection(SingleOfferShopBlockEntity be) {
@@ -435,7 +432,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (accessDraft == null)
             accessDraft = new AccessSettings.Draft(be.getAccessSettings());
         if (notificationDraft == null)
-            notificationDraft = new de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.Draft(be.getNotificationSettings());
+            notificationDraft = new de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.Draft(
+                    be.getNotificationSettings());
     }
 
     private void markDirty() {
@@ -464,7 +462,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             NetworkHandler.sendToServer(new ToggleAdminShopModePacket(be.getBlockPos(), next));
             b.setMessage(getAdminShopToggleLabel(be));
             rebuildUI();
-        }).bounds(leftPos + 84, topPos + 4, 88, 16).build());
+        }).bounds(leftPos + 83, topPos + 5, 88, 16).build());
     }
 
     @Override
@@ -493,16 +491,17 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
-        if (this.getFocused() instanceof net.minecraft.client.gui.components.EditBox editBox && editBox.canConsumeInput()) {
-            if (pKeyCode == 256) { // Escape
+        if (this.getFocused() instanceof net.minecraft.client.gui.components.EditBox editBox
+                && editBox.canConsumeInput()) {
+            if (pKeyCode == 256) {
                 this.setFocused(null);
                 return true;
             }
-            if (pKeyCode == 258) { // Tab
+            if (pKeyCode == 258) {
                 return super.keyPressed(pKeyCode, pScanCode, pModifiers);
             }
             editBox.keyPressed(pKeyCode, pScanCode, pModifiers);
-            return true; // Consume all keys to prevent AbstractContainerScreen from triggering 'E' (inventory)
+            return true;
         }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
@@ -563,8 +562,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private void renderSettingsBg(GuiGraphics graphics) {
         graphics.blit(SETTINGS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
         if (menu.isPrimaryOwner() && activeSettingsCategory == SettingsCategory.ACCESS) {
-            ownerListPanel.renderBackground(graphics, leftPos, OWNER_LIST_PANEL_BG, ACCESS_SCROLLER_SPRITE,
-                    ACCESS_SCROLLER_DISABLED_SPRITE);
+            ResourceLocation scrollerDisabled = ownerListPanel.isListDisabled() ? ACCESS_SCROLLER_LIST_DISABLED_SPRITE
+                    : ACCESS_SCROLLER_DISABLED_SPRITE;
+            ownerListPanel.renderBackground(graphics, leftPos, OWNER_LIST_PANEL_BG, OWNER_LIST_PANEL_DISABLE_BG,
+                    ACCESS_SCROLLER_SPRITE,
+                    scrollerDisabled);
         }
     }
 
@@ -575,7 +577,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int listX = leftPos + LOG_LIST_X_OFFSET;
         int listY = topPos + LOG_LIST_Y_OFFSET;
 
-        // Draw background panel with 1px border
         graphics.fill(listX - 1, listY - 1, listX + LOG_LIST_WIDTH + 1, listY + LOG_LIST_HEIGHT + 1, 0xFFA6A6A6);
         graphics.fill(listX, listY, listX + LOG_LIST_WIDTH, listY + LOG_LIST_HEIGHT, 0xFF2A2A2A);
 
@@ -594,7 +595,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 boolean isExpanded = (i == expandedLogIndex);
                 int rowHeight = isExpanded ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
 
-                // Only render what is visible
                 if (currentY + rowHeight > listY && currentY < listY + LOG_LIST_HEIGHT) {
                     renderLogRow(graphics, entries.get(i), listX, currentY, i, isExpanded);
                 }
@@ -620,7 +620,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int textY = y + (ROW_HEIGHT_COLLAPSED - font.lineHeight) / 2;
         int rowCenterY = y + ROW_HEIGHT_COLLAPSED / 2;
 
-        // Player Head
         int headX = x + 4;
         int headY = rowCenterY - LOG_HEAD_SIZE / 2;
         ResourceLocation skinTexture = resolveLogSkinTexture(entry);
@@ -629,19 +628,16 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         graphics.blit(skinTexture, headX, headY, LOG_HEAD_SIZE, LOG_HEAD_SIZE, LOG_HAT_U, LOG_HAT_V, LOG_HEAD_SRC_SIZE,
                 LOG_HEAD_SRC_SIZE, LOG_SKIN_TEX_SIZE, LOG_SKIN_TEX_SIZE);
 
-        // Expand/Collapse Indicator
         ResourceLocation expandIcon = isExpanded ? MOVE_DOWN_MINI_ICON : MOVE_RIGHT_MINI_ICON;
         int expandX = x + LOG_LIST_WIDTH - LOG_EXPAND_ICON_SIZE - 4;
         int expandY = y + (ROW_HEIGHT_COLLAPSED - LOG_EXPAND_ICON_SIZE) / 2;
         graphics.blit(expandIcon, expandX, expandY, 0, 0, LOG_EXPAND_ICON_SIZE, LOG_EXPAND_ICON_SIZE,
                 LOG_EXPAND_ICON_SIZE, LOG_EXPAND_ICON_SIZE);
 
-        // Time
         Component timeText = formatRelativeTime(entry.epochSecond());
         int timeX = expandX - 6 - font.width(timeText);
         graphics.drawString(font, timeText, timeX, textY, 0xC8C8C8, false);
 
-        // Player Name
         int detailsX = headX + LOG_HEAD_SIZE + 6;
         String buyerName = entry.buyerName().isBlank() ? "Unknown" : entry.buyerName();
         int maxNameWidth = timeX - detailsX - 4;
@@ -650,7 +646,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
         graphics.drawString(font, buyerName, detailsX, textY, 0xF2F2F2, false);
 
-        // --- EXPANDED VIEW: ITEM RENDERING ---
         if (isExpanded) {
             int previewX = getLogPreviewX(x);
             int previewY = y + ROW_HEIGHT_COLLAPSED;
@@ -755,8 +750,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(buyerId, name);
-        // SkinManager handles caching and asynchronous downloads natively via
-        // Minecraft.
         return client.getSkinManager().getInsecureSkin(profile).texture();
     }
 
@@ -780,7 +773,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     /**
-     * Shows the actual ItemStack tooltips for the rendered items instead of boring text.
+     * Shows the actual ItemStack tooltips for the rendered items instead of boring
+     * text.
      */
     private void renderLogHoverTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         if (expandedLogIndex == -1)
@@ -802,7 +796,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int itemY = previewY + 1;
         int previewX = getLogPreviewX(listX);
 
-        // Check if mouse is in the item rendering area of the expanded row
         if (mouseY >= itemY && mouseY < itemY + 16 && currentY > listY - ROW_HEIGHT_EXPANDED
                 && currentY < listY + LOG_LIST_HEIGHT) {
             TransactionLogEntry entry = entries.get(expandedLogIndex);
@@ -892,9 +885,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             int w = font.width(info);
             graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0x808080, false);
         } else if (activeSettingsCategory == SettingsCategory.ACCESS && menu.isPrimaryOwner()
-                && ownerListPanel.noPlayers()) {
+                && ownerListPanel.noPlayers() && !ownerListPanel.isListDisabled()) {
             Component info = Component.translatable("gui.marketblocks.no_players_available");
-            graphics.drawString(font, info, 18, ownerListPanel.listBaseY() - topPos + 16, 0x808080, false);
+            graphics.drawString(font, info, 30, ownerListPanel.listBaseY() - topPos + 35, 0x808080, false);
         }
     }
 
@@ -919,7 +912,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 return true;
             }
 
-            // Expand row function via click
             int listX = leftPos + LOG_LIST_X_OFFSET;
             if (mouseX >= listX && mouseX < listX + LOG_LIST_WIDTH) {
                 int currentY = listY - logScrollPixelOffset;
@@ -927,7 +919,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 for (int i = 0; i < entries.size(); i++) {
                     int rowHeight = (i == expandedLogIndex) ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
                     if (mouseY >= currentY && mouseY < currentY + rowHeight) {
-                        expandedLogIndex = (expandedLogIndex == i) ? -1 : i; // Toggle
+                        expandedLogIndex = (expandedLogIndex == i) ? -1 : i;
                         playSound(SoundEvents.UI_BUTTON_CLICK);
                         return true;
                     }
@@ -973,7 +965,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (menu.getActiveTab() == ShopTab.LOG) {
             if (getMaxLogScroll() > 0) {
-                logScrollPixelOffset -= (int) (scrollY * 16); // Scroll speed (16 pixels per step)
+                logScrollPixelOffset -= (int) (scrollY * 16);
                 clampLogScroll();
                 return true;
             }
@@ -1046,7 +1038,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     @Override
     public void onClose() {
         if (!saved && menu.getActiveTab() == ShopTab.SETTINGS) {
-            // Restore from blocks entity if not saved
             if (ioDraft != null) {
                 SingleOfferShopBlockEntity be = menu.getBlockEntity();
                 ioDraft = new IoSettings.Draft(be.getIoSettings());

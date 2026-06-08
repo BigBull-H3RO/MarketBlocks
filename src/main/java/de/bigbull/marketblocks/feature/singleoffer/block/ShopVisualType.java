@@ -2,6 +2,9 @@ package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import net.minecraft.world.level.block.Block;
 
+/**
+ * Defines the type of visual block design for a shop.
+ */
 public enum ShopVisualType {
     TRADE_STAND,
     MARKET_CRATE,
@@ -25,4 +28,3 @@ public enum ShopVisualType {
         return this == TRADE_STAND;
     }
 }
-

@@ -14,8 +14,10 @@ import net.minecraft.client.Minecraft;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.Util;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Client-only runtime state for BER-based visual NPC animations.
@@ -194,7 +196,6 @@ public class ShopNpcAnimationState {
                     parsedUuid = UUID.fromString(uuidStr);
                 }
             } catch (IllegalArgumentException e) {
-                // Not a UUID
             }
 
             if (Minecraft.getInstance().getConnection() != null) {
@@ -213,10 +214,10 @@ public class ShopNpcAnimationState {
                 if (parsedUuid != null) {
                     profile = new GameProfile(parsedUuid, "");
                     final UUID asyncUuid = parsedUuid;
-                    java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                    CompletableFuture.supplyAsync(() -> {
                         var result = Minecraft.getInstance().getMinecraftSessionService().fetchProfile(asyncUuid, false);
                         return result != null ? result.profile() : null;
-                    }, net.minecraft.Util.backgroundExecutor()).thenAcceptAsync(filledProfile -> {
+                    }, Util.backgroundExecutor()).thenAcceptAsync(filledProfile -> {
                         if (filledProfile != null && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
                             this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, filledProfile);
                         }
@@ -245,7 +246,7 @@ public class ShopNpcAnimationState {
 
             @Override
             public boolean isModelPartShown(PlayerModelPart part) {
-                return true; // Show hat, jacket, sleeves, pants, etc.
+                return true;
             }
 
             @Override

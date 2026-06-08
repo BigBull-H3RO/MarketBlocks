@@ -21,6 +21,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+/**
+ * An invisible secondary block placed on top of a {@link TradeStandBlock} when
+ * its showcase is enabled.
+ * Used to expand the physical hit-box and delegate interactions (breaking,
+ * opening the UI) back to the base block.
+ */
 public class TradeStandTopBlock extends Block {
     public static final MapCodec<TradeStandTopBlock> CODEC = simpleCodec(TradeStandTopBlock::new);
     private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 9, 15);
@@ -58,7 +64,8 @@ public class TradeStandTopBlock extends Block {
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos,
+            boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         if (!level.isClientSide && !state.canSurvive(level, pos)) {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
@@ -66,7 +73,8 @@ public class TradeStandTopBlock extends Block {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+            BlockHitResult hitResult) {
         BlockPos basePos = pos.below();
         BlockState baseState = level.getBlockState(basePos);
 
@@ -74,7 +82,8 @@ public class TradeStandTopBlock extends Block {
             return InteractionResult.PASS;
         }
 
-        BlockHitResult redirectedHit = new BlockHitResult(hitResult.getLocation(), hitResult.getDirection(), basePos, hitResult.isInside());
+        BlockHitResult redirectedHit = new BlockHitResult(hitResult.getLocation(), hitResult.getDirection(), basePos,
+                hitResult.isInside());
         return baseState.useWithoutItem(level, player, redirectedHit);
     }
 
@@ -91,7 +100,8 @@ public class TradeStandTopBlock extends Block {
     }
 
     @Override
-    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest,
+            FluidState fluid) {
         BlockPos basePos = pos.below();
         BlockState baseState = level.getBlockState(basePos);
 
@@ -102,7 +112,6 @@ public class TradeStandTopBlock extends Block {
         return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
     }
 
-    // Redirects the actual break including loot/enchantment behaviour to the base block.
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         BlockPos basePos = pos.below();
@@ -111,7 +120,6 @@ public class TradeStandTopBlock extends Block {
         if (baseState.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             baseState.getBlock().playerWillDestroy(level, basePos, baseState, player);
 
-            // Show particles/sound of the shop base block instead of the top helper block.
             level.levelEvent(player, 2001, basePos, Block.getId(baseState));
 
             if (!level.isClientSide()) {
@@ -119,7 +127,8 @@ public class TradeStandTopBlock extends Block {
                     level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 35);
                 } else {
                     BlockEntity blockEntity = level.getBlockEntity(basePos);
-                    baseState.getBlock().playerDestroy(level, player, basePos, baseState, blockEntity, player.getMainHandItem());
+                    baseState.getBlock().playerDestroy(level, player, basePos, baseState, blockEntity,
+                            player.getMainHandItem());
                     level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 3);
                 }
             }
@@ -132,4 +141,3 @@ public class TradeStandTopBlock extends Block {
         return PushReaction.BLOCK;
     }
 }
-

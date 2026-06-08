@@ -25,18 +25,27 @@ public class SingleOfferOwnerListPanel {
         ACCESS_LIST("gui.marketblocks.access.edit_access_list");
 
         private final String key;
-        ListMode(String key) { this.key = key; }
-        public Component title() { return Component.translatable(key); }
-        public ListMode next() { return this == OWNERS ? ACCESS_LIST : OWNERS; }
+
+        ListMode(String key) {
+            this.key = key;
+        }
+
+        public Component title() {
+            return Component.translatable(key);
+        }
+
+        public ListMode next() {
+            return this == OWNERS ? ACCESS_LIST : OWNERS;
+        }
     }
 
-    private static final int OWNER_VISIBLE_ROWS = 2;
+    private static final int OWNER_VISIBLE_ROWS = 4;
     private static final int OWNER_ROW_HEIGHT = 20;
     private static final int OWNER_PANEL_X_OFFSET = 7;
     private static final int OWNER_PANEL_BORDER = 1;
-    private static final int OWNER_PANEL_WIDTH = 137;
-    private static final int OWNER_PANEL_HEIGHT = 42;
-    private static final int OWNER_SCROLLBAR_X_OFFSET = 131;
+    private static final int OWNER_PANEL_WIDTH = 162;
+    private static final int OWNER_PANEL_HEIGHT = 82;
+    private static final int OWNER_SCROLLBAR_X_OFFSET = 156;
     private static final int SCROLLER_WIDTH = 12;
     private static final int SCROLLER_HEIGHT = 15;
 
@@ -52,10 +61,14 @@ public class SingleOfferOwnerListPanel {
 
     private SingleOfferShopScreen host;
     private Map<UUID, String> storedNames = Map.of();
-    private Runnable onDirty = () -> {};
+    private Runnable onDirty = () -> {
+    };
     private ListMode listMode = ListMode.OWNERS;
 
-    public ListMode getListMode() { return listMode; }
+    public ListMode getListMode() {
+        return listMode;
+    }
+
     public void setListMode(ListMode mode) {
         if (this.listMode != mode) {
             this.listMode = mode;
@@ -63,7 +76,15 @@ public class SingleOfferOwnerListPanel {
         }
     }
 
-    public Map<UUID, String> getStoredNames() { return storedNames; }
+    public Map<UUID, String> getStoredNames() {
+        return storedNames;
+    }
+
+    private boolean listDisabled = false;
+
+    public boolean isListDisabled() {
+        return listDisabled;
+    }
 
     public void prepareAndRender(SingleOfferShopScreen host,
             AccessSettings.Draft accessDraft,
@@ -74,6 +95,8 @@ public class SingleOfferOwnerListPanel {
         this.ownerListBaseY = listBaseY;
         this.onDirty = onDirty;
         this.ownerScrolling = false;
+        this.listDisabled = this.listMode == ListMode.ACCESS_LIST
+                && accessDraft.accessMode() == de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode.EVERYONE;
 
         if (!isPrimaryOwner) {
             this.noPlayers = false;
@@ -94,10 +117,11 @@ public class SingleOfferOwnerListPanel {
     public void renderBackground(GuiGraphics graphics,
             int leftPos,
             ResourceLocation panelTexture,
+            ResourceLocation panelDisabledTexture,
             ResourceLocation scrollerSprite,
             ResourceLocation scrollerDisabledSprite) {
         graphics.blit(
-                panelTexture,
+                listDisabled ? panelDisabledTexture : panelTexture,
                 leftPos + OWNER_PANEL_X_OFFSET,
                 ownerListBaseY - OWNER_PANEL_BORDER,
                 0,
@@ -163,8 +187,8 @@ public class SingleOfferOwnerListPanel {
         }
 
         int offRows = getOwnerOffscreenRows();
-        float step = (float) scrollY / (float) Math.max(1, offRows);
-        ownerScrollOffs = net.minecraft.util.Mth.clamp(ownerScrollOffs - step, 0.0F, 1.0F);
+        ownerScrollOffs = (float) ((double) ownerScrollOffs - scrollY / (double) offRows);
+        ownerScrollOffs = net.minecraft.util.Mth.clamp(ownerScrollOffs, 0.0F, 1.0F);
         setOwnerScrollFromOffs();
         return true;
     }
@@ -210,7 +234,8 @@ public class SingleOfferOwnerListPanel {
         ownerOrder.clear();
         ownerSelected.clear();
 
-        Map<UUID, String> current = new HashMap<>(listMode == ListMode.OWNERS ? accessDraft.additionalOwners() : accessDraft.accessList());
+        Map<UUID, String> current = new HashMap<>(
+                listMode == ListMode.OWNERS ? accessDraft.additionalOwners() : accessDraft.accessList());
 
         if (Minecraft.getInstance().getConnection() != null) {
             Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();
@@ -236,7 +261,7 @@ public class SingleOfferOwnerListPanel {
     }
 
     private boolean isOwnerScrollActive() {
-        return ownerOrder.size() > OWNER_VISIBLE_ROWS;
+        return !listDisabled && ownerOrder.size() > OWNER_VISIBLE_ROWS;
     }
 
     private int getOwnerOffscreenRows() {
@@ -257,6 +282,10 @@ public class SingleOfferOwnerListPanel {
         ownerCheckboxes.values().forEach(host::removeSettingsWidget);
         ownerCheckboxes.clear();
 
+        if (listDisabled) {
+            return;
+        }
+
         int maxOwners = de.bigbull.marketblocks.core.config.Config.MAX_CO_OWNERS_PER_SHOP.get();
         boolean limitReached = listMode == ListMode.OWNERS && collectSelectedOwners().size() >= maxOwners;
 
@@ -271,10 +300,18 @@ public class SingleOfferOwnerListPanel {
             String name = resolveName(id, storedNames);
             boolean selected = ownerSelected.getOrDefault(id, false);
 
-            Checkbox cb = host.addSettingsWidget(Checkbox.builder(Component.literal(name), host.settingsFont())
+            Component nameComp = Component.literal(name);
+            if (limitReached && !selected) {
+                nameComp = nameComp.copy().withStyle(net.minecraft.ChatFormatting.DARK_GRAY);
+            }
+
+            Checkbox cb = host.addSettingsWidget(Checkbox.builder(nameComp, host.settingsFont())
                     .pos(host.settingsLeftPos() + 8, ownerListBaseY + row * OWNER_ROW_HEIGHT)
                     .selected(selected)
                     .onValueChange((btn, value) -> {
+                        if (limitReached && !selected && value) {
+                            return;
+                        }
                         ownerSelected.put(id, value);
                         if (listMode == ListMode.OWNERS) {
                             renderOwnerWindow();
@@ -282,7 +319,7 @@ public class SingleOfferOwnerListPanel {
                         onDirty.run();
                     })
                     .build());
-            
+
             if (limitReached && !selected) {
                 cb.active = false;
             }

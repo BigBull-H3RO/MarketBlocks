@@ -2,22 +2,25 @@ package de.bigbull.marketblocks.feature.singleoffer.entity;
 
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.log.ShopTransactionLogSavedData;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.feature.visual.npc.IVisualShopNPC;
 import de.bigbull.marketblocks.feature.visual.npc.ShopNpcAnimationState;
+import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode;
 import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.IoRedstoneControl;
 import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -25,6 +28,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -32,6 +36,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -47,40 +52,24 @@ import java.util.*;
  * and interaction with adjacent blocks.
  */
 public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvider, IVisualShopNPC {
-    // Constants
-    private static final int MAX_SHOP_NAME_LENGTH = 32;
-    private static final double MAX_PLAYER_DISTANCE_SQUARED = 64.0; // 8 blocks
+    private static final double MAX_PLAYER_DISTANCE_SQUARED = 64.0;
     private static final Direction[] DIRECTIONS = Direction.values();
 
-    // NBT Keys
     private static final String NBT_HAS_OFFER = "HasOffer";
-    private static final String NBT_SHOP_NAME = "ShopName";
-    private static final String NBT_EMIT_REDSTONE = "EmitRedstone";
-    private static final String NBT_SIDE_MODES = "SideModes";
-    private static final String NBT_DIRECTION = "Direction";
-    private static final String NBT_MODE = "Mode";
     private static final String KEY_PAYMENT1 = "OfferPayment1";
     private static final String KEY_PAYMENT2 = "OfferPayment2";
     private static final String KEY_RESULT = "OfferResult";
-    private static final String NBT_ADMIN_SHOP_ENABLED = "AdminShopEnabled";
-    private static final String NBT_OUTPUT_WARNING = "OutputWarning";
-    private static final String NBT_OUTPUT_FULL = "OutputFull";
-    private static final String NBT_VISUALS = "Visuals";
     private static final String NBT_VISUAL_ANIMATION_NONCE = "VisualAnimationNonce";
     private static final String NBT_VISUAL_ANIMATION_EVENT = "VisualAnimationEvent";
     private static final String NBT_VISUAL_PURCHASE_COUNTER = "VisualPurchaseCounter";
     private static final String NBT_VISUAL_PAYMENT_SUCCESS_COUNTER = "VisualPaymentSuccessCounter";
     private static final String NBT_VISUAL_PAYMENT_FAIL_COUNTER = "VisualPaymentFailCounter";
-    private static final String NBT_PURCHASE_XP_FEEDBACK_SOUND = "PurchaseXpFeedbackSound";
-    private static final String NBT_GLOBAL_OFFER_ITEM_RENDERING = "GlobalOfferItemRendering";
 
-    // Inventory Handler Names
     private static final String HANDLER_INPUT = "InputInventory";
     private static final String HANDLER_OUTPUT = "OutputInventory";
     private static final String HANDLER_PAYMENT = "PaymentSlots";
     private static final String HANDLER_OFFER = "OfferSlot";
 
-    // Menu Flags
     public static final int HAS_OFFER_FLAG = 1;
     public static final int OFFER_AVAILABLE_FLAG = 2;
     public static final int OWNER_FLAG = 4;
@@ -88,12 +77,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public static final int OPERATOR_FLAG = 16;
     public static final int GLOBAL_ADMIN_MODE_FLAG = 32;
 
-    // Offer System
     private ItemStack offerPayment1 = ItemStack.EMPTY;
     private ItemStack offerPayment2 = ItemStack.EMPTY;
     private ItemStack offerResult = ItemStack.EMPTY;
     private boolean hasOffer = false;
-    private static final String SHOP_LOG_TYPE = ShopTransactionLogSavedData.SINGLE_OFFER_SHOP_TYPE;
     public static final int MAX_TRANSACTION_LOG_ENTRIES = 100;
 
     @Nullable
@@ -106,7 +93,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return inventoryManager;
     }
 
-    // Shop Settings
     private final ShopSettingsManager settingsManager = new ShopSettingsManager(this);
     private int visualAnimationNonce = 0;
     private byte visualAnimationEvent = VisualNpcAnimationEvent.NONE;
@@ -117,12 +103,25 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private final ItemStack[] paymentFeedbackSnapshot = new ItemStack[] { ItemStack.EMPTY, ItemStack.EMPTY };
     private long lastPurchaseXpSoundTick = -1L;
 
-    // --- CORE HANDLERS ---
 
-    // --- Inventories ---
     private class TrackedItemStackHandler extends ItemStackHandler {
         TrackedItemStackHandler(int size) {
             super(size);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @org.jetbrains.annotations.NotNull ItemStack stack) {
+            if (isAdminShopEnabled()) {
+                return false;
+            }
+            if (!hasOffer) {
+                return false;
+            }
+            ItemStack expectedItem = getOfferResult();
+            if (expectedItem.isEmpty()) {
+                return false;
+            }
+            return ItemStack.isSameItemSameComponents(stack, expectedItem);
         }
 
         @Override
@@ -144,9 +143,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
-            updateOfferSlot(); // Immediate update for UI responsiveness
-            needsOfferRefresh = true; // Flag for tick-based checks
-            // Note: updateOutputFullness() and sync() are batched in tick()
+            updateOfferSlot();
+            needsOfferRefresh = true;
         }
     };
 
@@ -165,10 +163,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
     };
 
-    // Reused snapshot handler to avoid per-call allocations during output-space
-    // simulations.
-    private final ItemStackHandler outputSimulationHandler = new ItemStackHandler(outputHandler.getSlots());
-
     private final ItemStackHandler offerHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -179,14 +173,11 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
             boolean offerActive = hasOffer();
 
-            // Ensure we only allow extraction of the FULL offer amount while an offer is
-            // active.
             if (offerActive) {
                 ItemStack currentOffer = getOfferResult();
                 if (currentOffer.isEmpty())
                     return ItemStack.EMPTY;
 
-                // Enforce all-or-nothing extraction to prevent partial payment
                 if (amount < currentOffer.getCount()) {
                     return ItemStack.EMPTY;
                 }
@@ -196,7 +187,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                 return super.extractItem(slot, amount, true);
             }
 
-            // Purchase logic only applies if an offer exists
             if (offerActive) {
                 if (!isReadyToPurchase()) {
                     updateOfferSlot();
@@ -220,14 +210,28 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             HANDLER_PAYMENT, paymentHandler,
             HANDLER_OFFER, offerHandler);
 
-    private final IItemHandler inputOnly = new SidedWrapper(inputHandler, false);
-    private final IItemHandler outputOnly = new SidedWrapper(outputHandler, true);
+    private final IItemHandler inputOnly = new SidedWrapper(inputHandler, false, () -> this.canProcessIo(SideMode.INPUT));
+    private final IItemHandler outputOnly = new SidedWrapper(outputHandler, true, () -> this.canProcessIo(SideMode.OUTPUT));
+
+    public boolean canProcessIo(SideMode mode) {
+        IoSettings io = getIoSettings();
+        if (!io.allowIo()) return false;
+
+        IoRedstoneControl rc = io.redstoneControl();
+        if (rc == IoRedstoneControl.REQUIRE_SIGNAL) return isPoweredByRedstone();
+        if (rc == IoRedstoneControl.REQUIRE_NO_SIGNAL) return !isPoweredByRedstone();
+        return true;
+    }
+
+    private boolean isPoweredByRedstone() {
+        return level != null && level.hasNeighborSignal(worldPosition);
+    }
 
     private final OfferManager offerManager = new OfferManager(this);
 
     private int tickCounter = 0;
     private boolean needsOfferRefresh = false;
-    
+
     private long lastOutOfStockNotifyTime = -1;
     private long lastOutputFullNotifyTime = -1;
 
@@ -235,7 +239,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         super(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), pos, state);
     }
 
-    // --- Sided Wrapper for Item Handlers ---
+
+
     /**
      * A wrapper for IItemHandler that restricts insertion or extraction.
      * 
@@ -243,7 +248,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
      * @param extractOnly If true, only extraction is allowed. If false, only
      *                    insertion is allowed.
      */
-    record SidedWrapper(IItemHandler backing, boolean extractOnly) implements IItemHandler {
+    record SidedWrapper(IItemHandler backing, boolean extractOnly, java.util.function.Supplier<Boolean> isActive) implements IItemHandler {
         @Override
         public int getSlots() {
             return backing.getSlots();
@@ -256,16 +261,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            if (extractOnly) {
-                return stack; // Cannot insert into an extract-only wrapper
+            if (extractOnly || !isActive.get()) {
+                return stack;
             }
             return backing.insertItem(slot, stack, simulate);
         }
 
         @Override
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            if (!extractOnly) {
-                return ItemStack.EMPTY; // Cannot extract from an insert-only wrapper
+            if (!extractOnly || !isActive.get()) {
+                return ItemStack.EMPTY;
             }
             return backing.extractItem(slot, amount, simulate);
         }
@@ -277,19 +282,19 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            return !extractOnly && backing.isItemValid(slot, stack);
+            return !extractOnly && isActive.get() && backing.isItemValid(slot, stack);
         }
     }
 
     public void updateShopDirectory() {
-        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-            de.bigbull.marketblocks.core.data.ShopDirectorySavedData data = de.bigbull.marketblocks.core.data.ShopDirectorySavedData.get(serverLevel);
-            net.minecraft.core.GlobalPos globalPos = net.minecraft.core.GlobalPos.of(serverLevel.dimension(), getBlockPos());
-            data.registerOrUpdateShop(globalPos, getOwnerId(), getOwnerName(), getShopName(), getGeneralSettings().isClosed());
+        if (level instanceof ServerLevel serverLevel) {
+            ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
+            GlobalPos globalPos = GlobalPos.of(serverLevel.dimension(), getBlockPos());
+            data.registerOrUpdateShop(globalPos, getOwnerId(), getOwnerName(), getShopName(),
+                    getGeneralSettings().isClosed());
         }
     }
 
-    // --- Menu Provider ---
     @Override
     public Component getDisplayName() {
         return Component.translatable("container.marketblocks.trade_stand");
@@ -300,7 +305,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return new SingleOfferShopMenu(containerId, playerInventory, this);
     }
 
-    // --- Getters for Handlers ---
     public ItemStackHandler getInputHandler() {
         return inputHandler;
     }
@@ -329,7 +333,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return outputOnly;
     }
 
-    // --- Core BlockEntity Methods ---
     public void sync() {
         setChanged();
         if (level != null && !level.isClientSide) {
@@ -357,7 +360,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                 worldPosition.getZ() + 0.5) <= MAX_PLAYER_DISTANCE_SQUARED;
     }
 
-    // --- Owner System ---
     public void setOwner(Player player) {
         settingsManager.setAccessSettings(
                 settingsManager.getAccessSettings().withOwner(player.getUUID(), player.getName().getString()), true);
@@ -366,7 +368,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
     }
 
-    @SuppressWarnings("unused")
+
     public void addOwner(UUID id, String name) {
         Map<UUID, String> newOwners = new HashMap<>(settingsManager.getAccessSettings().additionalOwners());
         newOwners.put(id, name);
@@ -380,7 +382,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         settingsManager.setAccessSettings(settingsManager.getAccessSettings().withAdditionalOwners(newOwners), false);
     }
 
-    @SuppressWarnings("unused")
+
     public void removeOwner(UUID id) {
         Map<UUID, String> newOwners = new HashMap<>(settingsManager.getAccessSettings().additionalOwners());
         if (newOwners.remove(id) != null) {
@@ -418,8 +420,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean canPlayerBuy(Player player) {
-        if (player == null) return !getGeneralSettings().isClosed();
-        if (isAdminShopEnabled() && player.hasPermissions(2)) return true;
+        if (player == null)
+            return !getGeneralSettings().isClosed();
+        if (isAdminShopEnabled() && player.hasPermissions(2))
+            return true;
         return canPlayerBuyByUUID(player.getUUID());
     }
 
@@ -473,13 +477,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         purchaseContextBuyerName = "";
     }
 
-    // --- Shop Settings ---
 
-    public de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings getNotificationSettings() {
+    public NotificationSettings getNotificationSettings() {
         return settingsManager.getNotificationSettings();
     }
 
-    public void setNotificationSettings(de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings settings, boolean sync) {
+    public void setNotificationSettings(NotificationSettings settings, boolean sync) {
         settingsManager.setNotificationSettings(settings, sync);
     }
 
@@ -533,7 +536,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         settingsManager.setIoSettings(ioSettings, sync);
     }
 
-    // --- Side Configuration ---
     public SideMode getMode(Direction absoluteDir) {
         return settingsManager.getIoSettings().getMode(absoluteDir, getBlockState().getValue(BaseShopBlock.FACING));
     }
@@ -560,7 +562,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             VillagerSettings villager,
             OfferItemSettings offerItem,
             AccessSettings access,
-            de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings notifications) {
+            NotificationSettings notifications) {
 
         settingsManager.setIoSettings(io, false);
         settingsManager.setGeneralSettings(general, false);
@@ -570,14 +572,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         settingsManager.setNotificationSettings(notifications, false);
 
         if (level != null && !level.isClientSide) {
-            unlockAdjacentChests(); // Safe reset
+            unlockAdjacentChests();
             lockAdjacentChests();
         }
 
         setChanged();
         sync();
         updateNeighborCache();
-        
+
         if (level != null && !level.isClientSide) {
             updateShopDirectory();
         }
@@ -589,13 +591,22 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         }
     }
 
-    public long getLastOutOfStockNotifyTime() { return lastOutOfStockNotifyTime; }
-    public void setLastOutOfStockNotifyTime(long time) { this.lastOutOfStockNotifyTime = time; }
+    public long getLastOutOfStockNotifyTime() {
+        return lastOutOfStockNotifyTime;
+    }
 
-    public long getLastOutputFullNotifyTime() { return lastOutputFullNotifyTime; }
-    public void setLastOutputFullNotifyTime(long time) { this.lastOutputFullNotifyTime = time; }
+    public void setLastOutOfStockNotifyTime(long time) {
+        this.lastOutOfStockNotifyTime = time;
+    }
 
-    // --- General Settings Accessors ---
+    public long getLastOutputFullNotifyTime() {
+        return lastOutputFullNotifyTime;
+    }
+
+    public void setLastOutputFullNotifyTime(long time) {
+        this.lastOutputFullNotifyTime = time;
+    }
+
 
     public GeneralSettings getGeneralSettings() {
         return settingsManager.getGeneralSettings();
@@ -611,7 +622,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void setShopName(String name, boolean sync) {
         GeneralSettings current = getGeneralSettings();
-        setGeneralSettings(new GeneralSettings(name, current.emitRedstone(), current.purchaseXpFeedbackSound(), current.isClosed()), sync);
+        setGeneralSettings(new GeneralSettings(name, current.emitRedstone(), current.purchaseXpFeedbackSound(),
+                current.isClosed()), sync);
         if (level != null && !level.isClientSide) {
             updateShopDirectory();
         }
@@ -623,7 +635,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void setEmitRedstone(boolean emitRedstone, boolean sync) {
         GeneralSettings current = getGeneralSettings();
-        setGeneralSettings(new GeneralSettings(current.shopName(), emitRedstone, current.purchaseXpFeedbackSound(), current.isClosed()),
+        setGeneralSettings(
+                new GeneralSettings(current.shopName(), emitRedstone, current.purchaseXpFeedbackSound(),
+                        current.isClosed()),
                 sync);
     }
 
@@ -633,10 +647,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void setPurchaseXpFeedbackSound(boolean enabled, boolean sync) {
         GeneralSettings current = getGeneralSettings();
-        setGeneralSettings(new GeneralSettings(current.shopName(), current.emitRedstone(), enabled, current.isClosed()), sync);
+        setGeneralSettings(new GeneralSettings(current.shopName(), current.emitRedstone(), enabled, current.isClosed()),
+                sync);
     }
 
-    // --- Villager Settings Accessors ---
 
     public VillagerSettings getVillagerSettings() {
         return settingsManager.getVillagerSettings();
@@ -646,7 +660,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         settingsManager.setVillagerSettings(settings, sync);
     }
 
-    // --- Offer Item Settings Accessors ---
 
     public OfferItemSettings getOfferItemSettings() {
         return settingsManager.getOfferItemSettings();
@@ -674,7 +687,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return inventoryManager.getValidNeighborHandler(dir);
     }
 
-    // --- Offer System ---
     public void createOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
         ItemStack normalizedPayment1 = payment1 == null ? ItemStack.EMPTY : payment1.copy();
         ItemStack normalizedPayment2 = payment2 == null ? ItemStack.EMPTY : payment2.copy();
@@ -790,9 +802,11 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     private boolean isReadyToPurchase() {
-        if (getGeneralSettings().isClosed()) return false;
+        if (getGeneralSettings().isClosed())
+            return false;
         if (purchaseContextBuyerId != null) {
-            if (!canPlayerBuyByUUID(purchaseContextBuyerId)) return false;
+            if (!canPlayerBuyByUUID(purchaseContextBuyerId))
+                return false;
         }
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
@@ -908,7 +922,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
             @Override
             public void set(int index, int value) {
-                // Not needed on client side
             }
 
             @Override
@@ -918,12 +931,11 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         };
     }
 
-    // --- Item and Chest Handling ---
     private void dropItems(Level level, BlockPos pos, ItemStackHandler handler) {
         for (int i = 0; i < handler.getSlots(); i++) {
             ItemStack stack = handler.getStackInSlot(i);
             if (!stack.isEmpty()) {
-                net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
+                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
             }
         }
     }
@@ -932,8 +944,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         dropItems(level, pos, inputHandler);
         dropItems(level, pos, outputHandler);
         dropItems(level, pos, paymentHandler);
-        // During an active offer, slot 0 contains only a UI copy of the offer result.
-        // The real stock item remains in inputHandler and is dropped above.
         if (!hasOffer) {
             dropItems(level, pos, offerHandler);
         }
@@ -984,20 +994,25 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             if (be.needsOfferRefresh) {
                 be.updateOfferSlot(false);
                 be.needsOfferRefresh = false;
-                be.sync(); // Sync after offer refresh
+                be.sync();
             }
-            be.updateOutputFullness(); // Moved inside interval
+            be.updateOutputFullness();
         }
 
         int chestInterval = Config.CHEST_IO_INTERVAL.get();
         if (chestExtensionEnabled && chestInterval > 0 && be.tickCounter % chestInterval == 0) {
             be.updateNeighborCache();
-            be.inventoryManager.pullFromInputChest(be.inputHandler);
-            be.inventoryManager.pushToOutputChest(be.outputHandler);
+            if (be.getIoSettings().autoIo()) {
+                if (be.canProcessIo(SideMode.INPUT)) {
+                    be.inventoryManager.pullFromInputChest(be.inputHandler);
+                }
+                if (be.canProcessIo(SideMode.OUTPUT)) {
+                    be.inventoryManager.pushToOutputChest(be.outputHandler);
+                }
+            }
         }
     }
 
-    // --- NBT HANDLING ---
 
     @Override
     public void onChunkUnloaded() {
@@ -1010,6 +1025,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public void setRemoved() {
+        if (level != null && level.isClientSide()) {
+            de.bigbull.marketblocks.compat.journeymap.JourneyMapCompat.removeShopMarker(worldPosition);
+        }
         super.setRemoved();
         unlockAdjacentChests();
         if (level != null) {
@@ -1020,13 +1038,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     @Override
     public void onLoad() {
         super.onLoad();
+        if (level != null && level.isClientSide()) {
+            de.bigbull.marketblocks.compat.journeymap.JourneyMapCompat.addShopMarker(this);
+        }
         if (level != null && !level.isClientSide && getBlockState().is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             TradeStandBlock.ensureTopBlock(level, worldPosition);
         }
         updateNeighborCache();
 
-        // Perform chunk-dependent operations here instead of in loadAdditional()
-        // At this point, the level is guaranteed to be set and neighbors are accessible
         lockAdjacentChests();
         if (level != null) {
             level.invalidateCapabilities(worldPosition);
@@ -1049,8 +1068,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         this.visualPaymentSuccessCounter = tag.getInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER);
         this.visualPaymentFailCounter = tag.getInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER);
 
-        // Moved to onLoad(): lockAdjacentChests() and invalidateCapabilities()
-        // This ensures level is not null and neighbor chunks are loaded
         tickCounter = 0;
     }
 
@@ -1104,10 +1121,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        // SECURITY: Only send client-relevant data, not full inventory contents
         CompoundTag tag = new CompoundTag();
 
-        // Offer data (needed for rendering)
         tag.putBoolean(NBT_HAS_OFFER, hasOffer);
         if (hasOffer) {
             if (!offerPayment1.isEmpty())
@@ -1118,7 +1133,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                 tag.put(KEY_RESULT, offerResult.save(registries));
         }
 
-        // Shop settings (includes I/O and Access)
         settingsManager.save(tag);
         tag.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
         tag.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
@@ -1126,24 +1140,18 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         tag.putInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, visualPaymentSuccessCounter);
         tag.putInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER, visualPaymentFailCounter);
 
-        // Note: Inventory handlers (input/output/payment) are NOT sent to clients
-        // for security reasons - they contain owner's items
 
         return tag;
     }
 
     @Override
     public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
-        // CRITICAL: Only load the data that was sent via getUpdateTag()
-        // Do NOT call loadAdditional() as it expects full NBT data!
 
-        // Offer data
         offerPayment1 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT1));
         offerPayment2 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT2));
         offerResult = ItemStack.parseOptional(registries, tag.getCompound(KEY_RESULT));
         hasOffer = tag.getBoolean(NBT_HAS_OFFER);
 
-        // Shop settings (includes I/O and Access)
         settingsManager.load(tag);
         visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
         visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
@@ -1151,7 +1159,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         visualPaymentSuccessCounter = tag.getInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER);
         visualPaymentFailCounter = tag.getInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER);
 
-        // Update client-side state
         updateOfferSlot();
         refreshPaymentFeedbackSnapshot();
     }

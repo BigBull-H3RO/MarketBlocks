@@ -6,7 +6,6 @@ import de.bigbull.marketblocks.feature.singleoffer.network.*;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -16,7 +15,6 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
  * This class ensures that all custom packets are known to NeoForge's networking system
  * and can be sent between the client and server.
  */
-@EventBusSubscriber(modid = MarketBlocks.MODID, bus = EventBusSubscriber.Bus.MOD)
 public class NetworkHandler {
     private static final String PROTOCOL_VERSION = "1.0.0";
 
@@ -32,8 +30,6 @@ public class NetworkHandler {
         final PayloadRegistrar registrar = event.registrar(MarketBlocks.MODID)
                 .versioned(PROTOCOL_VERSION);
 
-        // Client to Server packets
-        // Trade Stand packets
         registrar.playToServer(CreateOfferPacket.TYPE, CreateOfferPacket.CODEC, CreateOfferPacket::handle);
         registrar.playToServer(DeleteOfferPacket.TYPE, DeleteOfferPacket.CODEC, DeleteOfferPacket::handle);
         registrar.playToServer(SwitchTabPacket.TYPE, SwitchTabPacket.CODEC, SwitchTabPacket::handle);
@@ -44,7 +40,6 @@ public class NetworkHandler {
 
         registrar.playToServer(ClearTransactionLogPacket.TYPE, ClearTransactionLogPacket.CODEC, ClearTransactionLogPacket::handle);
 
-        // Marketplace packets
         registrar.playToServer(MarketplaceOpenRequestPacket.TYPE, MarketplaceOpenRequestPacket.CODEC, MarketplaceOpenRequestPacket::handle);
         registrar.playToServer(MarketplaceToggleEditModePacket.TYPE, MarketplaceToggleEditModePacket.CODEC, MarketplaceToggleEditModePacket::handle);
         registrar.playToServer(MarketplaceSelectPagePacket.TYPE, MarketplaceSelectPagePacket.CODEC, MarketplaceSelectPagePacket::handle);
@@ -59,12 +54,9 @@ public class NetworkHandler {
         registrar.playToServer(MarketplaceAutoFillPacket.TYPE, MarketplaceAutoFillPacket.CODEC, MarketplaceAutoFillPacket::handle);
         registrar.playToServer(MarketplaceSetOfferPacket.TYPE, MarketplaceSetOfferPacket.CODEC, MarketplaceSetOfferPacket::handle);
 
-        // Server to Client packets
-        // Trade Stand packets
         registrar.playToClient(OfferStatusPacket.TYPE, OfferStatusPacket.CODEC, OfferStatusPacket::handle);
         registrar.playToClient(TransactionLogSyncPacket.TYPE, TransactionLogSyncPacket.CODEC, TransactionLogSyncPacket::handle);
 
-        // Marketplace packets
         registrar.playToClient(MarketplaceSyncPacket.TYPE, MarketplaceSyncPacket.CODEC, MarketplaceSyncPacket::handle);
     }
 
@@ -77,6 +69,12 @@ public class NetworkHandler {
         PacketDistributor.sendToServer(packet);
     }
 
+    /**
+     * A helper method to send a packet from the server to a specific player.
+     *
+     * @param player The server player to receive the packet.
+     * @param packet The packet payload to send.
+     */
     public static void sendToPlayer(ServerPlayer player, CustomPacketPayload packet) {
         PacketDistributor.sendToPlayer(player, packet);
     }

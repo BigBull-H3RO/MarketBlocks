@@ -16,6 +16,11 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
 import java.util.Set;
 
+/**
+ * Data provider for generating block loot tables.
+ * Specifies what items drop when blocks are broken, including complex logic
+ * for preserving NBT data (like showcase state) when silk-touching Trade Stands.
+ */
 public class ModBlockLootTableProvider extends BlockLootSubProvider {
     public ModBlockLootTableProvider(HolderLookup.Provider registries) {
         super(Set.of(), FeatureFlags.REGISTRY.allFlags(), registries);
@@ -26,17 +31,13 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(RegistriesInit.MARKETCRATE_BLOCK.get());
         dropSelf(RegistriesInit.MARKETPLACE_BLOCK.get());
 
-        // 1. Top block drops nothing (the item is managed by the base block)
         this.add(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), noDrop());
 
-        // 2. Custom loot logic for the Trade Stand block
         this.add(RegistriesInit.TRADE_STAND_BLOCK.get(), block -> LootTable.lootTable()
                 .withPool(LootPool.lootPool()
                         .setRolls(ConstantValue.exactly(1.0F))
                         .add(
-                                // applyExplosionCondition automatically adds the "survives_explosion" condition
                                 this.applyExplosionCondition(block,
-                                        // IF: Silk Touch + showcase active
                                         LootItem.lootTableItem(block)
                                                 .when(this.hasSilkTouch())
                                                 .when(LootItemBlockStatePropertyCondition.hasBlockStateProperties(block)
@@ -44,7 +45,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                                                                 .hasProperty(TradeStandBlock.HAS_SHOWCASE, true)))
                                                 .apply(CopyBlockState.copyState(block).copy(TradeStandBlock.HAS_SHOWCASE))
 
-                                                // OTHERWISE: Standard drop (without NBT/showcase)
                                                 .otherwise(LootItem.lootTableItem(block))
                                 )
                         )

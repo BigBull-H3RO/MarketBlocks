@@ -69,7 +69,6 @@ public final class MarketplaceOffer {
     }
 
     private List<ItemStack> paymentsForSerialization() {
-        // ItemStack.CODEC rejects empty stacks (air/count 0), so persist only real payment entries.
         return payments.stream()
                 .filter(stack -> !stack.isEmpty())
                 .map(ItemStack::copy)

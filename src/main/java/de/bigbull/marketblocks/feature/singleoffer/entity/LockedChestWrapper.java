@@ -5,6 +5,10 @@ import net.neoforged.neoforge.items.IItemHandler;
 
 import java.util.UUID;
 
+/**
+ * A wrapper for an item handler that allows tracking the chest's owner.
+ * Ensures that shop automated IO only interacts with chests belonging to the shop's owners.
+ */
 public class LockedChestWrapper implements IItemHandler {
     private final IItemHandler delegate;
     private final UUID owner;

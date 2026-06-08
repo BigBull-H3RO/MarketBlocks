@@ -16,6 +16,11 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
+/**
+ * Handles gameplay-related events on the FORGE/GAME event bus.
+ * Currently intercepts interactions with Trade Stands to manage the placement 
+ * and removal of the protective glass showcase using specific items (Glass, Axes).
+ */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public class ModGameEvents {
     @SubscribeEvent

@@ -2,10 +2,15 @@ package de.bigbull.marketblocks.feature.singleoffer.settings;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * Defines the access control mode for a shop.
+ */
 public enum AccessMode {
     EVERYONE("gui.marketblocks.access.mode.everyone"),
     WHITELIST("gui.marketblocks.access.mode.whitelist"),
     BLACKLIST("gui.marketblocks.access.mode.blacklist");
+
+    private static final AccessMode[] VALUES = values();
 
     private final String translationKey;
 
@@ -22,6 +27,6 @@ public enum AccessMode {
     }
 
     public AccessMode next() {
-        return values()[(this.ordinal() + 1) % values().length];
+        return VALUES[(this.ordinal() + 1) % VALUES.length];
     }
 }

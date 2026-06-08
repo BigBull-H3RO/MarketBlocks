@@ -8,6 +8,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
+/**
+ * A custom button used in the shop UI to display an offer template.
+ * Renders up to two payment items on the left, an arrow in the middle, and the result item on the right.
+ */
 public class OfferTemplateButton extends Button {
     private static final ResourceLocation TRADE_ARROW =
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");

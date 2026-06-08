@@ -16,16 +16,20 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+/**
+ * A packet sent from the client to the server to delete the current trade offer
+ * in a shop.
+ * Also ejects the existing payment items back to the player.
+ */
 public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
 
-    public static final CustomPacketPayload.Type<DeleteOfferPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "delete_offer"));
+    public static final CustomPacketPayload.Type<DeleteOfferPacket> TYPE = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "delete_offer"));
 
     public static final StreamCodec<ByteBuf, DeleteOfferPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             DeleteOfferPacket::pos,
-            DeleteOfferPacket::new
-    );
+            DeleteOfferPacket::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -40,12 +44,9 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
             Level level = player.level();
 
             if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity shopEntity) {
-                // Check if the player is the owner
                 if (shopEntity.isOwner(player)) {
-                    // Completely remove the offer
                     shopEntity.clearOffer();
 
-                    // Empty current payment and offer slots too
                     for (int i = 0; i < 2; i++) {
                         ItemStack stack = shopEntity.getPaymentHandler().extractItem(i, Integer.MAX_VALUE, false);
                         if (!stack.isEmpty()) {
@@ -68,16 +69,17 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
 
                     shopEntity.updateOfferSlot();
 
-                    // Send status update to all players with open menus
                     if (level instanceof ServerLevel serverLevel) {
                         for (ServerPlayer p : serverLevel.players()) {
-                            if (p.containerMenu instanceof SingleOfferShopMenu menu && menu.getBlockEntity() == shopEntity) {
+                            if (p.containerMenu instanceof SingleOfferShopMenu menu
+                                    && menu.getBlockEntity() == shopEntity) {
                                 PacketDistributor.sendToPlayer(p, new OfferStatusPacket(packet.pos(), false));
                             }
                         }
                     }
 
-                    MarketBlocks.LOGGER.info("Player {} deleted offer at {}", player.getName().getString(), packet.pos());
+                    MarketBlocks.LOGGER.info("Player {} deleted offer at {}", player.getName().getString(),
+                            packet.pos());
                 }
             }
         });

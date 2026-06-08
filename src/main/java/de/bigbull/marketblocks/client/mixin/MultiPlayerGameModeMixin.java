@@ -14,6 +14,11 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
+/**
+ * Mixin for MultiPlayerGameMode to handle multi-block breaking logic on the client.
+ * Normalizes hit coordinates so that attacking the top half of a Trade Stand
+ * correctly targets the base block instead, preventing desync issues.
+ */
 @Mixin(MultiPlayerGameMode.class)
 public abstract class MultiPlayerGameModeMixin {
     @Shadow @Final private Minecraft minecraft;

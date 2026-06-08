@@ -14,6 +14,10 @@ import net.minecraft.world.item.Items;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Data provider for generating crafting recipes.
+ * Defines the recipes for crafting MarketBlocks items and blocks.
+ */
 public class ModRecipeProvider extends RecipeProvider {
     public ModRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
         super(output, registries);
@@ -21,28 +25,30 @@ public class ModRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
-        // Trade Stand
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.TRADE_STAND_BLOCK.get(), 1)
                 .pattern("#D#")
                 .pattern("IEI")
                 .pattern("#S#")
                 .define('#', ItemTags.PLANKS)
-                .define('D', Items.DEEPSLATE_TILE_SLAB)
+                .define('D', Items.SMOOTH_STONE_SLAB)
                 .define('E', Items.EMERALD)
                 .define('I', Items.IRON_INGOT)
                 .define('S', ItemTags.SIGNS)
                 .unlockedBy("has_emerald", has(Items.EMERALD))
+                .unlockedBy("has_chest", has(Items.CHEST))
                 .save(recipeOutput, getModId("trade_stand"));
 
-        // Market Crate
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.MARKETCRATE_BLOCK.get(), 1)
-                .pattern("#C#")
                 .pattern("#E#")
-                .pattern("###")
+                .pattern("#C#")
+                .pattern("BSB")
                 .define('#', ItemTags.PLANKS)
                 .define('C', Items.CHEST)
                 .define('E', Items.EMERALD)
+                .define('B', Items.BARREL)
+                .define('S', ItemTags.SIGNS)
                 .unlockedBy("has_emerald", has(Items.EMERALD))
+                .unlockedBy("has_chest", has(Items.CHEST))
                 .save(recipeOutput, getModId("marketcrate"));
     }
 

@@ -25,6 +25,7 @@ run-data
 
 repo
 /src/generated/resources/.cache/
+/journeymap
 
 # logs
 logs/

@@ -14,6 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Represents a single transaction entry in the shop's transaction log.
+ * Contains information about the buyer, the purchased items, the paid items, and the time of the transaction.
+ */
 public record TransactionLogEntry(
         long epochSecond,
         UUID buyerUuid,
@@ -68,7 +72,6 @@ public record TransactionLogEntry(
      * Checks whether this entry can be merged with a newer one (smart stacking).
      */
     public boolean canMergeWith(TransactionLogEntry other) {
-        // Must be the same buyer
         if (!this.buyerUuid().equals(other.buyerUuid())) return false;
 
         if (this.purchaseKind() != other.purchaseKind()) return false;

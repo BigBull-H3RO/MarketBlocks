@@ -5,13 +5,15 @@ import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -28,18 +30,20 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Represents the trade stand shop block variant.
+ * Supports a togglable "showcase" mode which places an invisible secondary
+ * block on top for interaction logic.
+ */
 public class TradeStandBlock extends BaseShopBlock {
     public static final MapCodec<TradeStandBlock> CODEC = simpleCodec(TradeStandBlock::new);
     public static final BooleanProperty HAS_SHOWCASE = BooleanProperty.create("has_showcase");
 
-    // Static shape without showcase (Y goes only up to 11)
     private static final VoxelShape SHAPE_NO_SHOWCASE = Block.box(0, 0, 0, 16, 11, 16);
 
-    // Combined shape: Base block + narrower showcase on top
     private static final VoxelShape SHAPE_WITH_SHOWCASE = Shapes.or(
-            SHAPE_NO_SHOWCASE,                                          // The lower base part (Y=0 to 11)
-            Block.box(1, 11, 1, 15, 16, 15)     // The showcase (inset by 1 pixel, Y=11 to 16)
-    );
+            SHAPE_NO_SHOWCASE,
+            Block.box(1, 11, 1, 15, 16, 15));
 
     public TradeStandBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -56,21 +60,21 @@ public class TradeStandBlock extends BaseShopBlock {
         return ShopRenderConfig.TRADE_STAND;
     }
 
-    /** * Helper method: checks whether the given BlockState is this shop and has a showcase.
+    /**
+     * Checks whether the given BlockState is this shop and has a showcase.
      */
     public static boolean hasShowcase(BlockState state) {
         return state.is(RegistriesInit.TRADE_STAND_BLOCK.get()) && state.getValue(HAS_SHOWCASE);
     }
 
-    // --- HIER IST DER FIX ---
-    // We query whether the showcase is active. If so, we return the full 16 height!
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return state.getValue(HAS_SHOWCASE) ? SHAPE_WITH_SHOWCASE : SHAPE_NO_SHOWCASE;
     }
 
     @Override
-    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos,
+            CollisionContext context) {
         return state.getValue(HAS_SHOWCASE) ? SHAPE_WITH_SHOWCASE : SHAPE_NO_SHOWCASE;
     }
 
@@ -78,7 +82,6 @@ public class TradeStandBlock extends BaseShopBlock {
     protected VoxelShape getInteractionShape(BlockState state, BlockGetter level, BlockPos pos) {
         return state.getValue(HAS_SHOWCASE) ? SHAPE_WITH_SHOWCASE : SHAPE_NO_SHOWCASE;
     }
-    // ------------------------
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
@@ -105,7 +108,8 @@ public class TradeStandBlock extends BaseShopBlock {
         return stack;
     }
 
-    public static InteractionResult tryEnableShowcase(Level level, BlockPos pos, BlockState state, Player player, ItemStack stack) {
+    public static InteractionResult tryEnableShowcase(Level level, BlockPos pos, BlockState state, Player player,
+            ItemStack stack) {
         if (!state.is(RegistriesInit.TRADE_STAND_BLOCK.get()) || state.getValue(HAS_SHOWCASE)) {
             return InteractionResult.PASS;
         }
@@ -131,6 +135,8 @@ public class TradeStandBlock extends BaseShopBlock {
             if (!topAlreadyPresent && !player.getAbilities().instabuild) {
                 stack.shrink(1);
             }
+            level.playSound(null, pos, net.minecraft.world.level.block.SoundType.GLASS.getPlaceSound(),
+                    net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide);
@@ -156,6 +162,8 @@ public class TradeStandBlock extends BaseShopBlock {
 
             ItemEntity glassItem = getItemEntity(level, pos);
             level.addFreshEntity(glassItem);
+            level.playSound(null, pos, net.minecraft.sounds.SoundEvents.ITEM_PICKUP,
+                    net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide);
@@ -163,15 +171,12 @@ public class TradeStandBlock extends BaseShopBlock {
 
     private static @NotNull ItemEntity getItemEntity(Level level, BlockPos pos) {
         double spawnX = pos.getX() + 0.5D;
-        // Y at exactly 11 pixels height (11/16) + 0.1 buffer so it pops out nicely
         double spawnY = pos.getY() + (11.0D / 16.0D) + 0.1D;
         double spawnZ = pos.getZ() + 0.5D;
 
-        // Manually spawn the item in the world
         ItemEntity glassItem = new ItemEntity(
-                level, spawnX, spawnY, spawnZ, new ItemStack(Items.GLASS)
-        );
-        glassItem.setDefaultPickUpDelay(); // Important: So the player does not pick it up in the exact same millisecond
+                level, spawnX, spawnY, spawnZ, new ItemStack(Items.GLASS));
+        glassItem.setDefaultPickUpDelay();
         return glassItem;
     }
 
@@ -195,10 +200,12 @@ public class TradeStandBlock extends BaseShopBlock {
     }
 
     public static void ensureTopBlock(Level level, BlockPos basePos) {
-        if (level.isClientSide) return;
+        if (level.isClientSide)
+            return;
 
         BlockState baseState = level.getBlockState(basePos);
-        if (!baseState.is(RegistriesInit.TRADE_STAND_BLOCK.get())) return;
+        if (!baseState.is(RegistriesInit.TRADE_STAND_BLOCK.get()))
+            return;
 
         BlockPos topPos = basePos.above();
         BlockState topState = level.getBlockState(topPos);
@@ -219,15 +226,13 @@ public class TradeStandBlock extends BaseShopBlock {
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide() && state.getValue(HAS_SHOWCASE)) {
-            // Check auf Behutsamkeit (Silk Touch) in 1.21.1
-            var registry = level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT);
-            var silkTouch = registry.getHolder(net.minecraft.world.item.enchantment.Enchantments.SILK_TOUCH);
+            var registry = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+            var silkTouchHolder = registry.getHolder(Enchantments.SILK_TOUCH);
 
-            boolean hasSilkTouch = silkTouch.isPresent() &&
-                    player.getMainHandItem().getEnchantments().getLevel(silkTouch.get()) > 0;
+            boolean hasSilkTouch = silkTouchHolder.isPresent()
+                    && player.getMainHandItem().getEnchantmentLevel(silkTouchHolder.get()) > 0;
 
             if (!hasSilkTouch && !player.isCreative()) {
-                // Only if NOT silk touch and NOT in Creative mode -> play glass sound
                 level.playSound(null, pos, net.minecraft.sounds.SoundEvents.GLASS_BREAK,
                         net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
             }
@@ -240,4 +245,3 @@ public class TradeStandBlock extends BaseShopBlock {
         return CODEC;
     }
 }
-

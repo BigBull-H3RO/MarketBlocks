@@ -14,6 +14,10 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import java.util.EnumMap;
 import java.util.Map;
 
+/**
+ * Manages the internal and adjacent inventory logic for a single-offer shop.
+ * Handles neighbor caching, auto-IO transfers, and stock/space calculations.
+ */
 public class ShopInventoryManager {
 
     private static final Direction[] DIRECTIONS = Direction.values();

@@ -1,0 +1,26 @@
+{
+  "parent": "marketblocks:marketblocks/redstone",
+  "criteria": {
+    "enabled_auto_io": {
+      "trigger": "marketblocks:shop_auto_io"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.auto_io.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:hopper"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.auto_io.title"
+    }
+  },
+  "requirements": [
+    [
+      "enabled_auto_io"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

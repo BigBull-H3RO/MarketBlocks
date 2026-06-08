@@ -6,6 +6,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Interface for shop entities that support visual NPC rendering.
+ * Provides the required rendering parameters and state.
+ */
 public interface IVisualShopNPC {
     BlockPos getVisualShopPos();
 

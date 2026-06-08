@@ -11,7 +11,8 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.function.BooleanSupplier;
 
 /**
- * Einfacher Button mit Hintergrund-Sprites und separatem Icon.
+ * A simple button widget that uses custom background sprites and overlays a separate icon.
+ * Supports different sprite states for normal, hovered, and selected modes.
  */
 public class IconButton extends Button {
     private final WidgetSprites sprites;
@@ -50,8 +51,7 @@ public class IconButton extends Button {
             background = sprites.get(true, false);
         }
 
-        RenderSystem.setShaderTexture(0, background);
-        graphics.blit(background, getX(), getY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight());
+        graphics.blitSprite(background, getX(), getY(), getWidth(), getHeight());
         ResourceLocation iconToRender = (selected && activeIcon != null) ? activeIcon : icon;
         RenderSystem.setShaderTexture(0, iconToRender);
         int iconSize = Math.min(18, Math.min(getWidth(), getHeight()));

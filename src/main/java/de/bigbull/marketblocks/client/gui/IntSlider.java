@@ -6,6 +6,10 @@ import net.minecraft.util.Mth;
 
 import java.util.function.Consumer;
 
+/**
+ * A custom slider widget for selecting integer values within a specific range.
+ * Automatically rounds the internal floating-point value to the nearest integer.
+ */
 public class IntSlider extends AbstractSliderButton {
     private final int min;
     private final int max;

@@ -34,9 +34,7 @@ public record MarketplaceAutoFillPacket(UUID offerId) implements CustomPacketPay
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof MarketplaceMenu menu) {
                 MarketplaceOffer offer = MarketplaceManager.get().findOffer(packet.offerId());
                 if (offer != null) {
-                    // IMPORTANT: Set the offer first (so slotsChanged knows what to do)
                     menu.setCurrentTradingOffer(offer);
-                    // Then fill in items -> triggers slotsChanged -> result slot appears
                     menu.autoFillPayment(player, offer);
                 }
             }

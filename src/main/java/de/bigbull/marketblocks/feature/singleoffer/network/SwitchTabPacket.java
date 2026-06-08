@@ -17,23 +17,26 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+/**
+ * A packet sent from the client to the server to change the active tab in the
+ * shop menu.
+ * Triggers sync of data required for the new tab (like transaction logs).
+ */
 public record SwitchTabPacket(BlockPos pos, ShopTab tab) implements CustomPacketPayload {
 
-    public static final CustomPacketPayload.Type<SwitchTabPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "switch_tab"));
+    public static final CustomPacketPayload.Type<SwitchTabPacket> TYPE = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "switch_tab"));
 
     private static final StreamCodec<ByteBuf, ShopTab> TAB_CODEC = ByteBufCodecs.VAR_INT.map(
             ShopTab::fromId,
-            ShopTab::ordinal
-    );
+            ShopTab::ordinal);
 
     public static final StreamCodec<ByteBuf, SwitchTabPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             SwitchTabPacket::pos,
             TAB_CODEC,
             SwitchTabPacket::tab,
-            SwitchTabPacket::new
-    );
+            SwitchTabPacket::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -65,10 +68,8 @@ public record SwitchTabPacket(BlockPos pos, ShopTab tab) implements CustomPacket
                                             ShopTransactionLogSavedData.SINGLE_OFFER_SHOP_TYPE,
                                             serverLevel.dimension(),
                                             pos,
-                                            ShopTransactionLogSavedData.DEFAULT_MAX_ENTRIES_PER_SHOP
-                                    ),
-                                    serverLevel.registryAccess()
-                            ));
+                                            ShopTransactionLogSavedData.DEFAULT_MAX_ENTRIES_PER_SHOP),
+                                    serverLevel.registryAccess()));
                         }
                     }
                 }

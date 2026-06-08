@@ -29,27 +29,33 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
  * Main shop UI orchestration.
  * Navigation guide:
  * - Lifecycle/Data sync: init(), containerTick(), rebuildUi()
- * - Selection/preview state: updatePreview(), findOfferOnSelectedPage(), sanitizeSelectionState()
- * - Edit controls wiring: buildEditorControls(), createEditorControlsContext(), ScreenEditorCallbacks
- * - Rendering pipeline: render(), renderModalBackdrop(), renderContent(), renderStaticOverlay()
- * - Input handling: mouseClicked(), mouseScrolled(), mouseDragged(), mouseReleased()
- * - Modal entry points: openOfferLimitsEditor(), openOfferPricingEditor(), openTextInput()
-**/
+ * - Selection/preview state: updatePreview(), findOfferOnSelectedPage(),
+ * sanitizeSelectionState()
+ * - Edit controls wiring: buildEditorControls(), createEditorControlsContext(),
+ * ScreenEditorCallbacks
+ * - Rendering pipeline: render(), renderModalBackdrop(), renderContent(),
+ * renderStaticOverlay()
+ * - Input handling: mouseClicked(), mouseScrolled(), mouseDragged(),
+ * mouseReleased()
+ * - Modal entry points: openOfferLimitsEditor(), openOfferPricingEditor(),
+ * openTextInput()
+ **/
 public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> {
     private static final int BACKDROP_MOUSE_OFFSCREEN = -10000;
-    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/marketplace.png");
+    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/marketplace.png");
     private static final int STATUS_LINE_HEIGHT = 12;
     private static final int RIGHT_SIDE_GAP = 2;
     private static final int RIGHT_BUTTON_SIZE = 20;
     private static final int RIGHT_BUTTON_GAP = 4;
 
-    // List
     private static final int ROW_HEIGHT = 20;
     private static final int MAX_VISIBLE_ROWS = 9;
     private static final int LIST_X_OFFSET = 5;
@@ -57,44 +63,54 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private static final int LIST_WIDTH = 88;
     private static final int LIST_HEIGHT = ROW_HEIGHT * MAX_VISIBLE_ROWS + 7;
 
-    // Scroller
     private static final int SCROLLER_X_OFFSET = 94;
     private static final int SCROLLER_WIDTH = 6;
     private static final int SCROLLER_HEIGHT = 27;
     private static final int SCROLLER_BOTTOM_INSET = 7;
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/villager/scroller_disabled");
+    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation
+            .withDefaultNamespace("container/villager/scroller");
+    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation
+            .withDefaultNamespace("container/villager/scroller_disabled");
 
-    // Preview
     private static final int PREVIEW_X_OFFSET = 144;
     private static final int PREVIEW_Y_OFFSET = 43;
 
-    // Controls (Buttons unter den Slots)
-    private static final int CONTROLS_X_START = 160; // Starts left-aligned with Slot 1
-    private static final int CONTROLS_Y_START = 102; // Below the slots (Slots are at Y=78, height 18)
+    private static final int CONTROLS_X_START = 160;
+    private static final int CONTROLS_Y_START = 102;
 
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_disabled.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_highlighted.png"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/button_selected.png")
-    );
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_disabled"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_highlighted"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_selected"));
 
-    private static final ResourceLocation ADD_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/create.png");
-    private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/delete.png");
-    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
-    private static final ResourceLocation ADD_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/marketplace/add_page.png");
-    private static final ResourceLocation DELETE_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/marketplace/delete_page.png");
-    private static final ResourceLocation RENAME_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/marketplace/rename_page.png");
-    private static final ResourceLocation CLEAR_SELECTION_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/clear_selection.png");
-    private static final ResourceLocation MOVE_UP_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_up_mini.png");
-    private static final ResourceLocation MOVE_DOWN_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_down_mini.png");
-    // Reuse existing icons to avoid missing-texture placeholders when dedicated assets are absent.
-    private static final ResourceLocation LIMITS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/edit_limits.png");
-    private static final ResourceLocation PRICING_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/edit_pricing.png");
-    private static final ResourceLocation ARROW_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow.png");
-    private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/out_of_stock.png");
-    private static final ResourceLocation TRADE_ARROW_DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/trade_arrow_disabled.png");
+    private static final ResourceLocation ADD_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/create.png");
+    private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/delete.png");
+    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/settings.png");
+    private static final ResourceLocation ADD_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/marketplace/add_page.png");
+    private static final ResourceLocation DELETE_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/marketplace/delete_page.png");
+    private static final ResourceLocation RENAME_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/marketplace/rename_page.png");
+    private static final ResourceLocation MOVE_UP_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/move_up_mini.png");
+    private static final ResourceLocation MOVE_DOWN_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/move_down_mini.png");
+    private static final ResourceLocation LIMITS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/edit_limits.png");
+    private static final ResourceLocation PRICING_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/edit_pricing.png");
+    private static final ResourceLocation ARROW_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/trade_arrow.png");
+    private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/out_of_stock.png");
+    private static final ResourceLocation TRADE_ARROW_DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(
+            MarketBlocks.MODID,
+            "textures/gui/icon/trade_arrow_disabled.png");
 
     private final List<AbstractWidget> dynamicWidgets = new ArrayList<>();
     private final List<AbstractWidget> foregroundWidgets = new ArrayList<>();
@@ -116,7 +132,6 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private final MarketplacePageSidebar.Callbacks pageSidebarCallbacks = new ScreenPageSidebarCallbacks();
     private final MarketplaceOverlayRenderer overlayRenderer = new MarketplaceOverlayRenderer();
 
-    // Lifecycle / bootstrapping
     public MarketplaceScreen(MarketplaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 276;
@@ -144,10 +159,17 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         rebuildUi();
     }
 
-    // Runtime sync (client cache, permissions, page changes)
     @Override
     public void containerTick() {
         super.containerTick();
+        if (isLocalEditMode && selectedOfferId != null && !isPreviewMatchingSelectedOffer()) {
+            boolean allEmpty = menu.getTemplateStack(0).isEmpty() && menu.getTemplateStack(1).isEmpty()
+                    && menu.getTemplateStack(2).isEmpty();
+            if (!allEmpty) {
+                clearSelectedOffer();
+                rebuildUi();
+            }
+        }
         MarketplaceData current = MarketplaceClientState.data();
         boolean canUseEditMode = menu.canUseEditMode();
         boolean dataChanged = current != cachedData;
@@ -170,7 +192,6 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         updatePreview();
     }
 
-    // Selection + preview state
     private void updatePreview() {
         if (this.offerPreviewButton == null) {
             return;
@@ -224,9 +245,29 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     private ItemStack[] normalizePaymentPair(ItemStack p1, ItemStack p2) {
         if (p1.isEmpty() && !p2.isEmpty()) {
-            return new ItemStack[]{p2, ItemStack.EMPTY};
+            return new ItemStack[] { p2, ItemStack.EMPTY };
         }
-        return new ItemStack[]{p1, p2};
+        return new ItemStack[] { p1, p2 };
+    }
+
+    public boolean isPreviewMatchingSelectedOffer() {
+        if (selectedOfferId == null)
+            return false;
+        MarketplaceOffer selectedOffer = findOfferOnSelectedPage(selectedOfferId);
+        if (selectedOffer == null)
+            return false;
+
+        List<ItemStack> payments = selectedOffer.effectivePayments();
+        ItemStack[] normPayments = normalizePaymentPair(payments);
+        ItemStack p0 = normPayments[0];
+        ItemStack p1 = normPayments[1];
+        ItemStack result = selectedOffer.result();
+
+        ItemStack menuP0 = menu.getTemplateStack(0);
+        ItemStack menuP1 = menu.getTemplateStack(1);
+        ItemStack menuResult = menu.getTemplateStack(2);
+
+        return ItemStack.matches(p0, menuP0) && ItemStack.matches(p1, menuP1) && ItemStack.matches(result, menuResult);
     }
 
     private void sanitizeSelectionState() {
@@ -320,11 +361,12 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     }
 
     private void buildPreviewButton() {
-        this.offerPreviewButton = new OfferTemplateButton(this.leftPos + PREVIEW_X_OFFSET, this.topPos + PREVIEW_Y_OFFSET, ignored -> {
-            if (!isLocalEditMode && selectedOfferId != null && minecraft != null && minecraft.player != null) {
-                NetworkHandler.sendToServer(new MarketplaceAutoFillPacket(selectedOfferId));
-            }
-        });
+        this.offerPreviewButton = new OfferTemplateButton(this.leftPos + PREVIEW_X_OFFSET,
+                this.topPos + PREVIEW_Y_OFFSET, ignored -> {
+                    if (!isLocalEditMode && selectedOfferId != null && minecraft != null && minecraft.player != null) {
+                        NetworkHandler.sendToServer(new MarketplaceAutoFillPacket(selectedOfferId));
+                    }
+                });
         this.offerPreviewButton.active = !isLocalEditMode;
         this.offerPreviewButton.visible = false;
         addDynamic(this.offerPreviewButton);
@@ -335,9 +377,9 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
             return;
         }
 
-        int toggleX = leftPos + imageWidth - 26;
-        int toggleY = topPos + 6;
-        IconButton toggleBtn = new IconButton(toggleX, toggleY, 20, 20, BUTTON_SPRITES, SETTINGS_ICON, ignored -> {
+        int toggleX = leftPos + imageWidth - 27;
+        int toggleY = topPos + 5;
+        IconButton toggleBtn = new IconButton(toggleX, toggleY, 22, 22, BUTTON_SPRITES, SETTINGS_ICON, ignored -> {
             NetworkHandler.sendToServer(new MarketplaceToggleEditModePacket(!isLocalEditMode));
             setEditMode(!isLocalEditMode);
         }, Component.translatable(isLocalEditMode
@@ -346,12 +388,10 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         addDynamic(toggleBtn);
     }
 
-    // Edit controls wiring
     private void buildEditorControls() {
         editorControls.build(
                 createEditorControlsContext(),
-                editorCallbacks
-        );
+                editorCallbacks);
     }
 
     private MarketplaceEditorControls.Context createEditorControlsContext() {
@@ -379,12 +419,10 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
                 ADD_PAGE_ICON,
                 DELETE_PAGE_ICON,
                 RENAME_PAGE_ICON,
-                CLEAR_SELECTION_ICON,
                 MOVE_UP_ICON,
                 MOVE_DOWN_ICON,
                 LIMITS_ICON,
-                PRICING_ICON
-        );
+                PRICING_ICON);
     }
 
     private void openOfferLimitsEditor(MarketplaceOffer offer) {
@@ -412,8 +450,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private void buildPageSidebar() {
         pageSidebar.buildButtons(
                 createPageSidebarContext(),
-                pageSidebarCallbacks
-        );
+                pageSidebarCallbacks);
     }
 
     private MarketplacePageSidebar.Context createPageSidebarContext() {
@@ -422,8 +459,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
                 this.topPos,
                 menu.selectedPage(),
                 this.cachedData.pages(),
-                this.font
-        );
+                this.font);
     }
 
     private void onPageSelected(int index) {
@@ -445,7 +481,6 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
     }
 
-    // Render pipeline
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
@@ -454,19 +489,19 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     }
 
     /**
-     * Renders a static backdrop for modal overlays without using AbstractContainerScreen#render.
+     * Renders a static backdrop for modal overlays without using
+     * AbstractContainerScreen#render.
      */
     public void renderModalBackdrop(GuiGraphics guiGraphics, float partialTick) {
-        // Keep the vanilla menu texture/background so the backdrop matches normal Marketplace visuals.
         this.renderMenuBackground(guiGraphics);
-        // Keep the exact same visual pipeline as the regular screen, but disable interactions.
         renderContent(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick, true);
     }
 
     /**
      * Shared render path for normal screen and modal backdrop mode.
      */
-    private void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, boolean suppressInteractions) {
+    private void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick,
+            boolean suppressInteractions) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
         renderStaticOverlay(guiGraphics, mouseX, mouseY, suppressInteractions);
@@ -493,7 +528,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         renderScroller(guiGraphics);
     }
 
-    private MarketplaceOverlayRenderer.Context createOverlayContext(int mouseX, int mouseY, boolean suppressInteractions) {
+    private MarketplaceOverlayRenderer.Context createOverlayContext(int mouseX, int mouseY,
+            boolean suppressInteractions) {
         return new MarketplaceOverlayRenderer.Context(
                 this.font,
                 mouseX,
@@ -520,8 +556,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
                 this::findOfferOnSelectedPage,
                 this::normalizePaymentPair,
                 this::getUnavailableStateIcon,
-                this::getDisplayRestockSeconds
-        );
+                this::getDisplayRestockSeconds);
     }
 
     private ResourceLocation getUnavailableStateIcon(MarketplaceOfferViewState viewState) {
@@ -537,13 +572,13 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         return null;
     }
 
-    private java.util.Optional<Integer> getDisplayRestockSeconds(MarketplaceOfferViewState viewState) {
+    private Optional<Integer> getDisplayRestockSeconds(MarketplaceOfferViewState viewState) {
         if (viewState == null || viewState.restockSecondsRemaining().isEmpty()) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         long elapsedMillis = Math.max(0L, System.currentTimeMillis() - MarketplaceClientState.lastSyncTimeMillis());
         int elapsedSeconds = (int) (elapsedMillis / 1000L);
-        return java.util.Optional.of(Math.max(0, viewState.restockSecondsRemaining().get() - elapsedSeconds));
+        return Optional.of(Math.max(0, viewState.restockSecondsRemaining().get() - elapsedSeconds));
     }
 
     private int listStartX() {
@@ -599,7 +634,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
 
         MarketplaceOffer clickedOffer = visibleOffers.get(index);
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        Minecraft.getInstance().getSoundManager()
+                .play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
 
         this.selectedOfferId = clickedOffer.id();
         if (!isLocalEditMode) {
@@ -612,7 +648,6 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         return true;
     }
 
-    // Input handling
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && isScrollBarActive() && isWithinScroller(mouseX, mouseY)) {
@@ -653,7 +688,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         guiGraphics.blit(BACKGROUND_TEXTURE, i, j, 0, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
 
         if (isLocalEditMode) {
-            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 166, topPos + 6, 0xFF5555, false);
+            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 166,
+                    topPos + 6, 0xFF5555, false);
         }
     }
 
@@ -682,7 +718,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (isScrollBarActive()) {
             int direction = (int) Math.signum(scrollY);
-            if (direction != 0) updateScrollOffset(scrollOffset - direction);
+            if (direction != 0)
+                updateScrollOffset(scrollOffset - direction);
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -708,7 +745,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) isDragging = false;
+        if (button == 0)
+            isDragging = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -716,10 +754,10 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         int scrollerX = scrollerX();
         int scrollerY = scrollerY();
         int scrollerHeight = scrollerHeight();
-        return mouseX >= scrollerX && mouseX < scrollerX + SCROLLER_WIDTH && mouseY >= scrollerY && mouseY < scrollerY + scrollerHeight;
+        return mouseX >= scrollerX && mouseX < scrollerX + SCROLLER_WIDTH && mouseY >= scrollerY
+                && mouseY < scrollerY + scrollerHeight;
     }
 
-    // Adapter between screen methods and external editor-controls builder.
     private final class ScreenEditorCallbacks implements MarketplaceEditorControls.Callbacks {
         @Override
         public void addWidget(AbstractWidget widget) {
@@ -727,7 +765,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
 
         @Override
-        public void openTextInput(Component title, String initialValue, boolean allowEmpty, Consumer<String> onConfirm) {
+        public void openTextInput(Component title, String initialValue, boolean allowEmpty,
+                Consumer<String> onConfirm) {
             MarketplaceScreen.this.openTextInput(title, initialValue, allowEmpty, onConfirm);
         }
 
@@ -754,6 +793,11 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         @Override
         public void rebuildUi() {
             MarketplaceScreen.this.rebuildUi();
+        }
+
+        @Override
+        public boolean isPreviewMatchingSelectedOffer() {
+            return MarketplaceScreen.this.isPreviewMatchingSelectedOffer();
         }
 
         @Override
@@ -784,7 +828,6 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
     }
 
-    // Shared simple text input modal used by page rename/create actions.
     private static class TextInputScreen extends BaseModalScreen {
         private static final int PANEL_WIDTH = 236;
         private static final int PANEL_HEIGHT = 98;
@@ -794,7 +837,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         private EditBox input;
         private Button confirmButton;
 
-        protected TextInputScreen(MarketplaceScreen parent, Component title, String initialValue, boolean allowEmpty, Consumer<String> onConfirm) {
+        protected TextInputScreen(MarketplaceScreen parent, Component title, String initialValue, boolean allowEmpty,
+                Consumer<String> onConfirm) {
             super(title, parent, PANEL_WIDTH, PANEL_HEIGHT, -1, -1);
             this.initialValue = initialValue == null ? "" : initialValue;
             this.allowEmpty = allowEmpty;
@@ -838,10 +882,10 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
         @Override
         protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-            // No extra foreground content needed for this modal.
         }
 
-        @Override public boolean keyPressed(int k, int s, int m) {
+        @Override
+        public boolean keyPressed(int k, int s, int m) {
             if (k == 257 || k == 335) {
                 if (confirmButton != null && confirmButton.active) {
                     confirmInput();
@@ -853,4 +897,3 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
     }
 }
-

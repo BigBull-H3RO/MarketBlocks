@@ -2,7 +2,9 @@ package de.bigbull.marketblocks;
 
 import com.mojang.logging.LogUtils;
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.event.ModCapabilityEvents;
 import de.bigbull.marketblocks.data.DataGenerators;
+import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.core.init.CreativeTabInit;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import net.neoforged.bus.api.IEventBus;
@@ -18,6 +20,8 @@ public class MarketBlocks {
 
     public MarketBlocks(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(DataGenerators::gatherData);
+        modEventBus.addListener(NetworkHandler::register);
+        modEventBus.addListener(ModCapabilityEvents::registerCapabilities);
 
         RegistriesInit.register(modEventBus);
         CreativeTabInit.CREATIVE_MODE_TABS.register(modEventBus);

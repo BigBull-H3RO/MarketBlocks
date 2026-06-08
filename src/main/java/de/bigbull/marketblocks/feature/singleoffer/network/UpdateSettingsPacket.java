@@ -20,6 +20,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+/**
+ * A packet sent from the client to the server to save all shop settings.
+ * Validates the settings and triggers relevant advancements on success.
+ */
 public record UpdateSettingsPacket(
         BlockPos pos,
         IoSettings ioSettings,
@@ -27,10 +31,9 @@ public record UpdateSettingsPacket(
         VillagerSettings villagerSettings,
         OfferItemSettings offerItemSettings,
         AccessSettings accessSettings,
-        NotificationSettings notificationSettings
-) implements CustomPacketPayload {
-    public static final CustomPacketPayload.Type<UpdateSettingsPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_side_config"));
+        NotificationSettings notificationSettings) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<UpdateSettingsPacket> TYPE = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "update_side_config"));
 
     public static final StreamCodec<ByteBuf, UpdateSettingsPacket> CODEC = StreamCodec.of(
             (buf, packet) -> {
@@ -51,8 +54,7 @@ public record UpdateSettingsPacket(
                 AccessSettings access = AccessSettings.STREAM_CODEC.decode(buf);
                 NotificationSettings notifications = NotificationSettings.STREAM_CODEC.decode(buf);
                 return new UpdateSettingsPacket(pos, io, general, villager, offerItem, access, notifications);
-            }
-    );
+            });
 
     @Override
     public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
@@ -65,27 +67,28 @@ public record UpdateSettingsPacket(
                 return;
             }
             Level level = player.level();
-            if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity blockEntity && blockEntity.isOwner(player)) {
+            if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity blockEntity
+                    && blockEntity.isOwner(player)) {
 
                 Direction facing = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
                 VillagerSettings villager = packet.villagerSettings();
 
-                // Validate NPC settings
                 if (villager.npcEnabled()) {
-                    boolean isValid = ShopVisualPlacementValidator.validate(level, packet.pos(), facing).result() == de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult.OK;
+                    boolean isValid = ShopVisualPlacementValidator.validate(level, packet.pos(), facing)
+                            .result() == de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult.OK;
                     if (!isValid) {
                         villager = villager.withNpcEnabled(false);
                     }
                 }
 
-                // Validate Access settings (Max Co-Owners)
                 AccessSettings access = packet.accessSettings();
                 int maxOwners = de.bigbull.marketblocks.core.config.Config.MAX_CO_OWNERS_PER_SHOP.get();
                 if (access.additionalOwners().size() > maxOwners) {
                     java.util.Map<java.util.UUID, String> truncated = new java.util.HashMap<>();
                     int count = 0;
                     for (var entry : access.additionalOwners().entrySet()) {
-                        if (count >= maxOwners) break;
+                        if (count >= maxOwners)
+                            break;
                         truncated.put(entry.getKey(), entry.getValue());
                         count++;
                     }
@@ -98,8 +101,28 @@ public record UpdateSettingsPacket(
                         villager,
                         packet.offerItemSettings(),
                         access,
-                        packet.notificationSettings()
-                );
+                        packet.notificationSettings());
+
+                if (villager.npcEnabled()) {
+                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_NPC_TRIGGER.get().trigger(player);
+                }
+
+                if (!access.additionalOwners().isEmpty()) {
+                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_CO_OWNER_TRIGGER.get().trigger(player);
+                }
+
+                if (villager.npcEnabled() && (!villager.npcName().isEmpty() || villager.usePlayerSkin())) {
+                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_NPC_CUSTOMIZE_TRIGGER.get().trigger(player);
+                }
+
+                if (packet.generalSettings().emitRedstone() || packet.ioSettings()
+                        .redstoneControl() != de.bigbull.marketblocks.feature.singleoffer.settings.IoRedstoneControl.IGNORED) {
+                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_REDSTONE_TRIGGER.get().trigger(player);
+                }
+
+                if (packet.ioSettings().autoIo()) {
+                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_AUTO_IO_TRIGGER.get().trigger(player);
+                }
             }
         });
     }

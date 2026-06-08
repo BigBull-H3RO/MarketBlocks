@@ -6,8 +6,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * Settings-Unterseiten fuer den Single-Offer-Shop.
- * Neue Kategorien koennen hier zentral erweitert werden.
+ * Settings subcategories for the single-offer shop.
+ * New categories can be centrally expanded here.
  */
 public enum SettingsCategory {
     GENERAL("gui.marketblocks.settings.category.general", "textures/gui/icon/singleoffer/general.png", Config.SHOP_TAB_GENERAL_ENABLED),

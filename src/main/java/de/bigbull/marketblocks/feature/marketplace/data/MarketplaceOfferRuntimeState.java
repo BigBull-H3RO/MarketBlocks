@@ -7,7 +7,7 @@ import net.minecraft.core.UUIDUtil;
 import java.util.*;
 
 /**
- * Persistenter Laufzeitstatus eines Marktplatz-Angebots.
+ * Persistent runtime state of a marketplace offer.
  */
 public final class MarketplaceOfferRuntimeState {
     private static final Codec<PlayerDailyPurchase> PLAYER_DAILY_PURCHASE_CODEC = RecordCodecBuilder.create(instance -> instance.group(

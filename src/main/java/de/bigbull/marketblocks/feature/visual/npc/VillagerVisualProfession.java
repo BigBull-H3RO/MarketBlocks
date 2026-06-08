@@ -4,6 +4,9 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.npc.VillagerProfession;
 
+/**
+ * Represents the visual profession applied to a rendered shop villager.
+ */
 public enum VillagerVisualProfession {
     NONE("none", "none"),
     ARMORER("armorer", "armorer"),

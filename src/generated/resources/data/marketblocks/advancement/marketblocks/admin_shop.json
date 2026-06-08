@@ -1,0 +1,28 @@
+{
+  "parent": "marketblocks:marketblocks/redstone",
+  "criteria": {
+    "enabled_admin_mode": {
+      "trigger": "marketblocks:shop_admin_mode"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.admin_shop.description"
+    },
+    "frame": "challenge",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:command_block"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.admin_shop.title"
+    }
+  },
+  "requirements": [
+    [
+      "enabled_admin_mode"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

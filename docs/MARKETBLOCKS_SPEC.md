@@ -178,8 +178,21 @@ Eintrag: `TransactionLogEntry`
 - Zeitstempel
 - Aggregationszähler
 
-Smart-Stacking:
 - zeitnah identische Käufe desselben Käufers werden zusammengeführt.
+
+### 4.1.11 Benachrichtigungen (Offline Notifications)
+`PendingNotificationsSavedData` (persistiert als SavedData):
+- Speichert Events für Shop-Owner, falls diese offline sind oder sich nicht in der Nähe befinden.
+- **Out of Stock**: Benachrichtigung, wenn der Input-Vorrat eines Shops aufgebraucht ist.
+- **Output Full**: Benachrichtigung, wenn das Output-Inventar keine weiteren Items mehr aufnehmen kann.
+- Beim Login oder bei Rückkehr wird der Spieler über diese Zustände gesammelt informiert.
+
+### 4.1.12 Advancements (Errungenschaften)
+Umfangreiches Set an Triggern für den SingleOfferShop:
+- `ShopNpcTrigger` / `ShopNpcCustomizeTrigger`: Platzierung und Anpassung des Visual NPCs.
+- `ShopSellTrigger` / `ShopWholesalerTrigger`: Erster Verkauf und Massenverkäufe (getrackt via `ShopSellCountSavedData`).
+- `ShopRedstoneTrigger` / `ShopAutoIoTrigger`: Nutzung der Automatisierungs-Features.
+- `ShopAdminModeTrigger` / `ShopCoOwnerTrigger` / `ShopOutOfStockTrigger`: Management-Events.
 
 ---
 
@@ -404,6 +417,8 @@ Tabs:
 - `event/MarketBlocksEvents`
 - `config/Config`
 - `shop/log/ShopTransactionLogSavedData`
+- `feature/notification/PendingNotificationsSavedData`
+- `feature/singleoffer/advancement/*Trigger`
 
 ---
 

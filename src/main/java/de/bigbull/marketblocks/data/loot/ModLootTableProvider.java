@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Entry point for loot table data generation.
+ * Registers sub-providers like ModBlockLootTableProvider to the main NeoForge datagen pipeline.
+ */
 public final class ModLootTableProvider {
     private ModLootTableProvider() {
     }

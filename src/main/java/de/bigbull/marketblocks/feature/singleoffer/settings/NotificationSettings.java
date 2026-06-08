@@ -46,7 +46,7 @@ public record NotificationSettings(
     }
 
     public static NotificationSettings load(CompoundTag tag) {
-        if (tag == null || tag.isEmpty()) return DEFAULT; // Return default if missing to ensure backwards compatibility
+        if (tag == null || tag.isEmpty()) return DEFAULT;
         return new NotificationSettings(
                 tag.contains(KEY_NOTIFY_ON_PURCHASE) ? tag.getBoolean(KEY_NOTIFY_ON_PURCHASE) : DEFAULT.notifyOnPurchase(),
                 tag.contains(KEY_NOTIFY_ON_OUT_OF_STOCK) ? tag.getBoolean(KEY_NOTIFY_ON_OUT_OF_STOCK) : DEFAULT.notifyOnOutOfStock(),

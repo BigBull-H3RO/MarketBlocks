@@ -5,6 +5,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.nbt.Tag;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -41,33 +43,33 @@ public record AccessSettings(
                 ByteBufCodecs.BOOL.encode(buf, settings.adminShopEnabled());
                 ByteBufCodecs.BOOL.encode(buf, settings.ownerId() != null);
                 if (settings.ownerId() != null) {
-                    net.minecraft.core.UUIDUtil.STREAM_CODEC.encode(buf, settings.ownerId());
+                    UUIDUtil.STREAM_CODEC.encode(buf, settings.ownerId());
                 }
                 ByteBufCodecs.STRING_UTF8.encode(buf, settings.ownerName());
 
                 buf.writeInt(settings.additionalOwners().size());
                 settings.additionalOwners().forEach((id, name) -> {
-                    net.minecraft.core.UUIDUtil.STREAM_CODEC.encode(buf, id);
+                    UUIDUtil.STREAM_CODEC.encode(buf, id);
                     ByteBufCodecs.STRING_UTF8.encode(buf, name);
                 });
 
                 ByteBufCodecs.STRING_UTF8.encode(buf, settings.accessMode().name());
                 buf.writeInt(settings.accessList().size());
                 settings.accessList().forEach((id, name) -> {
-                    net.minecraft.core.UUIDUtil.STREAM_CODEC.encode(buf, id);
+                    UUIDUtil.STREAM_CODEC.encode(buf, id);
                     ByteBufCodecs.STRING_UTF8.encode(buf, name);
                 });
             },
             buf -> {
                 boolean adminEnabled = ByteBufCodecs.BOOL.decode(buf);
                 boolean hasOwner = ByteBufCodecs.BOOL.decode(buf);
-                UUID ownerId = hasOwner ? net.minecraft.core.UUIDUtil.STREAM_CODEC.decode(buf) : null;
+                UUID ownerId = hasOwner ? UUIDUtil.STREAM_CODEC.decode(buf) : null;
                 String ownerName = ByteBufCodecs.STRING_UTF8.decode(buf);
 
                 int size = buf.readInt();
                 Map<UUID, String> additionalOwners = new HashMap<>();
                 for (int i = 0; i < size; i++) {
-                    UUID id = net.minecraft.core.UUIDUtil.STREAM_CODEC.decode(buf);
+                    UUID id = UUIDUtil.STREAM_CODEC.decode(buf);
                     String name = ByteBufCodecs.STRING_UTF8.decode(buf);
                     additionalOwners.put(id, name);
                 }
@@ -76,7 +78,7 @@ public record AccessSettings(
                 int accessSize = buf.readInt();
                 Map<UUID, String> accessList = new HashMap<>();
                 for (int i = 0; i < accessSize; i++) {
-                    UUID id = net.minecraft.core.UUIDUtil.STREAM_CODEC.decode(buf);
+                    UUID id = UUIDUtil.STREAM_CODEC.decode(buf);
                     String name = ByteBufCodecs.STRING_UTF8.decode(buf);
                     accessList.put(id, name);
                 }
@@ -133,8 +135,8 @@ public record AccessSettings(
         String ownerName = tag.getString(KEY_OWNER_NAME);
 
         Map<UUID, String> additionalOwners = new HashMap<>();
-        if (tag.contains(KEY_ADDITIONAL_OWNERS, net.minecraft.nbt.Tag.TAG_LIST)) {
-            ListTag list = tag.getList(KEY_ADDITIONAL_OWNERS, net.minecraft.nbt.Tag.TAG_COMPOUND);
+        if (tag.contains(KEY_ADDITIONAL_OWNERS, Tag.TAG_LIST)) {
+            ListTag list = tag.getList(KEY_ADDITIONAL_OWNERS, Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag ownerTag = list.getCompound(i);
                 if (ownerTag.hasUUID(KEY_ADDITIONAL_OWNER_ID)) {
@@ -148,13 +150,12 @@ public record AccessSettings(
             try {
                 accessMode = AccessMode.valueOf(tag.getString(KEY_ACCESS_MODE));
             } catch (IllegalArgumentException e) {
-                // Ignore invalid mode
             }
         }
 
         Map<UUID, String> accessList = new HashMap<>();
-        if (tag.contains(KEY_ACCESS_LIST, net.minecraft.nbt.Tag.TAG_LIST)) {
-            ListTag list = tag.getList(KEY_ACCESS_LIST, net.minecraft.nbt.Tag.TAG_COMPOUND);
+        if (tag.contains(KEY_ACCESS_LIST, Tag.TAG_LIST)) {
+            ListTag list = tag.getList(KEY_ACCESS_LIST, Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag accessTag = list.getCompound(i);
                 if (accessTag.hasUUID(KEY_ACCESS_PLAYER_ID)) {
