@@ -131,7 +131,7 @@ public class ModAdvancementProvider implements AdvancementSubProvider {
                                 .save(saver, "marketblocks:marketblocks/wholesaler");
 
                 Advancement.Builder.advancement()
-                                .parent(outOfStockAdvancement)
+                                .parent(soldItemAdvancement)
                                 .display(
                                                 Items.GOLDEN_APPLE,
                                                 Component.translatable("advancements.marketblocks.tycoon.title"),

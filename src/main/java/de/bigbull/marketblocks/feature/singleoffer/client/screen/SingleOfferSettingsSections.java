@@ -302,12 +302,12 @@ public final class SingleOfferSettingsSections {
         int leftX = host.settingsLeftPos() + 8;
 
         Button visibleButton = host.addSettingsWidget(Button.builder(
-                Component.literal(draft.visible() ? "ON" : "OFF"),
+                toggleStateLabel(draft.visible()),
                 b -> {
                     boolean next = !draft.visible();
                     draft.setVisible(next);
                     onDirty.run();
-                    b.setMessage(Component.literal(next ? "ON" : "OFF"));
+                    b.setMessage(toggleStateLabel(next));
                 })
                 .bounds(leftX, y, 35, 16)
                 .build());
@@ -447,7 +447,11 @@ public final class SingleOfferSettingsSections {
     }
 
     private static Component npcToggleLabel(VillagerSettings.Draft draft) {
-        return Component.literal(draft.npcEnabled() ? "ON" : "OFF");
+        return toggleStateLabel(draft.npcEnabled());
+    }
+
+    private static Component toggleStateLabel(boolean enabled) {
+        return Component.translatable(enabled ? "gui.marketblocks.toggle.on" : "gui.marketblocks.toggle.off");
     }
 
     private static Component professionLabel(VillagerSettings.Draft draft) {
