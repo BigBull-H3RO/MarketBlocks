@@ -1,0 +1,26 @@
+{
+  "parent": "marketblocks:marketblocks/joint_venture",
+  "criteria": {
+    "opened_marketplace": {
+      "trigger": "marketblocks:marketplace_open"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.wall_street.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:filled_map"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.wall_street.title"
+    }
+  },
+  "requirements": [
+    [
+      "opened_marketplace"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

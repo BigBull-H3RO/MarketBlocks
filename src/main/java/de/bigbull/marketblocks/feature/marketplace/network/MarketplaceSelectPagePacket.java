@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Wechselt serverseitig die ausgewählte Seite.
+ * Switches the selected page on the server side.
  */
 public record MarketplaceSelectPagePacket(int pageIndex) implements CustomPacketPayload {
     public static final Type<MarketplaceSelectPagePacket> TYPE = new Type<>(

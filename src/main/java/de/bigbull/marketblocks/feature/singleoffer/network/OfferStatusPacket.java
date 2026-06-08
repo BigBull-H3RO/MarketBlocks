@@ -53,7 +53,6 @@ public record OfferStatusPacket(BlockPos pos, boolean hasOffer) implements Custo
             if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity shopEntity) {
                 shopEntity.setHasOfferClient(packet.hasOffer());
 
-                // Keep currently opened menu in sync with the same block entity instance.
                 if (context.player().containerMenu instanceof SingleOfferShopMenu menu) {
                     if (menu.getBlockEntity().getBlockPos().equals(packet.pos())) {
                         menu.getBlockEntity().setHasOfferClient(packet.hasOffer());

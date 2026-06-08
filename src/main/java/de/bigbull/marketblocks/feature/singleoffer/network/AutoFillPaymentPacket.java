@@ -12,16 +12,19 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+/**
+ * A packet sent from the client to the server to auto-fill the payment slots
+ * in the shop menu based on the current offer's requirements.
+ */
 public record AutoFillPaymentPacket(BlockPos pos) implements CustomPacketPayload {
 
-    public static final CustomPacketPayload.Type<AutoFillPaymentPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "auto_fill_payment"));
+    public static final CustomPacketPayload.Type<AutoFillPaymentPacket> TYPE = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "auto_fill_payment"));
 
     public static final StreamCodec<ByteBuf, AutoFillPaymentPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             AutoFillPaymentPacket::pos,
-            AutoFillPaymentPacket::new
-    );
+            AutoFillPaymentPacket::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

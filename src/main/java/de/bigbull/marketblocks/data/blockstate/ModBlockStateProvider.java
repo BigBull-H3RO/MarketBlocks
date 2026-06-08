@@ -12,6 +12,11 @@ import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
+/**
+ * Data provider for generating block state JSONs and block models.
+ * Automates the creation of variants for shops (like rotations and showcase states) 
+ * instead of manually writing JSON files.
+ */
 public class ModBlockStateProvider extends BlockStateProvider {
     public ModBlockStateProvider(PackOutput output, ExistingFileHelper existingFileHelper) {
         super(output, MarketBlocks.MODID, existingFileHelper);

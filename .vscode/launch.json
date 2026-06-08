@@ -15,7 +15,7 @@
         "--launchTarget",
         "forgeclientdev",
         "--version",
-        "21.1.231",
+        "21.1.233",
         "--assetIndex",
         "asset-index",
         "--assetsDir",
@@ -27,7 +27,7 @@
         "--fml.mcVersion",
         "1.21.1",
         "--fml.neoForgeVersion",
-        "21.1.231",
+        "21.1.233",
         "--fml.neoFormVersion",
         "20240808.144430"
       ],
@@ -49,7 +49,7 @@
         "-Dforge.logging.console.level\u003ddebug",
         "-Dneoforge.enabledGameTestNamespaces\u003dmarketblocks",
         "-Dneoforge.enableGameTest\u003dtrue",
-        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\.gradle\\configuration\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathClient\\classpath.txt",
+        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\build\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathClient\\classpath.txt",
         "-DignoreList\u003dmixinextras-neoforge-0.5.3.jar,client-extra,neoforge-",
         "-Djava.net.preferIPv6Addresses\u003dsystem"
       ],
@@ -90,7 +90,7 @@
         "--fml.mcVersion",
         "1.21.1",
         "--fml.neoForgeVersion",
-        "21.1.231",
+        "21.1.233",
         "--fml.neoFormVersion",
         "20240808.144430"
       ],
@@ -109,7 +109,7 @@
         "jdk.naming.dns/com.sun.jndi.dns\u003djava.naming",
         "-Dforge.logging.markers\u003dREGISTRIES",
         "-Dforge.logging.console.level\u003ddebug",
-        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\.gradle\\configuration\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathData\\classpath.txt",
+        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\build\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathData\\classpath.txt",
         "-DignoreList\u003dmixinextras-neoforge-0.5.3.jar,client-extra,neoforge-",
         "-Djava.net.preferIPv6Addresses\u003dsystem"
       ],
@@ -139,7 +139,7 @@
         "--fml.mcVersion",
         "1.21.1",
         "--fml.neoForgeVersion",
-        "21.1.231",
+        "21.1.233",
         "--fml.neoFormVersion",
         "20240808.144430"
       ],
@@ -161,7 +161,7 @@
         "-Dneoforge.enabledGameTestNamespaces\u003dmarketblocks",
         "-Dneoforge.enableGameTest\u003dtrue",
         "-Dneoforge.gameTestServer\u003dtrue",
-        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\.gradle\\configuration\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathGameTestServer\\classpath.txt",
+        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\build\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathGameTestServer\\classpath.txt",
         "-DignoreList\u003dmixinextras-neoforge-0.5.3.jar,client-extra,neoforge-",
         "-Djava.net.preferIPv6Addresses\u003dsystem"
       ],
@@ -185,7 +185,7 @@
         "--launchTarget",
         "forgejunitdev",
         "--version",
-        "21.1.231",
+        "21.1.233",
         "--assetIndex",
         "asset-index",
         "--assetsDir",
@@ -197,7 +197,7 @@
         "--fml.mcVersion",
         "1.21.1",
         "--fml.neoForgeVersion",
-        "21.1.231",
+        "21.1.233",
         "--fml.neoFormVersion",
         "20240808.144430"
       ],
@@ -217,7 +217,7 @@
         "-XX:HeapDumpPath\u003dMojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
         "-Dforge.logging.markers\u003dREGISTRIES",
         "-Dforge.logging.console.level\u003ddebug",
-        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\.gradle\\configuration\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathJunit\\classpath.txt",
+        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\build\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathJunit\\classpath.txt",
         "-DignoreList\u003dmixinextras-neoforge-0.5.3.jar,client-extra,neoforge-",
         "-Djava.net.preferIPv6Addresses\u003dsystem"
       ],
@@ -247,7 +247,7 @@
         "--fml.mcVersion",
         "1.21.1",
         "--fml.neoForgeVersion",
-        "21.1.231",
+        "21.1.233",
         "--fml.neoFormVersion",
         "20240808.144430"
       ],
@@ -267,7 +267,7 @@
         "-Dforge.logging.markers\u003dREGISTRIES",
         "-Dforge.logging.console.level\u003ddebug",
         "-Dneoforge.enabledGameTestNamespaces\u003dmarketblocks",
-        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\.gradle\\configuration\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathServer\\classpath.txt",
+        "-DlegacyClassPath.file\u003dE:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\build\\neoForm\\neoFormJoined1.21.1-20240808.144430\\steps\\writeMinecraftClasspathServer\\classpath.txt",
         "-DignoreList\u003dmixinextras-neoforge-0.5.3.jar,client-extra,neoforge-",
         "-Djava.net.preferIPv6Addresses\u003dsystem"
       ],

@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Fordert das Öffnen des Marktplatz-Menüs an.
+ * Requests to open the marketplace menu.
  */
 public record MarketplaceOpenRequestPacket() implements CustomPacketPayload {
     public static final Type<MarketplaceOpenRequestPacket> TYPE = new Type<>(
@@ -27,6 +27,7 @@ public record MarketplaceOpenRequestPacket() implements CustomPacketPayload {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player) {
                 MarketplaceManager.get().openShop(player);
+                de.bigbull.marketblocks.core.init.RegistriesInit.MARKETPLACE_OPEN_TRIGGER.get().trigger(player);
             }
         });
     }

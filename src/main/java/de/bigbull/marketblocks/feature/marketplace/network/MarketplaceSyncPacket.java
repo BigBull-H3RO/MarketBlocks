@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Synchronisiert den vollständigen Datenstand des Marktplatzs an den Client.
+ * Synchronizes the full marketplace data state to the client.
  */
 public record MarketplaceSyncPacket(CompoundTag payload, CompoundTag offerViewStates, boolean canEdit, boolean globalEditModeEnabled) implements CustomPacketPayload {
     private static final String ENTRIES_KEY = "entries";

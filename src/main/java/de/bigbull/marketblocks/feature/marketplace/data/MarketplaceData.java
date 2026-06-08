@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Vollständige Datenstruktur eines Marktplatzs.
+ * Complete data structure of a marketplace.
  */
 public final class MarketplaceData {
     public static final Codec<MarketplaceData> CODEC = RecordCodecBuilder.create(instance -> instance.group(

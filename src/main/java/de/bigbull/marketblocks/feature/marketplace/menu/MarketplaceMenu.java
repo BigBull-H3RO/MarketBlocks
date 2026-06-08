@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Container-Menü für den blocklosen Marktplatz.
+ * Container menu for the blockless marketplace.
  */
 public class MarketplaceMenu extends AbstractContainerMenu {
     public static final int TEMPLATE_SLOTS = 3;
@@ -478,5 +478,3 @@ public class MarketplaceMenu extends AbstractContainerMenu {
         }
     }
 }
-
-

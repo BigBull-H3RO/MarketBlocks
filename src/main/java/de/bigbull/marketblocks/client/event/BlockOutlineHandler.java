@@ -37,7 +37,8 @@ public class BlockOutlineHandler {
     private static final VoxelShape FULL_SHOWCASE_OUTLINE = Shapes.or(BASE_OUTLINE, SHOWCASE_OUTLINE);
 
     private static final VoxelShape CRATE_BASE_OUTLINE = Block.box(0, 0, 0, 16, 8, 16);
-    private static final VoxelShape CRATE_LID_OUTLINE = Block.box(0.5, 15, -0.5, 15.5, 17, 15.5); // Adjusted generic box to match 2-pixel lid thickness
+    private static final VoxelShape CRATE_LID_OUTLINE = Block.box(0.5, 15, -0.5, 15.5, 17, 15.5);
+    private static final VoxelShape CRATE_LID_INNER_OUTLINE = Block.box(2.5, 15, 1.5, 13.5, 17, 13.5);
 
     @SubscribeEvent
     public static void onBlockHighlight(RenderHighlightEvent.Block event) {
@@ -128,7 +129,6 @@ public class BlockOutlineHandler {
                 pos.getZ() - camPos.z
         );
 
-        // Center on block to apply Y-axis rotation based on facing
         poseStack.pushPose();
         poseStack.translate(0.5, 0.5, 0.5);
 
@@ -137,7 +137,7 @@ public class BlockOutlineHandler {
             case EAST:  yRot = -90; break;
             case SOUTH: yRot = 180; break;
             case WEST:  yRot = 90; break;
-            default:    yRot = 0; break; // NORTH
+            default:    yRot = 0; break;
         }
 
         if (yRot != 0) {
@@ -146,29 +146,69 @@ public class BlockOutlineHandler {
 
         poseStack.translate(-0.5, -0.5, -0.5);
 
-        // Render base outline
         LevelRenderer.renderVoxelShape(
                 poseStack, consumer, CRATE_BASE_OUTLINE,
                 0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true
         );
 
-        // Render rotated lid outline
+        renderSlantedBasket(poseStack, consumer);
+
         poseStack.pushPose();
 
-        // Translate to lid rotation origin [8, 15, 15.5] as per JSON
         poseStack.translate(8.0 / 16.0, 15.0 / 16.0, 15.5 / 16.0);
-        // Apply -22.5 degrees rotation on X axis
         poseStack.mulPose(new Quaternionf(new AxisAngle4f((float) Math.toRadians(-22.5), 1.0f, 0.0f, 0.0f)));
-        // Translate back from origin so the lid box naturally fits
         poseStack.translate(-8.0 / 16.0, -15.0 / 16.0, -15.5 / 16.0);
 
         LevelRenderer.renderVoxelShape(
                 poseStack, consumer, CRATE_LID_OUTLINE,
                 0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true
         );
+        LevelRenderer.renderVoxelShape(
+                poseStack, consumer, CRATE_LID_INNER_OUTLINE,
+                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true
+        );
 
-        poseStack.popPose(); // popup lid pose
-        poseStack.popPose(); // popup block rotation pose
-        poseStack.popPose(); // popup block position pose
+        poseStack.popPose();
+        poseStack.popPose();
+        poseStack.popPose();
+    }
+
+    private static void renderSlantedBasket(PoseStack poseStack, VertexConsumer consumer) {
+        float minX = 1/16f, maxX = 15/16f;
+        float minZ = 1/16f, maxZ = 15/16f;
+        float yBottom = 8/16f;
+        float yFrontTop = 10/16f;
+        float yBackTop = 15/16f;
+
+        drawLine(poseStack, consumer, minX, yBottom, minZ, maxX, yBottom, minZ);
+        drawLine(poseStack, consumer, maxX, yBottom, minZ, maxX, yBottom, maxZ);
+        drawLine(poseStack, consumer, maxX, yBottom, maxZ, minX, yBottom, maxZ);
+        drawLine(poseStack, consumer, minX, yBottom, maxZ, minX, yBottom, minZ);
+
+        drawLine(poseStack, consumer, minX, yBottom, minZ, minX, yFrontTop, minZ);
+        drawLine(poseStack, consumer, maxX, yBottom, minZ, maxX, yFrontTop, minZ);
+        drawLine(poseStack, consumer, maxX, yBottom, maxZ, maxX, yBackTop, maxZ);
+        drawLine(poseStack, consumer, minX, yBottom, maxZ, minX, yBackTop, maxZ);
+
+        drawLine(poseStack, consumer, minX, yFrontTop, minZ, maxX, yFrontTop, minZ);
+        drawLine(poseStack, consumer, maxX, yBackTop, maxZ, minX, yBackTop, maxZ);
+        drawLine(poseStack, consumer, minX, yFrontTop, minZ, minX, yBackTop, maxZ);
+        drawLine(poseStack, consumer, maxX, yFrontTop, minZ, maxX, yBackTop, maxZ);
+    }
+
+    private static void drawLine(PoseStack poseStack, VertexConsumer consumer, float x1, float y1, float z1, float x2, float y2, float z2) {
+        PoseStack.Pose pose = poseStack.last();
+        org.joml.Matrix4f matrix4f = pose.pose();
+
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float dz = z2 - z1;
+        float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (len > 0) {
+            dx /= len; dy /= len; dz /= len;
+        }
+
+        consumer.addVertex(matrix4f, x1, y1, z1).setColor(0.0f, 0.0f, 0.0f, 0.4f).setNormal(pose, dx, dy, dz);
+        consumer.addVertex(matrix4f, x2, y2, z2).setColor(0.0f, 0.0f, 0.0f, 0.4f).setNormal(pose, dx, dy, dz);
     }
 }

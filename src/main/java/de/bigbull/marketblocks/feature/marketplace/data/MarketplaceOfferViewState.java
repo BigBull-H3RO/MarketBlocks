@@ -5,7 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import java.util.Optional;
 
 /**
- * Viewer-spezifischer Laufzeitstatus eines Marktplatz-Angebots.
+ * Viewer-specific runtime state of a marketplace offer.
  */
 public record MarketplaceOfferViewState(
         int maxPurchasable,

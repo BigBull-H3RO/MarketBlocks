@@ -2,6 +2,9 @@ package de.bigbull.marketblocks.feature.singleoffer;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * Represents the configuration modes for a side of a block in the I/O system.
+ */
 public enum SideMode {
     DISABLED("gui.marketblocks.disabled"),
     INPUT("gui.marketblocks.input"),

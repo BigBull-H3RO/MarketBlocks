@@ -1,0 +1,26 @@
+{
+  "parent": "marketblocks:marketblocks/first_shop",
+  "criteria": {
+    "sold_item": {
+      "trigger": "marketblocks:shop_sell"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.sold_item.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:emerald"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.sold_item.title"
+    }
+  },
+  "requirements": [
+    [
+      "sold_item"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

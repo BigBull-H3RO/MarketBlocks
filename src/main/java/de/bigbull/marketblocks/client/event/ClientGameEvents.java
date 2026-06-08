@@ -8,6 +8,11 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
+/**
+ * Handles gameplay-related client events.
+ * Currently listens for the custom "Open Marketplace" keybind and sends a packet
+ * to the server to open the UI when pressed.
+ */
 @EventBusSubscriber(modid = MarketBlocks.MODID, value = Dist.CLIENT)
 public final class ClientGameEvents {
     private ClientGameEvents() {

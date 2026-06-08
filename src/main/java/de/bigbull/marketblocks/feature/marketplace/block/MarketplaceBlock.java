@@ -12,6 +12,11 @@ import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.MapCodec;
 
+/**
+ * A physical block representation for the marketplace.
+ * While the marketplace can be opened globally via keybind, this block provides
+ * a physical access point in the world.
+ */
 public class MarketplaceBlock extends BaseEntityBlock {
 
     public static final MapCodec<MarketplaceBlock> CODEC = simpleCodec(MarketplaceBlock::new);

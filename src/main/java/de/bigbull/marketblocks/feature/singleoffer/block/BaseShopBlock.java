@@ -2,11 +2,13 @@ package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -94,7 +96,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 .setValue(POWERED, false);
     }
 
-    // --- Redstone & Comparator Logic ---
 
     @Override
     public boolean isSignalSource(BlockState state) {
@@ -103,18 +104,13 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        // 'direction' is "backwards" per Minecraft convention — the actual side of
-        // our block that faces the querying neighbour is direction.getOpposite().
         if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop && shop.isEmitRedstone()) {
             Direction side = direction.getOpposite();
-            // Comparators always receive the analog fill level for their side,
-            // never the short purchase pulse — check this BEFORE the POWERED state.
             if (hasComparatorReadPath(level, pos, side)) {
                 return shop.getAnalogSignal(side);
             }
         }
 
-        // Purchase pulse for plain redstone dust / repeaters (not comparators)
         if (state.getValue(POWERED)) {
             return 15;
         }
@@ -128,14 +124,11 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public boolean hasAnalogOutputSignal(BlockState state) {
-        // Return false so that Comparators fall through to getSignal(),
-        // which carries direction information for per-side I/O resolution.
         return false;
     }
 
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        // Not used — comparators are served via getSignal() instead.
         return 0;
     }
 
@@ -157,7 +150,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 state.getValue(ComparatorBlock.FACING) == sourceToComparator.getOpposite();
     }
 
-    // --- Block Updates & Interaction ---
 
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
@@ -171,7 +163,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (state.getValue(POWERED)) {
             level.setBlock(pos, state.setValue(POWERED, false), 3);
-            level.updateNeighborsAt(pos, this); // Ensures that turning off is detected
+            level.updateNeighborsAt(pos, this);
         }
     }
 
@@ -199,7 +191,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             return InteractionResult.FAIL;
         }
 
-        // Allow owner recovery only with administrative permissions
         if (shopEntity.getOwnerId() == null) {
             if (canRepairMissingOwner(level, player)) {
                 shopEntity.setOwner(player);
@@ -254,7 +245,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 if (player instanceof ServerPlayer sp) {
                     sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
                 }
-                level.sendBlockUpdated(pos, state, state, 3); // Resync for the client
+                level.sendBlockUpdated(pos, state, state, 3);
                 return false;
             }
         }
@@ -267,9 +258,9 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
                 shopEntity.dropContents(level, pos);
                 shopEntity.unlockAdjacentChests();
-                if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-                    de.bigbull.marketblocks.core.data.ShopDirectorySavedData data = de.bigbull.marketblocks.core.data.ShopDirectorySavedData.get(serverLevel);
-                    net.minecraft.core.GlobalPos globalPos = net.minecraft.core.GlobalPos.of(serverLevel.dimension(), pos);
+                if (level instanceof ServerLevel serverLevel) {
+                    ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
+                    GlobalPos globalPos = GlobalPos.of(serverLevel.dimension(), pos);
                     data.unregisterShop(globalPos);
                 }
             }
@@ -298,5 +289,3 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         return createTickerHelper(type, RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntity::tick);
     }
 }
-
-

@@ -1,8 +1,11 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.log.ShopTransactionLogSavedData;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
+import de.bigbull.marketblocks.feature.singleoffer.advancement.ShopSellCountSavedData;
 import de.bigbull.marketblocks.feature.singleoffer.network.OfferStatusPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,6 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Manages the offer logic for a single-offer shop block entity.
+ * Handles offer creation, validation, affordability checks, and bulk purchase execution.
+ */
 public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     private static final int PAYMENT_SLOT_COUNT = 2;
     private static final int RESULT_SLOT_INDEX = 2;
@@ -46,15 +53,18 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
                 new OfferStatusPacket(shopEntity.getBlockPos(), true));
 
         returnStacksToPlayer(player, extractedItems);
-        MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(), shopEntity.getBlockPos());
+        MarketBlocks.LOGGER.info("Player {} created offer at {}", player.getName().getString(),
+                shopEntity.getBlockPos());
         return true;
     }
 
     private OfferValidation validateOffer(ItemStack payment1, ItemStack payment2, ItemStack result) {
-        if (result.isEmpty()) return new OfferValidation(false, "gui.marketblocks.error.no_result_item");
-        if (payment1.isEmpty() && payment2.isEmpty()) return new OfferValidation(false, "gui.marketblocks.error.no_payment_items");
+        if (result.isEmpty())
+            return new OfferValidation(false, "gui.marketblocks.error.no_result_item");
+        if (payment1.isEmpty() && payment2.isEmpty())
+            return new OfferValidation(false, "gui.marketblocks.error.no_payment_items");
         ItemStack[] itemsInSlots = copyOfferSlotsFromShop();
-        ItemStack[] expectedItems = new ItemStack[]{payment1, payment2, result};
+        ItemStack[] expectedItems = new ItemStack[] { payment1, payment2, result };
         if (!areOfferSlotsConsistent(expectedItems, itemsInSlots)) {
             return new OfferValidation(false, "gui.marketblocks.error.invalid_offer");
         }
@@ -76,11 +86,13 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     }
 
     private boolean areOfferSlotsConsistent(ItemStack[] expected, ItemStack[] actual) {
-        if (!isItemBasicallyEqual(expected[RESULT_SLOT_INDEX], actual[RESULT_SLOT_INDEX])) return false;
+        if (!isItemBasicallyEqual(expected[RESULT_SLOT_INDEX], actual[RESULT_SLOT_INDEX]))
+            return false;
         boolean[] matched = new boolean[PAYMENT_SLOT_COUNT];
         for (int i = 0; i < PAYMENT_SLOT_COUNT; i++) {
             ItemStack exp = expected[i];
-            if (exp.isEmpty()) continue;
+            if (exp.isEmpty())
+                continue;
             boolean foundMatch = false;
             for (int j = 0; j < PAYMENT_SLOT_COUNT; j++) {
                 if (!matched[j] && isItemBasicallyEqual(exp, actual[j])) {
@@ -89,10 +101,12 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
                     break;
                 }
             }
-            if (!foundMatch) return false;
+            if (!foundMatch)
+                return false;
         }
         for (int j = 0; j < PAYMENT_SLOT_COUNT; j++) {
-            if (!matched[j] && !actual[j].isEmpty()) return false;
+            if (!matched[j] && !actual[j].isEmpty())
+                return false;
         }
         return true;
     }
@@ -104,24 +118,29 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         return extracted;
     }
 
-    private void extractRange(IItemHandler handler, ItemStack[] slots, ItemStack[] dest, int handlerStart, int destStart, int length) {
+    private void extractRange(IItemHandler handler, ItemStack[] slots, ItemStack[] dest, int handlerStart,
+            int destStart, int length) {
         for (int i = 0; i < length; i++) {
             int index = destStart + i;
             ItemStack stack = slots[index];
-            dest[index] = stack.isEmpty() ? ItemStack.EMPTY : handler.extractItem(handlerStart + i, stack.getCount(), false);
+            dest[index] = stack.isEmpty() ? ItemStack.EMPTY
+                    : handler.extractItem(handlerStart + i, stack.getCount(), false);
         }
     }
 
     private boolean isItemBasicallyEqual(ItemStack expected, ItemStack actual) {
-        if (expected.isEmpty()) return actual.isEmpty();
-        return !actual.isEmpty() && ItemStack.isSameItemSameComponents(actual, expected) && actual.getCount() == expected.getCount();
+        if (expected.isEmpty())
+            return actual.isEmpty();
+        return !actual.isEmpty() && ItemStack.isSameItemSameComponents(actual, expected)
+                && actual.getCount() == expected.getCount();
     }
 
     private void returnStacksToPlayer(ServerPlayer player, ItemStack... stacks) {
         for (ItemStack stack : stacks) {
             if (!stack.isEmpty()) {
                 player.getInventory().placeItemBackInInventory(stack);
-                if (!stack.isEmpty()) Containers.dropItemStack(player.level(), player.getX(), player.getY(), player.getZ(), stack);
+                if (!stack.isEmpty())
+                    Containers.dropItemStack(player.level(), player.getX(), player.getY(), player.getZ(), stack);
             }
         }
     }
@@ -129,7 +148,8 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     public boolean canAfford() {
         ItemStack p1 = shopEntity.getOfferPayment1();
         ItemStack p2 = shopEntity.getOfferPayment2();
-        if (p1.isEmpty() && p2.isEmpty()) return true;
+        if (p1.isEmpty() && p2.isEmpty())
+            return true;
 
         ShopInventoryManager inv = shopEntity.getInventoryManager();
 
@@ -139,22 +159,26 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         }
 
         return (p1.isEmpty() || inv.countMatchingPayment(p1) >= p1.getCount()) &&
-               (p2.isEmpty() || inv.countMatchingPayment(p2) >= p2.getCount());
+                (p2.isEmpty() || inv.countMatchingPayment(p2) >= p2.getCount());
     }
 
     public boolean hasResultItemInInput(boolean checkNeighbors) {
         ItemStack result = shopEntity.getOfferResult();
-        if (result.isEmpty()) return false;
-        if (shopEntity.isAdminShopEnabled()) return true;
+        if (result.isEmpty())
+            return false;
+        if (shopEntity.isAdminShopEnabled())
+            return true;
         return shopEntity.getInventoryManager().countMatchingInput(result, checkNeighbors) >= result.getCount();
     }
 
     public int processBulkPurchase(int maxAmount, @Nullable Player buyer, boolean shiftPurchase) {
-        if (maxAmount <= 0) return 0;
-        
+        if (maxAmount <= 0)
+            return 0;
+
         BuyerIdentity buyerIdentity = resolveBuyerIdentity(buyer);
         if (buyerIdentity != null) {
-            if (!shopEntity.canPlayerBuyByUUID(buyerIdentity.uuid())) return 0;
+            if (!shopEntity.canPlayerBuyByUUID(buyerIdentity.uuid()))
+                return 0;
         } else if (shopEntity.getGeneralSettings().isClosed()) {
             return 0;
         }
@@ -163,19 +187,22 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
         ShopInventoryManager inv = shopEntity.getInventoryManager();
 
-        if (!adminShop && de.bigbull.marketblocks.core.config.Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
+        if (!adminShop && Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
             inv.updateNeighborCache();
             inv.pullFromInputChest(shopEntity.getInputHandler());
         }
 
-        if (!shopEntity.hasOffer()) return 0;
+        if (!shopEntity.hasOffer())
+            return 0;
         ItemStack p1 = shopEntity.getOfferPayment1();
         ItemStack p2 = shopEntity.getOfferPayment2();
         ItemStack result = shopEntity.getOfferResult();
-        if (result.isEmpty()) return 0;
+        if (result.isEmpty())
+            return 0;
 
         int affordable = Integer.MAX_VALUE;
-        if (!p1.isEmpty()) affordable = Math.min(affordable, inv.countMatchingPayment(p1) / p1.getCount());
+        if (!p1.isEmpty())
+            affordable = Math.min(affordable, inv.countMatchingPayment(p1) / p1.getCount());
         if (!p2.isEmpty()) {
             if (!p1.isEmpty() && ItemStack.isSameItemSameComponents(p1, p2)) {
                 int totalReqPerUnit = p1.getCount() + p2.getCount();
@@ -184,23 +211,28 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
                 affordable = Math.min(affordable, inv.countMatchingPayment(p2) / p2.getCount());
             }
         }
-        if (p1.isEmpty() && p2.isEmpty()) affordable = maxAmount;
+        if (p1.isEmpty() && p2.isEmpty())
+            affordable = maxAmount;
 
         int inStock = adminShop ? Integer.MAX_VALUE : inv.countMatchingInput(result, true) / result.getCount();
 
         int actualAmount = Math.min(maxAmount, Math.min(affordable, inStock));
-        if (actualAmount <= 0) return 0;
+        if (actualAmount <= 0)
+            return 0;
 
-        int validAmount = adminShop ? actualAmount : (actualAmount == 1 ? (inv.hasOutputSpace(p1, p2) ? 1 : 0) : inv.simulateOutputSpace(p1, p2, actualAmount));
+        int validAmount = adminShop ? actualAmount
+                : (actualAmount == 1 ? (inv.hasOutputSpace(p1, p2) ? 1 : 0)
+                        : inv.simulateOutputSpace(p1, p2, actualAmount));
         actualAmount = validAmount;
 
         if (actualAmount <= 0) {
-            if (!adminShop) inv.updateOutputFullness();
+            if (!adminShop)
+                inv.updateOutputFullness();
             return 0;
         }
 
         executeTrades(p1, p2, result, actualAmount, adminShop, inv);
-        
+
         shopEntity.incrementVisualPurchaseCounter(actualAmount);
         shopEntity.playPurchaseXpSound(actualAmount);
 
@@ -208,32 +240,51 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
         shopEntity.sync();
         shopEntity.triggerRedstonePulse();
-        // Since needsOfferRefresh is private, we can call updateOfferSlot
         shopEntity.updateOfferSlot();
 
         triggerNotifications(buyerIdentity, result, actualAmount, adminShop, inv, p1, p2);
 
+        if (shopEntity.getLevel() instanceof ServerLevel serverLevel) {
+            ServerPlayer owner = serverLevel.getServer().getPlayerList()
+                    .getPlayer(shopEntity.getAccessSettings().ownerId());
+            if (owner != null) {
+                int totalSellCount = ShopSellCountSavedData
+                        .get(serverLevel).incrementAndGet(owner.getUUID(), actualAmount);
+                RegistriesInit.SHOP_SELL_TRIGGER.get().trigger(owner, totalSellCount);
+                if (!adminShop && inv.countMatchingInput(result, true) < result.getCount()) {
+                    RegistriesInit.SHOP_OUT_OF_STOCK_TRIGGER.get().trigger(owner);
+                }
+            }
+        }
+
+        if (buyer instanceof ServerPlayer serverBuyer && actualAmount >= 64) {
+            RegistriesInit.SHOP_WHOLESALER_TRIGGER.get().trigger(serverBuyer);
+        }
+
         return actualAmount;
     }
 
-    private void triggerNotifications(@Nullable BuyerIdentity buyer, ItemStack result, int tradeCount, boolean adminShop, ShopInventoryManager inv, ItemStack p1, ItemStack p2) {
-        if (!(shopEntity.getLevel() instanceof ServerLevel serverLevel)) return;
+    private void triggerNotifications(@Nullable BuyerIdentity buyer, ItemStack result, int tradeCount,
+            boolean adminShop, ShopInventoryManager inv, ItemStack p1, ItemStack p2) {
+        if (!(shopEntity.getLevel() instanceof ServerLevel serverLevel))
+            return;
         NotificationSettings notifSettings = shopEntity.getNotificationSettings();
 
         String shopName = shopEntity.getGeneralSettings().shopName();
-        if (shopName == null || shopName.isEmpty()) shopName = "MarketBlocks";
+        if (shopName == null || shopName.isEmpty())
+            shopName = "MarketBlocks";
         Component shopPrefix = Component.literal("[" + shopName + "] ");
 
-        // 1. Purchase Notification
         if (notifSettings.notifyOnPurchase() && tradeCount > 0) {
             String buyerName = buyer != null ? buyer.name() : "Unbekannt";
-            Component msg = shopPrefix.copy().append(Component.translatable("message.marketblocks.notifications.purchase", buyerName, tradeCount, result.getHoverName()));
+            Component msg = shopPrefix.copy().append(Component.translatable(
+                    "message.marketblocks.notifications.purchase", buyerName, tradeCount, result.getHoverName()));
             sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
         }
 
-        if (adminShop) return; // Admin shops don't run out of stock or get full
+        if (adminShop)
+            return;
 
-        // 2. Out of Stock
         boolean isOutOfStock = inv.countMatchingInput(result, true) < result.getCount();
         if (isOutOfStock && notifSettings.notifyOnOutOfStock()) {
             long currentTime = serverLevel.getGameTime();
@@ -242,20 +293,22 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
             if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
                 shopEntity.setLastOutOfStockNotifyTime(currentTime);
-                Component msg = shopPrefix.copy().append(Component.translatable("message.marketblocks.notifications.out_of_stock"));
+                Component msg = shopPrefix.copy()
+                        .append(Component.translatable("message.marketblocks.notifications.out_of_stock"));
                 boolean online = sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
-                if (!online) { // Primary owner offline
-                    PendingNotificationsSavedData.get(serverLevel).addOutOfStock(shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
+                if (!online) {
+                    PendingNotificationsSavedData.get(serverLevel)
+                            .addOutOfStock(shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
                     if (notifSettings.notifyCoOwners()) {
                         for (UUID coOwner : shopEntity.getAccessSettings().additionalOwners().keySet()) {
-                            PendingNotificationsSavedData.get(serverLevel).addOutOfStock(coOwner, shopEntity.getBlockPos());
+                            PendingNotificationsSavedData.get(serverLevel).addOutOfStock(coOwner,
+                                    shopEntity.getBlockPos());
                         }
                     }
                 }
             }
         }
 
-        // 3. Output Full
         boolean isOutputFull = !inv.hasOutputSpace(p1, p2);
         if (isOutputFull && notifSettings.notifyOnOutputFull()) {
             long currentTime = serverLevel.getGameTime();
@@ -264,13 +317,16 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
             if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
                 shopEntity.setLastOutputFullNotifyTime(currentTime);
-                Component msg = shopPrefix.copy().append(Component.translatable("message.marketblocks.notifications.output_full"));
+                Component msg = shopPrefix.copy()
+                        .append(Component.translatable("message.marketblocks.notifications.output_full"));
                 boolean online = sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
-                if (!online) { // Primary owner offline
-                    PendingNotificationsSavedData.get(serverLevel).addOutputFull(shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
+                if (!online) {
+                    PendingNotificationsSavedData.get(serverLevel)
+                            .addOutputFull(shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
                     if (notifSettings.notifyCoOwners()) {
                         for (UUID coOwner : shopEntity.getAccessSettings().additionalOwners().keySet()) {
-                            PendingNotificationsSavedData.get(serverLevel).addOutputFull(coOwner, shopEntity.getBlockPos());
+                            PendingNotificationsSavedData.get(serverLevel).addOutputFull(coOwner,
+                                    shopEntity.getBlockPos());
                         }
                     }
                 }
@@ -297,16 +353,21 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         return primaryOnline;
     }
 
-    private void executeTrades(ItemStack p1, ItemStack p2, ItemStack result, int tradeCount, boolean adminShop, ShopInventoryManager inv) {
-        if (tradeCount <= 0) return;
+    private void executeTrades(ItemStack p1, ItemStack p2, ItemStack result, int tradeCount, boolean adminShop,
+            ShopInventoryManager inv) {
+        if (tradeCount <= 0)
+            return;
 
         ItemStack totalP1 = multiplyStackForTrades(p1, tradeCount);
         ItemStack totalP2 = multiplyStackForTrades(p2, tradeCount);
         ItemStack totalResult = multiplyStackForTrades(result, tradeCount);
 
-        if (!totalP1.isEmpty()) inv.removePayment(totalP1);
-        if (!totalP2.isEmpty()) inv.removePayment(totalP2);
-        if (!adminShop && !totalResult.isEmpty()) inv.removeFromInput(totalResult);
+        if (!totalP1.isEmpty())
+            inv.removePayment(totalP1);
+        if (!totalP2.isEmpty())
+            inv.removePayment(totalP2);
+        if (!adminShop && !totalResult.isEmpty())
+            inv.removeFromInput(totalResult);
 
         if (!adminShop) {
             inv.addToOutputBatched(p1, tradeCount);
@@ -315,45 +376,52 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     }
 
     private ItemStack multiplyStackForTrades(ItemStack stack, int tradeCount) {
-        if (stack == null || stack.isEmpty() || tradeCount <= 0) return ItemStack.EMPTY;
+        if (stack == null || stack.isEmpty() || tradeCount <= 0)
+            return ItemStack.EMPTY;
         long total = (long) stack.getCount() * tradeCount;
-        if (total <= 0L) return ItemStack.EMPTY;
+        if (total <= 0L)
+            return ItemStack.EMPTY;
         ItemStack multiplied = stack.copy();
         multiplied.setCount((int) Math.min(Integer.MAX_VALUE, total));
         return multiplied;
     }
 
-    private void appendTransactionEntry(@Nullable BuyerIdentity buyer, ItemStack payment1, ItemStack payment2, ItemStack result, int tradeCount, boolean shiftPurchase) {
-        if (!(shopEntity.getLevel() instanceof ServerLevel serverLevel) || tradeCount <= 0) return;
+    private void appendTransactionEntry(@Nullable BuyerIdentity buyer, ItemStack payment1, ItemStack payment2,
+            ItemStack result, int tradeCount, boolean shiftPurchase) {
+        if (!(shopEntity.getLevel() instanceof ServerLevel serverLevel) || tradeCount <= 0)
+            return;
 
         List<ItemStack> paidStacks = new ArrayList<>(2);
         ItemStack paidOne = TransactionLogEntry.scaleStack(payment1, tradeCount);
         ItemStack paidTwo = TransactionLogEntry.scaleStack(payment2, tradeCount);
-        if (!paidOne.isEmpty()) paidStacks.add(paidOne);
-        if (!paidTwo.isEmpty()) paidStacks.add(paidTwo);
+        if (!paidOne.isEmpty())
+            paidStacks.add(paidOne);
+        if (!paidTwo.isEmpty())
+            paidStacks.add(paidTwo);
 
         List<ItemStack> boughtStacks = new ArrayList<>(1);
         ItemStack bought = TransactionLogEntry.scaleStack(result, tradeCount);
-        if (!bought.isEmpty()) boughtStacks.add(bought);
+        if (!bought.isEmpty())
+            boughtStacks.add(bought);
 
         UUID buyerId = buyer != null ? buyer.uuid() : new UUID(0L, 0L);
         String buyerName = buyer != null ? buyer.name() : "";
 
         TransactionLogEntry entry = TransactionLogEntry.now(
                 buyerId, buyerName, paidStacks, boughtStacks,
-                shiftPurchase ? TransactionLogEntry.PurchaseKind.SHIFT : TransactionLogEntry.PurchaseKind.SINGLE
-        );
+                shiftPurchase ? TransactionLogEntry.PurchaseKind.SHIFT : TransactionLogEntry.PurchaseKind.SINGLE);
 
         ShopTransactionLogSavedData.get(serverLevel).appendEntry(
                 ShopTransactionLogSavedData.SINGLE_OFFER_SHOP_TYPE,
                 serverLevel.dimension(),
                 shopEntity.getBlockPos(),
                 entry,
-                100 // MAX_TRANSACTION_LOG_ENTRIES
+                100
         );
     }
 
-    private record BuyerIdentity(UUID uuid, String name) {}
+    private record BuyerIdentity(UUID uuid, String name) {
+    }
 
     private @Nullable BuyerIdentity resolveBuyerIdentity(@Nullable Player directBuyer) {
         if (directBuyer != null) {

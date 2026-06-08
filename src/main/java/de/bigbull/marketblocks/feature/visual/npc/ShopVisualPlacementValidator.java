@@ -8,6 +8,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Validates the physical placement of visual NPCs behind shop blocks.
+ * Ensures the NPC has a solid surface to stand on and enough vertical clearance.
+ */
 public final class ShopVisualPlacementValidator {
     private ShopVisualPlacementValidator() {
     }

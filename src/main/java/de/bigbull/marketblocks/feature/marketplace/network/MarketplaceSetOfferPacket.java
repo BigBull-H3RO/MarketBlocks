@@ -32,7 +32,6 @@ public record MarketplaceSetOfferPacket(UUID offerId) implements CustomPacketPay
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof MarketplaceMenu menu) {
                 if (MarketplaceManager.get().isOfferOnPage(packet.offerId(), menu.selectedPage())) {
-                    // Sets the offer server-side so slotsChanged can compute result availability correctly.
                     menu.setSelectedOffer(packet.offerId());
                 } else {
                     menu.setCurrentTradingOffer(null);

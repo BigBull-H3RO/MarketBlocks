@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.1.26'
+    id 'net.neoforged.gradle.userdev' version '7.1.36'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -14,6 +14,17 @@ group = mod_group_id
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
     mavenCentral()
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+    maven {
+        name = "JourneyMap (Public)"
+        url = "https://jm.gserv.me/repository/maven-public/"
+    }
 }
 
 base {
@@ -55,6 +66,9 @@ configurations {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
+    compileOnly "maven.modrinth:jade:15.10.5+neoforge"
+    runtimeOnly "maven.modrinth:jade:15.10.5+neoforge"
+    compileOnly "info.journeymap:journeymap-api-neoforge:2.0.0-1.21.1-SNAPSHOT"
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -92,6 +106,7 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+
 }
 
 

@@ -1,6 +1,6 @@
 # Marketplace
 
-The **Marketplace** is the blockless, centrally managed trading system of MarketBlocks.
+The **Marketplace** is the centrally managed, page-based trading system of MarketBlocks. It can be accessed from anywhere without needing to be near a specific block.
 
 ## Contents
 
@@ -11,7 +11,9 @@ The **Marketplace** is the blockless, centrally managed trading system of Market
 
 ## Quick Overview
 
-- Open via keybind (**O**) or command
-- Page and offer management with server-side validation
+- Open via keybind (**O** by default), command (`/marketblocks marketplace`), or by interacting with a **Marketplace Block**
+- Page-based offer management with server-side validation
+- In-game editor for creating, editing, and deleting pages and offers (requires OP + admin mode)
 - JSON persistence with backup/restore strategy
-- Supports limits, restocks, and demand-based pricing
+- Supports stock limits, daily limits (global or per-player), restocks, and demand-based pricing
+- Advancements for opening the Marketplace and making your first purchase

@@ -1,0 +1,27 @@
+{
+  "parent": "marketblocks:marketblocks/sold_item",
+  "criteria": {
+    "bought_bulk": {
+      "trigger": "marketblocks:shop_wholesaler"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.wholesaler.description"
+    },
+    "frame": "challenge",
+    "icon": {
+      "count": 1,
+      "id": "minecraft:chest_minecart"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.wholesaler.title"
+    }
+  },
+  "requirements": [
+    [
+      "bought_bulk"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

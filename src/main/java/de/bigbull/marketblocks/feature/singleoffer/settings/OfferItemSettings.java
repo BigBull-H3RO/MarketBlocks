@@ -22,14 +22,13 @@ public record OfferItemSettings(
         float spacingXZ,
         float spacingY,
         float chaosRotation,
-        boolean dynamicFillLevel
-) {
-    private static final float MIN_SCALE = 0.1f;
-    private static final float MAX_SCALE = 4.0f;
+        boolean dynamicFillLevel) {
+    private static final float MIN_SCALE = 0.5f;
+    private static final float MAX_SCALE = 1.5f;
     private static final float MIN_SPEED = 0.0f;
-    private static final float MAX_SPEED = 20.0f;
-    private static final float MIN_HEIGHT = -2.0f;
-    private static final float MAX_HEIGHT = 4.0f;
+    private static final float MAX_SPEED = 1.5f;
+    private static final float MIN_HEIGHT = -0.25f;
+    private static final float MAX_HEIGHT = 0.25f;
     private static final int MIN_COUNT = 1;
     public static final int MAX_COUNT = 96;
     private static final float MIN_SPACING = -0.5f;
@@ -42,7 +41,7 @@ public record OfferItemSettings(
     private static final float DEFAULT_HEIGHT = 0.0f;
     private static final int DEFAULT_COUNT = 1;
     private static final float DEFAULT_ROTATION = 0.0f;
-    private static final CrateLayoutMode DEFAULT_LAYOUT_MODE = CrateLayoutMode.GESTAPELT;
+    private static final CrateLayoutMode DEFAULT_LAYOUT_MODE = CrateLayoutMode.STACKED;
     private static final float DEFAULT_SPACING_XZ = 0.0f;
     private static final float DEFAULT_SPACING_Y = 0.0f;
     private static final float DEFAULT_CHAOS_ROTATION = 0.1f;
@@ -65,8 +64,7 @@ public record OfferItemSettings(
     public static final OfferItemSettings DEFAULT = new OfferItemSettings(
             true, false, DEFAULT_SCALE, DEFAULT_SPEED, DEFAULT_HEIGHT,
             true, DEFAULT_COUNT, DEFAULT_ROTATION, DEFAULT_LAYOUT_MODE,
-            DEFAULT_SPACING_XZ, DEFAULT_SPACING_Y, DEFAULT_CHAOS_ROTATION, DEFAULT_DYNAMIC_FILL_LEVEL
-    );
+            DEFAULT_SPACING_XZ, DEFAULT_SPACING_Y, DEFAULT_CHAOS_ROTATION, DEFAULT_DYNAMIC_FILL_LEVEL);
 
     public static final StreamCodec<ByteBuf, OfferItemSettings> STREAM_CODEC = StreamCodec.of(
             (buf, s) -> {
@@ -97,9 +95,7 @@ public record OfferItemSettings(
                     ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),
-                    ByteBufCodecs.BOOL.decode(buf)
-            )
-    );
+                    ByteBufCodecs.BOOL.decode(buf)));
 
     public OfferItemSettings {
         scale = clampFinite(scale, MIN_SCALE, MAX_SCALE, DEFAULT_SCALE);
@@ -132,7 +128,8 @@ public record OfferItemSettings(
     }
 
     public static OfferItemSettings load(CompoundTag tag) {
-        if (tag == null) return DEFAULT;
+        if (tag == null)
+            return DEFAULT;
         return new OfferItemSettings(
                 !tag.contains(KEY_VISIBLE) || tag.getBoolean(KEY_VISIBLE),
                 tag.getBoolean(KEY_FULLBRIGHT),
@@ -142,21 +139,23 @@ public record OfferItemSettings(
                 !tag.contains(KEY_BOBBING) || tag.getBoolean(KEY_BOBBING),
                 tag.contains(KEY_COUNT) ? tag.getInt(KEY_COUNT) : DEFAULT_COUNT,
                 tag.contains(KEY_ROTATION) ? tag.getFloat(KEY_ROTATION) : DEFAULT_ROTATION,
-                tag.contains(KEY_LAYOUT_MODE) ? CrateLayoutMode.fromSerialized(tag.getString(KEY_LAYOUT_MODE)) : DEFAULT_LAYOUT_MODE,
+                tag.contains(KEY_LAYOUT_MODE) ? CrateLayoutMode.fromSerialized(tag.getString(KEY_LAYOUT_MODE))
+                        : DEFAULT_LAYOUT_MODE,
                 tag.contains(KEY_SPACING_XZ) ? tag.getFloat(KEY_SPACING_XZ) : DEFAULT_SPACING_XZ,
                 tag.contains(KEY_SPACING_Y) ? tag.getFloat(KEY_SPACING_Y) : DEFAULT_SPACING_Y,
                 tag.contains(KEY_CHAOS_ROTATION) ? tag.getFloat(KEY_CHAOS_ROTATION) : DEFAULT_CHAOS_ROTATION,
-                tag.contains(KEY_DYNAMIC_FILL_LEVEL) && tag.getBoolean(KEY_DYNAMIC_FILL_LEVEL)
-        );
+                tag.contains(KEY_DYNAMIC_FILL_LEVEL) && tag.getBoolean(KEY_DYNAMIC_FILL_LEVEL));
     }
 
     private static float clampFinite(float value, float min, float max, float fallback) {
-        if (!Float.isFinite(value)) return fallback;
+        if (!Float.isFinite(value))
+            return fallback;
         return Math.clamp(value, min, max);
     }
 
     private static float normalizeDegrees(float value) {
-        if (!Float.isFinite(value)) return DEFAULT_ROTATION;
+        if (!Float.isFinite(value))
+            return DEFAULT_ROTATION;
         float normalized = value % 360.0f;
         return normalized < 0.0f ? normalized + 360.0f : normalized;
     }
@@ -196,44 +195,122 @@ public record OfferItemSettings(
             this.dynamicFillLevel = s.dynamicFillLevel();
         }
 
-        public boolean visible() { return visible; }
-        public Draft setVisible(boolean v) { this.visible = v; return this; }
+        public boolean visible() {
+            return visible;
+        }
 
-        public boolean fullbright() { return fullbright; }
-        public Draft setFullbright(boolean v) { this.fullbright = v; return this; }
+        public Draft setVisible(boolean v) {
+            this.visible = v;
+            return this;
+        }
 
-        public float scale() { return scale; }
-        public Draft setScale(float v) { this.scale = v; return this; }
+        public boolean fullbright() {
+            return fullbright;
+        }
 
-        public float speed() { return speed; }
-        public Draft setSpeed(float v) { this.speed = v; return this; }
+        public Draft setFullbright(boolean v) {
+            this.fullbright = v;
+            return this;
+        }
 
-        public float heightOffset() { return heightOffset; }
-        public Draft setHeightOffset(float v) { this.heightOffset = v; return this; }
+        public float scale() {
+            return scale;
+        }
 
-        public boolean bobbing() { return bobbing; }
-        public Draft setBobbing(boolean v) { this.bobbing = v; return this; }
+        public Draft setScale(float v) {
+            this.scale = v;
+            return this;
+        }
 
-        public int count() { return count; }
-        public Draft setCount(int v) { this.count = v; return this; }
+        public float speed() {
+            return speed;
+        }
 
-        public float rotation() { return rotation; }
-        public Draft setRotation(float v) { this.rotation = v; return this; }
+        public Draft setSpeed(float v) {
+            this.speed = v;
+            return this;
+        }
 
-        public CrateLayoutMode layoutMode() { return layoutMode; }
-        public Draft setLayoutMode(CrateLayoutMode v) { this.layoutMode = v == null ? DEFAULT_LAYOUT_MODE : v; return this; }
+        public float heightOffset() {
+            return heightOffset;
+        }
 
-        public float spacingXZ() { return spacingXZ; }
-        public Draft setSpacingXZ(float v) { this.spacingXZ = v; return this; }
+        public Draft setHeightOffset(float v) {
+            this.heightOffset = v;
+            return this;
+        }
 
-        public float spacingY() { return spacingY; }
-        public Draft setSpacingY(float v) { this.spacingY = v; return this; }
+        public boolean bobbing() {
+            return bobbing;
+        }
 
-        public float chaosRotation() { return chaosRotation; }
-        public Draft setChaosRotation(float v) { this.chaosRotation = v; return this; }
+        public Draft setBobbing(boolean v) {
+            this.bobbing = v;
+            return this;
+        }
 
-        public boolean dynamicFillLevel() { return dynamicFillLevel; }
-        public Draft setDynamicFillLevel(boolean v) { this.dynamicFillLevel = v; return this; }
+        public int count() {
+            return count;
+        }
+
+        public Draft setCount(int v) {
+            this.count = v;
+            return this;
+        }
+
+        public float rotation() {
+            return rotation;
+        }
+
+        public Draft setRotation(float v) {
+            this.rotation = v;
+            return this;
+        }
+
+        public CrateLayoutMode layoutMode() {
+            return layoutMode;
+        }
+
+        public Draft setLayoutMode(CrateLayoutMode v) {
+            this.layoutMode = v == null ? DEFAULT_LAYOUT_MODE : v;
+            return this;
+        }
+
+        public float spacingXZ() {
+            return spacingXZ;
+        }
+
+        public Draft setSpacingXZ(float v) {
+            this.spacingXZ = v;
+            return this;
+        }
+
+        public float spacingY() {
+            return spacingY;
+        }
+
+        public Draft setSpacingY(float v) {
+            this.spacingY = v;
+            return this;
+        }
+
+        public float chaosRotation() {
+            return chaosRotation;
+        }
+
+        public Draft setChaosRotation(float v) {
+            this.chaosRotation = v;
+            return this;
+        }
+
+        public boolean dynamicFillLevel() {
+            return dynamicFillLevel;
+        }
+
+        public Draft setDynamicFillLevel(boolean v) {
+            this.dynamicFillLevel = v;
+            return this;
+        }
 
         public OfferItemSettings toSettings() {
             return new OfferItemSettings(visible, fullbright, scale, speed, heightOffset,

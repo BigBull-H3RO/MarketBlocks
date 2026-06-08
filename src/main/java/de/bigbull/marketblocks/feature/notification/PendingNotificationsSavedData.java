@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -16,6 +15,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Saved data for tracking pending shop notifications such as out of stock or output full.
+ */
 public class PendingNotificationsSavedData extends SavedData {
     public static final String DATA_NAME = MarketBlocks.MODID + "_pending_notifications";
 
@@ -28,8 +30,7 @@ public class PendingNotificationsSavedData extends SavedData {
     public static PendingNotificationsSavedData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(
                 new SavedData.Factory<>(PendingNotificationsSavedData::new, PendingNotificationsSavedData::load, null),
-                DATA_NAME
-        );
+                DATA_NAME);
     }
 
     public void addOutOfStock(UUID player, BlockPos pos) {
@@ -44,13 +45,15 @@ public class PendingNotificationsSavedData extends SavedData {
 
     public Set<BlockPos> getAndClearOutOfStock(UUID player) {
         Set<BlockPos> pos = outOfStockShops.remove(player);
-        if (pos != null) setDirty();
+        if (pos != null)
+            setDirty();
         return pos == null ? Set.of() : pos;
     }
 
     public Set<BlockPos> getAndClearOutputFull(UUID player) {
         Set<BlockPos> pos = outputFullShops.remove(player);
-        if (pos != null) setDirty();
+        if (pos != null)
+            setDirty();
         return pos == null ? Set.of() : pos;
     }
 
@@ -88,7 +91,8 @@ public class PendingNotificationsSavedData extends SavedData {
     }
 
     private static void loadMap(CompoundTag parentTag, String key, Map<UUID, Set<BlockPos>> map) {
-        if (!parentTag.contains(key, Tag.TAG_LIST)) return;
+        if (!parentTag.contains(key, Tag.TAG_LIST))
+            return;
         ListTag list = parentTag.getList(key, Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag entryTag = list.getCompound(i);

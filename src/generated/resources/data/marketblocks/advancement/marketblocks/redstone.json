@@ -1,0 +1,26 @@
+{
+  "parent": "marketblocks:marketblocks/first_shop",
+  "criteria": {
+    "enabled_redstone": {
+      "trigger": "marketblocks:shop_redstone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.redstone.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:redstone"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.redstone.title"
+    }
+  },
+  "requirements": [
+    [
+      "enabled_redstone"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

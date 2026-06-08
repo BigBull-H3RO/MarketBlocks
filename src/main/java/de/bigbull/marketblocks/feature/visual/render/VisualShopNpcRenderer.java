@@ -22,6 +22,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Client-side renderer for the visual NPC (Villager or custom player skin) associated with a shop.
+ * Handles rendering the NPC model, spawn/despawn animations, head tracking, and particle effects.
+ */
 public final class VisualShopNpcRenderer {
     private static final float SPAWN_DROP_START_Y = 80.0F;
     private static final int SPAWN_FALL_SOUND_START_OFFSET_TICKS = 0;
@@ -162,7 +166,6 @@ public final class VisualShopNpcRenderer {
     private static void processAnimationEvents(IVisualShopNPC host, VillagerSettings settings, ShopNpcAnimationState state, Level level, long now) {
         int currentNonce = host.getVisualAnimationNonce();
         if (!state.isAnimationNonceInitialized()) {
-            // First client sync: adopt nonce without replaying stale animation events.
             state.primeAnimationNonce(currentNonce);
             return;
         }
@@ -182,7 +185,6 @@ public final class VisualShopNpcRenderer {
             return;
         }
 
-        // Consume nonce only after this event can really be processed.
         state.setLastAnimationNonce(currentNonce);
 
         if (event == VisualNpcAnimationEvent.SPAWN && settings.npcEnabled()) {
@@ -232,7 +234,6 @@ public final class VisualShopNpcRenderer {
             if (settings.purchaseSoundsEnabled()) {
                 if (now - state.getLastPurchaseFeedbackTick() > 4L) {
                     int delta = currentCounter - state.getLastPurchaseCounter();
-                    // Higher pitch for more purchases at once (like vanilla XP orbs)
                     float pitch = Math.min(0.9F + delta * 0.08F, 1.8F);
                     level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
                             SoundEvents.VILLAGER_YES, SoundSource.BLOCKS, 0.6F, pitch, false);

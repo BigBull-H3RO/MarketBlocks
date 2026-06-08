@@ -76,7 +76,6 @@ public abstract class BaseModalScreen extends Screen {
 
     private void renderDimLayer(GuiGraphics guiGraphics) {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        // Ensure the dim layer is above all parent content regardless of previous depth state.
         RenderSystem.disableDepthTest();
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);

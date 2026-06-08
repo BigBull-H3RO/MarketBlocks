@@ -11,6 +11,10 @@ import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+/**
+ * Initializes and registers the custom creative mode tab for the MarketBlocks mod.
+ * Groups all mod-specific items and blocks into a single, easily accessible tab in the creative inventory.
+ */
 public final class CreativeTabInit {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MarketBlocks.MODID);
 
@@ -32,6 +36,7 @@ public final class CreativeTabInit {
                         output.accept(showcaseStack);
 
                         output.accept(RegistriesInit.MARKETCRATE_BLOCK.get());
+                        output.accept(RegistriesInit.MARKETPLACE_BLOCK.get());
                     })
                     .build());
 }

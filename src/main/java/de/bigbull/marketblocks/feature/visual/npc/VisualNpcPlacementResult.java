@@ -1,5 +1,8 @@
 package de.bigbull.marketblocks.feature.visual.npc;
 
+/**
+ * Represents the outcome of checking if an NPC can be placed behind a shop.
+ */
 public enum VisualNpcPlacementResult {
     OK(""),
     NO_STAND_SURFACE("gui.marketblocks.visuals.error.no_surface"),

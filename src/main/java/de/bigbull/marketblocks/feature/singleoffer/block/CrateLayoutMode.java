@@ -7,8 +7,10 @@ package de.bigbull.marketblocks.feature.singleoffer.block;
  * UI: LOSE (loose / scattered) and GESTAPELT (stacked / grid-based).
  */
 public enum CrateLayoutMode {
-    LOSE("lose"),
-    GESTAPELT("gestapelt");
+    SCATTERED("lose"),
+    STACKED("gestapelt");
+
+    private static final CrateLayoutMode[] VALUES = values();
 
     private final String serializedName;
 
@@ -25,21 +27,18 @@ public enum CrateLayoutMode {
     }
 
     public CrateLayoutMode next() {
-        CrateLayoutMode[] values = values();
-        int next = (ordinal() + 1) % values.length;
-        return values[next];
+        return VALUES[(ordinal() + 1) % VALUES.length];
     }
 
     public static CrateLayoutMode fromSerialized(String value) {
         if (value == null || value.isBlank()) {
-            return LOSE;
+            return SCATTERED;
         }
-        for (CrateLayoutMode mode : values()) {
+        for (CrateLayoutMode mode : VALUES) {
             if (mode.serializedName.equalsIgnoreCase(value)) {
                 return mode;
             }
         }
-        return LOSE;
+        return SCATTERED;
     }
 }
-

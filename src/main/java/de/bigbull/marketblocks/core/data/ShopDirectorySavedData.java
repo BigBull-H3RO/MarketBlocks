@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Maintains a global registry of all placed single-offer shops (Trade Stands, Market Crates) across the server.
+ * This is used for commands (like /marketblocks list) and other global lookup features.
+ */
 public class ShopDirectorySavedData extends SavedData {
     private static final String DATA_NAME = "marketblocks_shop_directory";
 

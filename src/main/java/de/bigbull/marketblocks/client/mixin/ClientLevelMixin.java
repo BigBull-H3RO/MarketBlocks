@@ -13,6 +13,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Mixin for ClientLevel to synchronize the block breaking animation.
+ * When a player breaks the top block of a Trade Stand, this mirrors the destruction
+ * progress to the base block, ensuring the cracking texture renders on the whole structure.
+ */
 @Mixin(ClientLevel.class)
 public abstract class ClientLevelMixin {
     @Unique

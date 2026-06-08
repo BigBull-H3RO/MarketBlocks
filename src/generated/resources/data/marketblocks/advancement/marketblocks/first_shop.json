@@ -1,0 +1,46 @@
+{
+  "parent": "marketblocks:marketblocks/root",
+  "criteria": {
+    "placed_marketcrate": {
+      "conditions": {
+        "location": [
+          {
+            "block": "marketblocks:marketcrate",
+            "condition": "minecraft:block_state_property"
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    },
+    "placed_trade_stand": {
+      "conditions": {
+        "location": [
+          {
+            "block": "marketblocks:trade_stand",
+            "condition": "minecraft:block_state_property"
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.first_shop.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "marketblocks:trade_stand"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.first_shop.title"
+    }
+  },
+  "requirements": [
+    [
+      "placed_trade_stand",
+      "placed_marketcrate"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

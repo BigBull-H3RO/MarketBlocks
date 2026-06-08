@@ -23,6 +23,11 @@ import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import org.lwjgl.glfw.GLFW;
 
+/**
+ * Main client-side event handler for MarketBlocks.
+ * Responsible for registering screens, block entity renderers, keybindings, and setting up
+ * client-specific block properties like render layers during the FML client setup phase.
+ */
 @EventBusSubscriber(modid = MarketBlocks.MODID, value = Dist.CLIENT)
 public class ClientEvents {
     private static final KeyMapping OPEN_MARKETPLACE = new KeyMapping(
@@ -33,7 +38,6 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        // New unified screen
         event.register(RegistriesInit.SINGLE_OFFER_SHOP_MENU.get(), SingleOfferShopScreen::new);
         event.register(RegistriesInit.MARKETPLACE_MENU.get(), MarketplaceScreen::new);
     }

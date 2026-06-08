@@ -9,6 +9,7 @@ import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSyncPacket;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenuProvider;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -203,6 +204,8 @@ public final class MarketplaceManager {
             offer.setRuntimeState(state);
             markDirty();
             shouldSyncViewers = true;
+
+            RegistriesInit.MARKETPLACE_BUY_TRIGGER.get().trigger(player);
         }
         if (shouldSyncViewers) {
             syncOpenViewers(player);

@@ -15,17 +15,21 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+/**
+ * A packet sent from the client to the server to toggle the admin shop mode.
+ * Only works if the player has OP permissions and admin mode is globally
+ * enabled.
+ */
 public record ToggleAdminShopModePacket(BlockPos pos, boolean enabled) implements CustomPacketPayload {
-    public static final CustomPacketPayload.Type<ToggleAdminShopModePacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "toggle_admin_shop_mode"));
+    public static final CustomPacketPayload.Type<ToggleAdminShopModePacket> TYPE = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "toggle_admin_shop_mode"));
 
     public static final StreamCodec<ByteBuf, ToggleAdminShopModePacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
             ToggleAdminShopModePacket::pos,
             ByteBufCodecs.BOOL,
             ToggleAdminShopModePacket::enabled,
-            ToggleAdminShopModePacket::new
-    );
+            ToggleAdminShopModePacket::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -50,6 +54,9 @@ public record ToggleAdminShopModePacket(BlockPos pos, boolean enabled) implement
             }
 
             blockEntity.setAdminShopEnabled(packet.enabled());
+            if (packet.enabled()) {
+                de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_ADMIN_MODE_TRIGGER.get().trigger(player);
+            }
             if (packet.enabled() && player.getServer() != null) {
                 for (ServerPlayer onlinePlayer : player.getServer().getPlayerList().getPlayers()) {
                     if (onlinePlayer.containerMenu instanceof SingleOfferShopMenu menu

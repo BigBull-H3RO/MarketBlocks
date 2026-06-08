@@ -1,6 +1,5 @@
 package de.bigbull.marketblocks.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import net.minecraft.client.Minecraft;
@@ -11,19 +10,23 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.function.Consumer;
 
+/**
+ * A multi-state button used in the I/O configuration UI.
+ * Toggles between Disabled, Input, and Output states for a specific block face.
+ */
 public class SideModeButton extends Button {
-    private static final ResourceLocation BUTTON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/button.png");
-    private static final ResourceLocation HIGHLIGHTED =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/button_highlighted.png");
-    private static final ResourceLocation SELECTED =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/button_selected.png");
-    private static final ResourceLocation INPUT_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/input_icon.png");
-    private static final ResourceLocation OUTPUT_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/output_icon.png");
-    private static final ResourceLocation DISABLED_ICON =
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/button/sidemode/disabled_icon.png");
+    private static final ResourceLocation BUTTON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "sidemode/button");
+    private static final ResourceLocation HIGHLIGHTED = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "sidemode/button_highlighted");
+    private static final ResourceLocation SELECTED = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "sidemode/button_selected");
+    private static final ResourceLocation INPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "sidemode/input_icon");
+    private static final ResourceLocation OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "sidemode/output_icon");
+    private static final ResourceLocation DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "sidemode/disabled_icon");
 
     private SideMode mode;
     private final Consumer<SideMode> callback;
@@ -31,7 +34,8 @@ public class SideModeButton extends Button {
     private boolean isPressing;
 
     public SideModeButton(int x, int y, int width, int height, SideMode initialMode, Consumer<SideMode> callback) {
-        super(x, y, width, height, Component.empty(), b -> {}, DEFAULT_NARRATION);
+        super(x, y, width, height, Component.empty(), b -> {
+        }, DEFAULT_NARRATION);
         this.mode = initialMode;
         this.callback = callback;
         this.pressTicks = 0;
@@ -88,8 +92,7 @@ public class SideModeButton extends Button {
             pressTicks--;
         }
 
-        RenderSystem.setShaderTexture(0, background);
-        graphics.blit(background, getX(), getY(), 0, 0, getWidth(), getHeight(), 16, 16);
+        graphics.blitSprite(background, getX(), getY(), getWidth(), getHeight());
 
         ResourceLocation icon = switch (mode) {
             case DISABLED -> DISABLED_ICON;
@@ -97,9 +100,8 @@ public class SideModeButton extends Button {
             case OUTPUT -> OUTPUT_ICON;
         };
 
-        RenderSystem.setShaderTexture(0, icon);
         int iconX = getX() + (getWidth() - 16) / 2;
         int iconY = getY() + (getHeight() - 16) / 2;
-        graphics.blit(icon, iconX, iconY, 0, 0, 16, 16, 16, 16);
+        graphics.blitSprite(icon, iconX, iconY, 16, 16);
     }
 }
