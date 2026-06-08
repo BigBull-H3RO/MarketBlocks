@@ -43,15 +43,15 @@ public class ModDeLangProvider extends LanguageProvider {
         add("command.marketblocks.list.tp", "[Teleport]");
         add("command.marketblocks.list.waypoint", "[Wegpunkt]");
         add("command.marketblocks.marketplacelist.entry", "- Marktplatz %s");
-        add("command.marketblocks.marketplacelist.header", "--- Marktplatz Liste ---");
+        add("command.marketblocks.marketplacelist.header", "--- Marktplatz-Liste ---");
         add("command.marketblocks.marketplacelist.no_links", "Keine Marktplätze gefunden.");
         add("command.marketblocks.player_not_found", "Spieler nicht gefunden");
-        add("command.marketblocks.reload.success", "MarketBlocks Konfiguration erfolgreich neu geladen!");
+        add("command.marketblocks.reload.success", "MarketBlocks-Konfiguration erfolgreich neu geladen!");
         add("command.marketblocks.resetlimits.no_changes", "Es wurden keine Tageslimits zurückgesetzt.");
         add("command.marketblocks.resetlimits.success", "Tageslimits erfolgreich zurückgesetzt.");
         add("command.marketblocks.shoplist.closed", "GESCHLOSSEN");
         add("command.marketblocks.shoplist.entry", "- [%s] %s (von %s)");
-        add("command.marketblocks.shoplist.header", "--- Shop Liste ---");
+        add("command.marketblocks.shoplist.header", "--- Shop-Liste ---");
         add("command.marketblocks.shoplist.no_shops", "Keine Shops auf diesem Marktplatz verfügbar.");
         add("command.marketblocks.shoplist.open", "OFFEN");
         add("command.marketblocks.unlink.not_found", "Konnte die Marktplatz-Verlinkung nicht finden.");
@@ -65,19 +65,21 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.access.edit_access_list", "Zugriffsliste");
         add("gui.marketblocks.access.edit_owners", "Besitzer");
         add("gui.marketblocks.access.mode.blacklist", "Modus: Blacklist");
-        add("gui.marketblocks.access.mode.everyone", "Modus: Jeder");
+        add("gui.marketblocks.access.mode.everyone", "Modus: Alle");
         add("gui.marketblocks.access.mode.whitelist", "Modus: Whitelist");
-        add("gui.marketblocks.io.allow_io", "I/O Erlauben");
+        add("gui.marketblocks.io.allow_io", "I/O erlauben");
         add("gui.marketblocks.io.allow_io.tooltip", "Erlaube Trichtern und Kabeln, mit dieser Seite zu interagieren.");
-        add("gui.marketblocks.io.auto_io", "Auto Push/Pull");
-        add("gui.marketblocks.io.auto_io.tooltip", "Items automatisch in angrenzende Inventare pushen oder ziehen.");
+        add("gui.marketblocks.io.auto_io", "Autom. Ein-/Ausgabe");
+        add("gui.marketblocks.io.auto_io.tooltip", "Items automatisch in angrenzende Inventare verschieben.");
         add("gui.marketblocks.io.redstone_control.ignored", "Ignoriert");
-        add("gui.marketblocks.io.redstone_control.require_no_signal", "Niedrig (Kein Signal)");
+        add("gui.marketblocks.io.redstone_control.require_no_signal", "Niedrig (kein Signal)");
         add("gui.marketblocks.io.redstone_control.require_signal", "Hoch (Signal benötigt)");
         add("gui.marketblocks.io.redstone_control.tooltip", "Redstone-Steuerungsmodus für diese Seite.");
         add("gui.marketblocks.settings_owner_only", "Nur der Besitzer kann Einstellungen ändern");
         add("gui.marketblocks.settings_tab", "Einstellungen anzeigen");
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");
+        add("gui.marketblocks.toggle.off", "AUS");
+        add("gui.marketblocks.toggle.on", "AN");
         add("gui.marketblocks.settings.category.access", "Zugriff");
         add("gui.marketblocks.settings.category.general", "Allgemein");
         add("gui.marketblocks.settings.category.io", "I/O");
@@ -94,13 +96,13 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.layout_mode", "Layout-Modus");
         add("gui.marketblocks.visuals.layout_mode.gestapelt", "Gestapelt");
         add("gui.marketblocks.visuals.layout_mode.lose", "Lose");
-        add("gui.marketblocks.visuals.npc_enabled", "Deko-Villager");
+        add("gui.marketblocks.visuals.npc_enabled", "Deko-Dorfbewohner");
         add("gui.marketblocks.visuals.npc_name", "NPC-Name");
         add("gui.marketblocks.visuals.offer_item_disabled_global", "Vom Server-Admin deaktiviert.");
         add("gui.marketblocks.visuals.offer_item_fullbright", "Leuchten");
         add("gui.marketblocks.visuals.offer_item_fullbright.tooltip", "Lässt das Item im Dunkeln leuchten.");
         add("gui.marketblocks.visuals.offer_item_visible", "Angebot sichtbar");
-        add("gui.marketblocks.visuals.offer_item_visible.tooltip", "Versteckt oder zeigt das schwebende/dargestellte Angebot.");
+        add("gui.marketblocks.visuals.offer_item_visible.tooltip", "Zeigt oder versteckt das schwebende/dargestellte Angebot.");
         add("gui.marketblocks.visuals.payment_sounds", "Bezahl-Sounds");
         add("gui.marketblocks.visuals.player_skin_name", "Spielername");
         add("gui.marketblocks.visuals.profession", "Beruf");
@@ -131,10 +133,10 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.spacing_y", "Abstand Y");
         add("gui.marketblocks.visuals.speed", "Rotationsgeschw.");
         add("gui.marketblocks.visuals.use_player_skin", "Spieler-Skin");
-        add("gui.marketblocks.visuals.use_player_skin.tooltip", "Einen Spieler anstelle eines Villagers anzeigen.");
+        add("gui.marketblocks.visuals.use_player_skin.tooltip", "Einen Spieler anstelle eines Dorfbewohners anzeigen.");
 
         // === GUI - Notifications ===
-        add("gui.marketblocks.notifications.co_owners", "Co-Owner benachrichtigen");
+        add("gui.marketblocks.notifications.co_owners", "Mitbesitzer benachrichtigen");
         add("gui.marketblocks.notifications.co_owners.tooltip", "Sende Benachrichtigungen auch an zusätzliche Shop-Besitzer.");
         add("gui.marketblocks.notifications.login.out_of_stock", "§cWarnung: %s deiner Shops sind leer!§r");
         add("gui.marketblocks.notifications.login.output_full", "§cWarnung: Bei %s deiner Shops ist das Ausgabe-Inventar voll!§r");
@@ -150,7 +152,7 @@ public class ModDeLangProvider extends LanguageProvider {
 
         // === GUI - Marketplace Editors ===
         add("gui.marketblocks.marketplace.editor.limits.daily", "Tageslimit");
-        add("gui.marketblocks.marketplace.editor.limits.restock", "Restock (s)");
+        add("gui.marketblocks.marketplace.editor.limits.restock", "Auffüllzeit (s)");
         add("gui.marketblocks.marketplace.editor.limits.stock", "Lagerlimit");
         add("gui.marketblocks.marketplace.editor.limits.title", "Limits");
         add("gui.marketblocks.marketplace.editor.pricing.disabled", "Preisdynamik AUS");
@@ -185,11 +187,11 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.tooltip.remaining_daily_empty", "Tageslimit erreicht.");
         add("gui.marketblocks.marketplace.tooltip.remaining_stock", "Verbleibende Käufe aus Bestand.");
         add("gui.marketblocks.marketplace.tooltip.remaining_stock_empty", "Nicht auf Lager.");
-        add("gui.marketblocks.marketplace.tooltip.restock_in", "Zeit bis Restock.");
-        add("gui.marketblocks.marketplace.tooltip.restock_ready", "Restock jetzt fällig.");
+        add("gui.marketblocks.marketplace.tooltip.restock_in", "Zeit bis zum Auffüllen.");
+        add("gui.marketblocks.marketplace.tooltip.restock_ready", "Auffüllen ist jetzt fällig.");
         add("gui.marketblocks.marketplace.tooltip.unavailable_daily", "Nicht kaufbar: Tageslimit erreicht.");
         add("gui.marketblocks.marketplace.tooltip.unavailable_generic", "Nicht kaufbar.");
-        add("gui.marketblocks.marketplace.tooltip.unavailable_restock", "Nicht kaufbar: Restock läuft.");
+        add("gui.marketblocks.marketplace.tooltip.unavailable_restock", "Nicht kaufbar: Auffüllen läuft.");
         add("gui.marketblocks.marketplace.tooltip.unavailable_stock", "Nicht kaufbar: kein Bestand.");
         add("gui.marketblocks.marketplace.unnamed_page", "Seite %s");
 
@@ -208,7 +210,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.inventory_admin_disabled", "Inventar im Admin-Modus deaktiviert");
         add("gui.marketblocks.inventory_owner_only", "Nur der Besitzer kann das Inventar verwalten");
         add("gui.marketblocks.inventory_tab", "Inventar anzeigen");
-        add("gui.marketblocks.inventory_title", "Handelsstand Inventar");
+        add("gui.marketblocks.inventory_title", "Handelsstand-Inventar");
         add("gui.marketblocks.log_tab", "Verlauf anzeigen");
         add("gui.marketblocks.log_title", "Transaktions-Log");
         add("gui.marketblocks.log.clear", "Log leeren");
@@ -231,7 +233,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.purchase_xp_sound", "XP-Sound beim Kauf");
         add("gui.marketblocks.purchase_xp_sound.tooltip", "Spielt einen XP-Sound ab, wenn ein Spieler etwas kauft");
         add("gui.marketblocks.save", "Speichern");
-        add("gui.marketblocks.shop_closed", "Shop Geschlossen");
+        add("gui.marketblocks.shop_closed", "Shop geschlossen");
         add("gui.marketblocks.shop_closed.tooltip", "Ist dies aktiv, können nur Besitzer einkaufen.");
         add("gui.marketblocks.shop_name", "Shopname");
         add("gui.marketblocks.shop_title", "Handelsstand");
@@ -253,55 +255,55 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.marketplace.page_not_found", "Die gewählte Shop-Seite wurde nicht gefunden.");
         add("message.marketblocks.marketplace.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
         add("message.marketblocks.marketplace.pricing.invalid_finite", "Bitte gültige endliche Zahlen für die Preisdynamik eingeben.");
-        add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte verwenden Sie nur Zahlen (Punkt oder Komma erlaubt).");
+        add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte verwende nur Zahlen (Punkt oder Komma erlaubt).");
         add("message.marketblocks.marketplace.pricing.no_connection", "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.trade_stand.no_offer", "Dieser Handelsstand hat aktuell kein aktives Angebot.");
         add("message.marketblocks.trade_stand.not_owner", "Nur der Besitzer kann diesen Handelsstand abbauen.");
 
         // === Jade / Waila Support ===
-        add("config.jade.plugin_marketblocks.shop_info", "Shop Info");
+        add("config.jade.plugin_marketblocks.shop_info", "Shop-Info");
         add("marketblocks.jade.for", "Für:");
         add("marketblocks.jade.out_of_stock", "Ausverkauft!");
         add("marketblocks.jade.output_full", "Lager voll!");
         add("marketblocks.jade.owner", "Besitzer: %s");
         add("marketblocks.jade.selling", "Verkauft:");
-        add("marketblocks.jade.status.admin_shop", "Admin Shop");
+        add("marketblocks.jade.status.admin_shop", "Admin-Shop");
         add("marketblocks.jade.status.closed", "Shop geschlossen");
 
         // === Advancements ===
-        add("advancements.marketblocks.admin_shop.description", "Erstelle einen Admin-Shop");
+        add("advancements.marketblocks.admin_shop.description", "Aktiviere den Admin-Shop-Modus");
         add("advancements.marketblocks.admin_shop.title", "Unendliche Waren");
-        add("advancements.marketblocks.auto_io.description", "Aktiviere Auto I/O für deinen Shop");
+        add("advancements.marketblocks.auto_io.description", "Aktiviere automatische Ein-/Ausgabe für deinen Shop");
         add("advancements.marketblocks.auto_io.title", "Logistik");
-        add("advancements.marketblocks.custom_npc.description", "Gib deinem Shop-NPC einen eigenen Namen");
+        add("advancements.marketblocks.custom_npc.description", "Passe deinen Shop-NPC mit Namen oder Spieler-Skin an");
         add("advancements.marketblocks.custom_npc.title", "Eigenes Personal");
-        add("advancements.marketblocks.first_shop.description", "Platziere deinen ersten Verkaufsstand");
+        add("advancements.marketblocks.first_shop.description", "Platziere deinen ersten MarketBlocks-Shopblock");
         add("advancements.marketblocks.first_shop.title", "Eröffnet!");
-        add("advancements.marketblocks.hiring.description", "Stelle einen NPC für deinen Shop ein");
+        add("advancements.marketblocks.hiring.description", "Aktiviere einen Shop-NPC für deinen Shop");
         add("advancements.marketblocks.hiring.title", "Wir stellen ein");
         add("advancements.marketblocks.joint_venture.description", "Füge einen Mitbesitzer hinzu");
         add("advancements.marketblocks.joint_venture.title", "Joint Venture");
-        add("advancements.marketblocks.marketplace_buy.description", "Kaufe ein Item von einem Marktplatz");
+        add("advancements.marketblocks.marketplace_buy.description", "Kaufe ein Item über den Marktplatz");
         add("advancements.marketblocks.marketplace_buy.title", "Einkaufsbummel");
-        add("advancements.marketblocks.out_of_stock.description", "Dein Shop hat keine Waren mehr");
+        add("advancements.marketblocks.out_of_stock.description", "Ein Nicht-Admin-Shop hat keine Waren mehr");
         add("advancements.marketblocks.out_of_stock.title", "Ausverkauft");
-        add("advancements.marketblocks.redstone.description", "Verbinde Redstone mit deinem Shop");
+        add("advancements.marketblocks.redstone.description", "Aktiviere Redstone-Ausgabe oder redstonegesteuerte I/O");
         add("advancements.marketblocks.redstone.title", "Redstone-Logik");
-        add("advancements.marketblocks.root.description", "Werde der ultimative Händler");
+        add("advancements.marketblocks.root.description", "Erhalte einen MarketBlocks-Shopblock");
         add("advancements.marketblocks.root.title", "MarketBlocks");
-        add("advancements.marketblocks.showcase.description", "Aktiviere den Schaufenster-Modus");
+        add("advancements.marketblocks.showcase.description", "Füge einem Verkaufsstand eine Glasvitrine hinzu");
         add("advancements.marketblocks.showcase.title", "Schaufenster");
-        add("advancements.marketblocks.sold_item.description", "Verkaufe dein erstes Item an einen Spieler");
+        add("advancements.marketblocks.sold_item.description", "Verkaufe dein erstes Item an einen anderen Spieler");
         add("advancements.marketblocks.sold_item.title", "Erster Verkauf!");
-        add("advancements.marketblocks.tycoon.description", "Verdiene riesige Profite");
+        add("advancements.marketblocks.tycoon.description", "Verkaufe 100 Items über deine Shops");
         add("advancements.marketblocks.tycoon.title", "Tycoon");
-        add("advancements.marketblocks.wall_street.description", "Eröffne einen Marktplatz");
+        add("advancements.marketblocks.wall_street.description", "Öffne den Marktplatz");
         add("advancements.marketblocks.wall_street.title", "Wall Street");
-        add("advancements.marketblocks.wholesaler.description", "Führe eine große Transaktion durch");
+        add("advancements.marketblocks.wholesaler.description", "Kaufe 64 oder mehr Items in einer Transaktion");
         add("advancements.marketblocks.wholesaler.title", "Großhändler");
 
         // === Subtitles ===
-        add("subtitles.marketblocks.visual_npc_fall", "Villager landet");
+        add("subtitles.marketblocks.visual_npc_fall", "Dorfbewohner landet");
 
         // === Block Registrations ===
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Marktkiste");

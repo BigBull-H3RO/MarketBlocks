@@ -10,8 +10,9 @@ The advancement tree starts with a **root** advancement and branches into **4 pa
 Root (Obtain a Trade Stand or Market Crate)
 └── First Shop (Place your first shop)
     ├── Branch 1: Trade & Sales
-    │   └── Sold Item → Out of Stock → Tycoon (hidden)
+    │   └── Sold Item → Out of Stock
     │                  → Wholesaler
+    │                  → Tycoon (hidden)
     ├── Branch 2: Shop Design
     │   └── Showcase → Hiring → Custom NPC
     ├── Branch 3: Network & Cooperation
@@ -38,7 +39,7 @@ Root (Obtain a Trade Stand or Market Crate)
 | --- | --- | --- | --- |
 | **Sold Item** | Emerald | Make your first successful sale to another player | Task |
 | **Out of Stock** | Barrier | Your shop runs out of stock (input inventory empty) | Goal |
-| **Wholesaler** | Chest Minecart | A customer uses shift-click to buy in bulk | Challenge |
+| **Wholesaler** | Chest Minecart | Buy 64 or more items in one transaction | Challenge |
 | **Tycoon** | Golden Apple | Sell 100 items total across all your shops (hidden — only appears after unlocking) | Challenge |
 
 > The sell count is tracked globally per player using persistent saved data. It accumulates across all shops and play sessions.
@@ -51,7 +52,7 @@ Root (Obtain a Trade Stand or Market Crate)
 | --- | --- | --- | --- |
 | **Showcase** | Glass | Use Glass on a Trade Stand (activating the showcase feature) | Task |
 | **Hiring** | Villager Spawn Egg | Enable a Visual NPC on your shop | Task |
-| **Custom NPC** | Name Tag | Customize your NPC (set a name or change the profession) | Task |
+| **Custom NPC** | Name Tag | Customize your NPC with a name or player skin | Task |
 
 ---
 
@@ -69,7 +70,7 @@ Root (Obtain a Trade Stand or Market Crate)
 
 | Advancement | Icon | Trigger | Type |
 | --- | --- | --- | --- |
-| **Redstone** | Redstone Dust | Enable redstone emission on a shop (Settings → General → Emit Redstone) | Task |
+| **Redstone** | Redstone Dust | Enable redstone emission or redstone-controlled I/O on a shop | Task |
 | **Auto I/O** | Hopper | Enable the Auto I/O feature for a shop | Task |
 | **Admin Shop** | Command Block | Enable Admin Shop Mode on a shop (hidden — requires global admin mode to be active) | Challenge |
 
