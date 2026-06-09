@@ -37,7 +37,7 @@ public record OfferItemSettings(
     private static final float MAX_CHAOS_ROTATION = 1.0f;
 
     private static final float DEFAULT_SCALE = 0.75f;
-    private static final float DEFAULT_SPEED = 2.0f;
+    private static final float DEFAULT_SPEED = 0.75f;
     private static final float DEFAULT_HEIGHT = 0.0f;
     private static final int DEFAULT_COUNT = 1;
     private static final float DEFAULT_ROTATION = 0.0f;

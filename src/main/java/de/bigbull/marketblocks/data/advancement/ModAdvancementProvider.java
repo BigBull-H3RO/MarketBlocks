@@ -99,7 +99,7 @@ public class ModAdvancementProvider implements AdvancementSubProvider {
                                 .addCriterion("sold_item", ShopSellTrigger.TriggerInstance.soldItem())
                                 .save(saver, "marketblocks:marketblocks/sold_item");
 
-                AdvancementHolder outOfStockAdvancement = Advancement.Builder.advancement()
+                Advancement.Builder.advancement()
                                 .parent(soldItemAdvancement)
                                 .display(
                                                 Items.BARRIER,

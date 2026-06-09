@@ -103,15 +103,15 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                     float heightOffset = offerSettings.heightOffset();
                     float bobbingOffset = 0.0f;
                     if (offerSettings.bobbing()) {
-                        float bobTime = (blockEntity.getLevel().getGameTime() + partialTick) * 0.05f;
-                        bobbingOffset = Mth.sin(bobTime) * 0.1f;
+                        float bobTime = (blockEntity.getLevel().getGameTime() + partialTick) * 0.08f;
+                        bobbingOffset = Mth.sin(bobTime) * 0.085f;
                     }
 
                     poseStack.translate(offerItem.x(), offerItem.y() + heightOffset + bobbingOffset, offerItem.z());
 
                     float speed = offerSettings.speed();
                     if (speed > 0) {
-                        float time = (blockEntity.getLevel().getGameTime() + partialTick) * speed;
+                        float time = (blockEntity.getLevel().getGameTime() + partialTick) * (speed * 5.0f);
                         poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
                     }
 

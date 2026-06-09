@@ -6,7 +6,7 @@ MarketBlocks features a comprehensive advancement system that guides players thr
 
 The advancement tree starts with a **root** advancement and branches into **4 paths**, each focusing on a different aspect of the mod.
 
-```
+```text
 Root (Obtain a Trade Stand or Market Crate)
 └── First Shop (Place your first shop)
     ├── Branch 1: Trade & Sales

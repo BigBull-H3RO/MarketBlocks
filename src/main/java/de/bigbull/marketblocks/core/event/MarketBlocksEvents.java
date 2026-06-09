@@ -222,7 +222,9 @@ public final class MarketBlocksEvents {
                                 .then(Commands.literal("unlink")
                                         .requires(source -> source.hasPermission(2))
                                         .executes(MarketBlocksEvents::executeMarketplaceUnlink)
-                                        .executes(MarketBlocksEvents::executeMarketplaceUnlinkByName))));
+                                        .then(Commands.argument("name", StringArgumentType.string())
+                                                .suggests(LINK_SUGGESTIONS)
+                                                .executes(MarketBlocksEvents::executeMarketplaceUnlinkByName)))));
 
         event.getDispatcher().register(
                 Commands.literal("mb_internal_waypoint")

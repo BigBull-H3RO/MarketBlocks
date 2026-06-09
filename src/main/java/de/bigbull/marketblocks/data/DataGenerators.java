@@ -20,6 +20,7 @@ import java.util.List;
  * Registers all providers for assets (lang, blockstates) and data (tags, recipes, loot tables, advancements).
  */
 public class DataGenerators {
+    @SuppressWarnings("deprecation")
     public static void gatherData(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
