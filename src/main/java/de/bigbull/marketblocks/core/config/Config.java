@@ -7,8 +7,10 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
  * Central configuration registry for the MarketBlocks mod.
- * Defines and stores all configuration options available to server admins and players,
- * categorized into logical sections like Shop Core, Shop Logic, Marketplace, and Visuals.
+ * Defines and stores all configuration options available to server admins and
+ * players,
+ * categorized into logical sections like Shop Core, Shop Logic, Marketplace,
+ * and Visuals.
  */
 public class Config {
         public static final ModConfigSpec.Builder COMMON_BUILDER = new ModConfigSpec.Builder();
@@ -132,6 +134,7 @@ public class Config {
                                 .defineInRange("notificationCooldownTicks", 1200, 0, Integer.MAX_VALUE);
                 COMMON_BUILDER.pop();
 
+                // ---MarketPlace---
                 COMMON_BUILDER.push("Marketplace");
                 MARKETPLACE_GLOBAL_DAILY_LIMIT = COMMON_BUILDER
                                 .comment("If true, Marketplace daily limits are shared globally. If false, they apply per player.")
@@ -145,6 +148,7 @@ public class Config {
                                 .defineInRange("maxCoOwnersPerShop", 10, 0, 100);
                 COMMON_BUILDER.pop();
 
+                // ---SingleOfferShops---
                 COMMON_BUILDER.push("SingleOfferShop - Tab Visibility");
                 SHOP_TAB_GENERAL_ENABLED = COMMON_BUILDER.define("shopTabGeneralEnabled", true);
                 SHOP_TAB_IO_ENABLED = COMMON_BUILDER.define("shopTabIoEnabled", true);
@@ -154,33 +158,33 @@ public class Config {
                 SHOP_TAB_ACCESS_ENABLED = COMMON_BUILDER.define("shopTabAccessEnabled", true);
                 COMMON_BUILDER.pop();
 
+                // ---TradeStand---
                 COMMON_BUILDER.push("TradeStand - Default Values");
                 COMMON_BUILDER.comment(
                                 "These values are used as starting values for new TradeStands. If a tab is disabled above, these serve as fixed forced values.");
                 COMMON_BUILDER.push("General Defaults");
                 TRADESTAND_DEFAULT_EMIT_REDSTONE = COMMON_BUILDER.define("tradestandDefaultEmitRedstone", false);
-                TRADESTAND_DEFAULT_PURCHASE_XP_SOUND = COMMON_BUILDER.define("tradestandDefaultPurchaseXpSound", true);
+                TRADESTAND_DEFAULT_PURCHASE_XP_SOUND = COMMON_BUILDER.define("tradestandDefaultPurchaseXpSound", false);
                 TRADESTAND_DEFAULT_IS_CLOSED = COMMON_BUILDER.define("tradestandDefaultIsClosed", false);
                 COMMON_BUILDER.pop();
                 COMMON_BUILDER.push("Villager Defaults");
                 TRADESTAND_DEFAULT_VILLAGER_NPC_ENABLED = COMMON_BUILDER.define("tradestandDefaultVillagerNpcEnabled",
                                 false);
-                TRADESTAND_DEFAULT_VILLAGER_PROFESSION = COMMON_BUILDER.defineEnum(
-                                "tradestandDefaultVillagerProfession",
-                                VillagerVisualProfession.NONE);
+                TRADESTAND_DEFAULT_VILLAGER_PROFESSION = COMMON_BUILDER
+                                .defineEnum("tradestandDefaultVillagerProfession", VillagerVisualProfession.NONE);
                 TRADESTAND_DEFAULT_PURCHASE_PARTICLES = COMMON_BUILDER.define("tradestandDefaultPurchaseParticles",
-                                true);
-                TRADESTAND_DEFAULT_PURCHASE_SOUNDS = COMMON_BUILDER.define("tradestandDefaultPurchaseSounds", true);
+                                false);
+                TRADESTAND_DEFAULT_PURCHASE_SOUNDS = COMMON_BUILDER.define("tradestandDefaultPurchaseSounds", false);
                 TRADESTAND_DEFAULT_PAYMENT_SLOT_SOUNDS = COMMON_BUILDER.define("tradestandDefaultPaymentSlotSounds",
-                                true);
+                                false);
                 TRADESTAND_DEFAULT_USE_PLAYER_SKIN = COMMON_BUILDER.define("tradestandDefaultUsePlayerSkin", false);
                 COMMON_BUILDER.pop();
                 COMMON_BUILDER.push("Visuals Defaults");
                 TRADESTAND_DEFAULT_ITEM_VISIBLE = COMMON_BUILDER.define("tradestandDefaultItemVisible", true);
                 TRADESTAND_DEFAULT_ITEM_FULLBRIGHT = COMMON_BUILDER.define("tradestandDefaultItemFullbright", false);
-                TRADESTAND_DEFAULT_ITEM_SCALE = COMMON_BUILDER.defineInRange("tradestandDefaultItemScale", 0.75, 0.5,
+                TRADESTAND_DEFAULT_ITEM_SCALE = COMMON_BUILDER.defineInRange("tradestandDefaultItemScale", 1.0, 0.5,
                                 1.5);
-                TRADESTAND_DEFAULT_ITEM_SPEED = COMMON_BUILDER.defineInRange("tradestandDefaultItemSpeed", 1.0, 0.0,
+                TRADESTAND_DEFAULT_ITEM_SPEED = COMMON_BUILDER.defineInRange("tradestandDefaultItemSpeed", 0.75, 0.0,
                                 1.5);
                 TRADESTAND_DEFAULT_ITEM_HEIGHT_OFFSET = COMMON_BUILDER
                                 .defineInRange("tradestandDefaultItemHeightOffset", 0.0, -0.25, 0.25);
@@ -202,26 +206,26 @@ public class Config {
                 COMMON_BUILDER.pop();
                 COMMON_BUILDER.pop();
 
+                // ---MarketCrate---
                 COMMON_BUILDER.push("MarketCrate - Default Values");
                 COMMON_BUILDER.comment(
                                 "These values are used as starting values for new MarketCrates. If a tab is disabled above, these serve as fixed forced values.");
                 COMMON_BUILDER.push("General Defaults");
                 MARKETCRATE_DEFAULT_EMIT_REDSTONE = COMMON_BUILDER.define("marketcrateDefaultEmitRedstone", false);
                 MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND = COMMON_BUILDER.define("marketcrateDefaultPurchaseXpSound",
-                                true);
+                                false);
                 MARKETCRATE_DEFAULT_IS_CLOSED = COMMON_BUILDER.define("marketcrateDefaultIsClosed", false);
                 COMMON_BUILDER.pop();
                 COMMON_BUILDER.push("Villager Defaults");
                 MARKETCRATE_DEFAULT_VILLAGER_NPC_ENABLED = COMMON_BUILDER.define("marketcrateDefaultVillagerNpcEnabled",
                                 false);
-                MARKETCRATE_DEFAULT_VILLAGER_PROFESSION = COMMON_BUILDER.defineEnum(
-                                "marketcrateDefaultVillagerProfession",
-                                VillagerVisualProfession.NONE);
+                MARKETCRATE_DEFAULT_VILLAGER_PROFESSION = COMMON_BUILDER
+                                .defineEnum("marketcrateDefaultVillagerProfession", VillagerVisualProfession.NONE);
                 MARKETCRATE_DEFAULT_PURCHASE_PARTICLES = COMMON_BUILDER.define("marketcrateDefaultPurchaseParticles",
-                                true);
-                MARKETCRATE_DEFAULT_PURCHASE_SOUNDS = COMMON_BUILDER.define("marketcrateDefaultPurchaseSounds", true);
+                                false);
+                MARKETCRATE_DEFAULT_PURCHASE_SOUNDS = COMMON_BUILDER.define("marketcrateDefaultPurchaseSounds", false);
                 MARKETCRATE_DEFAULT_PAYMENT_SLOT_SOUNDS = COMMON_BUILDER.define("marketcrateDefaultPaymentSlotSounds",
-                                true);
+                                false);
                 MARKETCRATE_DEFAULT_USE_PLAYER_SKIN = COMMON_BUILDER.define("marketcrateDefaultUsePlayerSkin", false);
                 COMMON_BUILDER.pop();
                 COMMON_BUILDER.push("Visuals Defaults");
@@ -278,6 +282,7 @@ public class Config {
                                 .define("enableMixinDesyncLogging", false);
                 COMMON_BUILDER.pop();
 
+                // ---Integrations---
                 COMMON_BUILDER.push("Integrations");
                 ENABLE_XAEROS_COMPAT = COMMON_BUILDER
                                 .comment("Enable Xaero's Minimap chat waypoint suggestions.")

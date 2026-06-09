@@ -337,12 +337,12 @@ public final class SingleOfferSettingsSections {
 
         switch (visualType) {
             case TRADE_STAND -> {
-                host.addSettingsWidget(new FloatSlider(leftX, y, 80, 16,
+                host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16,
                         Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 1.5f, draft.scale(), value -> {
                             draft.setScale(value);
                             onDirty.run();
                         }));
-                host.addSettingsWidget(new FloatSlider(leftX + 85, y, 80, 16,
+                host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16,
                         Component.translatable("gui.marketblocks.visuals.speed"), 0.0f, 1.5f, draft.speed(), value -> {
                             draft.setSpeed(value);
                             onDirty.run();
@@ -350,7 +350,7 @@ public final class SingleOfferSettingsSections {
                 y += 20;
 
                 host.addSettingsWidget(
-                        new FloatSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.height"),
+                        new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.height"),
                                 -0.25f, 0.25f, draft.heightOffset(), value -> {
                                     draft.setHeightOffset(value);
                                     onDirty.run();
@@ -358,7 +358,7 @@ public final class SingleOfferSettingsSections {
                 host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.bobbing"),
                         host.settingsFont())
-                        .pos(leftX + 85, y)
+                        .pos(leftX + 82, y)
                         .selected(draft.bobbing())
                         .onValueChange((checkbox, value) -> {
                             draft.setBobbing(value);
@@ -368,7 +368,7 @@ public final class SingleOfferSettingsSections {
             }
             case MARKET_CRATE -> {
                 host.addSettingsWidget(
-                        new IntSlider(leftX, y, 80, 16, Component.translatable("gui.marketblocks.visuals.count"), 1,
+                        new IntSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.count"), 1,
                                 OfferItemSettings.MAX_COUNT, draft.count(), value -> {
                                     draft.setCount(value);
                                     onDirty.run();

@@ -31,35 +31,37 @@ public class ModDeLangProvider extends LanguageProvider {
         add("key.marketblocks.open_marketplace", "Marktplatz öffnen");
 
         // === Commands ===
-        add("command.marketblocks.break.denied", "Du kannst diesen Block nicht abbauen, solange er mit einem Marktplatz verlinkt ist!");
-        add("command.marketblocks.break.unlinked", "Der Block wurde vom Marktplatz entlinkt.");
-        add("command.marketblocks.link.already_linked", "Dieser Verkaufsstand ist bereits mit dem Marktplatz verlinkt.");
-        add("command.marketblocks.link.not_looking_at_block", "Du musst einen Verkaufsstand ansehen, um ihn zu verlinken.");
-        add("command.marketblocks.link.success", "Verkaufsstand erfolgreich mit Marktplatz verlinkt!");
+        // === Commands ===
+        add("command.marketblocks.break.denied",
+                "§cDu kannst diesen Block nicht abbauen, solange er mit einem Marktplatz verlinkt ist!");
+        add("command.marketblocks.break.unlinked", "§eDer Block wurde vom Marktplatz entlinkt.");
+        add("command.marketblocks.link.already_linked", "§cDieser Block ist bereits mit einem Marktplatz verlinkt.");
+        add("command.marketblocks.link.not_looking_at_block", "§cDu musst einen Block ansehen, um ihn zu verlinken.");
+        add("command.marketblocks.link.success", "§aBlock erfolgreich mit Marktplatz verlinkt!");
         add("command.marketblocks.list.click_to_delete", "Klicken zum Löschen");
         add("command.marketblocks.list.click_to_teleport", "Klicken zum Teleportieren");
         add("command.marketblocks.list.click_to_waypoint", "Klicken für Wegpunkt-Links im Chat");
         add("command.marketblocks.list.delete", "[Löschen]");
         add("command.marketblocks.list.tp", "[Teleport]");
         add("command.marketblocks.list.waypoint", "[Wegpunkt]");
-        add("command.marketblocks.marketplacelist.entry", "- Marktplatz %s");
-        add("command.marketblocks.marketplacelist.header", "--- Marktplatz-Liste ---");
-        add("command.marketblocks.marketplacelist.no_links", "Keine Marktplätze gefunden.");
-        add("command.marketblocks.player_not_found", "Spieler nicht gefunden");
-        add("command.marketblocks.reload.success", "MarketBlocks-Konfiguration erfolgreich neu geladen!");
-        add("command.marketblocks.resetlimits.no_changes", "Es wurden keine Tageslimits zurückgesetzt.");
-        add("command.marketblocks.resetlimits.success", "Tageslimits erfolgreich zurückgesetzt.");
+        add("command.marketblocks.marketplacelist.entry", "§8▪ §6Marktplatz §e%s");
+        add("command.marketblocks.marketplacelist.header", "§8======== §6§lMarktplatz-Liste §8========");
+        add("command.marketblocks.marketplacelist.no_links", "§cKeine Marktplätze gefunden.");
+        add("command.marketblocks.player_not_found", "§cSpieler nicht gefunden");
+        add("command.marketblocks.reload.success", "§aMarketBlocks-Konfiguration erfolgreich neu geladen!");
+        add("command.marketblocks.resetlimits.no_changes", "§eEs wurden keine Tageslimits zurückgesetzt.");
+        add("command.marketblocks.resetlimits.success", "§aTageslimits erfolgreich zurückgesetzt.");
         add("command.marketblocks.shoplist.closed", "GESCHLOSSEN");
-        add("command.marketblocks.shoplist.entry", "- [%s] %s (von %s)");
-        add("command.marketblocks.shoplist.header", "--- Shop-Liste ---");
-        add("command.marketblocks.shoplist.no_shops", "Keine Shops auf diesem Marktplatz verfügbar.");
+        add("command.marketblocks.shoplist.entry", "§8▪ §7[%s§7] §e%s §8(von §7%s§8)");
+        add("command.marketblocks.shoplist.header", "§8======== §6§lShop-Liste §8========");
+        add("command.marketblocks.shoplist.no_shops", "§cKeine Shops auf diesem Marktplatz verfügbar.");
         add("command.marketblocks.shoplist.open", "OFFEN");
-        add("command.marketblocks.unlink.not_found", "Konnte die Marktplatz-Verlinkung nicht finden.");
-        add("command.marketblocks.unlink.not_linked", "Dieser Verkaufsstand ist nicht verlinkt.");
-        add("command.marketblocks.unlink.not_looking_at_block", "Du musst einen Verkaufsstand ansehen, um ihn zu entlinken.");
-        add("command.marketblocks.unlink.success", "Verkaufsstand erfolgreich entlinkt!");
-        add("command.marketblocks.unlink.success_name", "Vom Marktplatz entlinkt: %s");
-        add("command.marketblocks.waypoint.created", "Wegpunkt-Links erfolgreich erstellt:");
+        add("command.marketblocks.unlink.not_found", "§cKonnte die Marktplatz-Verlinkung nicht finden.");
+        add("command.marketblocks.unlink.not_linked", "§cDieser Block ist nicht verlinkt.");
+        add("command.marketblocks.unlink.not_looking_at_block", "§cDu musst einen Block ansehen, um ihn zu entlinken.");
+        add("command.marketblocks.unlink.success", "§aBlock erfolgreich entlinkt!");
+        add("command.marketblocks.unlink.success_name", "§aVom Marktplatz entlinkt: §e%s");
+        add("command.marketblocks.waypoint.created", "§aWegpunkt-Links erfolgreich erstellt:");
 
         // === GUI - Settings ===
         add("gui.marketblocks.access.edit_access_list", "Zugriffsliste");
@@ -102,7 +104,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.offer_item_fullbright", "Leuchten");
         add("gui.marketblocks.visuals.offer_item_fullbright.tooltip", "Lässt das Item im Dunkeln leuchten.");
         add("gui.marketblocks.visuals.offer_item_visible", "Angebot sichtbar");
-        add("gui.marketblocks.visuals.offer_item_visible.tooltip", "Zeigt oder versteckt das schwebende/dargestellte Angebot.");
+        add("gui.marketblocks.visuals.offer_item_visible.tooltip",
+                "Zeigt oder versteckt das schwebende/dargestellte Angebot.");
         add("gui.marketblocks.visuals.payment_sounds", "Bezahl-Sounds");
         add("gui.marketblocks.visuals.player_skin_name", "Spielername");
         add("gui.marketblocks.visuals.profession", "Beruf");
@@ -128,24 +131,27 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.rotation_y", "Rotation Y");
         add("gui.marketblocks.visuals.rotation_z", "Rotation Z");
         add("gui.marketblocks.visuals.scale", "Größe");
-        add("gui.marketblocks.visuals.spacing", "Item-Abstand");
         add("gui.marketblocks.visuals.spacing_xz", "Abstand X/Z");
         add("gui.marketblocks.visuals.spacing_y", "Abstand Y");
-        add("gui.marketblocks.visuals.speed", "Rotationsgeschw.");
+        add("gui.marketblocks.visuals.speed", "Geschw.");
         add("gui.marketblocks.visuals.use_player_skin", "Spieler-Skin");
         add("gui.marketblocks.visuals.use_player_skin.tooltip", "Einen Spieler anstelle eines Dorfbewohners anzeigen.");
 
         // === GUI - Notifications ===
         add("gui.marketblocks.notifications.co_owners", "Mitbesitzer benachrichtigen");
-        add("gui.marketblocks.notifications.co_owners.tooltip", "Sende Benachrichtigungen auch an zusätzliche Shop-Besitzer.");
+        add("gui.marketblocks.notifications.co_owners.tooltip",
+                "Sende Benachrichtigungen auch an zusätzliche Shop-Besitzer.");
         add("gui.marketblocks.notifications.login.out_of_stock", "§cWarnung: %s deiner Shops sind leer!§r");
-        add("gui.marketblocks.notifications.login.output_full", "§cWarnung: Bei %s deiner Shops ist das Ausgabe-Inventar voll!§r");
+        add("gui.marketblocks.notifications.login.output_full",
+                "§cWarnung: Bei %s deiner Shops ist das Ausgabe-Inventar voll!§r");
         add("gui.marketblocks.notifications.out_of_stock", "Leer-Warnung");
         add("gui.marketblocks.notifications.out_of_stock.tooltip", "Werde gewarnt, wenn der Shop leer ist.");
         add("gui.marketblocks.notifications.output_full", "Ausgabe Voll-Warnung");
-        add("gui.marketblocks.notifications.output_full.tooltip", "Werde gewarnt, wenn das Ausgabe-Inventar des Shops voll ist.");
+        add("gui.marketblocks.notifications.output_full.tooltip",
+                "Werde gewarnt, wenn das Ausgabe-Inventar des Shops voll ist.");
         add("gui.marketblocks.notifications.purchase", "Kaufbenachrichtigung");
-        add("gui.marketblocks.notifications.purchase.tooltip", "Werde im Chat benachrichtigt, wenn jemand aus deinem Shop kauft.");
+        add("gui.marketblocks.notifications.purchase.tooltip",
+                "Werde im Chat benachrichtigt, wenn jemand aus deinem Shop kauft.");
         add("message.marketblocks.notifications.out_of_stock", "§cDein Shop ist leer!§r");
         add("message.marketblocks.notifications.output_full", "§cDas Ausgabe-Inventar deines Shops ist voll!§r");
         add("message.marketblocks.notifications.purchase", "§a%s kaufte %sx %s aus deinem Shop.§r");
@@ -243,20 +249,28 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.side.right", "Rechts");
 
         // === Messages & Chat ===
-        add("message.marketblocks.marketplace.daily_limit_reached", "Das Tageslimit für dieses Angebot wurde erreicht.");
+        add("message.marketblocks.marketplace.daily_limit_reached",
+                "Das Tageslimit für dieses Angebot wurde erreicht.");
         add("message.marketblocks.marketplace.edit_mode_disabled", "Marktplatz-Bearbeitungsmodus deaktiviert.");
         add("message.marketblocks.marketplace.edit_mode_enabled", "Marktplatz-Bearbeitungsmodus aktiviert.");
-        add("message.marketblocks.marketplace.limits.invalid_data", "Limits konnten nicht gespeichert werden: ungültige Daten.");
-        add("message.marketblocks.marketplace.limits.invalid_positive_int", "Bitte nur positive ganze Zahlen für Limits eingeben.");
-        add("message.marketblocks.marketplace.limits.no_connection", "Limits konnten nicht gespeichert werden: keine Serververbindung.");
+        add("message.marketblocks.marketplace.limits.invalid_data",
+                "Limits konnten nicht gespeichert werden: ungültige Daten.");
+        add("message.marketblocks.marketplace.limits.invalid_positive_int",
+                "Bitte nur positive ganze Zahlen für Limits eingeben.");
+        add("message.marketblocks.marketplace.limits.no_connection",
+                "Limits konnten nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.marketplace.page_name_blank", "Der Seitenname darf nicht leer sein.");
         add("message.marketblocks.marketplace.page_name_duplicate", "Eine Seite mit dem Namen '%s' existiert bereits.");
         add("message.marketblocks.marketplace.page_name_too_long", "Der Seitenname darf maximal %s Zeichen lang sein.");
         add("message.marketblocks.marketplace.page_not_found", "Die gewählte Shop-Seite wurde nicht gefunden.");
-        add("message.marketblocks.marketplace.pricing.invalid_data", "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
-        add("message.marketblocks.marketplace.pricing.invalid_finite", "Bitte gültige endliche Zahlen für die Preisdynamik eingeben.");
-        add("message.marketblocks.marketplace.pricing.invalid_number_format", "Bitte verwende nur Zahlen (Punkt oder Komma erlaubt).");
-        add("message.marketblocks.marketplace.pricing.no_connection", "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.");
+        add("message.marketblocks.marketplace.pricing.invalid_data",
+                "Preisdynamik konnte nicht gespeichert werden: ungültige Daten.");
+        add("message.marketblocks.marketplace.pricing.invalid_finite",
+                "Bitte gültige endliche Zahlen für die Preisdynamik eingeben.");
+        add("message.marketblocks.marketplace.pricing.invalid_number_format",
+                "Bitte verwende nur Zahlen (Punkt oder Komma erlaubt).");
+        add("message.marketblocks.marketplace.pricing.no_connection",
+                "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.trade_stand.no_offer", "Dieser Handelsstand hat aktuell kein aktives Angebot.");
         add("message.marketblocks.trade_stand.not_owner", "Nur der Besitzer kann diesen Handelsstand abbauen.");
 

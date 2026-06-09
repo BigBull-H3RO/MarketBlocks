@@ -83,7 +83,7 @@ public final class RegistriesInit {
                         () -> new TradeStandBlock(tradeStandProperties()));
 
         public static final DeferredBlock<Block> TRADE_STAND_BLOCK_TOP = registerInternalBlock("trade_stand_top",
-                        () -> new TradeStandTopBlock(tradeStandProperties()));
+                        () -> new TradeStandTopBlock(tradeStandProperties().sound(SoundType.GLASS)));
 
         public static final DeferredBlock<Block> MARKETCRATE_BLOCK = registerBlock("marketcrate",
                         () -> new MarketCrateBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
