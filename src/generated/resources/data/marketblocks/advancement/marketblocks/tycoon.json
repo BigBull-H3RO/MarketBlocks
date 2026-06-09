@@ -1,5 +1,5 @@
 {
-  "parent": "marketblocks:marketblocks/out_of_stock",
+  "parent": "marketblocks:marketblocks/sold_item",
   "criteria": {
     "sold_many": {
       "conditions": {

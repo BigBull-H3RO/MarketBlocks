@@ -78,6 +78,8 @@ public class ModEnLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings_owner_only", "Only the owner can change settings");
         add("gui.marketblocks.settings_tab", "Show Settings");
         add("gui.marketblocks.settings_title", "Shop Settings");
+        add("gui.marketblocks.toggle.off", "OFF");
+        add("gui.marketblocks.toggle.on", "ON");
         add("gui.marketblocks.settings.category.access", "Access");
         add("gui.marketblocks.settings.category.general", "General");
         add("gui.marketblocks.settings.category.io", "I/O");
@@ -275,35 +277,35 @@ public class ModEnLangProvider extends LanguageProvider {
         add("marketblocks.jade.status.closed", "Shop Closed");
 
         // === Advancements ===
-        add("advancements.marketblocks.admin_shop.description", "Create an Admin Shop");
+        add("advancements.marketblocks.admin_shop.description", "Enable admin shop mode");
         add("advancements.marketblocks.admin_shop.title", "Infinite Goods");
-        add("advancements.marketblocks.auto_io.description", "Enable Auto I/O for your shop");
+        add("advancements.marketblocks.auto_io.description", "Enable automatic input/output for your shop");
         add("advancements.marketblocks.auto_io.title", "Logistics");
-        add("advancements.marketblocks.custom_npc.description", "Give your shop NPC a custom name");
+        add("advancements.marketblocks.custom_npc.description", "Customize your shop NPC with a name or player skin");
         add("advancements.marketblocks.custom_npc.title", "Custom Staff");
-        add("advancements.marketblocks.first_shop.description", "Place your first Trade Stand");
+        add("advancements.marketblocks.first_shop.description", "Place your first MarketBlocks shop block");
         add("advancements.marketblocks.first_shop.title", "Open for Business");
-        add("advancements.marketblocks.hiring.description", "Hire an NPC for your shop");
+        add("advancements.marketblocks.hiring.description", "Enable a shop NPC for your shop");
         add("advancements.marketblocks.hiring.title", "Now Hiring");
         add("advancements.marketblocks.joint_venture.description", "Add a co-owner to your shop");
         add("advancements.marketblocks.joint_venture.title", "Joint Venture");
-        add("advancements.marketblocks.marketplace_buy.description", "Buy an item from a Marketplace");
+        add("advancements.marketblocks.marketplace_buy.description", "Buy an item through the Marketplace");
         add("advancements.marketblocks.marketplace_buy.title", "Mall Shopper");
-        add("advancements.marketblocks.out_of_stock.description", "Have your shop run out of stock");
+        add("advancements.marketblocks.out_of_stock.description", "Have a non-admin shop run out of stock");
         add("advancements.marketblocks.out_of_stock.title", "Out of Stock");
-        add("advancements.marketblocks.redstone.description", "Connect redstone to your shop");
+        add("advancements.marketblocks.redstone.description", "Enable redstone output or redstone-controlled I/O");
         add("advancements.marketblocks.redstone.title", "Redstone Logic");
-        add("advancements.marketblocks.root.description", "Become the ultimate merchant");
+        add("advancements.marketblocks.root.description", "Obtain a MarketBlocks shop block");
         add("advancements.marketblocks.root.title", "MarketBlocks");
-        add("advancements.marketblocks.showcase.description", "Toggle the showcase mode");
+        add("advancements.marketblocks.showcase.description", "Add a glass showcase to a Trade Stand");
         add("advancements.marketblocks.showcase.title", "Show off");
-        add("advancements.marketblocks.sold_item.description", "Have a player buy an item from your shop");
+        add("advancements.marketblocks.sold_item.description", "Sell your first item to another player");
         add("advancements.marketblocks.sold_item.title", "First Sale!");
-        add("advancements.marketblocks.tycoon.description", "Earn a huge amount of profits");
+        add("advancements.marketblocks.tycoon.description", "Sell 100 items through your shops");
         add("advancements.marketblocks.tycoon.title", "Tycoon");
-        add("advancements.marketblocks.wall_street.description", "Open a Marketplace");
+        add("advancements.marketblocks.wall_street.description", "Open the Marketplace");
         add("advancements.marketblocks.wall_street.title", "Wall Street");
-        add("advancements.marketblocks.wholesaler.description", "Perform a bulk transaction");
+        add("advancements.marketblocks.wholesaler.description", "Buy 64 or more items in one transaction");
         add("advancements.marketblocks.wholesaler.title", "Wholesaler");
 
         // === Subtitles ===
