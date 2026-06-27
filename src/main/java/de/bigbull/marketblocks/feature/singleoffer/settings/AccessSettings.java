@@ -67,6 +67,9 @@ public record AccessSettings(
                 String ownerName = ByteBufCodecs.STRING_UTF8.decode(buf);
 
                 int size = buf.readInt();
+                if (size < 0 || size > 100) {
+                    throw new IllegalArgumentException("Invalid additionalOwners size: " + size);
+                }
                 Map<UUID, String> additionalOwners = new HashMap<>();
                 for (int i = 0; i < size; i++) {
                     UUID id = UUIDUtil.STREAM_CODEC.decode(buf);
@@ -74,8 +77,17 @@ public record AccessSettings(
                     additionalOwners.put(id, name);
                 }
 
-                AccessMode accessMode = AccessMode.valueOf(ByteBufCodecs.STRING_UTF8.decode(buf));
+                String modeStr = ByteBufCodecs.STRING_UTF8.decode(buf);
+                AccessMode accessMode = AccessMode.EVERYONE;
+                try {
+                    accessMode = AccessMode.valueOf(modeStr);
+                } catch (IllegalArgumentException e) {
+                    // Fallback to default
+                }
                 int accessSize = buf.readInt();
+                if (accessSize < 0 || accessSize > 100) {
+                    throw new IllegalArgumentException("Invalid accessList size: " + accessSize);
+                }
                 Map<UUID, String> accessList = new HashMap<>();
                 for (int i = 0; i < accessSize; i++) {
                     UUID id = UUIDUtil.STREAM_CODEC.decode(buf);

@@ -25,7 +25,7 @@ We have built-in solutions to ensure your shops remain perfectly interactable wi
 
 ### FTB Chunks
 ✅ **Fully Supported Out of the Box!**
-MarketBlocks natively bundles the `ftbchunks:interact_whitelist` data tag for all shop block variants (`trade_stand`, `market_crate`, `marketplace`). Visitors can right-click your shops to buy items inside your claimed chunks, but they cannot break the blocks or access your internal storage.
+MarketBlocks natively bundles the `ftbchunks:interact_whitelist` data tag for all shop block variants (`trade_stand`, `marketcrate`). Visitors can right-click your shops to buy items inside your claimed chunks, but they cannot break the blocks or access your internal storage.
 
 ### Open Parties and Claims (OpenPac)
 ⚠️ **Requires Server Config Adjustment.**
@@ -39,8 +39,7 @@ OpenPac does not utilize data tags for whitelisting block interactions. Instead,
 forcedBlockProtectionExceptionList = [
     "interact$marketblocks:trade_stand",
     "interact$marketblocks:trade_stand_top",
-    "interact$marketblocks:market_crate",
-    "interact$marketblocks:marketplace"
+    "interact$marketblocks:marketcrate"
 ]
 ```
 4. Save the file and restart the server. Players can now safely buy from shops in OpenPac claims!
@@ -50,7 +49,7 @@ forcedBlockProtectionExceptionList = [
 ## 🖥️ HUD & Info Mods
 
 ### Jade
-MarketBlocks features dedicated compatibility with **Jade** (and WTHIT/HWYLA derivatives). When looking at any SingleOfferShop or Marketplace block in the world, the Jade overlay displays rich, real-time information:
+MarketBlocks features dedicated compatibility with **Jade** (and WTHIT/HWYLA derivatives). When looking at any SingleOfferShop or linked block in the world, the Jade overlay displays rich, real-time information:
 
 - **Shop Status**: Clearly indicates whether the shop is currently **Open** or **Closed**.
 - **Active Offer**: Shows the exact payment item(s) required and the resulting item being sold directly on your HUD.

@@ -97,7 +97,7 @@ public record VillagerSettings(
     }
 
     public static String sanitizeNpcName(String raw) {
-        return NameValidator.sanitizeName(raw);
+        return NameValidator.sanitizeNpcName(raw);
     }
 
     public static String sanitizePlayerSkinName(String raw) {

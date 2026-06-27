@@ -91,7 +91,7 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
             if (Minecraft.getInstance().level != null && 
                 globalPos.dimension().equals(Minecraft.getInstance().level.dimension())) {
                 try {
-                    ResourceLocation iconLoc = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/journeymap/MarketPlace.png");
+                    ResourceLocation iconLoc = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/journeymap/marketplace.png");
                     MapImage icon = new MapImage(iconLoc, 16, 16).setDisplayWidth(16).setDisplayHeight(16).centerAnchors();
 
                     MarkerOverlay marker = new MarkerOverlay(MarketBlocks.MODID, globalPos.pos(), icon);

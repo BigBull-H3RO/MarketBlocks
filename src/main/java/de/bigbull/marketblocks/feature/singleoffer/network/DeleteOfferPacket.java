@@ -43,7 +43,10 @@ public record DeleteOfferPacket(BlockPos pos) implements CustomPacketPayload {
             }
             Level level = player.level();
 
-            if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity shopEntity) {
+            if (player.containerMenu instanceof SingleOfferShopMenu openMenu
+                    && openMenu.getBlockEntity() == level.getBlockEntity(packet.pos())
+                    && openMenu.stillValid(player)
+                    && openMenu.getBlockEntity() instanceof SingleOfferShopBlockEntity shopEntity) {
                 if (shopEntity.isOwner(player)) {
                     shopEntity.clearOffer();
 

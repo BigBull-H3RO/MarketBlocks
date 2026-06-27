@@ -75,7 +75,10 @@ public record UpdateSettingsPacket(
                 return;
             }
             Level level = player.level();
-            if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity blockEntity
+            if (player.containerMenu instanceof de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu menu
+                    && menu.getBlockEntity() == level.getBlockEntity(packet.pos())
+                    && menu.stillValid(player)
+                    && menu.getBlockEntity() instanceof SingleOfferShopBlockEntity blockEntity
                     && blockEntity.isOwner(player)) {
 
                 Direction facing = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
@@ -89,18 +92,40 @@ public record UpdateSettingsPacket(
                     }
                 }
 
-                AccessSettings access = packet.accessSettings();
-                int maxOwners = Config.MAX_CO_OWNERS_PER_SHOP.get();
-                if (access.additionalOwners().size() > maxOwners) {
-                    Map<UUID, String> truncated = new HashMap<>();
-                    int count = 0;
-                    for (var entry : access.additionalOwners().entrySet()) {
-                        if (count >= maxOwners)
-                            break;
-                        truncated.put(entry.getKey(), entry.getValue());
-                        count++;
+                AccessSettings incomingAccess = packet.accessSettings();
+                AccessSettings existingAccess = blockEntity.getSettingsManager().getAccessSettings();
+                boolean isPrimaryOwner = blockEntity.getAccessManager().isPrimaryOwner(player);
+                boolean isAdminMode = Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.get() && player.hasPermissions(2);
+
+                boolean newAdminShopEnabled = existingAccess.adminShopEnabled();
+                if (isAdminMode) {
+                    newAdminShopEnabled = incomingAccess.adminShopEnabled();
+                }
+
+                UUID newOwnerId = existingAccess.ownerId();
+                String newOwnerName = existingAccess.ownerName();
+
+                Map<UUID, String> newAdditionalOwners = existingAccess.additionalOwners();
+                de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode newAccessMode = existingAccess.accessMode();
+                Map<UUID, String> newAccessList = existingAccess.accessList();
+
+                if (isPrimaryOwner) {
+                    newAdditionalOwners = incomingAccess.additionalOwners();
+                    newAccessMode = incomingAccess.accessMode();
+                    newAccessList = incomingAccess.accessList();
+
+                    int maxOwners = Config.MAX_CO_OWNERS_PER_SHOP.get();
+                    if (newAdditionalOwners.size() > maxOwners) {
+                        Map<UUID, String> truncated = new HashMap<>();
+                        int count = 0;
+                        for (var entry : newAdditionalOwners.entrySet()) {
+                            if (count >= maxOwners)
+                                break;
+                            truncated.put(entry.getKey(), entry.getValue());
+                            count++;
+                        }
+                        newAdditionalOwners = truncated;
                     }
-                    access = access.withAdditionalOwners(truncated);
                 }
 
                 blockEntity.updateSettingsBatch(
@@ -108,14 +133,14 @@ public record UpdateSettingsPacket(
                         packet.generalSettings(),
                         villager,
                         packet.offerItemSettings(),
-                        access,
+                        new AccessSettings(newAdminShopEnabled, newOwnerId, newOwnerName, newAdditionalOwners, newAccessMode, newAccessList),
                         packet.notificationSettings());
 
                 if (villager.npcEnabled()) {
                     RegistriesInit.SHOP_NPC_TRIGGER.get().trigger(player);
                 }
 
-                if (!access.additionalOwners().isEmpty()) {
+                if (!newAdditionalOwners.isEmpty()) {
                     RegistriesInit.SHOP_CO_OWNER_TRIGGER.get().trigger(player);
                 }
 

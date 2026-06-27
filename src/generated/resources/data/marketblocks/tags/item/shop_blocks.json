@@ -1,5 +1,6 @@
 {
   "values": [
-    "marketblocks:marketcrate"
+    "marketblocks:marketcrate",
+    "marketblocks:trade_stand"
   ]
 }

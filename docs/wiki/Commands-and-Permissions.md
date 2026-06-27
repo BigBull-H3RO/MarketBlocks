@@ -11,8 +11,8 @@ All administrative commands require **operator level 2** (`hasPermission(2)`).
 | `/marketblocks admin editmode [true\|false]` | Enables or disables global admin/edit mode for shops and marketplace. |
 | `/marketblocks admin reload` | Reloads the Marketplace JSON configuration from disk. |
 | `/marketblocks admin resetlimits <player>` | Resets daily purchase limits for a specific player. |
-| `/marketblocks admin marketplace link <name>` | Links the looked-at Marketplace block to a specific marketplace page/name. |
-| `/marketblocks admin marketplace unlink` | Unlinks the looked-at Marketplace block. |
+| `/marketblocks admin marketplace link <name>` | Links any looked-at block in the world to a specific marketplace page/name. |
+| `/marketblocks admin marketplace unlink` | Unlinks the looked-at linked block. |
 | `/marketblocks admin sale shop set|remove` | Configures or removes a temporary sale/discount on a SingleOfferShop. |
 | `/marketblocks admin sale marketplace set|remove` | Configures or removes a temporary sale/discount on a Marketplace offer. |
 | `/marketblocks admin trader value set|remove` | Sets or removes custom currency values for trader entities. |
@@ -62,7 +62,7 @@ Owners and co-owners always bypass access restrictions. If the shop is **closed*
 
 ## Marketplace Permissions
 
-- **Opening**: Any player can open the Marketplace via the keybind (**O** by default), the `/marketblocks marketplace open` command, or by clicking a linked Marketplace Block.
+- **Opening**: Any player can open the Marketplace via the keybind (**O** by default), the `/marketblocks marketplace open` command, or by clicking any linked block in the world.
 - **Buying**: Any player can buy from available offers, subject to limits.
 - **Editing**: Requires operator level 2 **and** global admin mode to be enabled.
 

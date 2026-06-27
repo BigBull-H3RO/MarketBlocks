@@ -50,7 +50,10 @@ public record ToggleAdminShopModePacket(BlockPos pos, boolean enabled) implement
             }
 
             Level level = player.level();
-            if (!(level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity blockEntity)) {
+            if (!(player.containerMenu instanceof SingleOfferShopMenu openMenu
+                    && openMenu.getBlockEntity() == level.getBlockEntity(packet.pos())
+                    && openMenu.stillValid(player)
+                    && openMenu.getBlockEntity() instanceof SingleOfferShopBlockEntity blockEntity)) {
                 return;
             }
 

@@ -11,7 +11,7 @@ The **Marketplace** is the centrally managed, page-based trading hub of MarketBl
 
 ## Quick Overview
 
-- **Multiple Opening Methods**: Open instantly via keybind (**O** by default), command (`/marketblocks marketplace open`), or by right-clicking a linked **Marketplace Block**.
+- **Multiple Opening Methods**: Open instantly via keybind (**O** by default), command (`/marketblocks marketplace open`), or by right-clicking any linked block in the world.
 - **Page-Based Structure**: Clean UI organization with tabs for different categories (e.g., Minerals, Food, Enchantments, Rares).
 - **Live In-Game Editor**: Fully customize pages, offers, limits, and pricing directly in-game (requires OP + `/marketblocks admin editmode true`).
 - **Temporary Sales**: Set up timed discounts on offers to spark player activity.
@@ -25,4 +25,4 @@ Depending on your server type (anarchy, SMP, RPG, or minigame), you can choose h
 
 1. **Keybind (`O`)**: Best for fast-paced survival servers where players can trade on the go without returning to spawn.
 2. **Command (`/marketblocks marketplace open`)**: Excellent for servers using custom menu plugins or NPC command-dispatchers.
-3. **Linked Marketplace Blocks**: Ideal for immersive RPG or hub servers. Admins can place Marketplace Blocks at spawn and link them (`/marketblocks admin marketplace link <page_name>`) so players must physically visit the market stalls to trade.
+3. **Linked Blocks**: Ideal for immersive RPG or hub servers. Admins can place decorative blocks or stalls at spawn and link them (`/marketblocks admin marketplace link <page_name>`) so players must physically visit the market stalls to trade.

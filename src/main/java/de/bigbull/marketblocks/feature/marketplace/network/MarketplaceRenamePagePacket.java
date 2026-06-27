@@ -33,7 +33,7 @@ public record MarketplaceRenamePagePacket(String oldName, String newName) implem
             if (!(context.player() instanceof ServerPlayer player) || !MarketplaceManager.get().canEdit(player)) {
                 return;
             }
-            String sanitizedName = NameValidator.sanitizeName(packet.newName());
+            String sanitizedName = NameValidator.sanitizePageName(packet.newName());
             MarketplaceManager.MutationResult<Void> result = MarketplaceManager.get().renamePage(packet.oldName(), sanitizedName);
             if (result.isSuccess()) {
                 MarketplaceManager.get().syncOpenViewers(player);
