@@ -171,33 +171,62 @@ public class ShopInventoryManager {
     }
 
     public boolean hasOutputSpace(ItemStack... stacks) {
-        ItemStackHandler testHandler = prepareOutputSimulationHandler();
+        java.util.List<IItemHandler> testHandlers = prepareOutputSimulationHandlers();
         for (ItemStack stack : stacks) {
             if (stack == null || stack.isEmpty()) continue;
-            ItemStack remaining = ItemHandlerHelper.insertItem(testHandler, stack.copy(), false);
+            ItemStack remaining = simulateInsert(testHandlers, stack);
             if (!remaining.isEmpty()) return false;
         }
         return true;
     }
 
-    private ItemStackHandler prepareOutputSimulationHandler() {
+    private java.util.List<IItemHandler> prepareOutputSimulationHandlers() {
+        java.util.List<IItemHandler> list = new java.util.ArrayList<>();
         ItemStackHandler outputHandler = blockEntity.getOutputHandler();
         for (int i = 0; i < outputHandler.getSlots(); i++) {
             outputSimulationHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
         }
-        return outputSimulationHandler;
+        list.add(outputSimulationHandler);
+
+        if (Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+            for (Direction dir : DIRECTIONS) {
+                if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
+                    IItemHandler neighbor = getValidNeighborHandler(dir);
+                    if (neighbor != null) {
+                        int slots = neighbor.getSlots();
+                        ItemStackHandler simNeighbor = new ItemStackHandler(slots);
+                        for (int i = 0; i < slots; i++) {
+                            simNeighbor.setStackInSlot(i, neighbor.getStackInSlot(i).copy());
+                        }
+                        list.add(simNeighbor);
+                    }
+                }
+            }
+        }
+        return list;
+    }
+
+    private ItemStack simulateInsert(java.util.List<IItemHandler> handlers, ItemStack stack) {
+        ItemStack current = stack.copy();
+        for (IItemHandler handler : handlers) {
+            current = ItemHandlerHelper.insertItem(handler, current, false);
+            if (current.isEmpty()) {
+                break;
+            }
+        }
+        return current;
     }
 
     public int simulateOutputSpace(ItemStack p1, ItemStack p2, int maxTransactions) {
-        ItemStackHandler testHandler = prepareOutputSimulationHandler();
+        java.util.List<IItemHandler> testHandlers = prepareOutputSimulationHandlers();
         int validAmount = 0;
         for (int i = 0; i < maxTransactions; i++) {
             boolean fits = true;
             if (!p1.isEmpty()) {
-                if (!ItemHandlerHelper.insertItem(testHandler, p1.copy(), false).isEmpty()) fits = false;
+                if (!simulateInsert(testHandlers, p1).isEmpty()) fits = false;
             }
             if (fits && !p2.isEmpty()) {
-                if (!ItemHandlerHelper.insertItem(testHandler, p2.copy(), false).isEmpty()) fits = false;
+                if (!simulateInsert(testHandlers, p2).isEmpty()) fits = false;
             }
             if (fits) {
                 validAmount++;
@@ -260,8 +289,23 @@ public class ShopInventoryManager {
         while (total > 0L) {
             ItemStack chunk = stack.copy();
             chunk.setCount((int) Math.min(total, maxStack));
-            ItemHandlerHelper.insertItem(blockEntity.getOutputHandler(), chunk, false);
-            total -= chunk.getCount();
+            ItemStack remainder = ItemHandlerHelper.insertItem(blockEntity.getOutputHandler(), chunk, false);
+            if (!remainder.isEmpty() && Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+                for (Direction dir : DIRECTIONS) {
+                    if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
+                        IItemHandler neighbor = getValidNeighborHandler(dir);
+                        if (neighbor != null) {
+                            remainder = ItemHandlerHelper.insertItem(neighbor, remainder, false);
+                            if (remainder.isEmpty()) break;
+                        }
+                    }
+                }
+            }
+            int inserted = chunk.getCount() - remainder.getCount();
+            if (inserted <= 0) {
+                break;
+            }
+            total -= inserted;
         }
     }
 

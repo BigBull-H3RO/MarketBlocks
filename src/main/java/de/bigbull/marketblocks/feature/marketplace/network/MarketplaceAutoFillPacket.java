@@ -32,10 +32,12 @@ public record MarketplaceAutoFillPacket(UUID offerId) implements CustomPacketPay
     public static void handle(MarketplaceAutoFillPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof MarketplaceMenu menu) {
-                MarketplaceOffer offer = MarketplaceManager.get().findOffer(packet.offerId());
-                if (offer != null) {
-                    menu.setCurrentTradingOffer(offer);
-                    menu.autoFillPayment(player, offer);
+                if (MarketplaceManager.get().isOfferOnPage(packet.offerId(), menu.selectedPage())) {
+                    MarketplaceOffer offer = MarketplaceManager.get().findOffer(packet.offerId());
+                    if (offer != null) {
+                        menu.setCurrentTradingOffer(offer);
+                        menu.autoFillPayment(player, offer);
+                    }
                 }
             }
         });

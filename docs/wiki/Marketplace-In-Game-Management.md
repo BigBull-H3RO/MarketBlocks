@@ -8,7 +8,7 @@ The Marketplace GUI can be accessed through three convenient methods:
 
 - **Keybind**: Press **O** (default, fully configurable in Minecraft controls).
 - **Command**: Run `/marketblocks marketplace open` (available to all players).
-- **Marketplace Block**: Right-click a placed Marketplace Block in the world (which can be globally linked or targeted to specific pages).
+- **Linked Block**: Right-click any linked block in the world (which can be globally linked or targeted to specific pages).
 
 ## Enabling Edit Mode
 
@@ -34,11 +34,11 @@ Admins can configure time-limited sales and discounts on Marketplace offers with
 - **Set Sale**: `/marketblocks admin sale marketplace set <offer_id> <discount_percentage> <duration_minutes>`
 - **End Sale**: `/marketblocks admin sale marketplace remove <offer_id>`
 
-## Linking Marketplace Blocks
+## Linking Blocks
 
-Server builders can create physical hub marketplaces by placing Marketplace Blocks and linking them to open either the entire Marketplace or specific sub-pages:
+Server builders can create physical hub marketplaces by placing any decorative blocks and linking them to open either the entire Marketplace or specific sub-pages:
 
-- **Link Block**: Look at a Marketplace block and run `/marketblocks admin marketplace link <page_name>`
+- **Link Block**: Look at any block and run `/marketblocks admin marketplace link <page_name>`
 - **Unlink Block**: Look at a linked block and run `/marketblocks admin marketplace unlink`
 
 ## Permission Overview

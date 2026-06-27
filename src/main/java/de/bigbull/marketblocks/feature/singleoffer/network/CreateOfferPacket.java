@@ -56,7 +56,11 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
             if (context.player() instanceof ServerPlayer player) {
                 Level level = player.level();
 
-                if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity shopEntity && shopEntity.isOwner(player)) {
+                if (player.containerMenu instanceof de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu menu
+                        && menu.getBlockEntity() == level.getBlockEntity(packet.pos())
+                        && menu.stillValid(player)
+                        && menu.getBlockEntity() instanceof SingleOfferShopBlockEntity shopEntity
+                        && shopEntity.isOwner(player)) {
                     OfferManager manager = shopEntity.getOfferManager();
                     if (!manager.applyOffer(player, packet.payment1(), packet.payment2(), packet.result())) {
                         MarketBlocks.LOGGER.warn("Invalid offer creation attempt by player {}", player.getName().getString());

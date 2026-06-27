@@ -34,7 +34,7 @@ The mod focuses on **secure transactions**, **extensive customization**, **clear
 
 ✅ **Marketplace**
 - Blockless, centralized market system with pages and multiple offers.
-- Open via keybind (**O**), command, or by interacting with a linked **Marketplace Block**.
+- Open via keybind (**O**), command, or by interacting with any linked block in the world.
 - In-game editor for creating and managing offers (Admin only).
 - **Temporary Sales:** Set up limited-time sales and discounts on marketplace offers.
 - **Top 10 Statistics:** Keep track of the most popular marketplace offers.
@@ -79,7 +79,7 @@ MarketBlocks is designed to work in secure multiplayer environments. By default,
 * **Open Parties and Claims (OpenPac):** ⚠️ Requires server config adjustment. OpenPac doesn't use tags for whitelisting. Server Admins must manually add the shop blocks to their config file.
   * **How to fix:** Open your server's `openpartiesandclaims-server.toml` file and add the shop blocks to the `forcedBlockProtectionExceptionList` like this:
     ```toml
-    forcedBlockProtectionExceptionList = ["interact$marketblocks:trade_stand", "interact$marketblocks:trade_stand_top", "interact$marketblocks:market_crate", "interact$marketblocks:marketplace"]
+    forcedBlockProtectionExceptionList = ["interact$marketblocks:trade_stand", "interact$marketblocks:trade_stand_top", "interact$marketblocks:marketcrate"]
     ```
 * **Waypoints & HUD:** Fully supports **JourneyMap**, **Xaero's Minimap**, and **Jade** for rich tooltips and easy shop navigation.
 
@@ -110,7 +110,7 @@ Main commands are grouped under **`/marketblocks`**:
 | **`/marketblocks admin editmode [true\|false]`** | `OP Level 2` | Enables/disables global admin/edit mode for shops and marketplace. |
 | **`/marketblocks admin reload`** | `OP Level 2` | Reloads marketplace configuration from disk. |
 | **`/marketblocks admin resetlimits <player>`** | `OP Level 2` | Resets daily limits for the specified player. |
-| **`/marketblocks admin marketplace link <name>`** | `OP Level 2` | Links the looked-at Marketplace block to a specific marketplace page/name. Use `unlink` to remove. |
+| **`/marketblocks admin marketplace link <name>`** | `OP Level 2` | Links any looked-at block in the world to a specific marketplace page/name. Use `unlink` to remove. |
 | **`/marketblocks admin sale shop set|remove`** | `OP Level 2` | Configures or removes a temporary sale/discount on a SingleOfferShop. |
 | **`/marketblocks admin sale marketplace set|remove`** | `OP Level 2` | Configures or removes a temporary sale/discount on a Marketplace offer. |
 | **`/marketblocks admin trader value set|remove`** | `OP Level 2` | Sets or removes custom currency values for trader entities. |

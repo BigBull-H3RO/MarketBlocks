@@ -41,7 +41,8 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 tag(TagKey.create(
                                 Registries.BLOCK,
                                 SHOP_BLOCKS_TAG_ID))
-                                .add(RegistriesInit.MARKETCRATE_BLOCK.get());
+                                .add(RegistriesInit.MARKETCRATE_BLOCK.get())
+                                .add(RegistriesInit.TRADE_STAND_BLOCK.get());
 
                 tag(FTBCHUNKS_INTERACT_WHITELIST)
                                 .add(RegistriesInit.TRADE_STAND_BLOCK.get())

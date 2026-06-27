@@ -29,7 +29,7 @@ public record MarketplaceCreatePagePacket(String pageName) implements CustomPack
     public static void handle(MarketplaceCreatePagePacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && MarketplaceManager.get().canEdit(player)) {
-                String sanitizedName = NameValidator.sanitizeName(packet.pageName());
+                String sanitizedName = NameValidator.sanitizePageName(packet.pageName());
                 MarketplaceManager.MutationResult<?> result = MarketplaceManager.get().createPage(sanitizedName);
                 if (result.isSuccess()) {
                     MarketplaceManager.get().syncOpenViewers(player);

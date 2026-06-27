@@ -39,7 +39,10 @@ public record UpdateRedstoneSettingPacket(BlockPos pos, boolean enabled) impleme
                 return;
             }
             Level level = player.level();
-            if (level.getBlockEntity(packet.pos()) instanceof SingleOfferShopBlockEntity blockEntity
+            if (player.containerMenu instanceof de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu menu
+                    && menu.getBlockEntity() == level.getBlockEntity(packet.pos())
+                    && menu.stillValid(player)
+                    && menu.getBlockEntity() instanceof SingleOfferShopBlockEntity blockEntity
                     && blockEntity.isOwner(player)) {
                 blockEntity.setEmitRedstone(packet.enabled(), true);
             }

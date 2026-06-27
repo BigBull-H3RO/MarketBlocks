@@ -96,14 +96,32 @@ public record IoSettings(
     public static IoSettings load(CompoundTag tag) {
         if (tag == null) return DEFAULT;
         return new IoSettings(
-                tag.contains(KEY_LEFT) ? SideMode.valueOf(tag.getString(KEY_LEFT)) : SideMode.DISABLED,
-                tag.contains(KEY_RIGHT) ? SideMode.valueOf(tag.getString(KEY_RIGHT)) : SideMode.DISABLED,
-                tag.contains(KEY_BOTTOM) ? SideMode.valueOf(tag.getString(KEY_BOTTOM)) : SideMode.DISABLED,
-                tag.contains(KEY_BACK) ? SideMode.valueOf(tag.getString(KEY_BACK)) : SideMode.DISABLED,
-                tag.contains(KEY_REDSTONE_CONTROL) ? IoRedstoneControl.valueOf(tag.getString(KEY_REDSTONE_CONTROL)) : IoRedstoneControl.IGNORED,
+                parseSideMode(tag, KEY_LEFT),
+                parseSideMode(tag, KEY_RIGHT),
+                parseSideMode(tag, KEY_BOTTOM),
+                parseSideMode(tag, KEY_BACK),
+                parseRedstoneControl(tag, KEY_REDSTONE_CONTROL),
                 tag.contains(KEY_ALLOW_IO) ? tag.getBoolean(KEY_ALLOW_IO) : true,
                 tag.contains(KEY_AUTO_IO) ? tag.getBoolean(KEY_AUTO_IO) : false
         );
+    }
+
+    private static SideMode parseSideMode(CompoundTag tag, String key) {
+        if (!tag.contains(key)) return SideMode.DISABLED;
+        try {
+            return SideMode.valueOf(tag.getString(key));
+        } catch (IllegalArgumentException e) {
+            return SideMode.DISABLED;
+        }
+    }
+
+    private static IoRedstoneControl parseRedstoneControl(CompoundTag tag, String key) {
+        if (!tag.contains(key)) return IoRedstoneControl.IGNORED;
+        try {
+            return IoRedstoneControl.valueOf(tag.getString(key));
+        } catch (IllegalArgumentException e) {
+            return IoRedstoneControl.IGNORED;
+        }
     }
 
     public IoSettings withMode(Direction absoluteDir, Direction blockFacing, SideMode mode) {

@@ -73,7 +73,7 @@ public class NetworkHandler {
         
         registrar.playToServer(type, codec, (packet, context) -> {
             if (context.player() instanceof Player player) {
-                if (!PacketRateLimiter.canProcessPacket(player)) {
+                if (!PacketRateLimiter.canProcessPacket(player, type)) {
                     return;
                 }
             }

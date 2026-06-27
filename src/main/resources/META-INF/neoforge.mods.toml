@@ -31,3 +31,17 @@ config="marketblocks.mixins.json"
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
+
+[[dependencies."${mod_id}"]]
+    modId="jade"
+    type="optional"
+    versionRange="[1.21,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies."${mod_id}"]]
+    modId="journeymap"
+    type="optional"
+    versionRange="[1.21,)"
+    ordering="NONE"
+    side="CLIENT"
