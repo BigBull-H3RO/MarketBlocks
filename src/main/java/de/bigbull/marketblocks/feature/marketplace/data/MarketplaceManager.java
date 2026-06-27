@@ -48,7 +48,7 @@ public final class MarketplaceManager {
     private static final int AUTO_SAVE_TICKS = 20 * 60;
     private static final int RUNTIME_UPKEEP_INTERVAL_TICKS = 20;
     private static final int MAX_PAGE_NAME_LENGTH = 64;
-    private static final int DEMAND_DECAY_PER_DAY = 1;
+
 
     private static final MarketplaceManager INSTANCE = new MarketplaceManager();
 

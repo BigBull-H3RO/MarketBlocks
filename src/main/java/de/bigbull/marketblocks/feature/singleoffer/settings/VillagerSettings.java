@@ -20,7 +20,6 @@ public record VillagerSettings(
         boolean usePlayerSkin,
         String playerSkinName
 ) {
-    private static final int MAX_NPC_NAME_LENGTH = 32;
     private static final int MAX_PLAYER_SKIN_NAME_LENGTH = 36;
 
     private static final String KEY_NPC_ENABLED = "NpcEnabled";
