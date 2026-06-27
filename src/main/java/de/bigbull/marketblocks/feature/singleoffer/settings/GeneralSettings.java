@@ -16,7 +16,6 @@ public record GeneralSettings(
         boolean purchaseXpFeedbackSound,
         boolean isClosed,
         ShopCategory shopCategory) {
-    private static final int MAX_SHOP_NAME_LENGTH = 32;
 
     private static final String KEY_SHOP_NAME = "ShopName";
     private static final String KEY_EMIT_REDSTONE = "EmitRedstone";

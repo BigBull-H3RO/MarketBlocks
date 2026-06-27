@@ -1,6 +1,5 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
-import java.util.Locale;
 
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceUpdateOfferPricingPacket;

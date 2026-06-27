@@ -16,9 +16,6 @@ public class LeaveAndDespawnGoal extends Goal {
     private final double speedModifier;
     private int despawnTimer;
 
-    /** How far away the trader should try to walk before vanishing. */
-    private static final double WALK_AWAY_DISTANCE = 16.0D;
-
     public LeaveAndDespawnGoal(ShopBuyerEntity entity, double speedModifier) {
         this.entity = entity;
         this.speedModifier = speedModifier;

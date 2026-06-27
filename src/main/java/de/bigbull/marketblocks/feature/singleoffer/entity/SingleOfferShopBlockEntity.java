@@ -52,17 +52,10 @@ import java.util.*;
  */
 public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvider, IVisualShopNPC {
     private static final double MAX_PLAYER_DISTANCE_SQUARED = 64.0;
-    private static final Direction[] DIRECTIONS = Direction.values();
-
     private static final String NBT_HAS_OFFER = "HasOffer";
     private static final String KEY_PAYMENT1 = "OfferPayment1";
     private static final String KEY_PAYMENT2 = "OfferPayment2";
     private static final String KEY_RESULT = "OfferResult";
-    private static final String NBT_VISUAL_ANIMATION_NONCE = "VisualAnimationNonce";
-    private static final String NBT_VISUAL_ANIMATION_EVENT = "VisualAnimationEvent";
-    private static final String NBT_VISUAL_PURCHASE_COUNTER = "VisualPurchaseCounter";
-    private static final String NBT_VISUAL_PAYMENT_SUCCESS_COUNTER = "VisualPaymentSuccessCounter";
-    private static final String NBT_VISUAL_PAYMENT_FAIL_COUNTER = "VisualPaymentFailCounter";
     private static final String NBT_TOTAL_SALES = "TotalSales";
 
     private static final String HANDLER_INPUT = "InputInventory";
@@ -230,10 +223,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return true;
     }
 
-    private boolean isPoweredByRedstone() {
-        return redstoneManager.isPoweredByRedstone();
-    }
-
     private final OfferManager offerManager = new OfferManager(this);
 
     private int tickCounter = 0;
@@ -350,10 +339,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void updateNeighborCache() {
         inventoryManager.updateNeighborCache();
-    }
-
-    private boolean isChestIoExtensionEnabled() {
-        return Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get();
     }
 
     public boolean stillValid(Player player) {

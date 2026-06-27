@@ -51,8 +51,6 @@ public class ShopBuyerEntity extends PathfinderMob {
     /** Tracks the number of successful purchases for context-dependent interaction. */
     private int successfulPurchases = 0;
 
-    /** Total number of interact messages available. */
-    private static final int TOTAL_INTERACT_MESSAGES = 10;
     /** Messages 1-3: general, 4-6: post-purchase, 7-8: searching, 9-10: browsing */
     private static final int GENERAL_MSG_START = 1;
     private static final int GENERAL_MSG_END = 3;
