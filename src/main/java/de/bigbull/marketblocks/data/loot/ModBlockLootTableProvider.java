@@ -29,7 +29,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     @Override
     protected void generate() {
         dropSelf(RegistriesInit.MARKETCRATE_BLOCK.get());
-        dropSelf(RegistriesInit.MARKETPLACE_BLOCK.get());
 
         this.add(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), noDrop());
 

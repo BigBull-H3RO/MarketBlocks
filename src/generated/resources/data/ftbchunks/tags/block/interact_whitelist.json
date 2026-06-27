@@ -1,8 +1,6 @@
 {
   "values": [
     "marketblocks:trade_stand",
-    "marketblocks:trade_stand_top",
-    "marketblocks:marketcrate",
-    "marketblocks:marketplace"
+    "marketblocks:marketcrate"
   ]
 }

@@ -8,21 +8,30 @@ All administrative commands require **operator level 2** (`hasPermission(2)`).
 
 | Command | Purpose |
 | --- | --- |
-| `/marketblocks adminmode` | Toggles global admin/edit mode (on/off). |
-| `/marketblocks adminmode [true\|false]` | Enables or disables global admin/edit mode explicitly. |
-| `/marketblocks marketplace` | Opens the Marketplace GUI (requires the sender to be a player). |
-| `/marketblocks marketplace reload` | Reloads the Marketplace JSON configuration from disk. |
-| `/marketblocks marketplace resetlimits <player>` | Resets daily purchase limits for a specific player. |
+| `/marketblocks admin editmode [true\|false]` | Enables or disables global admin/edit mode for shops and marketplace. |
+| `/marketblocks admin reload` | Reloads the Marketplace JSON configuration from disk. |
+| `/marketblocks admin resetlimits <player>` | Resets daily purchase limits for a specific player. |
+| `/marketblocks admin marketplace link <name>` | Links the looked-at Marketplace block to a specific marketplace page/name. |
+| `/marketblocks admin marketplace unlink` | Unlinks the looked-at Marketplace block. |
+| `/marketblocks admin sale shop set|remove` | Configures or removes a temporary sale/discount on a SingleOfferShop. |
+| `/marketblocks admin sale marketplace set|remove` | Configures or removes a temporary sale/discount on a Marketplace offer. |
+| `/marketblocks admin trader value set|remove` | Sets or removes custom currency values for trader entities. |
+| `/marketblocks admin trader blacklist add|remove` | Adds or removes trader entities from the blacklist. |
 
 ## All Players
 
 | Command | Purpose |
 | --- | --- |
-| `/marketblocks list` | Lists all registered shops on the server with name, owner, and open/closed status. Operators see a clickable **[TP]** button to teleport to each shop. Non-operators see coordinates instead. |
+| `/marketblocks shop list [page]` | Lists all SingleOfferShops. Supports filtering by `owner`, `name`, or `category`. Operators get a **[TP]** button to teleport to each shop. All players get a clickable **[Waypoint]** button. |
+| `/marketblocks shop search <item> [page]` | Searches for SingleOfferShops buying or selling a specific item. |
+| `/marketblocks shop stats` | Shows the Top 10 SingleOfferShops by total sales. |
+| `/marketblocks marketplace open` | Opens the Marketplace GUI (requires the sender to be a player). |
+| `/marketblocks marketplace list [page]` | Lists all active Marketplace offers in chat. |
+| `/marketblocks marketplace stats` | Shows the Top 10 Marketplace offers by total sales. |
 
 ## Global Admin Mode
 
-The global admin mode is a central toggle that controls several features across the mod:
+The global admin mode is a central toggle (`/marketblocks admin editmode true`) that controls several features across the mod:
 
 - **Marketplace**: Enables the in-game editor for creating, editing, and deleting pages and offers.
 - **SingleOfferShop**: Allows operators to access the **Admin Shop** toggle in the Access settings tab.
@@ -53,7 +62,7 @@ Owners and co-owners always bypass access restrictions. If the shop is **closed*
 
 ## Marketplace Permissions
 
-- **Opening**: Any player can open the Marketplace via the keybind (**O** by default) or the `/marketblocks marketplace` command (requires OP).
+- **Opening**: Any player can open the Marketplace via the keybind (**O** by default), the `/marketblocks marketplace open` command, or by clicking a linked Marketplace Block.
 - **Buying**: Any player can buy from available offers, subject to limits.
 - **Editing**: Requires operator level 2 **and** global admin mode to be enabled.
 
@@ -61,4 +70,4 @@ Owners and co-owners always bypass access restrictions. If the shop is **closed*
 
 - MarketBlocks does not register custom permission nodes — all permission checks use the vanilla operator level system.
 - For fine-grained permission control, use a server permission mod that can manage operator levels or command-level permissions.
-- Grant critical commands (`reload`, `resetlimits`, `adminmode`) only to trusted roles.
+- Grant critical commands (`reload`, `resetlimits`, `admin editmode`) only to trusted roles.

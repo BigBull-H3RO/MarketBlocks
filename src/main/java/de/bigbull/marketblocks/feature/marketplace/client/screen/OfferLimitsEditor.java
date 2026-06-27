@@ -14,6 +14,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
 import java.util.UUID;
+import net.minecraft.util.FormattedCharSequence;
+import java.util.List;
 
 /**
  * Modal dialog for editing the purchase limits of a single marketplace offer.
@@ -126,6 +128,18 @@ public class OfferLimitsEditor extends BaseModalScreen {
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.daily"), labelX, rowStartY, 0xCFCFCF, false);
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.stock"), labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.restock"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
+
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY, "gui.marketblocks.marketplace.editor.limits.daily.tooltip");
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + ROW_SPACING, "gui.marketblocks.marketplace.editor.limits.stock.tooltip");
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + (ROW_SPACING * 2), "gui.marketblocks.marketplace.editor.limits.restock.tooltip");
+    }
+
+    private void renderTooltipIfHovered(GuiGraphics guiGraphics, int mouseX, int mouseY, int x, int y, String translationKey) {
+        int w = 80;
+        if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + font.lineHeight) {
+            List<FormattedCharSequence> lines = font.split(Component.translatable(translationKey), 200);
+            guiGraphics.renderTooltip(this.font, lines, mouseX, mouseY);
+        }
     }
 }
 

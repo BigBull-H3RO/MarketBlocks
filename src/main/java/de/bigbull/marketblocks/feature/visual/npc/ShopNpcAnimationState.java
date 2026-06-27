@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.visual.npc;
 
+import net.minecraft.world.entity.player.Player;
+
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
@@ -250,7 +252,7 @@ public class ShopNpcAnimationState {
             }
 
             @Override
-            public boolean isInvisibleTo(net.minecraft.world.entity.player.Player player) {
+            public boolean isInvisibleTo(Player player) {
                 return !this.isCustomNameVisible() || !super.hasCustomName();
             }
 
@@ -273,3 +275,4 @@ public class ShopNpcAnimationState {
         return player;
     }
 }
+

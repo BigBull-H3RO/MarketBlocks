@@ -23,6 +23,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -165,6 +166,11 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             level.setBlock(pos, state.setValue(POWERED, false), 3);
             level.updateNeighborsAt(pos, this);
         }
+    }
+
+    @Override
+    protected boolean isPathfindable(BlockState state, PathComputationType pathComputationType) {
+        return false;
     }
 
     @Override

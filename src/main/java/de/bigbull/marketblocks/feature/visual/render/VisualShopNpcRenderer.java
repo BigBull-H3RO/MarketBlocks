@@ -1,5 +1,8 @@
 package de.bigbull.marketblocks.feature.visual.render;
 
+import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.network.chat.Component;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.visual.npc.IVisualShopNPC;
@@ -92,7 +95,7 @@ public final class VisualShopNpcRenderer {
 
         if (settings.usePlayerSkin()) {
             String skinName = settings.playerSkinName();
-            net.minecraft.client.player.RemotePlayer player = state.getOrCreateRenderPlayer(level, skinName == null ? "" : skinName);
+            RemotePlayer player = state.getOrCreateRenderPlayer(level, skinName == null ? "" : skinName);
             player.noCulling = true;
             player.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
             player.setYRot(bodyYaw);
@@ -106,7 +109,7 @@ public final class VisualShopNpcRenderer {
             player.tickCount = (int) now;
             if (!settings.npcName().isBlank()) {
                 player.setCustomNameVisible(true);
-                player.setCustomName(net.minecraft.network.chat.Component.literal(settings.npcName()));
+                player.setCustomName(Component.literal(settings.npcName()));
             } else {
                 player.setCustomNameVisible(false);
                 player.setCustomName(null);
@@ -144,7 +147,7 @@ public final class VisualShopNpcRenderer {
             villager.tickCount = (int) now;
             if (!settings.npcName().isBlank()) {
                 villager.setCustomNameVisible(true);
-                villager.setCustomName(net.minecraft.network.chat.Component.literal(settings.npcName()));
+                villager.setCustomName(Component.literal(settings.npcName()));
             } else {
                 villager.setCustomNameVisible(false);
                 villager.setCustomName(null);
@@ -348,3 +351,4 @@ public final class VisualShopNpcRenderer {
         }
     }
 }
+

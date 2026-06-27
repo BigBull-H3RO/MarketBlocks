@@ -1,12 +1,17 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
+import net.minecraft.core.Direction;
+
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
+import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.ShopCategory;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import net.minecraft.nbt.CompoundTag;
 
@@ -61,7 +66,8 @@ public class ShopSettingsManager {
                 "",
                 isMarketCrate ? Config.MARKETCRATE_DEFAULT_EMIT_REDSTONE.get() : Config.TRADESTAND_DEFAULT_EMIT_REDSTONE.get(),
                 isMarketCrate ? Config.MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND.get() : Config.TRADESTAND_DEFAULT_PURCHASE_XP_SOUND.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_IS_CLOSED.get() : Config.TRADESTAND_DEFAULT_IS_CLOSED.get());
+                isMarketCrate ? Config.MARKETCRATE_DEFAULT_IS_CLOSED.get() : Config.TRADESTAND_DEFAULT_IS_CLOSED.get(),
+                ShopCategory.NONE);
     }
 
     private VillagerSettings createDefaultVillagerSettings() {
@@ -88,7 +94,7 @@ public class ShopSettingsManager {
                 isMarketCrate ? false : Config.TRADESTAND_DEFAULT_ITEM_BOBBING.get(),
                 isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_COUNT.get() : 1,
                 isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_ROTATION.get().floatValue() : 0.0f,
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_LAYOUT_MODE.get() : de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode.STACKED,
+                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_LAYOUT_MODE.get() : CrateLayoutMode.STACKED,
                 isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_SPACING_XZ.get().floatValue() : 0.0f,
                 isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_SPACING_Y.get().floatValue() : 0.0f,
                 isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_CHAOS_ROTATION.get().floatValue() : 0.1f,
@@ -105,7 +111,7 @@ public class ShopSettingsManager {
     }
 
     private boolean isMarketCrate() {
-        return de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType.from(blockEntity.getBlockState().getBlock()) == de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType.MARKET_CRATE;
+        return ShopVisualType.from(blockEntity.getBlockState().getBlock()) == ShopVisualType.MARKET_CRATE;
     }
 
 
@@ -124,6 +130,10 @@ public class ShopSettingsManager {
 
     public String getShopName() {
         return generalSettings.shopName();
+    }
+
+    public ShopCategory getShopCategory() {
+        return generalSettings.shopCategory();
     }
 
     public boolean isEmitRedstone() {
@@ -179,7 +189,7 @@ public class ShopSettingsManager {
 
         blockEntity.setChanged();
 
-        for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.values()) {
+        for (Direction dir : Direction.values()) {
             blockEntity.invalidateCapabilitiesAndNeighbor(dir);
         }
 
@@ -301,3 +311,4 @@ public class ShopSettingsManager {
         outputFull = tag.getBoolean("OutputFull");
     }
 }
+

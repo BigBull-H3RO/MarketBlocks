@@ -1,6 +1,12 @@
 package de.bigbull.marketblocks.feature.singleoffer.network;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
@@ -9,7 +15,9 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.IoRedstoneControl;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
+import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -75,16 +83,16 @@ public record UpdateSettingsPacket(
 
                 if (villager.npcEnabled()) {
                     boolean isValid = ShopVisualPlacementValidator.validate(level, packet.pos(), facing)
-                            .result() == de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult.OK;
+                            .result() == VisualNpcPlacementResult.OK;
                     if (!isValid) {
                         villager = villager.withNpcEnabled(false);
                     }
                 }
 
                 AccessSettings access = packet.accessSettings();
-                int maxOwners = de.bigbull.marketblocks.core.config.Config.MAX_CO_OWNERS_PER_SHOP.get();
+                int maxOwners = Config.MAX_CO_OWNERS_PER_SHOP.get();
                 if (access.additionalOwners().size() > maxOwners) {
-                    java.util.Map<java.util.UUID, String> truncated = new java.util.HashMap<>();
+                    Map<UUID, String> truncated = new HashMap<>();
                     int count = 0;
                     for (var entry : access.additionalOwners().entrySet()) {
                         if (count >= maxOwners)
@@ -104,26 +112,27 @@ public record UpdateSettingsPacket(
                         packet.notificationSettings());
 
                 if (villager.npcEnabled()) {
-                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_NPC_TRIGGER.get().trigger(player);
+                    RegistriesInit.SHOP_NPC_TRIGGER.get().trigger(player);
                 }
 
                 if (!access.additionalOwners().isEmpty()) {
-                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_CO_OWNER_TRIGGER.get().trigger(player);
+                    RegistriesInit.SHOP_CO_OWNER_TRIGGER.get().trigger(player);
                 }
 
                 if (villager.npcEnabled() && (!villager.npcName().isEmpty() || villager.usePlayerSkin())) {
-                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_NPC_CUSTOMIZE_TRIGGER.get().trigger(player);
+                    RegistriesInit.SHOP_NPC_CUSTOMIZE_TRIGGER.get().trigger(player);
                 }
 
                 if (packet.generalSettings().emitRedstone() || packet.ioSettings()
-                        .redstoneControl() != de.bigbull.marketblocks.feature.singleoffer.settings.IoRedstoneControl.IGNORED) {
-                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_REDSTONE_TRIGGER.get().trigger(player);
+                        .redstoneControl() != IoRedstoneControl.IGNORED) {
+                    RegistriesInit.SHOP_REDSTONE_TRIGGER.get().trigger(player);
                 }
 
                 if (packet.ioSettings().autoIo()) {
-                    de.bigbull.marketblocks.core.init.RegistriesInit.SHOP_AUTO_IO_TRIGGER.get().trigger(player);
+                    RegistriesInit.SHOP_AUTO_IO_TRIGGER.get().trigger(player);
                 }
             }
         });
     }
 }
+

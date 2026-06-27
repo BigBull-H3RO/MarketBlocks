@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
+import net.minecraft.sounds.SoundEvents;
+
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceAutoFillPacket;
@@ -282,9 +284,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     private void clearSelectedOffer() {
         this.selectedOfferId = null;
-        if (!isLocalEditMode) {
-            menu.setCurrentTradingOffer(null);
-        }
+        menu.setCurrentTradingOffer(null);
     }
 
     private MarketplaceOffer findOfferOnSelectedPage(UUID offerId) {
@@ -635,7 +635,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
         MarketplaceOffer clickedOffer = visibleOffers.get(index);
         Minecraft.getInstance().getSoundManager()
-                .play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 
         this.selectedOfferId = clickedOffer.id();
         if (!isLocalEditMode) {
@@ -897,3 +897,4 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
     }
 }
+

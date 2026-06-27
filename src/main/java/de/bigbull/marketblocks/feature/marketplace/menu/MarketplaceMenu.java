@@ -1,5 +1,11 @@
 package de.bigbull.marketblocks.feature.marketplace.menu;
 
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceClientState;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
@@ -141,8 +147,14 @@ public class MarketplaceMenu extends AbstractContainerMenu {
 
     public void setEditMode(boolean enable) {
         if (enable && !canUseEditMode()) return;
-        this.isEditMode = enable;
-        slotsChanged(tradeContainer);
+        if (this.isEditMode != enable) {
+            if (inventory.player instanceof ServerPlayer player) {
+                clearTemplate(player);
+                setCurrentTradingOffer(null);
+            }
+            this.isEditMode = enable;
+            slotsChanged(tradeContainer);
+        }
     }
 
     public void setEditPermissionClient(boolean canEdit, boolean globalEnabled) {
@@ -332,7 +344,7 @@ public class MarketplaceMenu extends AbstractContainerMenu {
                 }
             } else {
                 if (currentTradingOffer == null) return ItemStack.EMPTY;
-                if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)) return ItemStack.EMPTY;
+                if (!(player instanceof ServerPlayer serverPlayer)) return ItemStack.EMPTY;
 
                 ItemStack resultProto = currentTradingOffer.result();
                 PaymentMatch paymentMatch = resolvePaymentMatch();
@@ -368,9 +380,11 @@ public class MarketplaceMenu extends AbstractContainerMenu {
                         remaining -= chunkSize;
                     }
 
+                    playPurchaseFeedback(serverPlayer);
                     slotsChanged(tradeContainer);
                     return totalBoughtCopy;
                 }
+                playFailFeedback(serverPlayer);
                 return ItemStack.EMPTY;
             }
         } else if (index < TEMPLATE_SLOTS) {
@@ -379,7 +393,14 @@ public class MarketplaceMenu extends AbstractContainerMenu {
             }
         } else {
             if (isEditMode) {
-                if (!this.moveItemStackTo(newStack, PAYMENT_SLOT_0, TEMPLATE_SLOTS, false)) {
+                this.moveItemStackTo(newStack, PAYMENT_SLOT_0, PAYMENT_SLOTS_END_EXCLUSIVE, false);
+                if (!newStack.isEmpty()) {
+                    Slot offerSlot = this.slots.get(RESULT_SLOT);
+                    if (offerSlot.getItem().isEmpty()) {
+                        this.moveItemStackTo(newStack, RESULT_SLOT, RESULT_SLOT + 1, false);
+                    }
+                }
+                if (!newStack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
             } else {
@@ -422,7 +443,7 @@ public class MarketplaceMenu extends AbstractContainerMenu {
         if (currentTradingOffer == null) {
             return 0;
         }
-        if (inventory.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+        if (inventory.player instanceof ServerPlayer serverPlayer) {
             return MarketplaceManager.get().getMaximumPurchasableNow(currentTradingOffer.id(), serverPlayer.getUUID());
         }
         return currentOfferViewState().maxPurchasable();
@@ -440,6 +461,23 @@ public class MarketplaceMenu extends AbstractContainerMenu {
     private void clearResultIfNeeded() {
         if (!isEditMode && !tradeContainer.getItem(RESULT_SLOT).isEmpty()) {
             tradeContainer.setItem(RESULT_SLOT, ItemStack.EMPTY);
+        }
+    }
+
+    private void playPurchaseFeedback(ServerPlayer player) {
+        if (player.level() instanceof ServerLevel serverLevel) {
+            serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
+                    player.getX(), player.getY() + 1.0D, player.getZ(),
+                    10, 0.4D, 0.4D, 0.4D, 0.0D);
+            serverLevel.playSound(null, player.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP,
+                    SoundSource.PLAYERS, 0.6F, 1.0F);
+        }
+    }
+
+    private void playFailFeedback(ServerPlayer player) {
+        if (player.level() instanceof ServerLevel serverLevel) {
+            serverLevel.playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP,
+                    SoundSource.PLAYERS, 0.4F, 0.5F);
         }
     }
 
@@ -464,17 +502,20 @@ public class MarketplaceMenu extends AbstractContainerMenu {
 
         @Override
         public void onTake(Player player, ItemStack stack) {
-            if (!isEditMode && currentTradingOffer != null && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            if (!isEditMode && currentTradingOffer != null && player instanceof ServerPlayer serverPlayer) {
                 PaymentMatch paymentMatch = resolvePaymentMatch();
                 if (paymentMatch == null || MarketplaceManager.get().getMaximumPurchasableNow(currentTradingOffer.id(), serverPlayer.getUUID()) <= 0
                         || !MarketplaceManager.get().processPurchaseTransactionSlotBased(serverPlayer, currentTradingOffer.id(), 1)) {
                     player.containerMenu.setCarried(ItemStack.EMPTY);
+                    playFailFeedback(serverPlayer);
                     return;
                 }
                 removeMatchedPayments(paymentMatch, 1);
+                playPurchaseFeedback(serverPlayer);
                 slotsChanged(tradeContainer);
             }
             super.onTake(player, stack);
         }
     }
 }
+

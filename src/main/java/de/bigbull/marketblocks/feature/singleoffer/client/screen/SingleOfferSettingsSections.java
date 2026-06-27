@@ -11,6 +11,7 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
@@ -73,10 +74,21 @@ public final class SingleOfferSettingsSections {
             onDirty.run();
         });
 
+        Button categoryBtn = host.addSettingsWidget(Button.builder(
+                Component.translatable("gui.marketblocks.category").append(": ").append(Component.translatable("gui.marketblocks.category." + draft.shopCategory().getId())),
+                b -> {
+                    draft.setShopCategory(draft.shopCategory().next());
+                    b.setMessage(Component.translatable("gui.marketblocks.category").append(": ").append(Component.translatable("gui.marketblocks.category." + draft.shopCategory().getId())));
+                    onDirty.run();
+                })
+                .bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 50, 158, 16)
+                .build());
+        categoryBtn.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.category.tooltip")));
+
         Checkbox closedCheckbox = host.addSettingsWidget(Checkbox.builder(
                 Component.translatable("gui.marketblocks.shop_closed"),
                 host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 50)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 70)
                 .selected(draft.isClosed())
                 .onValueChange((checkbox, value) -> {
                     draft.setIsClosed(value);
@@ -88,7 +100,7 @@ public final class SingleOfferSettingsSections {
         Checkbox emitCheckbox = host.addSettingsWidget(Checkbox.builder(
                 Component.translatable("gui.marketblocks.emit_redstone"),
                 host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 70)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 90)
                 .selected(draft.emitRedstone())
                 .onValueChange((checkbox, value) -> {
                     draft.setEmitRedstone(value);
@@ -100,7 +112,7 @@ public final class SingleOfferSettingsSections {
         Checkbox xpSoundCheckbox = host.addSettingsWidget(Checkbox.builder(
                 Component.translatable("gui.marketblocks.purchase_xp_sound"),
                 host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 90)
+                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 110)
                 .selected(draft.purchaseXpFeedbackSound())
                 .onValueChange((checkbox, value) -> {
                     draft.setPurchaseXpFeedbackSound(value);
@@ -460,7 +472,7 @@ public final class SingleOfferSettingsSections {
     }
 
     public static void buildNotificationSection(SingleOfferShopScreen host,
-            de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.Draft draft, Runnable onDirty) {
+            NotificationSettings.Draft draft, Runnable onDirty) {
         int leftX = host.settingsLeftPos() + 8;
         int y = host.settingsTopPos() + 26;
 

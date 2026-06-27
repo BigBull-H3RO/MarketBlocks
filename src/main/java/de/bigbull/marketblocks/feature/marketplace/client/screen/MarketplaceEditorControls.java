@@ -135,7 +135,10 @@ public final class MarketplaceEditorControls {
                     new IconButton(controlsX, controlsY + context.rightButtonSize() + context.rightButtonGap(), 20, 20,
                             context.buttonSprites(), context.pricingIcon(),
                             ignored -> callbacks.openOfferPricingEditor(selectedOffer),
-                            Component.translatable("gui.marketblocks.marketplace.inline.pricing"), () -> false));
+                            de.bigbull.marketblocks.core.config.Config.MARKETPLACE_GLOBAL_PRICING_ENABLED.get()
+                                    ? Component.translatable("gui.marketblocks.marketplace.inline.pricing.disabled_global")
+                                    : Component.translatable("gui.marketblocks.marketplace.inline.pricing"),
+                            () -> de.bigbull.marketblocks.core.config.Config.MARKETPLACE_GLOBAL_PRICING_ENABLED.get()));
         }
     }
 

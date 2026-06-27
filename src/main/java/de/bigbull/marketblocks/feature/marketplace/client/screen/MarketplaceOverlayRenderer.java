@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
+import java.util.Locale;
+
 import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceClientState;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
@@ -97,7 +99,7 @@ public final class MarketplaceOverlayRenderer {
     private int renderPriceAndDailyStatus(GuiGraphics guiGraphics, Context context, MarketplaceOfferViewState viewState, int textX, int textY) {
         Component priceText = Component.translatable(
                 "gui.marketblocks.marketplace.status.price_short",
-                String.format(java.util.Locale.ROOT, "%.2f", viewState.priceMultiplier())
+                String.format(Locale.ROOT, "%.2f", viewState.priceMultiplier())
         );
         guiGraphics.drawString(context.font(), priceText, textX, textY, 0x404040, false);
         if (!context.suppressInteractions() && isPointWithinStatusLine(context, textX, textY, priceText)) {
@@ -160,12 +162,15 @@ public final class MarketplaceOverlayRenderer {
     private void renderOfferRow(GuiGraphics graphics, Context context, MarketplaceOffer offer, int x, int y, boolean isSelected) {
         MarketplaceOfferViewState viewState = MarketplaceClientState.offerViewState(offer.id());
         ItemStack[] payments = context.paymentNormalizer().apply(offer.effectivePayments());
+        ItemStack[] originalPayments = context.paymentNormalizer().apply(offer.originalPayments());
         ItemStack p1 = payments[0];
         ItemStack p2 = payments[1];
+        ItemStack origP1 = originalPayments[0];
+        ItemStack origP2 = originalPayments[1];
 
         boolean offerAvailable = viewState.maxPurchasable() > 0;
         OfferTemplateButton rowButton = new OfferTemplateButton(x, y, ignored -> {});
-        rowButton.update(p1, p2, offer.result(), offerAvailable);
+        rowButton.update(p1, p2, origP1, origP2, offer.result(), offerAvailable, !offerAvailable);
         int renderMouseX = isSelected ? x + 1 : context.mouseX();
         int renderMouseY = isSelected ? y + 1 : context.mouseY();
         rowButton.render(graphics, renderMouseX, renderMouseY, 0.0F);
@@ -199,21 +204,32 @@ public final class MarketplaceOverlayRenderer {
         MarketplaceOffer offer = context.visibleOffers().get(offerIndex);
         MarketplaceOfferViewState viewState = MarketplaceClientState.offerViewState(offer.id());
         ItemStack[] payments = context.paymentNormalizer().apply(offer.effectivePayments());
+        ItemStack[] originalPayments = context.paymentNormalizer().apply(offer.originalPayments());
+        
+        ItemStack p1 = payments[0];
+        ItemStack p2 = payments[1];
+        ItemStack origP1 = originalPayments[0];
+        ItemStack origP2 = originalPayments[1];
 
-        int payment1X = listStartX + 4;
-        int resultX = listStartX + 70;
-        renderRowTooltips(graphics, context, payments[0], payments[1], offer.result(), viewState, payment1X, resultX);
+        boolean hasDiscount1 = !origP1.isEmpty() && p1.getCount() != origP1.getCount();
+        boolean hasDiscount2 = !origP2.isEmpty() && p2.getCount() != origP2.getCount();
+
+        int payment1X = listStartX + (hasDiscount1 ? OfferTemplateButton.PAYMENT_1_X_OFFSET_DISCOUNTED : OfferTemplateButton.PAYMENT_1_X_OFFSET);
+        int payment2X = listStartX + (hasDiscount2 ? OfferTemplateButton.PAYMENT_2_X_OFFSET_DISCOUNTED : OfferTemplateButton.PAYMENT_2_X_OFFSET);
+        int resultX = listStartX + OfferTemplateButton.RESULT_X_OFFSET;
+
+        renderRowTooltips(graphics, context, p1, p2, offer.result(), viewState, payment1X, payment2X, resultX);
     }
 
     private void renderRowTooltips(GuiGraphics graphics, Context context, ItemStack p1, ItemStack p2, ItemStack result,
                                    MarketplaceOfferViewState viewState,
-                                   int startX, int resultX) {
+                                   int p1X, int p2X, int resultX) {
         int mouseX = context.mouseX();
         int mouseY = context.mouseY();
 
-        if (mouseX >= startX && mouseX <= startX + 16 && !p1.isEmpty()) {
+        if (mouseX >= p1X && mouseX <= p1X + 16 && !p1.isEmpty()) {
             graphics.renderTooltip(context.font(), p1, mouseX, mouseY);
-        } else if (mouseX >= startX + 24 && mouseX <= startX + 40 && !p2.isEmpty()) {
+        } else if (mouseX >= p2X && mouseX <= p2X + 16 && !p2.isEmpty()) {
             graphics.renderTooltip(context.font(), p2, mouseX, mouseY);
         } else if (mouseX >= resultX && mouseX <= resultX + 16 && !result.isEmpty()) {
             graphics.renderTooltip(context.font(), result, mouseX, mouseY);
@@ -296,6 +312,7 @@ public final class MarketplaceOverlayRenderer {
         }
     }
 }
+
 
 
 

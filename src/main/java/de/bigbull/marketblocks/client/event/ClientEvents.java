@@ -43,8 +43,9 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
-    public static void registerBlockEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+    public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntityRenderer::new);
+        event.registerEntityRenderer(RegistriesInit.SHOP_BUYER.get(), de.bigbull.marketblocks.feature.trader.client.ShopBuyerRenderer::new);
     }
 
     @SubscribeEvent

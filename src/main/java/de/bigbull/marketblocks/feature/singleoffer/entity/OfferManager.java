@@ -7,6 +7,7 @@ import de.bigbull.marketblocks.feature.log.ShopTransactionLogSavedData;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.advancement.ShopSellCountSavedData;
 import de.bigbull.marketblocks.feature.singleoffer.network.OfferStatusPacket;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -233,6 +234,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
         executeTrades(p1, p2, result, actualAmount, adminShop, inv);
 
+        shopEntity.incrementTotalSales(actualAmount);
         shopEntity.incrementVisualPurchaseCounter(actualAmount);
         shopEntity.playPurchaseXpSound(actualAmount);
 
@@ -261,7 +263,60 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
             RegistriesInit.SHOP_WHOLESALER_TRIGGER.get().trigger(serverBuyer);
         }
 
+        if (buyer instanceof ServerPlayer serverBuyer && Config.SHOP_BUYER_MESSAGE.get()) {
+            if (Config.SHOP_BUYER_MESSAGE_GLOBAL.get()) {
+                Component msg = Component.translatable("message.marketblocks.purchase_success.global", serverBuyer.getDisplayName(), actualAmount, result.getHoverName()).withStyle(ChatFormatting.GREEN);
+                serverBuyer.server.getPlayerList().broadcastSystemMessage(msg, false);
+            } else {
+                Component msg = Component.translatable("message.marketblocks.purchase_success", actualAmount, result.getHoverName()).withStyle(ChatFormatting.GREEN);
+                serverBuyer.sendSystemMessage(msg);
+            }
+        }
+
         return actualAmount;
+    }
+
+    public int processNpcPurchase() {
+        if (shopEntity.getGeneralSettings().isClosed() || !shopEntity.hasOffer()) return 0;
+
+        boolean adminShop = shopEntity.isAdminShopEnabled();
+        ShopInventoryManager inv = shopEntity.getInventoryManager();
+
+        ItemStack p1 = shopEntity.getOfferPayment1();
+        ItemStack p2 = shopEntity.getOfferPayment2();
+        ItemStack result = shopEntity.getOfferResult();
+
+        if (result.isEmpty()) return 0;
+
+        int inStock = adminShop ? Integer.MAX_VALUE : inv.countMatchingInput(result, true) / result.getCount();
+        if (inStock <= 0) return 0;
+
+        int validAmount = adminShop ? 1 : (inv.hasOutputSpace(p1, p2) ? 1 : 0);
+        if (validAmount <= 0) {
+            if (!adminShop) inv.updateOutputFullness();
+            return 0;
+        }
+
+        if (!adminShop) {
+            inv.removeFromInput(result.copy());
+            inv.addToOutputBatched(p1, 1);
+            inv.addToOutputBatched(p2, 1);
+        }
+
+        shopEntity.incrementTotalSales(1);
+        shopEntity.incrementVisualPurchaseCounter(1);
+        shopEntity.playPurchaseXpSound(1);
+
+        BuyerIdentity buyerIdentity = new BuyerIdentity(new UUID(0L, 0L), Component.translatable("entity.marketblocks.shop_buyer").getString());
+        appendTransactionEntry(buyerIdentity, p1, p2, result, 1, false);
+
+        shopEntity.sync();
+        shopEntity.triggerRedstonePulse();
+        shopEntity.updateOfferSlot();
+
+        triggerNotifications(buyerIdentity, result, 1, adminShop, inv, p1, p2);
+
+        return 1;
     }
 
     private void triggerNotifications(@Nullable BuyerIdentity buyer, ItemStack result, int tradeCount,
@@ -289,7 +344,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         if (isOutOfStock && notifSettings.notifyOnOutOfStock()) {
             long currentTime = serverLevel.getGameTime();
             long lastNotify = shopEntity.getLastOutOfStockNotifyTime();
-            int cooldown = de.bigbull.marketblocks.core.config.Config.NOTIFICATION_COOLDOWN.get();
+            int cooldown = Config.NOTIFICATION_COOLDOWN.get();
 
             if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
                 shopEntity.setLastOutOfStockNotifyTime(currentTime);
@@ -313,7 +368,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         if (isOutputFull && notifSettings.notifyOnOutputFull()) {
             long currentTime = serverLevel.getGameTime();
             long lastNotify = shopEntity.getLastOutputFullNotifyTime();
-            int cooldown = de.bigbull.marketblocks.core.config.Config.NOTIFICATION_COOLDOWN.get();
+            int cooldown = Config.NOTIFICATION_COOLDOWN.get();
 
             if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
                 shopEntity.setLastOutputFullNotifyTime(currentTime);
@@ -427,8 +482,8 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         if (directBuyer != null) {
             return new BuyerIdentity(directBuyer.getUUID(), directBuyer.getGameProfile().getName());
         }
-        if (shopEntity.purchaseContextBuyerId != null) {
-            return new BuyerIdentity(shopEntity.purchaseContextBuyerId, shopEntity.purchaseContextBuyerName);
+        if (shopEntity.getAccessManager().purchaseContextBuyerId != null) {
+            return new BuyerIdentity(shopEntity.getAccessManager().purchaseContextBuyerId, shopEntity.getAccessManager().purchaseContextBuyerName);
         }
         return null;
     }

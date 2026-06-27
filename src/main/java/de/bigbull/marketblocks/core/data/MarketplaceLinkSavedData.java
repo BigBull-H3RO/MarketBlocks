@@ -1,5 +1,10 @@
 package de.bigbull.marketblocks.core.data;
 
+import java.util.Iterator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.MinecraftServer;
+
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -9,6 +14,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.phys.Vec3;
+import de.bigbull.marketblocks.network.NetworkHandler;
+import de.bigbull.marketblocks.feature.marketplace.network.LinkedBlocksSyncPacket;
+import java.util.ArrayList;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -74,11 +82,11 @@ public class MarketplaceLinkSavedData extends SavedData {
 
     public int removeLinkByName(String name) {
         int count = 0;
-        java.util.Iterator<Map.Entry<GlobalPos, LinkInfo>> iterator = linkedBlocks.entrySet().iterator();
+        Iterator<Map.Entry<GlobalPos, LinkInfo>> iterator = linkedBlocks.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<GlobalPos, LinkInfo> entry = iterator.next();
             String linkName = entry.getValue().name;
-            net.minecraft.core.BlockPos pos = entry.getKey().pos();
+            BlockPos pos = entry.getKey().pos();
             String coordName = pos.getX() + "_" + pos.getY() + "_" + pos.getZ();
 
             if (name.equals(linkName) || name.equals(coordName)) {
@@ -90,6 +98,17 @@ public class MarketplaceLinkSavedData extends SavedData {
             setDirty();
         }
         return count;
+    }
+
+    public void syncToAll(MinecraftServer server) {
+        LinkedBlocksSyncPacket packet = new LinkedBlocksSyncPacket(new ArrayList<>(linkedBlocks.keySet()));
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            NetworkHandler.sendToPlayer(player, packet);
+        }
+    }
+
+    public void syncToPlayer(ServerPlayer player) {
+        NetworkHandler.sendToPlayer(player, new LinkedBlocksSyncPacket(new ArrayList<>(linkedBlocks.keySet())));
     }
 
     @Override
@@ -147,3 +166,4 @@ public class MarketplaceLinkSavedData extends SavedData {
         return data;
     }
 }
+

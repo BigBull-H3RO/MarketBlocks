@@ -24,16 +24,43 @@ public class Config {
         public static final ModConfigSpec.IntValue OUTPUT_WARNING_PERCENT;
         public static final ModConfigSpec.IntValue NOTIFICATION_COOLDOWN;
         public static final ModConfigSpec.BooleanValue MARKETPLACE_GLOBAL_DAILY_LIMIT;
+        public static final ModConfigSpec.BooleanValue MARKETPLACE_GLOBAL_PRICING_ENABLED;
+        public static final ModConfigSpec.IntValue MARKETPLACE_GLOBAL_PRICING_MIN_PERCENT;
+        public static final ModConfigSpec.IntValue MARKETPLACE_GLOBAL_PRICING_MAX_PERCENT;
+        public static final ModConfigSpec.EnumValue<de.bigbull.marketblocks.feature.marketplace.data.Volatility> MARKETPLACE_GLOBAL_PRICING_VOLATILITY;
         public static final ModConfigSpec.BooleanValue MARKETBLOCKS_ADMIN_MODE_ENABLED;
         public static final ModConfigSpec.IntValue MAX_CO_OWNERS_PER_SHOP;
+        public static final ModConfigSpec.IntValue MAX_SHOPS_PER_PLAYER_SURVIVAL;
         public static final ModConfigSpec.BooleanValue ENABLE_MIXIN_DESYNC_LOGGING;
         public static final ModConfigSpec.BooleanValue VISUAL_NPC_FORCE_OFFSCREEN_RENDERING;
         public static final ModConfigSpec.IntValue VISUAL_NPC_RENDER_VIEW_DISTANCE;
         public static final ModConfigSpec.BooleanValue ENABLE_GLOBAL_OFFER_ITEM_RENDERING;
         public static final ModConfigSpec.DoubleValue SHOP_BLAST_RESISTANCE;
 
+        public static final ModConfigSpec.BooleanValue ALLOW_NON_OP_TELEPORT;
+        public static final ModConfigSpec.BooleanValue SHOP_BUYER_MESSAGE;
+        public static final ModConfigSpec.BooleanValue SHOP_BUYER_MESSAGE_GLOBAL;
+        public static final ModConfigSpec.BooleanValue MARKETPLACE_BUYER_MESSAGE;
+        public static final ModConfigSpec.BooleanValue MARKETPLACE_BUYER_MESSAGE_GLOBAL;
+
         public static final ModConfigSpec.BooleanValue ENABLE_XAEROS_COMPAT;
         public static final ModConfigSpec.BooleanValue ENABLE_JOURNEYMAP_COMPAT;
+
+        public static final ModConfigSpec.BooleanValue ENABLE_TRADER_SPAWNING;
+        public static final ModConfigSpec.IntValue TRADER_SPAWN_CHANCE;
+        public static final ModConfigSpec.IntValue TRADER_SPAWN_NEAR_PLAYER_CHANCE_PERCENT;
+        public static final ModConfigSpec.IntValue TRADER_MIN_BUDGET;
+        public static final ModConfigSpec.IntValue TRADER_MAX_BUDGET;
+        public static final ModConfigSpec.IntValue TRADER_DESPAWN_TICKS;
+        public static final ModConfigSpec.IntValue TRADER_MAX_PER_DIMENSION;
+        public static final ModConfigSpec.IntValue TRADER_MAX_SHOPS_PER_VISIT;
+        public static final ModConfigSpec.BooleanValue TRADER_NAMES_ENABLED;
+        public static final ModConfigSpec.BooleanValue TRADER_PREFER_DAYTIME_SPAWN;
+
+        public static final ModConfigSpec.BooleanValue ENABLE_PACKET_RATE_LIMITING;
+        public static final ModConfigSpec.IntValue PACKET_COOLDOWN_MS;
+        public static final ModConfigSpec.IntValue MAX_SHOP_NAME_LENGTH;
+        public static final ModConfigSpec.BooleanValue BLOCK_FORMATTING_IN_SHOP_NAME;
 
         public static final ModConfigSpec.BooleanValue SHOP_TAB_GENERAL_ENABLED;
         public static final ModConfigSpec.BooleanValue SHOP_TAB_IO_ENABLED;
@@ -132,6 +159,74 @@ public class Config {
                 NOTIFICATION_COOLDOWN = COMMON_BUILDER
                                 .comment("Ticks to wait before sending another 'Out of Stock' or 'Output Full' notification (Default: 1200 = 1 Minute)")
                                 .defineInRange("notificationCooldownTicks", 1200, 0, Integer.MAX_VALUE);
+                MAX_SHOPS_PER_PLAYER_SURVIVAL = COMMON_BUILDER
+                                .comment("Maximum number of shops a player can place in Survival mode (-1 for unlimited)")
+                                .defineInRange("maxShopsPerPlayerSurvival", 10, -1, Integer.MAX_VALUE);
+                ALLOW_NON_OP_TELEPORT = COMMON_BUILDER
+                                .comment("Allow non-OP players to use the [TP] button in the shop list")
+                                .define("allowNonOpTeleport", false);
+                SHOP_BUYER_MESSAGE = COMMON_BUILDER
+                                .comment("Send chat message upon successful purchase at a SingleOfferShop (Default: false)")
+                                .define("shopBuyerMessage", false);
+                SHOP_BUYER_MESSAGE_GLOBAL = COMMON_BUILDER
+                                .comment("Broadcast the SingleOfferShop purchase message globally to all players instead of just the buyer (Default: false)")
+                                .define("shopBuyerMessageGlobal", false);
+                MARKETPLACE_BUYER_MESSAGE = COMMON_BUILDER
+                                .comment("Send chat message upon successful purchase at the Marketplace (Default: false)")
+                                .define("marketplaceBuyerMessage", false);
+                MARKETPLACE_BUYER_MESSAGE_GLOBAL = COMMON_BUILDER
+                                .comment("Broadcast the Marketplace purchase message globally to all players instead of just the buyer (Default: false)")
+                                .define("marketplaceBuyerMessageGlobal", false);
+
+                COMMON_BUILDER.push("Wandering Trader NPC");
+                ENABLE_TRADER_SPAWNING = COMMON_BUILDER
+                                .comment("Enable spawning of Wandering Trader NPCs that buy items from SingleOfferShops")
+                                .define("enableTraderSpawning", true);
+                TRADER_SPAWN_CHANCE = COMMON_BUILDER
+                                .comment("Chance to spawn a trader per tick (1 in X). Default: 24000 (roughly once per Minecraft day)")
+                                .defineInRange("traderSpawnChance", 24000, 100, Integer.MAX_VALUE);
+                TRADER_SPAWN_NEAR_PLAYER_CHANCE_PERCENT = COMMON_BUILDER
+                                .comment("Chance in percent that a spawning trader spawns near a random player instead of a shop. Default: 10")
+                                .defineInRange("traderSpawnNearPlayerChancePercent", 10, 0, 100);
+                TRADER_MIN_BUDGET = COMMON_BUILDER
+                                .comment("Minimum budget value a spawned trader has")
+                                .defineInRange("traderMinBudget", 64, 1, 1000000);
+                TRADER_MAX_BUDGET = COMMON_BUILDER
+                                .comment("Maximum budget value a spawned trader has")
+                                .defineInRange("traderMaxBudget", 256, 1, 1000000);
+                TRADER_DESPAWN_TICKS = COMMON_BUILDER
+                                .comment("Time in ticks before a trader despawns. Default: 48000 (~40 minutes, same as vanilla Wandering Trader)")
+                                .defineInRange("traderDespawnTicks", 48000, 1200, 240000);
+                TRADER_MAX_PER_DIMENSION = COMMON_BUILDER
+                                .comment("Maximum number of Shop Buyer NPCs that can exist simultaneously per dimension. Default: 3")
+                                .defineInRange("traderMaxPerDimension", 3, 1, 20);
+                TRADER_MAX_SHOPS_PER_VISIT = COMMON_BUILDER
+                                .comment("Maximum number of shops a trader visits before leaving. Actual number is random between 1 and this value. Default: 4")
+                                .defineInRange("traderMaxShopsPerVisit", 4, 1, 10);
+                TRADER_NAMES_ENABLED = COMMON_BUILDER
+                                .comment("Enable random names for Shop Buyer NPCs displayed above their heads.",
+                                                "Names can be customized in config/marketblocks/trader_names.json")
+                                .define("traderNamesEnabled", true);
+                TRADER_PREFER_DAYTIME_SPAWN = COMMON_BUILDER
+                                .comment("If true, traders will only spawn during daytime (like the vanilla Wandering Trader)")
+                                .define("traderPreferDaytimeSpawn", true);
+                COMMON_BUILDER.pop();
+
+                COMMON_BUILDER.pop();
+
+                COMMON_BUILDER.push("Security & Robustness");
+                ENABLE_PACKET_RATE_LIMITING = COMMON_BUILDER
+                                .comment("Enable rate limiting for network packets to prevent spamming")
+                                .define("enablePacketRateLimiting", true);
+                PACKET_COOLDOWN_MS = COMMON_BUILDER
+                                .comment("Cooldown in milliseconds between network packets per player")
+                                .defineInRange("packetCooldownMs", 100, 0, 5000);
+                MAX_SHOP_NAME_LENGTH = COMMON_BUILDER
+                                .comment("Maximum allowed length for a shop name")
+                                .defineInRange("maxShopNameLength", 32, 1, 256);
+                BLOCK_FORMATTING_IN_SHOP_NAME = COMMON_BUILDER
+                                .comment("Block chat formatting codes (like &c or §c) in shop names")
+                                .define("blockFormattingInShopName", true);
                 COMMON_BUILDER.pop();
 
                 // ---MarketPlace---
@@ -139,6 +234,18 @@ public class Config {
                 MARKETPLACE_GLOBAL_DAILY_LIMIT = COMMON_BUILDER
                                 .comment("If true, Marketplace daily limits are shared globally. If false, they apply per player.")
                                 .define("marketplaceGlobalDailyLimit", false);
+                MARKETPLACE_GLOBAL_PRICING_ENABLED = COMMON_BUILDER
+                                .comment("If true, dynamic demand pricing is forced for ALL offers in the Marketplace, overriding individual settings.")
+                                .define("marketplaceGlobalPricingEnabled", false);
+                MARKETPLACE_GLOBAL_PRICING_MIN_PERCENT = COMMON_BUILDER
+                                .comment("Global dynamic pricing minimum price in percent (e.g. 50 = 50% discount).")
+                                .defineInRange("marketplaceGlobalPricingMinPercent", 50, 1, 1000);
+                MARKETPLACE_GLOBAL_PRICING_MAX_PERCENT = COMMON_BUILDER
+                                .comment("Global dynamic pricing maximum price in percent (e.g. 200 = 2x price).")
+                                .defineInRange("marketplaceGlobalPricingMaxPercent", 200, 100, 10000);
+                MARKETPLACE_GLOBAL_PRICING_VOLATILITY = COMMON_BUILDER
+                                .comment("Global dynamic pricing volatility (SLOW, NORMAL, FAST).")
+                                .defineEnum("marketplaceGlobalPricingVolatility", de.bigbull.marketblocks.feature.marketplace.data.Volatility.NORMAL);
                 MARKETBLOCKS_ADMIN_MODE_ENABLED = COMMON_BUILDER
                                 .comment("Global admin mode controlled by /marketblocks adminmode.",
                                                 "Enables Marketplace edit mode and OP-only Admin-Shop controls in SingleOffer settings.")

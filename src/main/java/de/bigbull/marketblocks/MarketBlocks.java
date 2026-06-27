@@ -22,6 +22,7 @@ public class MarketBlocks {
         modEventBus.addListener(DataGenerators::gatherData);
         modEventBus.addListener(NetworkHandler::register);
         modEventBus.addListener(ModCapabilityEvents::registerCapabilities);
+        modEventBus.addListener(de.bigbull.marketblocks.core.event.ModEntityEvents::onEntityAttributeCreation);
 
         RegistriesInit.register(modEventBus);
         CreativeTabInit.CREATIVE_MODE_TABS.register(modEventBus);

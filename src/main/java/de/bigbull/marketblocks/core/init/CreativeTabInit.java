@@ -36,7 +36,6 @@ public final class CreativeTabInit {
                         output.accept(showcaseStack);
 
                         output.accept(RegistriesInit.MARKETCRATE_BLOCK.get());
-                        output.accept(RegistriesInit.MARKETPLACE_BLOCK.get());
                     })
                     .build());
 }
