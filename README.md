@@ -29,11 +29,15 @@ The mod focuses on **secure transactions**, **extensive customization**, **clear
 - **Access Control:** Restrict buyers via Whitelist or Blacklist.
 - **Ownership:** Primary owner and up to 10 co-owners with clear UI role handling.
 - Optional **Admin Shop Mode** (no stock required, unlimited supply, server-side validated).
+- **Temporary Sales:** Configure timed discounts and price changes for your shop offers.
+- **Top 10 Statistics:** View the top performing shops by sales numbers.
 
 ✅ **Marketplace**
 - Blockless, centralized market system with pages and multiple offers.
-- Open via keybind (**O**), command, or by interacting with a **Marketplace Block**.
+- Open via keybind (**O**), command, or by interacting with a linked **Marketplace Block**.
 - In-game editor for creating and managing offers (Admin only).
+- **Temporary Sales:** Set up limited-time sales and discounts on marketplace offers.
+- **Top 10 Statistics:** Keep track of the most popular marketplace offers.
 - JSON persistence with backup/restore strategy.
 
 ✅ **Rich Visuals & NPCs**
@@ -48,7 +52,7 @@ The mod focuses on **secure transactions**, **extensive customization**, **clear
 
 ✅ **Limits, Restock & Demand Pricing (Marketplace)**
 - Daily limits (global or per-player), stock limits, and restock intervals.
-- Dynamic price calculation via multiplier system.
+- **Demand Pricing:** Dynamic price calculation via a flexible multiplier system based on player demand and decay over time.
 
 ✅ **Automation & Redstone**
 - **Auto I/O:** Configurable pull/push of items through adjacent inventories with redstone control.
@@ -59,7 +63,8 @@ The mod focuses on **secure transactions**, **extensive customization**, **clear
 - **Offline Notifications:** Get notified on login if your shop is out of stock or its output is full.
 - Persistent shop transaction log with smart stacking.
 - Comprehensive Advancement tree to guide players through features.
-- Shop Directory (`/marketblocks list`) to view all active shops.
+- Shop Directory (`/marketblocks shop list`) to view all active shops with filtering by name, owner, or category.
+- **Waypoint Integration:** Seamlessly create waypoints to shops using **JourneyMap** or **Xaero's Minimap** directly from chat!
 
 ---
 
@@ -76,6 +81,7 @@ MarketBlocks is designed to work in secure multiplayer environments. By default,
     ```toml
     forcedBlockProtectionExceptionList = ["interact$marketblocks:trade_stand", "interact$marketblocks:trade_stand_top", "interact$marketblocks:market_crate", "interact$marketblocks:marketplace"]
     ```
+* **Waypoints & HUD:** Fully supports **JourneyMap**, **Xaero's Minimap**, and **Jade** for rich tooltips and easy shop navigation.
 
 ---
 
@@ -95,11 +101,20 @@ Main commands are grouped under **`/marketblocks`**:
 
 | Command | Permission | Description |
 | --- | --- | --- |
-| **`/marketblocks list`** | `All Players` | Lists all shops. Operators get a [TP] button to teleport to them. |
-| **`/marketblocks adminmode [true\|false]`** | `OP Level 2` | Enables/disables global admin/edit mode. |
-| **`/marketblocks marketplace`** | `OP Level 2` | Opens the marketplace GUI. |
-| **`/marketblocks marketplace reload`** | `OP Level 2` | Reloads marketplace configuration from disk. |
-| **`/marketblocks marketplace resetlimits <player>`** | `OP Level 2` | Resets daily limits for the specified player. |
+| **`/marketblocks shop list [page]`** | `All Players` | Lists all SingleOfferShops. Supports filtering by `owner`, `name`, or `category`. Operators get a [TP] button. All players get a [Waypoint] button. |
+| **`/marketblocks shop search <item> [page]`** | `All Players` | Searches for shops buying or selling a specific item. |
+| **`/marketblocks shop stats`** | `All Players` | Shows the Top 10 SingleOfferShops by total sales. |
+| **`/marketblocks marketplace open`** | `All Players` | Opens the Marketplace GUI. |
+| **`/marketblocks marketplace list [page]`** | `All Players` | Lists all active Marketplace offers in chat. |
+| **`/marketblocks marketplace stats`** | `All Players` | Shows the Top 10 Marketplace offers by total sales. |
+| **`/marketblocks admin editmode [true\|false]`** | `OP Level 2` | Enables/disables global admin/edit mode for shops and marketplace. |
+| **`/marketblocks admin reload`** | `OP Level 2` | Reloads marketplace configuration from disk. |
+| **`/marketblocks admin resetlimits <player>`** | `OP Level 2` | Resets daily limits for the specified player. |
+| **`/marketblocks admin marketplace link <name>`** | `OP Level 2` | Links the looked-at Marketplace block to a specific marketplace page/name. Use `unlink` to remove. |
+| **`/marketblocks admin sale shop set|remove`** | `OP Level 2` | Configures or removes a temporary sale/discount on a SingleOfferShop. |
+| **`/marketblocks admin sale marketplace set|remove`** | `OP Level 2` | Configures or removes a temporary sale/discount on a Marketplace offer. |
+| **`/marketblocks admin trader value set|remove`** | `OP Level 2` | Sets or removes custom currency values for trader entities. |
+| **`/marketblocks admin trader blacklist add|remove`** | `OP Level 2` | Adds or removes trader entities from the blacklist. |
 
 ---
 

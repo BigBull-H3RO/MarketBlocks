@@ -36,9 +36,10 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
                 String shopName = shop.getShopName();
                 String ownerName = shop.getOwnerName();
                 if (shopName != null && !shopName.isEmpty()) {
-                    tooltip.add(Component.translatable("marketblocks.jade.owner", shopName)
+                    tooltip.add(Component.translatable("marketblocks.jade.shop", shopName)
                             .withStyle(ChatFormatting.GREEN));
-                } else if (ownerName != null && !ownerName.isEmpty()) {
+                }
+                if (ownerName != null && !ownerName.isEmpty()) {
                     tooltip.add(Component.translatable("marketblocks.jade.owner", ownerName)
                             .withStyle(ChatFormatting.GREEN));
                 }

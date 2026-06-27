@@ -9,6 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import de.bigbull.marketblocks.util.NameValidator;
 
 public record MarketplaceRenamePagePacket(String oldName, String newName) implements CustomPacketPayload {
     public static final Type<MarketplaceRenamePagePacket> TYPE = new Type<>(
@@ -32,7 +33,8 @@ public record MarketplaceRenamePagePacket(String oldName, String newName) implem
             if (!(context.player() instanceof ServerPlayer player) || !MarketplaceManager.get().canEdit(player)) {
                 return;
             }
-            MarketplaceManager.MutationResult<Void> result = MarketplaceManager.get().renamePage(packet.oldName(), packet.newName());
+            String sanitizedName = NameValidator.sanitizeName(packet.newName());
+            MarketplaceManager.MutationResult<Void> result = MarketplaceManager.get().renamePage(packet.oldName(), sanitizedName);
             if (result.isSuccess()) {
                 MarketplaceManager.get().syncOpenViewers(player);
             } else {

@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.marketplace.data;
 
+import java.util.Locale;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,20 +15,35 @@ public final class MarketplaceRuntimeMath {
     private MarketplaceRuntimeMath() {
     }
 
+    public static final double MIN_TEMPERATURE = -1.0;
+    public static final double MAX_TEMPERATURE = 1.0;
+    public static final double NEUTRAL_ZONE_MAX = 0.2;
+    public static final double NEUTRAL_ZONE_MIN = -0.2;
+
     /**
-     * Calculates the price multiplier based on current demand.
+     * Calculates the price multiplier based on current market temperature.
      * Returns {@code 1.0} when demand pricing is disabled or {@code pricing} is {@code null}.
      *
-     * @param pricing         the pricing configuration; may be {@code null}
-     * @param demandPurchases the number of purchases tracked for demand purposes
+     * @param pricing     the pricing configuration; may be {@code null}
+     * @param temperature the current market temperature [-1.0, 1.0]
      * @return the clamped price multiplier in the range [{@code minMultiplier}, {@code maxMultiplier}]
      */
-    public static double computeDemandMultiplier(DemandPricing pricing, int demandPurchases) {
+    public static double computeDemandMultiplier(DemandPricing pricing, double temperature) {
         if (pricing == null || !pricing.enabled()) {
             return 1.0d;
         }
-        double raw = pricing.baseMultiplier() + (Math.max(0, demandPurchases) * pricing.demandStep());
-        return Math.max(pricing.minMultiplier(), Math.min(pricing.maxMultiplier(), raw));
+
+        double clampedTemp = Math.max(MIN_TEMPERATURE, Math.min(MAX_TEMPERATURE, temperature));
+
+        if (clampedTemp > NEUTRAL_ZONE_MAX) {
+            double ratio = (clampedTemp - NEUTRAL_ZONE_MAX) / (MAX_TEMPERATURE - NEUTRAL_ZONE_MAX);
+            return 1.0 + ratio * (pricing.maxMultiplier() - 1.0);
+        } else if (clampedTemp < NEUTRAL_ZONE_MIN) {
+            double ratio = (NEUTRAL_ZONE_MIN - clampedTemp) / (NEUTRAL_ZONE_MIN - MIN_TEMPERATURE);
+            return 1.0 - ratio * (1.0 - pricing.minMultiplier());
+        }
+
+        return 1.0d;
     }
 
     /**
@@ -44,29 +61,55 @@ public final class MarketplaceRuntimeMath {
     }
 
     /**
-     * Applies daily decay to the demand purchase counter based on elapsed in-game days.
+     * Applies exponential decay to the market temperature based on elapsed real-world time.
      *
-     * @param currentDemandPurchases the current accumulated demand purchase count
-     * @param lastDecayDay           the in-game day when decay was last applied (0 or negative means "now")
-     * @param currentDay             the current in-game day
-     * @param decayPerDay            purchases to subtract per elapsed day; 0 disables decay
-     * @return the reduced demand purchase count, clamped to {@code ≥ 0}
+     * @param currentTemperature the current temperature [-1.0, 1.0]
+     * @param volatility         the volatility setting
+     * @param lastUpdateMs       the real-world timestamp when it was last updated
+     * @param currentTimeMs      the current real-world timestamp
+     * @return the decayed temperature
      */
-    public static int computeDemandPurchasesAfterDailyDecay(int currentDemandPurchases, long lastDecayDay, long currentDay, int decayPerDay) {
-        int normalizedDemand = Math.max(0, currentDemandPurchases);
-        long normalizedCurrentDay = Math.max(0L, currentDay);
-        long normalizedLastDecayDay = lastDecayDay <= 0L ? normalizedCurrentDay : Math.min(lastDecayDay, normalizedCurrentDay);
-        int normalizedDecayPerDay = Math.max(0, decayPerDay);
-        if (normalizedDecayPerDay == 0) {
-            return normalizedDemand;
-        }
+    public static double computeTemperatureAfterTimeDecay(double currentTemperature, Volatility volatility, long lastUpdateMs, long currentTimeMs) {
+        if (volatility == null) volatility = Volatility.NORMAL;
 
-        long elapsedDays = normalizedCurrentDay - normalizedLastDecayDay;
-        if (elapsedDays <= 0L) {
-            return normalizedDemand;
-        }
-        long totalDecay = elapsedDays * (long) normalizedDecayPerDay;
-        return (int) Math.max(0L, normalizedDemand - totalDecay);
+        long elapsedMs = Math.max(0L, currentTimeMs - lastUpdateMs);
+        if (elapsedMs == 0L) return currentTemperature;
+
+        double elapsedHours = elapsedMs / (1000.0 * 60.0 * 60.0);
+
+        // Decay factor per hour
+        double k = switch (volatility) {
+            case SLOW -> 0.0041; // Half-life ~7 days
+            case NORMAL -> 0.0096; // Half-life ~3 days
+            case FAST -> 0.0289; // Half-life ~1 day
+        };
+
+        // Decay towards MIN_TEMPERATURE (-1.0)
+        double target = MIN_TEMPERATURE;
+        double newTemp = target + (currentTemperature - target) * Math.exp(-k * elapsedHours);
+
+        return Math.max(MIN_TEMPERATURE, Math.min(MAX_TEMPERATURE, newTemp));
+    }
+
+    /**
+     * Increases the market temperature based on purchase amount.
+     *
+     * @param currentTemperature the current temperature
+     * @param volatility         the volatility setting
+     * @param amount             number of items/trades purchased
+     * @return the heated temperature
+     */
+    public static double addPurchaseHeat(double currentTemperature, Volatility volatility, int amount) {
+        if (volatility == null) volatility = Volatility.NORMAL;
+
+        double heatPerPurchase = switch (volatility) {
+            case SLOW -> 0.02;
+            case NORMAL -> 0.05;
+            case FAST -> 0.10;
+        };
+
+        double newTemp = currentTemperature + (heatPerPurchase * amount);
+        return Math.min(MAX_TEMPERATURE, newTemp);
     }
 
     /**
@@ -115,7 +158,7 @@ public final class MarketplaceRuntimeMath {
     }
 
     /**
-     * Returns the seconds until the next restock tick, or {@link java.util.Optional#empty()} when
+     * Returns the seconds until the next restock tick, or {@link Optional#empty()} when
      * the offer is at full stock, unlimited, or has no restock configuration.
      *
      * @param limit           the configured offer limits
@@ -149,7 +192,7 @@ public final class MarketplaceRuntimeMath {
         int safeSeconds = Math.max(0, totalSeconds);
         int minutes = safeSeconds / 60;
         int seconds = safeSeconds % 60;
-        return String.format(java.util.Locale.ROOT, "%02d:%02d", minutes, seconds);
+        return String.format(Locale.ROOT, "%02d:%02d", minutes, seconds);
     }
 
     /**
@@ -186,3 +229,4 @@ public final class MarketplaceRuntimeMath {
     public record RestockResult(int stockRemaining, long lastRestockGameTime, boolean changed) {
     }
 }
+

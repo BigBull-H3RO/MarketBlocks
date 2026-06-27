@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
+import java.util.Locale;
+
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceUpdateOfferPricingPacket;
 import de.bigbull.marketblocks.feature.marketplace.data.DemandPricing;
@@ -14,6 +16,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
 import java.util.UUID;
+import de.bigbull.marketblocks.feature.marketplace.data.Volatility;
+import net.minecraft.util.FormattedCharSequence;
+import java.util.List;
 
 /**
  * Modal dialog for editing the demand-based pricing configuration of a single marketplace offer.
@@ -27,9 +32,10 @@ public class OfferPricingEditor extends BaseModalScreen {
     private final DemandPricing currentPricing;
 
     private boolean enablePricing;
-    private EditBox demandStepInput;
+    private Volatility volatility;
     private EditBox minMultiplierInput;
     private EditBox maxMultiplierInput;
+    private Button volatilityButton;
 
     public OfferPricingEditor(Screen parent, UUID offerId, DemandPricing currentPricing) {
         this(parent, offerId, currentPricing, -1, -1);
@@ -40,6 +46,7 @@ public class OfferPricingEditor extends BaseModalScreen {
         this.offerId = offerId;
         this.currentPricing = currentPricing != null ? currentPricing : DemandPricing.disabled();
         this.enablePricing = this.currentPricing.enabled();
+        this.volatility = this.currentPricing.volatility();
     }
 
     @Override
@@ -48,7 +55,7 @@ public class OfferPricingEditor extends BaseModalScreen {
 
         createPricingInputs();
         createActionButtons();
-        setInitialFocus(demandStepInput);
+        setInitialFocus(minMultiplierInput);
     }
 
     private void createPricingInputs() {
@@ -63,15 +70,31 @@ public class OfferPricingEditor extends BaseModalScreen {
                 .build();
         this.addRenderableWidget(togglePricingButton);
 
-        this.demandStepInput = createDecimalInput(inputX, rowStartY + ROW_SPACING, currentPricing.demandStep());
-        this.minMultiplierInput = createDecimalInput(inputX, rowStartY + (ROW_SPACING * 2), currentPricing.minMultiplier());
-        this.maxMultiplierInput = createDecimalInput(inputX, rowStartY + (ROW_SPACING * 3), currentPricing.maxMultiplier());
+        this.minMultiplierInput = createIntegerInput(inputX, rowStartY + ROW_SPACING, (int) Math.round(currentPricing.minMultiplier() * 100));
+        this.maxMultiplierInput = createIntegerInput(inputX, rowStartY + (ROW_SPACING * 2), (int) Math.round(currentPricing.maxMultiplier() * 100));
+
+        this.volatilityButton = Button.builder(volatilityMessage(), button -> {
+                    cycleVolatility();
+                    button.setMessage(volatilityMessage());
+                })
+                .bounds(inputX, rowStartY + (ROW_SPACING * 3) - 1, INPUT_WIDTH, 20)
+                .build();
+        this.addRenderableWidget(volatilityButton);
     }
 
-    private EditBox createDecimalInput(int x, int y, double value) {
+    private void cycleVolatility() {
+        Volatility[] vals = Volatility.values();
+        this.volatility = vals[(this.volatility.ordinal() + 1) % vals.length];
+    }
+
+    private Component volatilityMessage() {
+        return Component.translatable("gui.marketblocks.marketplace.editor.pricing.volatility." + volatility.getSerializedName());
+    }
+
+    private EditBox createIntegerInput(int x, int y, int value) {
         EditBox input = new EditBox(this.font, x, y, INPUT_WIDTH, INPUT_HEIGHT, Component.literal(""));
-        input.setFilter(OfferPricingEditor::isDecimalInput);
-        input.setValue(String.format(java.util.Locale.ROOT, "%.2f", value));
+        input.setFilter(OfferPricingEditor::isIntegerInput);
+        input.setValue(String.valueOf(value));
         this.addRenderableWidget(input);
         return input;
     }
@@ -96,16 +119,18 @@ public class OfferPricingEditor extends BaseModalScreen {
 
     private void savePricing() {
         try {
-            double demandStep = parseLocalizedDoubleOrDefault(demandStepInput.getValue(), currentPricing.demandStep());
-            double minMultiplier = parseLocalizedDoubleOrDefault(minMultiplierInput.getValue(), currentPricing.minMultiplier());
-            double maxMultiplier = parseLocalizedDoubleOrDefault(maxMultiplierInput.getValue(), currentPricing.maxMultiplier());
+            int minPercent = parseIntegerOrDefault(minMultiplierInput.getValue(), (int) Math.round(currentPricing.minMultiplier() * 100));
+            int maxPercent = parseIntegerOrDefault(maxMultiplierInput.getValue(), (int) Math.round(currentPricing.maxMultiplier() * 100));
 
-            if (!Double.isFinite(demandStep) || !Double.isFinite(minMultiplier) || !Double.isFinite(maxMultiplier)) {
-                notifyClient(Component.translatable("message.marketblocks.marketplace.pricing.invalid_finite"));
+            double minMultiplier = minPercent / 100.0;
+            double maxMultiplier = maxPercent / 100.0;
+
+            if (minMultiplier > maxMultiplier) {
+                notifyClient(Component.translatable("message.marketblocks.marketplace.pricing.invalid_data"));
                 return;
             }
 
-            DemandPricing newPricing = new DemandPricing(enablePricing, 1.0d, demandStep, minMultiplier, maxMultiplier);
+            DemandPricing newPricing = new DemandPricing(enablePricing, 1.0d, volatility, minMultiplier, maxMultiplier);
 
             var connection = Minecraft.getInstance().getConnection();
             if (connection == null) {
@@ -125,28 +150,45 @@ public class OfferPricingEditor extends BaseModalScreen {
         }
     }
 
-    private static boolean isDecimalInput(String value) {
-        return value.isEmpty() || value.matches("\\d{0,6}([.,]\\d{0,4})?");
+    private static boolean isIntegerInput(String value) {
+        return value.isEmpty() || value.matches("\\d{0,6}");
     }
 
-    private static double parseLocalizedDoubleOrDefault(String rawValue, double fallback) {
+    private static int parseIntegerOrDefault(String rawValue, int fallback) {
         String value = rawValue == null ? "" : rawValue.trim();
-        if (value.isEmpty()) {
+        if (value.isEmpty()) return fallback;
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
             return fallback;
         }
-        return Double.parseDouble(value.replace(',', '.'));
     }
 
     @Override
     protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         int labelX = panelLeft + LABEL_X_OFFSET;
         int rowStartY = panelTop + LABEL_START_Y_OFFSET;
+        
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.label"), labelX, rowStartY, 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.step"), labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.min"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.max"), labelX, rowStartY + (ROW_SPACING * 3), 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.min"), labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.max"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.pricing.volatility"), labelX, rowStartY + (ROW_SPACING * 3), 0xCFCFCF, false);
+
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY, "gui.marketblocks.marketplace.editor.pricing.label.tooltip");
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + ROW_SPACING, "gui.marketblocks.marketplace.editor.pricing.min.tooltip");
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + (ROW_SPACING * 2), "gui.marketblocks.marketplace.editor.pricing.max.tooltip");
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + (ROW_SPACING * 3), "gui.marketblocks.marketplace.editor.pricing.volatility.tooltip");
+    }
+
+    private void renderTooltipIfHovered(GuiGraphics guiGraphics, int mouseX, int mouseY, int x, int y, String translationKey) {
+        int w = 80; // approximate hit width for the text
+        if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + font.lineHeight) {
+            List<FormattedCharSequence> lines = font.split(Component.translatable(translationKey), 200);
+            guiGraphics.renderTooltip(this.font, lines, mouseX, mouseY);
+        }
     }
 }
+
 
 
 

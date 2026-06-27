@@ -6,6 +6,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.world.item.ItemStack;
 
+import de.bigbull.marketblocks.core.config.Config;
 import java.util.*;
 
 /**
@@ -76,11 +77,34 @@ public final class MarketplaceOffer {
     }
 
     /**
+     * Returns the payment items without any demand multiplier applied.
+     */
+    public List<ItemStack> originalPayments() {
+        return payments();
+    }
+
+    /**
      * Returns the payment items with the current demand multiplier applied to each item's count.
      * Empty (air) slots are preserved as-is.
      */
     public List<ItemStack> effectivePayments() {
-        double multiplier = MarketplaceRuntimeMath.computeDemandMultiplier(pricing, runtimeState.demandPurchases());
+        if (runtimeState.isSaleActive() && runtimeState.salePercent().isPresent()) {
+            double percent = runtimeState.salePercent().get();
+            double multiplier = Math.max(0.0, 1.0 + (percent / 100.0));
+            List<ItemStack> effective = new ArrayList<>(payments.size());
+            for (ItemStack payment : payments) {
+                if (payment.isEmpty()) {
+                    effective.add(ItemStack.EMPTY);
+                    continue;
+                }
+                ItemStack adjusted = payment.copy();
+                adjusted.setCount(MarketplaceRuntimeMath.scalePaymentCount(payment.getCount(), multiplier));
+                effective.add(adjusted);
+            }
+            return Collections.unmodifiableList(effective);
+        }
+
+        double multiplier = MarketplaceRuntimeMath.computeDemandMultiplier(pricing(), runtimeState.temperature());
         List<ItemStack> effective = new ArrayList<>(payments.size());
         for (ItemStack payment : payments) {
             if (payment.isEmpty()) {
@@ -96,7 +120,10 @@ public final class MarketplaceOffer {
 
     /** Returns the current demand-based price multiplier (1.0 when demand pricing is disabled). */
     public double currentPriceMultiplier() {
-        return MarketplaceRuntimeMath.computeDemandMultiplier(pricing, runtimeState.demandPurchases());
+        if (runtimeState.isSaleActive() && runtimeState.salePercent().isPresent()) {
+            return Math.max(0.0, 1.0 + (runtimeState.salePercent().get() / 100.0));
+        }
+        return MarketplaceRuntimeMath.computeDemandMultiplier(pricing(), runtimeState.temperature());
     }
 
     public OfferLimit limits() {
@@ -104,6 +131,15 @@ public final class MarketplaceOffer {
     }
 
     public DemandPricing pricing() {
+        if (Config.MARKETPLACE_GLOBAL_PRICING_ENABLED.get()) {
+            return new DemandPricing(
+                true,
+                1.0,
+                Config.MARKETPLACE_GLOBAL_PRICING_VOLATILITY.get(),
+                Config.MARKETPLACE_GLOBAL_PRICING_MIN_PERCENT.get() / 100.0,
+                Config.MARKETPLACE_GLOBAL_PRICING_MAX_PERCENT.get() / 100.0
+            );
+        }
         return pricing;
     }
 

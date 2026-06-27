@@ -1,5 +1,9 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.block.SoundType;
+
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
@@ -135,8 +139,8 @@ public class TradeStandBlock extends BaseShopBlock {
             if (!topAlreadyPresent && !player.getAbilities().instabuild) {
                 stack.shrink(1);
             }
-            level.playSound(null, pos, net.minecraft.world.level.block.SoundType.GLASS.getPlaceSound(),
-                    net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+            level.playSound(null, pos, SoundType.GLASS.getPlaceSound(),
+                    SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide);
@@ -162,8 +166,8 @@ public class TradeStandBlock extends BaseShopBlock {
 
             ItemEntity glassItem = getItemEntity(level, pos);
             level.addFreshEntity(glassItem);
-            level.playSound(null, pos, net.minecraft.sounds.SoundEvents.ITEM_PICKUP,
-                    net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+            level.playSound(null, pos, SoundEvents.ITEM_PICKUP,
+                    SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide);
@@ -233,8 +237,8 @@ public class TradeStandBlock extends BaseShopBlock {
                     && player.getMainHandItem().getEnchantmentLevel(silkTouchHolder.get()) > 0;
 
             if (!hasSilkTouch && !player.isCreative()) {
-                level.playSound(null, pos, net.minecraft.sounds.SoundEvents.GLASS_BREAK,
-                        net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+                level.playSound(null, pos, SoundEvents.GLASS_BREAK,
+                        SoundSource.BLOCKS, 1.0F, 1.0F);
             }
         }
         return super.playerWillDestroy(level, pos, state, player);
@@ -245,3 +249,4 @@ public class TradeStandBlock extends BaseShopBlock {
         return CODEC;
     }
 }
+

@@ -1,5 +1,10 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.util.Mth;
+
+import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -96,7 +101,7 @@ public class SingleOfferOwnerListPanel {
         this.onDirty = onDirty;
         this.ownerScrolling = false;
         this.listDisabled = this.listMode == ListMode.ACCESS_LIST
-                && accessDraft.accessMode() == de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode.EVERYONE;
+                && accessDraft.accessMode() == AccessMode.EVERYONE;
 
         if (!isPrimaryOwner) {
             this.noPlayers = false;
@@ -109,7 +114,7 @@ public class SingleOfferOwnerListPanel {
         }
 
         this.storedNames = listMode == ListMode.OWNERS ? accessDraft.additionalOwners() : accessDraft.accessList();
-        this.ownerStartIndex = net.minecraft.util.Mth.clamp(ownerStartIndex, 0, getOwnerOffscreenRows());
+        this.ownerStartIndex = Mth.clamp(ownerStartIndex, 0, getOwnerOffscreenRows());
         renderOwnerWindow();
         this.noPlayers = ownerOrder.isEmpty();
     }
@@ -171,7 +176,7 @@ public class SingleOfferOwnerListPanel {
 
         ownerScrollOffs = ((float) mouseY - (float) top - (SCROLLER_HEIGHT / 2.0F))
                 / ((float) (bottom - top) - (float) SCROLLER_HEIGHT);
-        ownerScrollOffs = net.minecraft.util.Mth.clamp(ownerScrollOffs, 0.0F, 1.0F);
+        ownerScrollOffs = Mth.clamp(ownerScrollOffs, 0.0F, 1.0F);
 
         setOwnerScrollFromOffs();
         return true;
@@ -188,7 +193,7 @@ public class SingleOfferOwnerListPanel {
 
         int offRows = getOwnerOffscreenRows();
         ownerScrollOffs = (float) ((double) ownerScrollOffs - scrollY / (double) offRows);
-        ownerScrollOffs = net.minecraft.util.Mth.clamp(ownerScrollOffs, 0.0F, 1.0F);
+        ownerScrollOffs = Mth.clamp(ownerScrollOffs, 0.0F, 1.0F);
         setOwnerScrollFromOffs();
         return true;
     }
@@ -286,7 +291,7 @@ public class SingleOfferOwnerListPanel {
             return;
         }
 
-        int maxOwners = de.bigbull.marketblocks.core.config.Config.MAX_CO_OWNERS_PER_SHOP.get();
+        int maxOwners = Config.MAX_CO_OWNERS_PER_SHOP.get();
         boolean limitReached = listMode == ListMode.OWNERS && collectSelectedOwners().size() >= maxOwners;
 
         int visible = Math.min(OWNER_VISIBLE_ROWS, ownerOrder.size());
@@ -302,7 +307,7 @@ public class SingleOfferOwnerListPanel {
 
             Component nameComp = Component.literal(name);
             if (limitReached && !selected) {
-                nameComp = nameComp.copy().withStyle(net.minecraft.ChatFormatting.DARK_GRAY);
+                nameComp = nameComp.copy().withStyle(ChatFormatting.DARK_GRAY);
             }
 
             Checkbox cb = host.addSettingsWidget(Checkbox.builder(nameComp, host.settingsFont())

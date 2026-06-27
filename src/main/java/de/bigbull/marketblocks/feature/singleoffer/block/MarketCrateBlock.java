@@ -20,27 +20,9 @@ public class MarketCrateBlock extends BaseShopBlock {
 
     private static final VoxelShape BASE_SHAPE_NORTH = Shapes.or(
             Block.box(0, 0, 0, 16, 8, 16),
-            Block.box(2, 8, 1, 14, 10, 2),
-            Block.box(2, 8, 14, 14, 15, 15),
-            Block.box(1, 8, 11, 2, 15, 15),
-            Block.box(1, 8, 8, 2, 14, 11),
-            Block.box(1, 8, 4, 2, 12, 8),
-            Block.box(1, 8, 1, 2, 11, 4),
-            Block.box(14, 8, 11, 15, 15, 15),
-            Block.box(14, 8, 8, 15, 14, 11),
-            Block.box(14, 8, 4, 15, 12, 8),
-            Block.box(14, 8, 1, 15, 11, 4),
-
-            Block.box(0, 9.5, 0, 16, 11.5, 1.5),
-            Block.box(0, 15, 13.5, 16, 16, 16),
-            Block.box(0, 10.5, 1.5, 2.5, 12.5, 4.5),
-            Block.box(0, 11.5, 4.5, 2.5, 13.5, 7.5),
-            Block.box(0, 12.5, 7.5, 2.5, 14.5, 10.5),
-            Block.box(0, 14, 10.5, 2.5, 16, 13.5),
-            Block.box(13.5, 10.5, 1.5, 16, 12.5, 4.5),
-            Block.box(13.5, 11.5, 4.5, 16, 13.5, 7.5),
-            Block.box(13.5, 12.5, 7.5, 16, 14.5, 10.5),
-            Block.box(13.5, 14, 10.5, 16, 16, 13.5));
+            Block.box(0, 8, 0, 16, 11, 16),
+            Block.box(0, 11, 5, 16, 14, 16),
+            Block.box(0, 14, 10, 16, 16, 16));
 
     private static final VoxelShape SHAPE_EAST = rotateShape(Direction.NORTH, Direction.EAST, BASE_SHAPE_NORTH);
     private static final VoxelShape SHAPE_SOUTH = rotateShape(Direction.NORTH, Direction.SOUTH, BASE_SHAPE_NORTH);

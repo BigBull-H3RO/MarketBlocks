@@ -1,5 +1,9 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.Font;
+import net.minecraft.Util;
+
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
@@ -15,6 +19,7 @@ import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
 import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
+import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
@@ -148,7 +153,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private OfferItemSettings.Draft offerItemDraft;
     private IoSettings.Draft ioDraft;
     private AccessSettings.Draft accessDraft;
-    private de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.Draft notificationDraft;
+    private NotificationSettings.Draft notificationDraft;
 
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
@@ -373,7 +378,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
 
             AccessSettings access = accessDraft.toSettings();
-            de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings notifications = notificationDraft
+            NotificationSettings notifications = notificationDraft
                     .toSettings();
 
             be.setGeneralSettings(general, false);
@@ -432,7 +437,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (accessDraft == null)
             accessDraft = new AccessSettings.Draft(be.getAccessSettings());
         if (notificationDraft == null)
-            notificationDraft = new de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings.Draft(
+            notificationDraft = new NotificationSettings.Draft(
                     be.getNotificationSettings());
     }
 
@@ -491,7 +496,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
-        if (this.getFocused() instanceof net.minecraft.client.gui.components.EditBox editBox
+        if (this.getFocused() instanceof EditBox editBox
                 && editBox.canConsumeInput()) {
             if (pKeyCode == 256) {
                 this.setFocused(null);
@@ -745,7 +750,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         UUID buyerId = entry.buyerUuid();
         String name = entry.buyerName();
         if (buyerId == null || (buyerId.getLeastSignificantBits() == 0L && buyerId.getMostSignificantBits() == 0L)) {
-            buyerId = net.minecraft.Util.NIL_UUID;
+            buyerId = Util.NIL_UUID;
         }
 
         Minecraft client = Minecraft.getInstance();
@@ -1058,11 +1063,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 .validate(be.getLevel(), be.getBlockPos(), be.getBlockState().getValue(BaseShopBlock.FACING)).result();
     }
 
-    <T extends net.minecraft.client.gui.components.AbstractWidget> T addSettingsWidget(T widget) {
+    <T extends AbstractWidget> T addSettingsWidget(T widget) {
         return addRenderableWidget(widget);
     }
 
-    void removeSettingsWidget(net.minecraft.client.gui.components.AbstractWidget widget) {
+    void removeSettingsWidget(AbstractWidget widget) {
         removeWidget(widget);
     }
 
@@ -1074,7 +1079,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         return topPos;
     }
 
-    net.minecraft.client.gui.Font settingsFont() {
+    Font settingsFont() {
         return font;
     }
 }
+

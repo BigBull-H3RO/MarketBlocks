@@ -4,8 +4,7 @@ import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
 import de.bigbull.marketblocks.feature.marketplace.advancement.MarketplaceBuyTrigger;
 import de.bigbull.marketblocks.feature.marketplace.advancement.MarketplaceOpenTrigger;
-import de.bigbull.marketblocks.feature.marketplace.block.MarketplaceBlock;
-import de.bigbull.marketblocks.feature.marketplace.entity.MarketplaceBlockEntity;
+
 import de.bigbull.marketblocks.feature.singleoffer.advancement.ShopAdminModeTrigger;
 import de.bigbull.marketblocks.feature.singleoffer.advancement.ShopAutoIoTrigger;
 import de.bigbull.marketblocks.feature.singleoffer.advancement.ShopCoOwnerTrigger;
@@ -41,6 +40,11 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.function.Supplier;
 
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import de.bigbull.marketblocks.feature.trader.entity.ShopBuyerEntity;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
+
 /**
  * Central registry initialization class for the MarketBlocks mod.
  * Uses NeoForge's DeferredRegisters to safely register all blocks, items, block entities,
@@ -57,6 +61,8 @@ public final class RegistriesInit {
                         MarketBlocks.MODID);
         public static final DeferredRegister<CriterionTrigger<?>> TRIGGER_TYPES = DeferredRegister
                         .create(Registries.TRIGGER_TYPE, MarketBlocks.MODID);
+        public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister
+                        .create(Registries.ENTITY_TYPE, MarketBlocks.MODID);
 
         private RegistriesInit() {
         }
@@ -68,6 +74,7 @@ public final class RegistriesInit {
                 MENU_TYPES.register(bus);
                 SOUND_EVENTS.register(bus);
                 TRIGGER_TYPES.register(bus);
+                ENTITY_TYPES.register(bus);
         }
 
         public static BlockBehaviour.Properties tradeStandProperties() {
@@ -90,25 +97,17 @@ public final class RegistriesInit {
                                         .noOcclusion()
                                         .mapColor(MapColor.WOOD)
                                         .instrument(NoteBlockInstrument.BASS)
-                                        .strength(2.0f, 3.0f)
+                                        .strength(2.5F, 3600000.0F)
                                         .sound(SoundType.WOOD)));
 
-        public static final DeferredBlock<Block> MARKETPLACE_BLOCK = registerBlock("marketplace",
-                        () -> new MarketplaceBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
-                                        .noOcclusion()
-                                        .mapColor(MapColor.WOOD)
-                                        .instrument(NoteBlockInstrument.BASS)
-                                        .strength(2.0f, 3.0f)
-                                        .sound(SoundType.WOOD)));
+
 
         public static final Supplier<BlockEntityType<SingleOfferShopBlockEntity>> SINGLE_OFFER_SHOP_BLOCK_ENTITY = BLOCK_ENTITIES
                         .register("single_offer_shop", () -> BlockEntityType.Builder.of(
                                         SingleOfferShopBlockEntity::new, TRADE_STAND_BLOCK.get(),
                                         MARKETCRATE_BLOCK.get()).build(null));
 
-        public static final Supplier<BlockEntityType<MarketplaceBlockEntity>> MARKETPLACE_BLOCK_ENTITY = BLOCK_ENTITIES
-                        .register("marketplace", () -> BlockEntityType.Builder.of(
-                                        MarketplaceBlockEntity::new, MARKETPLACE_BLOCK.get()).build(null));
+
 
         public static final Supplier<MenuType<SingleOfferShopMenu>> SINGLE_OFFER_SHOP_MENU = MENU_TYPES
                         .register("single_offer_shop_menu", () -> IMenuTypeExtension.create(SingleOfferShopMenu::new));
@@ -142,6 +141,15 @@ public final class RegistriesInit {
                         .register("shop_admin_mode", ShopAdminModeTrigger::new);
         public static final Supplier<MarketplaceBuyTrigger> MARKETPLACE_BUY_TRIGGER = TRIGGER_TYPES
                         .register("marketplace_buy", MarketplaceBuyTrigger::new);
+
+        public static final Supplier<EntityType<ShopBuyerEntity>> SHOP_BUYER = ENTITY_TYPES.register("shop_buyer",
+                        () -> EntityType.Builder.of(ShopBuyerEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .clientTrackingRange(10)
+                                        .build("shop_buyer"));
+
+        public static final Supplier<Item> SHOP_BUYER_SPAWN_EGG = ITEMS.register("shop_buyer_spawn_egg",
+                        () -> new DeferredSpawnEggItem(SHOP_BUYER, 0x0000AA, 0xFFFF00, new Item.Properties()));
 
         public static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
                 DeferredBlock<T> toReturn = BLOCKS.register(name, block);

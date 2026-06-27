@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.client.gui;
 
+import java.util.Locale;
+
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -30,7 +32,7 @@ public class FloatSlider extends AbstractSliderButton {
 
     @Override
     protected void updateMessage() {
-        this.setMessage(this.prefix.copy().append(": ").append(String.format(java.util.Locale.US, "%.2f", this.currentValue)));
+        this.setMessage(this.prefix.copy().append(": ").append(String.format(Locale.US, "%.2f", this.currentValue)));
     }
 
     @Override
@@ -43,7 +45,7 @@ public class FloatSlider extends AbstractSliderButton {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (this.isValidClickButton(button)) {
             double d0 = (mouseX - (double)(this.getX() + 4)) / (double)(this.width - 8);
-            this.value = net.minecraft.util.Mth.clamp(d0, 0.0D, 1.0D);
+            this.value = Mth.clamp(d0, 0.0D, 1.0D);
             this.applyValue();
             this.updateMessage();
             return true;

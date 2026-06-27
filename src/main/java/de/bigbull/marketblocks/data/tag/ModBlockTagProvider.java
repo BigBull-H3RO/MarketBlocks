@@ -36,20 +36,16 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 tag(BlockTags.MINEABLE_WITH_AXE)
                                 .add(RegistriesInit.TRADE_STAND_BLOCK.get())
                                 .add(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())
-                                .add(RegistriesInit.MARKETCRATE_BLOCK.get())
-                                .add(RegistriesInit.MARKETPLACE_BLOCK.get());
+                                .add(RegistriesInit.MARKETCRATE_BLOCK.get());
 
-                tag(net.minecraft.tags.TagKey.create(
-                                net.minecraft.core.registries.Registries.BLOCK,
+                tag(TagKey.create(
+                                Registries.BLOCK,
                                 SHOP_BLOCKS_TAG_ID))
-                                .add(RegistriesInit.TRADE_STAND_BLOCK.get())
-                                .add(RegistriesInit.MARKETCRATE_BLOCK.get())
-                                .add(RegistriesInit.MARKETPLACE_BLOCK.get());
+                                .add(RegistriesInit.MARKETCRATE_BLOCK.get());
 
                 tag(FTBCHUNKS_INTERACT_WHITELIST)
                                 .add(RegistriesInit.TRADE_STAND_BLOCK.get())
-                                .add(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())
-                                .add(RegistriesInit.MARKETCRATE_BLOCK.get())
-                                .add(RegistriesInit.MARKETPLACE_BLOCK.get());
+                                .add(RegistriesInit.MARKETCRATE_BLOCK.get());
         }
 }
+

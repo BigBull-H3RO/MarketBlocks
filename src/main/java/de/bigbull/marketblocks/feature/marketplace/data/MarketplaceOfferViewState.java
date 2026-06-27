@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.marketplace.data;
 
+import java.util.Objects;
+
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.Optional;
@@ -22,11 +24,11 @@ public record MarketplaceOfferViewState(
 
     public MarketplaceOfferViewState {
         maxPurchasable = Math.max(0, maxPurchasable);
-        remainingDailyPurchases = java.util.Objects.requireNonNullElse(remainingDailyPurchases, Optional.<Integer>empty())
+        remainingDailyPurchases = Objects.requireNonNullElse(remainingDailyPurchases, Optional.<Integer>empty())
                 .filter(candidate -> candidate >= 0);
-        remainingStock = java.util.Objects.requireNonNullElse(remainingStock, Optional.<Integer>empty())
+        remainingStock = Objects.requireNonNullElse(remainingStock, Optional.<Integer>empty())
                 .filter(candidate -> candidate >= 0);
-        restockSecondsRemaining = java.util.Objects.requireNonNullElse(restockSecondsRemaining, Optional.<Integer>empty())
+        restockSecondsRemaining = Objects.requireNonNullElse(restockSecondsRemaining, Optional.<Integer>empty())
                 .filter(candidate -> candidate >= 0);
         priceMultiplier = Math.max(0.0d, priceMultiplier);
     }
@@ -58,3 +60,4 @@ public record MarketplaceOfferViewState(
         );
     }
 }
+

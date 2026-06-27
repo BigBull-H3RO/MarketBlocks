@@ -31,6 +31,13 @@ public record AutoFillPaymentPacket(BlockPos pos) implements CustomPacketPayload
         return TYPE;
     }
 
+    /**
+     * Handles the auto-fill packet on the server main thread.
+     * Pulls matching items from the player's inventory into the payment slots of the active {@link SingleOfferShopMenu}.
+     *
+     * @param packet  The incoming packet payload containing the shop block position.
+     * @param context The payload context with the sending player.
+     */
     public static void handle(AutoFillPaymentPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) {

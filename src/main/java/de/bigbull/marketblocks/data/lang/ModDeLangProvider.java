@@ -22,6 +22,10 @@ public class ModDeLangProvider extends LanguageProvider {
         // === Blocks & Items ===
         add("item.marketblocks.trade_stand.with_showcase", "Handelsstand (Mit Vitrine)");
 
+        // === Entities ===
+        add("entity.marketblocks.shop_buyer", "Wandernder Shop-Käufer");
+        add("item.marketblocks.shop_buyer_spawn_egg", "Wandernder Shop-Käufer Spawn-Ei");
+
         // === Containers & Menus ===
         add("container.marketblocks.trade_stand", "Handelsstand");
         add("menu.marketblocks.marketplace", "Marktplatz");
@@ -44,18 +48,28 @@ public class ModDeLangProvider extends LanguageProvider {
         add("command.marketblocks.list.delete", "[Löschen]");
         add("command.marketblocks.list.tp", "[Teleport]");
         add("command.marketblocks.list.waypoint", "[Wegpunkt]");
+        add("command.marketblocks.list.page_header", "§8======== §6§lShops (Seite %s/%s) §8========");
+        add("command.marketblocks.list.prev", "[< Zurück]");
+        add("command.marketblocks.list.next", "[Weiter >]");
         add("command.marketblocks.marketplacelist.entry", "§8▪ §6Marktplatz §e%s");
-        add("command.marketblocks.marketplacelist.header", "§8======== §6§lMarktplatz-Liste §8========");
+        add("command.marketblocks.marketplacelist.page_header", "§8======== §6§lMarktplatz-Liste (Seite %s/%s) §8========");
         add("command.marketblocks.marketplacelist.no_links", "§cKeine Marktplätze gefunden.");
         add("command.marketblocks.player_not_found", "§cSpieler nicht gefunden");
         add("command.marketblocks.reload.success", "§aMarketBlocks-Konfiguration erfolgreich neu geladen!");
         add("command.marketblocks.resetlimits.no_changes", "§eEs wurden keine Tageslimits zurückgesetzt.");
         add("command.marketblocks.resetlimits.success", "§aTageslimits erfolgreich zurückgesetzt.");
+        add("command.marketblocks.search.header", "§8======== §6§lShops, die %s verkaufen (Seite %s/%s) §8========");
+        add("command.marketblocks.search.no_shops", "§cKeine Shops oder Marktplätze gefunden, die %s verkaufen.");
         add("command.marketblocks.shoplist.closed", "GESCHLOSSEN");
         add("command.marketblocks.shoplist.entry", "§8▪ §7[%s§7] §e%s §8(von §7%s§8)");
         add("command.marketblocks.shoplist.header", "§8======== §6§lShop-Liste §8========");
-        add("command.marketblocks.shoplist.no_shops", "§cKeine Shops auf diesem Marktplatz verfügbar.");
+        add("command.marketblocks.shoplist.no_shops", "§cKeine Shops verfügbar.");
         add("command.marketblocks.shoplist.open", "OFFEN");
+        add("command.marketblocks.shoplist.hover.shop", "Shop: %s");
+        add("command.marketblocks.shoplist.hover.owner", "Besitzer: %s");
+        add("command.marketblocks.shoplist.hover.status", "Status: %s");
+        add("command.marketblocks.shoplist.hover.offer", "Angebot:");
+        add("command.marketblocks.shoplist.hover.arrow", "➔");
         add("command.marketblocks.unlink.not_found", "§cKonnte die Marktplatz-Verlinkung nicht finden.");
         add("command.marketblocks.unlink.not_linked", "§cDieser Block ist nicht verlinkt.");
         add("command.marketblocks.unlink.not_looking_at_block", "§cDu musst einen Block ansehen, um ihn zu entlinken.");
@@ -141,9 +155,6 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.notifications.co_owners", "Mitbesitzer benachrichtigen");
         add("gui.marketblocks.notifications.co_owners.tooltip",
                 "Sende Benachrichtigungen auch an zusätzliche Shop-Besitzer.");
-        add("gui.marketblocks.notifications.login.out_of_stock", "§cWarnung: %s deiner Shops sind leer!§r");
-        add("gui.marketblocks.notifications.login.output_full",
-                "§cWarnung: Bei %s deiner Shops ist das Ausgabe-Inventar voll!§r");
         add("gui.marketblocks.notifications.out_of_stock", "Leer-Warnung");
         add("gui.marketblocks.notifications.out_of_stock.tooltip", "Werde gewarnt, wenn der Shop leer ist.");
         add("gui.marketblocks.notifications.output_full", "Ausgabe Voll-Warnung");
@@ -161,12 +172,22 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.editor.limits.restock", "Auffüllzeit (s)");
         add("gui.marketblocks.marketplace.editor.limits.stock", "Lagerlimit");
         add("gui.marketblocks.marketplace.editor.limits.title", "Limits");
+        add("gui.marketblocks.marketplace.editor.limits.daily.tooltip", "Maximale Käufe pro Spieler und Tag.");
+        add("gui.marketblocks.marketplace.editor.limits.stock.tooltip", "Gesamter verfügbarer Lagerbestand für dieses Angebot.");
+        add("gui.marketblocks.marketplace.editor.limits.restock.tooltip", "Zeit in Sekunden bis zum Wiederauffüllen.");
         add("gui.marketblocks.marketplace.editor.pricing.disabled", "Preisdynamik AUS");
         add("gui.marketblocks.marketplace.editor.pricing.enabled", "Preisdynamik AN");
-        add("gui.marketblocks.marketplace.editor.pricing.label", "Preisdynamik");
-        add("gui.marketblocks.marketplace.editor.pricing.max", "Maximaler Multiplikator");
-        add("gui.marketblocks.marketplace.editor.pricing.min", "Minimaler Multiplikator");
-        add("gui.marketblocks.marketplace.editor.pricing.step", "Nachfrage-Schritt");
+        add("gui.marketblocks.marketplace.editor.pricing.label", "Preisdynamik aktivieren");
+        add("gui.marketblocks.marketplace.editor.pricing.label.tooltip", "Wenn aktiviert, skaliert der Preis dynamisch anhand der Nachfrage/Markttemperatur.");
+        add("gui.marketblocks.marketplace.editor.pricing.max", "Maximaler Preis (%)");
+        add("gui.marketblocks.marketplace.editor.pricing.max.tooltip", "Maximaler Prozentsatz, den der Preis erreichen kann (z.B. 200 = doppelter Preis).");
+        add("gui.marketblocks.marketplace.editor.pricing.min", "Minimaler Preis (%)");
+        add("gui.marketblocks.marketplace.editor.pricing.min.tooltip", "Minimaler Prozentsatz, auf den der Preis sinken kann (z.B. 50 = halber Preis).");
+        add("gui.marketblocks.marketplace.editor.pricing.volatility", "Volatilität");
+        add("gui.marketblocks.marketplace.editor.pricing.volatility.tooltip", "Wie schnell der Preis auf Käufe und Zeitverfall reagiert.");
+        add("gui.marketblocks.marketplace.editor.pricing.volatility.slow", "Langsam");
+        add("gui.marketblocks.marketplace.editor.pricing.volatility.normal", "Normal");
+        add("gui.marketblocks.marketplace.editor.pricing.volatility.fast", "Schnell");
         add("gui.marketblocks.marketplace.editor.pricing.title", "Preisdynamik");
 
         // === GUI - Marketplace Elements ===
@@ -176,6 +197,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.delete_page", "Seite löschen");
         add("gui.marketblocks.marketplace.inline.limits", "Limits bearbeiten");
         add("gui.marketblocks.marketplace.inline.pricing", "Preisdynamik bearbeiten");
+        add("gui.marketblocks.marketplace.inline.pricing.disabled_global", "Deaktiviert: Globale Preisdynamik ist in der Server-Konfiguration aktiv");
         add("gui.marketblocks.marketplace.mode.edit", "In Bearbeitungsmodus wechseln");
         add("gui.marketblocks.marketplace.mode.view", "In Ansichtsmodus wechseln");
         add("gui.marketblocks.marketplace.move_offer", "Angebot verschieben");
@@ -204,6 +226,15 @@ public class ModDeLangProvider extends LanguageProvider {
         // === GUI - General ===
         add("gui.marketblocks.admin_shop.disabled", "Admin-Shop: AUS");
         add("gui.marketblocks.admin_shop.enabled", "Admin-Shop: AN");
+        add("gui.marketblocks.category", "Kategorie");
+        add("gui.marketblocks.category.none", "Keine");
+        add("gui.marketblocks.category.weapons_armor", "Waffen & Rüstung");
+        add("gui.marketblocks.category.tools", "Werkzeuge");
+        add("gui.marketblocks.category.blocks", "Blöcke & Baumaterial");
+        add("gui.marketblocks.category.food_potions", "Nahrung & Tränke");
+        add("gui.marketblocks.category.valuables", "Wertgegenstände");
+        add("gui.marketblocks.category.misc", "Sonstiges");
+        add("gui.marketblocks.category.tooltip", "Kategorie, unter der der Shop in der globalen Liste angezeigt wird");
         add("gui.marketblocks.create_offer", "Angebot erstellen");
         add("gui.marketblocks.delete_offer", "Angebot löschen");
         add("gui.marketblocks.disabled", "Deaktiviert");
@@ -273,6 +304,19 @@ public class ModDeLangProvider extends LanguageProvider {
                 "Preisdynamik konnte nicht gespeichert werden: keine Serververbindung.");
         add("message.marketblocks.trade_stand.no_offer", "Dieser Handelsstand hat aktuell kein aktives Angebot.");
         add("message.marketblocks.trade_stand.not_owner", "Nur der Besitzer kann diesen Handelsstand abbauen.");
+        add("message.marketblocks.trade_stand.break_not_empty", "Du musst zuerst alle Items und Auszahlungen leeren!");
+        add("message.marketblocks.shop.limit_reached", "Du kannst maximal %s Shops platzieren!");
+        
+        add("message.marketblocks.shop_buyer.interact.1", "§eIch bin auf der Suche nach guten Waren zum Kaufen!§r");
+        add("message.marketblocks.shop_buyer.interact.2", "§eHast du etwas Interessantes im Angebot?§r");
+        add("message.marketblocks.shop_buyer.interact.3", "§eIch reise umher, um Dinge zu kaufen. Vielleicht hast du, was ich suche!§r");
+        add("message.marketblocks.shop_buyer.interact.4", "§eIch habe gerade ein tolles Angebot gefunden! Ich liebe es, hier einzukaufen!§r");
+        add("message.marketblocks.shop_buyer.interact.5", "§eNoch ein guter Kauf! Meine Tasche wird langsam schwer.§r");
+        add("message.marketblocks.shop_buyer.interact.6", "§eIch habe bekommen, was ich brauchte, dank dieser Shops!§r");
+        add("message.marketblocks.shop_buyer.interact.7", "§eHmm, ich suche nach etwas Bestimmtem...§r");
+        add("message.marketblocks.shop_buyer.interact.8", "§eIch frage mich, welche anderen Shops es hier noch gibt...§r");
+        add("message.marketblocks.shop_buyer.interact.9", "§eIch schaue mich nur um. Noch hat nichts mein Interesse geweckt.§r");
+        add("message.marketblocks.shop_buyer.interact.10", "§eSchöner Shop, den du hier hast! Den merke ich mir.§r");
 
         // === Jade / Waila Support ===
         add("config.jade.plugin_marketblocks.shop_info", "Shop-Info");
@@ -280,9 +324,11 @@ public class ModDeLangProvider extends LanguageProvider {
         add("marketblocks.jade.out_of_stock", "Ausverkauft!");
         add("marketblocks.jade.output_full", "Lager voll!");
         add("marketblocks.jade.owner", "Besitzer: %s");
+        add("marketblocks.jade.shop", "Shop: %s");
         add("marketblocks.jade.selling", "Verkauft:");
         add("marketblocks.jade.status.admin_shop", "Admin-Shop");
         add("marketblocks.jade.status.closed", "Shop geschlossen");
+        add("marketblocks.jade.trader.budget", "Budget: %s");
 
         // === Advancements ===
         add("advancements.marketblocks.admin_shop.description", "Aktiviere den Admin-Shop-Modus");
@@ -319,9 +365,34 @@ public class ModDeLangProvider extends LanguageProvider {
         // === Subtitles ===
         add("subtitles.marketblocks.visual_npc_fall", "Dorfbewohner landet");
 
+        // === Login Notifications ===
+        add("gui.marketblocks.notifications.login.out_of_stock", "§c[MarketBlocks] %s deiner Shops sind ausverkauft!§r");
+        add("gui.marketblocks.notifications.login.output_full", "§c[MarketBlocks] Bei %s deiner Shops ist das Ausgabelager voll!§r");
+        add("gui.marketblocks.notifications.login.coordinate", "§7 - Position: X: %s, Y: %s, Z: %s§r");
+
+        // === Purchase Confirmations ===
+        add("message.marketblocks.purchase_success", "Du hast erfolgreich %s x %s gekauft.");
+        add("message.marketblocks.purchase_success.global", "%s hat %s x %s gekauft.");
+
+        // === Admin Commands ===
+        add("command.marketblocks.trader.value.set", "Wert von %s auf %s gesetzt.");
+        add("command.marketblocks.trader.value.remove", "Wert für %s entfernt.");
+        add("command.marketblocks.trader.blacklist.add", "%s zur Blacklist hinzugefügt.");
+        add("command.marketblocks.trader.blacklist.remove", "%s von der Blacklist entfernt.");
+        add("command.marketblocks.sale.set.success", "Sonderangebot für [%s] aktiviert: Preisänderung %s (Dauer: %s min)");
+        add("command.marketblocks.sale.remove.success", "Sonderangebot beendet für [%s].");
+        add("command.marketblocks.sale.not_found", "Angebot / Shop nicht gefunden: %s");
+        add("command.marketblocks.sale.failed", "Fehler beim Bearbeiten des Sonderangebots.");
+        add("command.marketblocks.stats.shop.header", "--- Top 10 SingleOfferShops ---");
+        add("command.marketblocks.stats.shop.empty", "Keine Shops verfügbar.");
+        add("command.marketblocks.stats.shop.unnamed", "Unbenannt");
+        add("command.marketblocks.stats.shop.entry", "%s. %s - %s Verkäufe");
+        add("command.marketblocks.stats.marketplace.header", "--- Top 10 Marketplace Angebote ---");
+        add("command.marketblocks.stats.marketplace.empty", "Keine Angebote verfügbar.");
+        add("command.marketblocks.stats.marketplace.entry", "%s. %s - %s Verkäufe");
+
         // === Block Registrations ===
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Marktkiste");
-        addBlock(RegistriesInit.MARKETPLACE_BLOCK, "Marktplatz");
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Verkaufsstand");
 
     }

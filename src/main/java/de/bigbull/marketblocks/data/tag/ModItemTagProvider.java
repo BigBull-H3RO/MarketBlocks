@@ -1,5 +1,8 @@
 package de.bigbull.marketblocks.data.tag;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+
 import de.bigbull.marketblocks.MarketBlocks;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -23,11 +26,12 @@ public class ModItemTagProvider extends ItemTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
-        copy(net.minecraft.tags.TagKey.create(
-                net.minecraft.core.registries.Registries.BLOCK,
+        copy(TagKey.create(
+                Registries.BLOCK,
                 ModBlockTagProvider.SHOP_BLOCKS_TAG_ID),
-                net.minecraft.tags.TagKey.create(
-                        net.minecraft.core.registries.Registries.ITEM,
+                TagKey.create(
+                        Registries.ITEM,
                         ModBlockTagProvider.SHOP_BLOCKS_TAG_ID));
     }
 }
+

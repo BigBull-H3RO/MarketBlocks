@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import de.bigbull.marketblocks.util.NameValidator;
 
 /**
  * Settings for the Villager tab: NPC toggle, name, profession, and feedback effects.
@@ -96,12 +97,7 @@ public record VillagerSettings(
     }
 
     public static String sanitizeNpcName(String raw) {
-        if (raw == null || raw.isBlank()) return "";
-        String sanitized = raw.strip().replaceAll("[^\\p{L}\\p{N} _-]", "");
-        if (sanitized.length() > MAX_NPC_NAME_LENGTH) {
-            sanitized = sanitized.substring(0, MAX_NPC_NAME_LENGTH);
-        }
-        return sanitized;
+        return NameValidator.sanitizeName(raw);
     }
 
     public static String sanitizePlayerSkinName(String raw) {

@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.render;
 
+import net.minecraft.client.renderer.texture.OverlayTexture;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -444,16 +446,16 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         float halfH = 0.5f;
 
         vertexConsumer.addVertex(matrix4f, -halfW, -halfH, 0).setColor(255, 255, 255, 255).setUv(0.0F, 0.0F)
-                .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
                 .setNormal(poseStack.last(), 0, 0, 1);
         vertexConsumer.addVertex(matrix4f, -halfW, halfH, 0).setColor(255, 255, 255, 255).setUv(0.0F, 1.0F)
-                .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
                 .setNormal(poseStack.last(), 0, 0, 1);
         vertexConsumer.addVertex(matrix4f, halfW, halfH, 0).setColor(255, 255, 255, 255).setUv(1.0F, 1.0F)
-                .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
                 .setNormal(poseStack.last(), 0, 0, 1);
         vertexConsumer.addVertex(matrix4f, halfW, -halfH, 0).setColor(255, 255, 255, 255).setUv(1.0F, 0.0F)
-                .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
                 .setNormal(poseStack.last(), 0, 0, 1);
 
         poseStack.popPose();
@@ -507,3 +509,4 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 pos.getZ() + 3);
     }
 }
+

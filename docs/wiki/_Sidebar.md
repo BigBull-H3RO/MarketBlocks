@@ -14,5 +14,6 @@
   - [Admin Shop Mode](SingleOfferShop-Admin-Shop-Mode)
   - [Examples / Common Setups](SingleOfferShop-Examples-and-Common-Setups)
   - [Advancements](SingleOfferShop-Advancements)
+- [Mod Compatibility](Mod-Compatibility)
 - [Commands & Permissions](Commands-and-Permissions)
 - [Developer Info](Developer-Info)
