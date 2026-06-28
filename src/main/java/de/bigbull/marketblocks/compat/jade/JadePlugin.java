@@ -6,6 +6,7 @@ import snownee.jade.api.IWailaPlugin;
 import snownee.jade.api.WailaPlugin;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
+import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandTopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.trader.entity.ShopBuyerEntity;
 
@@ -15,12 +16,14 @@ public class JadePlugin implements IWailaPlugin {
     @Override
     public void register(IWailaCommonRegistration registration) {
         registration.registerBlockDataProvider(ShopBlockComponentProvider.INSTANCE, SingleOfferShopBlockEntity.class);
+        registration.registerBlockDataProvider(ShopBlockComponentProvider.INSTANCE, TradeStandTopBlock.class);
         registration.registerEntityDataProvider(ShopBuyerComponentProvider.INSTANCE, ShopBuyerEntity.class);
     }
 
     @Override
     public void registerClient(IWailaClientRegistration registration) {
         registration.registerBlockComponent(ShopBlockComponentProvider.INSTANCE, BaseShopBlock.class);
+        registration.registerBlockComponent(ShopBlockComponentProvider.INSTANCE, TradeStandTopBlock.class);
         registration.registerEntityComponent(ShopBuyerComponentProvider.INSTANCE, ShopBuyerEntity.class);
     }
 }

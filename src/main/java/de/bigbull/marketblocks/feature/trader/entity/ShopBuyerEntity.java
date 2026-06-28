@@ -21,6 +21,7 @@ import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.UseItemGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -48,7 +49,9 @@ public class ShopBuyerEntity extends PathfinderMob {
     /** How many more shops this trader wants to visit before leaving. */
     private int shopsToVisit;
 
-    /** Tracks the number of successful purchases for context-dependent interaction. */
+    /**
+     * Tracks the number of successful purchases for context-dependent interaction.
+     */
     private int successfulPurchases = 0;
 
     /** Messages 1-3: general, 4-6: post-purchase, 7-8: searching, 9-10: browsing */
@@ -66,6 +69,9 @@ public class ShopBuyerEntity extends PathfinderMob {
         this.despawnDelay = Config.TRADER_DESPAWN_TICKS.get();
         int maxShops = Config.TRADER_MAX_SHOPS_PER_VISIT.get();
         this.shopsToVisit = maxShops > 1 ? 1 + this.random.nextInt(maxShops) : 1;
+        if (this.getNavigation() instanceof GroundPathNavigation groundNavigation) {
+            groundNavigation.setCanFloat(true);
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -217,7 +223,8 @@ public class ShopBuyerEntity extends PathfinderMob {
     // --- Visited Shops ---
 
     /**
-     * Marks a shop position as visited so the trader won't revisit it during this lifecycle.
+     * Marks a shop position as visited so the trader won't revisit it during this
+     * lifecycle.
      */
     public void addVisitedShop(BlockPos pos) {
         this.visitedShops.add(pos);

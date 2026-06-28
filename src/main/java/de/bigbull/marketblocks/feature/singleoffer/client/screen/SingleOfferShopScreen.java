@@ -464,6 +464,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         addSettingsWidget(Button.builder(getAdminShopToggleLabel(be), b -> {
             boolean next = !be.isAdminShopEnabled();
             be.setAdminShopEnabledClient(next);
+            if (accessDraft != null) {
+                accessDraft.setAdminShopEnabled(next);
+            }
             NetworkHandler.sendToServer(new ToggleAdminShopModePacket(be.getBlockPos(), next));
             b.setMessage(getAdminShopToggleLabel(be));
             rebuildUI();

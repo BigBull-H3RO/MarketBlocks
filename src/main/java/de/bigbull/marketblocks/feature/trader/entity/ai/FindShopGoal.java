@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.feature.trader.entity.ai;
 
+import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
@@ -49,8 +50,11 @@ public class FindShopGoal extends Goal {
         ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
 
         // Pre-filter by dimension and distance, then shuffle for randomness
+        boolean allowAdminShops = Config.TRADER_ALLOW_ADMIN_SHOPS.get();
         List<ShopDirectorySavedData.ShopEntry> candidates = new ArrayList<>();
         for (ShopDirectorySavedData.ShopEntry shop : data.getShops()) {
+            if (!allowAdminShops && shop.isAdminShop())
+                continue;
             GlobalPos globalPos = shop.pos();
             if (globalPos.dimension() != serverLevel.dimension())
                 continue;

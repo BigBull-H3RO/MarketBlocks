@@ -34,7 +34,8 @@ public class PacketRateLimiter {
 
         if (packetType.equals(de.bigbull.marketblocks.feature.singleoffer.network.SwitchTabPacket.TYPE) ||
             packetType.equals(de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSelectPagePacket.TYPE) ||
-            packetType.equals(de.bigbull.marketblocks.feature.marketplace.network.MarketplaceOpenRequestPacket.TYPE)) {
+            packetType.equals(de.bigbull.marketblocks.feature.marketplace.network.MarketplaceOpenRequestPacket.TYPE) ||
+            packetType.equals(de.bigbull.marketblocks.feature.marketplace.network.MarketplaceClearTemplatePacket.TYPE)) {
             cooldown = Math.min(cooldown, 25L);
         }
 

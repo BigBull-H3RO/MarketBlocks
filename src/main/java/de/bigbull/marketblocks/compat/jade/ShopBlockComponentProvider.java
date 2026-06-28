@@ -15,6 +15,8 @@ import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEn
 import net.minecraft.world.phys.Vec2;
 import snownee.jade.api.IServerDataProvider;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandTopBlock;
 
 public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
@@ -24,7 +26,11 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
 
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
-        if (accessor.getBlockEntity() instanceof SingleOfferShopBlockEntity shop) {
+        BlockEntity be = accessor.getBlockEntity();
+        if (be == null && accessor.getBlock() instanceof TradeStandTopBlock) {
+            be = accessor.getLevel().getBlockEntity(accessor.getPosition().below());
+        }
+        if (be instanceof SingleOfferShopBlockEntity shop) {
 
             // Status and Owner/Name
             if (shop.getGeneralSettings().isClosed()) {
@@ -100,7 +106,11 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
 
     @Override
     public void appendServerData(CompoundTag data, BlockAccessor accessor) {
-        if (accessor.getBlockEntity() instanceof SingleOfferShopBlockEntity shop) {
+        BlockEntity be = accessor.getBlockEntity();
+        if (be == null && accessor.getBlock() instanceof TradeStandTopBlock) {
+            be = accessor.getLevel().getBlockEntity(accessor.getPosition().below());
+        }
+        if (be instanceof SingleOfferShopBlockEntity shop) {
             boolean hasStock = shop.isAdminShopEnabled() || shop.getOfferManager().hasResultItemInInput(true);
             boolean outputFull = !shop.isAdminShopEnabled() && !shop.getInventoryManager().hasOutputSpace(shop.getOfferPayment1(), shop.getOfferPayment2());
             data.putBoolean("HasStock", hasStock);

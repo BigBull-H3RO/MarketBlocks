@@ -57,6 +57,7 @@ public class NetworkHandler {
         registerServerPacket(registrar, MarketplaceUpdateOfferPricingPacket.TYPE, MarketplaceUpdateOfferPricingPacket.CODEC, MarketplaceUpdateOfferPricingPacket::handle);
         registerServerPacket(registrar, MarketplaceAutoFillPacket.TYPE, MarketplaceAutoFillPacket.CODEC, MarketplaceAutoFillPacket::handle);
         registerServerPacket(registrar, MarketplaceSetOfferPacket.TYPE, MarketplaceSetOfferPacket.CODEC, MarketplaceSetOfferPacket::handle);
+        registerServerPacket(registrar, MarketplaceClearTemplatePacket.TYPE, MarketplaceClearTemplatePacket.CODEC, MarketplaceClearTemplatePacket::handle);
 
         registrar.playToClient(OfferStatusPacket.TYPE, OfferStatusPacket.CODEC, OfferStatusPacket::handle);
         registrar.playToClient(TransactionLogSyncPacket.TYPE, TransactionLogSyncPacket.CODEC, TransactionLogSyncPacket::handle);
