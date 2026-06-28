@@ -506,12 +506,19 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             AccessSettings access,
             NotificationSettings notifications) {
 
+        boolean oldAdminShop = isAdminShopEnabled();
+
         settingsManager.setIoSettings(io, false);
         settingsManager.setGeneralSettings(general, false);
         settingsManager.setVillagerSettings(villager, false);
         settingsManager.setOfferItemSettings(offerItem, false);
         settingsManager.setAccessSettings(access, false);
         settingsManager.setNotificationSettings(notifications, false);
+
+        if (oldAdminShop != access.adminShopEnabled()) {
+            needsOfferRefresh = true;
+            updateOfferSlot(false);
+        }
 
         if (level != null && !level.isClientSide) {
             unlockAdjacentChests();

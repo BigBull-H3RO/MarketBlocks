@@ -5,6 +5,7 @@ import net.minecraft.sounds.SoundEvents;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceAutoFillPacket;
+import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceClearTemplatePacket;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSelectPagePacket;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSetOfferPacket;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceToggleEditModePacket;
@@ -128,6 +129,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     private OfferTemplateButton offerPreviewButton;
     private UUID selectedOfferId = null;
+    private int clearTemplateDelay = 0;
     private final MarketplaceEditorControls editorControls = new MarketplaceEditorControls();
     private final MarketplaceEditorControls.Callbacks editorCallbacks = new ScreenEditorCallbacks();
     private final MarketplacePageSidebar pageSidebar = new MarketplacePageSidebar();
@@ -164,7 +166,9 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     @Override
     public void containerTick() {
         super.containerTick();
-        if (isLocalEditMode && selectedOfferId != null && !isPreviewMatchingSelectedOffer()) {
+        if (this.clearTemplateDelay > 0) {
+            this.clearTemplateDelay--;
+        } else if (isLocalEditMode && selectedOfferId != null && !isPreviewMatchingSelectedOffer()) {
             boolean allEmpty = menu.getTemplateStack(0).isEmpty() && menu.getTemplateStack(1).isEmpty()
                     && menu.getTemplateStack(2).isEmpty();
             if (!allEmpty) {
@@ -641,6 +645,13 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         if (!isLocalEditMode) {
             menu.setCurrentTradingOffer(clickedOffer);
             NetworkHandler.sendToServer(new MarketplaceSetOfferPacket(clickedOffer.id()));
+        } else {
+            boolean allEmpty = menu.getTemplateStack(0).isEmpty() && menu.getTemplateStack(1).isEmpty()
+                    && menu.getTemplateStack(2).isEmpty();
+            if (!allEmpty) {
+                this.clearTemplateDelay = 10;
+                NetworkHandler.sendToServer(new MarketplaceClearTemplatePacket());
+            }
         }
 
         updatePreview();

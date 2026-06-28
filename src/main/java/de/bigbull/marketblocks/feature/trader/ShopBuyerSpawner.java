@@ -50,8 +50,10 @@ public class ShopBuyerSpawner {
         }
 
         ShopDirectorySavedData data = ShopDirectorySavedData.get(level);
+        boolean allowAdminShops = Config.TRADER_ALLOW_ADMIN_SHOPS.get();
         List<ShopDirectorySavedData.ShopEntry> shops = data.getShops().stream()
-                .filter(s -> s.pos().dimension().equals(level.dimension()) && !s.isClosed())
+                .filter(s -> s.pos().dimension().equals(level.dimension()) && !s.isClosed()
+                        && (allowAdminShops || !s.isAdminShop()))
                 .toList();
 
         boolean spawnNearPlayer = shops.isEmpty()
@@ -81,7 +83,7 @@ public class ShopBuyerSpawner {
             BlockPos candidate = targetPos.offset(dx, 0, dz);
             BlockPos spawnPos = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, candidate);
 
-            if (level.getFluidState(spawnPos).isEmpty()) {
+            if (level.getFluidState(spawnPos).isEmpty() && level.getFluidState(spawnPos.below()).isEmpty()) {
                 ShopBuyerEntity entity = RegistriesInit.SHOP_BUYER.get().create(level);
                 if (entity != null) {
                     entity.moveTo(spawnPos, 0.0F, 0.0F);

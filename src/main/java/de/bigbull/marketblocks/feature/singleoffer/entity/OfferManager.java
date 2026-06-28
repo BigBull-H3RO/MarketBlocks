@@ -280,6 +280,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         if (shopEntity.getGeneralSettings().isClosed() || !shopEntity.hasOffer()) return 0;
 
         boolean adminShop = shopEntity.isAdminShopEnabled();
+        if (adminShop && !Config.TRADER_ALLOW_ADMIN_SHOPS.get()) return 0;
         ShopInventoryManager inv = shopEntity.getInventoryManager();
 
         ItemStack p1 = shopEntity.getOfferPayment1();

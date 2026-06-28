@@ -56,6 +56,7 @@ public class Config {
         public static final ModConfigSpec.IntValue TRADER_MAX_SHOPS_PER_VISIT;
         public static final ModConfigSpec.BooleanValue TRADER_NAMES_ENABLED;
         public static final ModConfigSpec.BooleanValue TRADER_PREFER_DAYTIME_SPAWN;
+        public static final ModConfigSpec.BooleanValue TRADER_ALLOW_ADMIN_SHOPS;
 
         public static final ModConfigSpec.BooleanValue ENABLE_PACKET_RATE_LIMITING;
         public static final ModConfigSpec.IntValue PACKET_COOLDOWN_MS;
@@ -210,6 +211,9 @@ public class Config {
                 TRADER_PREFER_DAYTIME_SPAWN = COMMON_BUILDER
                                 .comment("If true, traders will only spawn during daytime (like the vanilla Wandering Trader)")
                                 .define("traderPreferDaytimeSpawn", true);
+                TRADER_ALLOW_ADMIN_SHOPS = COMMON_BUILDER
+                                .comment("If true, traders can spawn near and purchase from SingleOfferShops that have Admin Mode enabled. Default: true")
+                                .define("traderAllowAdminShops", true);
                 COMMON_BUILDER.pop();
 
                 COMMON_BUILDER.pop();
