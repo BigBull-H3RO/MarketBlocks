@@ -1,8 +1,13 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.MarketCrateConfig;
+import de.bigbull.marketblocks.core.config.TradeStandConfig;
+import de.bigbull.marketblocks.feature.singleoffer.SideMode;
+import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
@@ -14,10 +19,14 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.ShopCategory;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 
 /**
  * Manages all configuration settings for a single-offer shop block entity.
- * Handles general, villager, offer item, IO, access, and notification settings, as well as NBT serialization.
+ * Handles general, villager, offer item, IO, access, and notification settings,
+ * as well as NBT serialization.
  */
 public class ShopSettingsManager {
     private static final String KEY_GENERAL = "General";
@@ -55,65 +64,80 @@ public class ShopSettingsManager {
                 IoSettings.DEFAULT.right(),
                 IoSettings.DEFAULT.bottom(),
                 IoSettings.DEFAULT.back(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_REDSTONE_CONTROL.get() : Config.TRADESTAND_DEFAULT_REDSTONE_CONTROL.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ALLOW_IO.get() : Config.TRADESTAND_DEFAULT_ALLOW_IO.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_AUTO_IO.get() : Config.TRADESTAND_DEFAULT_AUTO_IO.get());
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_REDSTONE_CONTROL.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_REDSTONE_CONTROL.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ALLOW_IO.get() : TradeStandConfig.TRADESTAND_DEFAULT_ALLOW_IO.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_AUTO_IO.get() : TradeStandConfig.TRADESTAND_DEFAULT_AUTO_IO.get());
     }
 
     private GeneralSettings createDefaultGeneralSettings() {
         boolean isMarketCrate = isMarketCrate();
         return new GeneralSettings(
                 "",
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_EMIT_REDSTONE.get() : Config.TRADESTAND_DEFAULT_EMIT_REDSTONE.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND.get() : Config.TRADESTAND_DEFAULT_PURCHASE_XP_SOUND.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_IS_CLOSED.get() : Config.TRADESTAND_DEFAULT_IS_CLOSED.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_EMIT_REDSTONE.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_EMIT_REDSTONE.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_PURCHASE_XP_SOUND.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_IS_CLOSED.get() : TradeStandConfig.TRADESTAND_DEFAULT_IS_CLOSED.get(),
                 ShopCategory.NONE);
     }
 
     private VillagerSettings createDefaultVillagerSettings() {
         boolean isMarketCrate = isMarketCrate();
         return new VillagerSettings(
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_VILLAGER_NPC_ENABLED.get() : Config.TRADESTAND_DEFAULT_VILLAGER_NPC_ENABLED.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_VILLAGER_NPC_ENABLED.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_VILLAGER_NPC_ENABLED.get(),
                 "",
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_VILLAGER_PROFESSION.get() : Config.TRADESTAND_DEFAULT_VILLAGER_PROFESSION.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_PURCHASE_PARTICLES.get() : Config.TRADESTAND_DEFAULT_PURCHASE_PARTICLES.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_PURCHASE_SOUNDS.get() : Config.TRADESTAND_DEFAULT_PURCHASE_SOUNDS.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_PAYMENT_SLOT_SOUNDS.get() : Config.TRADESTAND_DEFAULT_PAYMENT_SLOT_SOUNDS.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_USE_PLAYER_SKIN.get() : Config.TRADESTAND_DEFAULT_USE_PLAYER_SKIN.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_VILLAGER_PROFESSION.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_VILLAGER_PROFESSION.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_PURCHASE_PARTICLES.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_PURCHASE_PARTICLES.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_PURCHASE_SOUNDS.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_PURCHASE_SOUNDS.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_PAYMENT_SLOT_SOUNDS.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_PAYMENT_SLOT_SOUNDS.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_USE_PLAYER_SKIN.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_USE_PLAYER_SKIN.get(),
                 "");
     }
 
     private OfferItemSettings createDefaultOfferItemSettings() {
         boolean isMarketCrate = isMarketCrate();
         return new OfferItemSettings(
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_VISIBLE.get() : Config.TRADESTAND_DEFAULT_ITEM_VISIBLE.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_FULLBRIGHT.get() : Config.TRADESTAND_DEFAULT_ITEM_FULLBRIGHT.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_SCALE.get().floatValue() : Config.TRADESTAND_DEFAULT_ITEM_SCALE.get().floatValue(),
-                isMarketCrate ? 0.0f : Config.TRADESTAND_DEFAULT_ITEM_SPEED.get().floatValue(),
-                isMarketCrate ? 0.0f : Config.TRADESTAND_DEFAULT_ITEM_HEIGHT_OFFSET.get().floatValue(),
-                isMarketCrate ? false : Config.TRADESTAND_DEFAULT_ITEM_BOBBING.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_COUNT.get() : 1,
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_ROTATION.get().floatValue() : 0.0f,
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_LAYOUT_MODE.get() : CrateLayoutMode.STACKED,
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_SPACING_XZ.get().floatValue() : 0.0f,
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_SPACING_Y.get().floatValue() : 0.0f,
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_CHAOS_ROTATION.get().floatValue() : 0.1f,
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_ITEM_DYNAMIC_FILL.get() : false);
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_VISIBLE.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_ITEM_VISIBLE.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_FULLBRIGHT.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_ITEM_FULLBRIGHT.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_SCALE.get().floatValue()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_ITEM_SCALE.get().floatValue(),
+                isMarketCrate ? 0.0f : TradeStandConfig.TRADESTAND_DEFAULT_ITEM_SPEED.get().floatValue(),
+                isMarketCrate ? 0.0f : TradeStandConfig.TRADESTAND_DEFAULT_ITEM_HEIGHT_OFFSET.get().floatValue(),
+                isMarketCrate ? false : TradeStandConfig.TRADESTAND_DEFAULT_ITEM_BOBBING.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_COUNT.get() : 1,
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_ROTATION.get().floatValue() : 0.0f,
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_LAYOUT_MODE.get() : CrateLayoutMode.STACKED,
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_SPACING_XZ.get().floatValue() : 0.0f,
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_SPACING_Y.get().floatValue() : 0.0f,
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_CHAOS_ROTATION.get().floatValue() : 0.1f,
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_DYNAMIC_FILL.get() : false);
     }
 
     private NotificationSettings createDefaultNotificationSettings() {
         boolean isMarketCrate = isMarketCrate();
         return new NotificationSettings(
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_NOTIFY_PURCHASE.get() : Config.TRADESTAND_DEFAULT_NOTIFY_PURCHASE.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_NOTIFY_OUT_OF_STOCK.get() : Config.TRADESTAND_DEFAULT_NOTIFY_OUT_OF_STOCK.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_NOTIFY_OUTPUT_FULL.get() : Config.TRADESTAND_DEFAULT_NOTIFY_OUTPUT_FULL.get(),
-                isMarketCrate ? Config.MARKETCRATE_DEFAULT_NOTIFY_CO_OWNERS.get() : Config.TRADESTAND_DEFAULT_NOTIFY_CO_OWNERS.get());
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_NOTIFY_PURCHASE.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_PURCHASE.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_NOTIFY_OUT_OF_STOCK.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_OUT_OF_STOCK.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_NOTIFY_OUTPUT_FULL.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_OUTPUT_FULL.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_NOTIFY_CO_OWNERS.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_CO_OWNERS.get());
     }
 
     private boolean isMarketCrate() {
         return ShopVisualType.from(blockEntity.getBlockState().getBlock()) == ShopVisualType.MARKET_CRATE;
     }
-
 
     public GeneralSettings getGeneralSettings() {
         return generalSettings;
@@ -144,7 +168,6 @@ public class ShopSettingsManager {
         return generalSettings.purchaseXpFeedbackSound();
     }
 
-
     public VillagerSettings getVillagerSettings() {
         return villagerSettings;
     }
@@ -163,7 +186,6 @@ public class ShopSettingsManager {
             blockEntity.sync();
     }
 
-
     public OfferItemSettings getOfferItemSettings() {
         return offerItemSettings;
     }
@@ -177,7 +199,6 @@ public class ShopSettingsManager {
             blockEntity.sync();
     }
 
-
     public IoSettings getIoSettings() {
         return ioSettings;
     }
@@ -186,6 +207,21 @@ public class ShopSettingsManager {
         this.ioSettings = settings == null ? createDefaultIoSettings() : settings;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
+
+        if (!Config.ENABLE_DOUBLE_CHEST_SUPPORT.get() && blockEntity.getLevel() != null) {
+            Direction facing = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
+            for (Direction dir : Direction.values()) {
+                SideMode mode = this.ioSettings.getMode(dir, facing);
+                if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
+                    BlockPos neighborPos = blockEntity.getBlockPos().relative(dir);
+                    BlockState state = blockEntity.getLevel().getBlockState(neighborPos);
+                    if (state.getBlock() instanceof ChestBlock &&
+                            state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                        this.ioSettings = this.ioSettings.withMode(dir, facing, SideMode.DISABLED);
+                    }
+                }
+            }
+        }
 
         blockEntity.setChanged();
 
@@ -198,7 +234,6 @@ public class ShopSettingsManager {
             blockEntity.updateNeighborCache();
         }
     }
-
 
     public AccessSettings getAccessSettings() {
         return accessSettings;
@@ -217,7 +252,6 @@ public class ShopSettingsManager {
         return accessSettings.adminShopEnabled();
     }
 
-
     public NotificationSettings getNotificationSettings() {
         return notificationSettings;
     }
@@ -230,7 +264,6 @@ public class ShopSettingsManager {
         if (sync)
             blockEntity.sync();
     }
-
 
     public boolean isGlobalOfferItemRenderingEnabled() {
         return globalOfferItemRenderingEnabled;
@@ -253,7 +286,6 @@ public class ShopSettingsManager {
         this.outputFull = full;
         this.outputAlmostFull = almostFull;
     }
-
 
     public void save(CompoundTag tag) {
         tag.put(KEY_GENERAL, generalSettings.save());
@@ -311,4 +343,3 @@ public class ShopSettingsManager {
         outputFull = tag.getBoolean("OutputFull");
     }
 }
-

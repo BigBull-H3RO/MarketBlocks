@@ -10,25 +10,43 @@ import net.neoforged.fml.ModList;
 
 public class JourneyMapCompat {
     public static void addShopMarker(SingleOfferShopBlockEntity shop) {
-        if (Config.ENABLE_JOURNEYMAP_COMPAT.get() && ModList.get().isLoaded("journeymap")) {
-            if (MarketBlocksJourneyMapPlugin.getInstance() != null) {
-                MarketBlocksJourneyMapPlugin.getInstance().addShopMarker(shop);
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient() && Config.ENABLE_JOURNEYMAP_COMPAT.get() && ModList.get().isLoaded("journeymap")) {
+            try {
+                Class<?> pluginClass = Class.forName("de.bigbull.marketblocks.compat.journeymap.MarketBlocksJourneyMapPlugin");
+                Object instance = pluginClass.getMethod("getInstance").invoke(null);
+                if (instance != null) {
+                    pluginClass.getMethod("addShopMarker", SingleOfferShopBlockEntity.class).invoke(instance, shop);
+                }
+            } catch (Exception e) {
+                // ignore
             }
         }
     }
 
     public static void removeShopMarker(BlockPos pos) {
-        if (Config.ENABLE_JOURNEYMAP_COMPAT.get() && ModList.get().isLoaded("journeymap")) {
-            if (MarketBlocksJourneyMapPlugin.getInstance() != null) {
-                MarketBlocksJourneyMapPlugin.getInstance().removeShopMarker(pos);
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient() && Config.ENABLE_JOURNEYMAP_COMPAT.get() && ModList.get().isLoaded("journeymap")) {
+            try {
+                Class<?> pluginClass = Class.forName("de.bigbull.marketblocks.compat.journeymap.MarketBlocksJourneyMapPlugin");
+                Object instance = pluginClass.getMethod("getInstance").invoke(null);
+                if (instance != null) {
+                    pluginClass.getMethod("removeShopMarker", BlockPos.class).invoke(instance, pos);
+                }
+            } catch (Exception e) {
+                // ignore
             }
         }
     }
     
     public static void updateMarketplaceMarkers(List<GlobalPos> linkedBlocks) {
-        if (Config.ENABLE_JOURNEYMAP_COMPAT.get() && ModList.get().isLoaded("journeymap")) {
-            if (MarketBlocksJourneyMapPlugin.getInstance() != null) {
-                MarketBlocksJourneyMapPlugin.getInstance().updateMarketplaceMarkers(linkedBlocks);
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient() && Config.ENABLE_JOURNEYMAP_COMPAT.get() && ModList.get().isLoaded("journeymap")) {
+            try {
+                Class<?> pluginClass = Class.forName("de.bigbull.marketblocks.compat.journeymap.MarketBlocksJourneyMapPlugin");
+                Object instance = pluginClass.getMethod("getInstance").invoke(null);
+                if (instance != null) {
+                    pluginClass.getMethod("updateMarketplaceMarkers", List.class).invoke(instance, linkedBlocks);
+                }
+            } catch (Exception e) {
+                // ignore
             }
         }
     }

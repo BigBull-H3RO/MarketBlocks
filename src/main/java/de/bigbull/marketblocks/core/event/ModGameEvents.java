@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
@@ -25,8 +26,9 @@ import de.bigbull.marketblocks.network.PacketRateLimiter;
 
 /**
  * Handles gameplay-related events on the FORGE/GAME event bus.
- * Currently intercepts interactions with Trade Stands to manage the placement 
- * and removal of the protective glass showcase using specific items (Glass, Axes).
+ * Currently intercepts interactions with Trade Stands to manage the placement
+ * and removal of the protective glass showcase using specific items (Glass,
+ * Axes).
  */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public class ModGameEvents {
@@ -58,12 +60,14 @@ public class ModGameEvents {
 
         if (stack.getItem() instanceof AxeItem) {
             result = TradeStandBlock.tryDisableShowcase(level, basePos, baseState, event.getEntity());
-            if (result == InteractionResult.FAIL && !level.isClientSide && event.getEntity() instanceof ServerPlayer player) {
+            if (result == InteractionResult.FAIL && !level.isClientSide
+                    && event.getEntity() instanceof ServerPlayer player) {
                 player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
             }
         } else if (stack.is(Items.GLASS)) {
             result = TradeStandBlock.tryEnableShowcase(level, basePos, baseState, event.getEntity(), stack);
-            if (result == InteractionResult.FAIL && !level.isClientSide && event.getEntity() instanceof ServerPlayer player) {
+            if (result == InteractionResult.FAIL && !level.isClientSide
+                    && event.getEntity() instanceof ServerPlayer player) {
                 player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
             }
         }
@@ -101,7 +105,26 @@ public class ModGameEvents {
 
             if (ownedShops >= maxShops) {
                 event.setCanceled(true);
-                player.displayClientMessage(Component.translatable("message.marketblocks.shop.limit_reached", maxShops), true);
+                player.displayClientMessage(Component.translatable("message.marketblocks.shop.limit_reached", maxShops),
+                        true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        if (Config.GIVE_TRADE_BOOK_ON_FIRST_JOIN.get()) {
+            CompoundTag persistentData = player.getPersistentData();
+            if (!persistentData.getBoolean("MB_ReceivedTradeBook")) {
+                persistentData.putBoolean("MB_ReceivedTradeBook", true);
+                ItemStack book = new ItemStack(RegistriesInit.TRADE_BOOK.get());
+                if (!player.getInventory().add(book)) {
+                    player.drop(book, false);
+                }
             }
         }
     }

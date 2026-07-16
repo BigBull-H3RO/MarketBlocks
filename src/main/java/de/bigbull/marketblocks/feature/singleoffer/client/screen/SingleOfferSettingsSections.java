@@ -19,7 +19,10 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.components.WidgetSprites;
+import net.minecraft.resources.ResourceLocation;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -27,28 +30,53 @@ import java.util.function.Consumer;
  * screen.
  */
 public final class SingleOfferSettingsSections {
-    private static final int SETTINGS_CATEGORY_BUTTON_Y_OFFSET = -24;
-    private static final int SETTINGS_CATEGORY_BUTTON_X_OFFSET = 4;
-    private static final int SETTINGS_CATEGORY_BUTTON_WIDTH = 22;
-    private static final int SETTINGS_CATEGORY_BUTTON_HEIGHT = 22;
-    private static final int SETTINGS_CATEGORY_BUTTON_GAP = 4;
+    private static final int SETTINGS_CATEGORY_BUTTON_Y_OFFSET = -28;
+    private static final int SETTINGS_CATEGORY_BUTTON_X_OFFSET = 0;
+    private static final int SETTINGS_CATEGORY_BUTTON_WIDTH = 26;
+    private static final int SETTINGS_CATEGORY_BUTTON_HEIGHT = 32;
+    private static final int SETTINGS_CATEGORY_BUTTON_GAP = 1;
+
+    private static WidgetSprites getSettingsTabSprites(int index, int total) {
+        String suffix = (index == 0) ? "1" : "2";
+        return new WidgetSprites(
+                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix),
+                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix),
+                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix), // Hover
+                                                                                                                    // equals
+                                                                                                                    // unselected
+                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_selected_" + suffix));
+    }
 
     private SingleOfferSettingsSections() {
     }
 
-    public static void buildCategoryButtons(SingleOfferShopScreen host, SettingsCategory activeCategory,
+    public static List<IconButton> buildCategoryButtons(SingleOfferShopScreen host, SettingsCategory activeCategory,
             Consumer<SettingsCategory> onSwitch) {
+        List<IconButton> tabs = new java.util.ArrayList<>();
         int x = host.settingsLeftPos() + SETTINGS_CATEGORY_BUTTON_X_OFFSET;
         int y = host.settingsTopPos() + SETTINGS_CATEGORY_BUTTON_Y_OFFSET;
+
+        int totalTabs = 0;
+        for (SettingsCategory category : SettingsCategory.values()) {
+            if (category.isEnabled())
+                totalTabs++;
+        }
+
+        int index = 0;
         for (SettingsCategory category : SettingsCategory.values()) {
             if (!category.isEnabled())
                 continue;
-            host.addSettingsWidget(new IconButton(
+
+            boolean isSelected = category == activeCategory;
+            int currentHeight = isSelected ? 32 : 28;
+            int currentY = isSelected ? y : y + 1;
+
+            IconButton tabButton = new IconButton(
                     x,
-                    y,
+                    currentY,
                     SETTINGS_CATEGORY_BUTTON_WIDTH,
-                    SETTINGS_CATEGORY_BUTTON_HEIGHT,
-                    AbstractSingleOfferShopScreen.BUTTON_SPRITES,
+                    currentHeight,
+                    getSettingsTabSprites(index, totalTabs),
                     category.icon(),
                     b -> {
                         if (category != activeCategory) {
@@ -56,9 +84,14 @@ public final class SingleOfferSettingsSections {
                         }
                     },
                     category.title(),
-                    () -> category == activeCategory));
+                    () -> category == activeCategory)
+                    .withIconOffset(0, 2)
+                    .withSelectedIconOffset(0, -2);
+            tabs.add(tabButton);
             x += SETTINGS_CATEGORY_BUTTON_WIDTH + SETTINGS_CATEGORY_BUTTON_GAP;
+            index++;
         }
+        return tabs;
     }
 
     public static EditBox buildGeneralSection(SingleOfferShopScreen host,
@@ -75,10 +108,12 @@ public final class SingleOfferSettingsSections {
         });
 
         Button categoryBtn = host.addSettingsWidget(Button.builder(
-                Component.translatable("gui.marketblocks.category").append(": ").append(Component.translatable("gui.marketblocks.category." + draft.shopCategory().getId())),
+                Component.translatable("gui.marketblocks.category").append(": ")
+                        .append(Component.translatable("gui.marketblocks.category." + draft.shopCategory().getId())),
                 b -> {
                     draft.setShopCategory(draft.shopCategory().next());
-                    b.setMessage(Component.translatable("gui.marketblocks.category").append(": ").append(Component.translatable("gui.marketblocks.category." + draft.shopCategory().getId())));
+                    b.setMessage(Component.translatable("gui.marketblocks.category").append(": ").append(
+                            Component.translatable("gui.marketblocks.category." + draft.shopCategory().getId())));
                     onDirty.run();
                 })
                 .bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 50, 158, 16)

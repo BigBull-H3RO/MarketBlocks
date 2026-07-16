@@ -102,7 +102,65 @@ public class TradeWithShopGoal extends Goal {
 
         BlockEntity be = serverLevel.getBlockEntity(target);
         if (be instanceof SingleOfferShopBlockEntity shop) {
-            if (shop.getGeneralSettings().isClosed() || !shop.hasOffer()) {
+            boolean canBuy = false;
+
+            if (!shop.getGeneralSettings().isClosed() && shop.hasOffer()) {
+                ItemStack p1 = shop.getOfferPayment1();
+                ItemStack p2 = shop.getOfferPayment2();
+                ItemStack result = shop.getOfferResult();
+
+                TraderEconomyManager eco = TraderEconomyManager.get();
+                double paymentValue = 0;
+                double resultValue = 0;
+
+                if (!result.isEmpty()) {
+                    Double v = eco.evaluateItem(result.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    if (v != null) resultValue = v * result.getCount();
+                }
+
+                if (!p1.isEmpty()) {
+                    Double v = eco.evaluateItem(p1.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    if (v != null) paymentValue += v * p1.getCount();
+                }
+                if (!p2.isEmpty()) {
+                    Double v = eco.evaluateItem(p2.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    if (v != null) paymentValue += v * p2.getCount();
+                }
+
+                int budgetCost = (int) Math.ceil(paymentValue);
+                boolean interested = entity.isInterestedIn(shop.getGeneralSettings().shopCategory());
+                double allowedBudget = interested ? entity.getBudget() : entity.getBudget() * 0.20;
+
+                if (resultValue > 0 && resultValue >= paymentValue && allowedBudget >= budgetCost) {
+                    canBuy = true;
+                    int bought = shop.getOfferManager().processNpcPurchase();
+                    if (bought > 0) {
+                        entity.reduceBudget(budgetCost);
+                        entity.incrementSuccessfulPurchases();
+
+                        // Happy reaction: sound + particles
+                        serverLevel.playSound(null, entity.blockPosition(), SoundEvents.VILLAGER_YES, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                        for (int i = 0; i < 5; i++) {
+                            serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
+                                    entity.getX() + (entity.getRandom().nextDouble() - 0.5D),
+                                    entity.getY() + 1.5D + (entity.getRandom().nextDouble() - 0.5D),
+                                    entity.getZ() + (entity.getRandom().nextDouble() - 0.5D),
+                                    1, 0.0, 0.0, 0.0, 0.0);
+                        }
+
+                        // Head nod: briefly look down then back up to simulate nodding
+                        entity.getLookControl().setLookAt(
+                                entity.getX() + entity.getLookAngle().x,
+                                entity.getY() - 0.5D,
+                                entity.getZ() + entity.getLookAngle().z,
+                                30.0F, 30.0F);
+                    } else {
+                        serverLevel.playSound(null, entity.blockPosition(), SoundEvents.VILLAGER_NO, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                    }
+                }
+            }
+
+            if (!canBuy) {
                 // Start window-shopping: browse for 2-4 seconds, then react
                 browsingPhase = true;
                 browsingTimer = 40 + entity.getRandom().nextInt(40); // 2-4 seconds of browsing
@@ -110,51 +168,6 @@ public class TradeWithShopGoal extends Goal {
                 // Play a curious ambient sound as they start inspecting
                 serverLevel.playSound(null, entity.blockPosition(), SoundEvents.WANDERING_TRADER_AMBIENT, SoundSource.NEUTRAL, 0.8F, 1.0F);
                 return;
-            }
-
-            ItemStack p1 = shop.getOfferPayment1();
-            ItemStack p2 = shop.getOfferPayment2();
-
-            TraderEconomyManager eco = TraderEconomyManager.get();
-            double paymentValue = 0;
-            if (!p1.isEmpty()) {
-                Double v = eco.evaluateItem(p1.getItem(), serverLevel.getRecipeManager());
-                if (v != null) paymentValue += v * p1.getCount();
-            }
-            if (!p2.isEmpty()) {
-                Double v = eco.evaluateItem(p2.getItem(), serverLevel.getRecipeManager());
-                if (v != null) paymentValue += v * p2.getCount();
-            }
-
-            int budgetCost = (int) Math.ceil(paymentValue);
-            
-            if (entity.getBudget() >= budgetCost) {
-                int bought = shop.getOfferManager().processNpcPurchase();
-                if (bought > 0) {
-                    entity.reduceBudget(budgetCost);
-                    entity.incrementSuccessfulPurchases();
-                    
-                    // Happy reaction: sound + particles
-                    serverLevel.playSound(null, entity.blockPosition(), SoundEvents.VILLAGER_YES, SoundSource.NEUTRAL, 1.0F, 1.0F);
-                    for (int i = 0; i < 5; i++) {
-                        serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, 
-                                entity.getX() + (entity.getRandom().nextDouble() - 0.5D), 
-                                entity.getY() + 1.5D + (entity.getRandom().nextDouble() - 0.5D), 
-                                entity.getZ() + (entity.getRandom().nextDouble() - 0.5D), 
-                                1, 0.0, 0.0, 0.0, 0.0);
-                    }
-
-                    // Head nod: briefly look down then back up to simulate nodding
-                    entity.getLookControl().setLookAt(
-                            entity.getX() + entity.getLookAngle().x,
-                            entity.getY() - 0.5D,
-                            entity.getZ() + entity.getLookAngle().z,
-                            30.0F, 30.0F);
-                } else {
-                    serverLevel.playSound(null, entity.blockPosition(), SoundEvents.VILLAGER_NO, SoundSource.NEUTRAL, 1.0F, 1.0F);
-                }
-            } else {
-                serverLevel.playSound(null, entity.blockPosition(), SoundEvents.VILLAGER_NO, SoundSource.NEUTRAL, 1.0F, 1.0F);
             }
         }
 
@@ -173,12 +186,9 @@ public class TradeWithShopGoal extends Goal {
             // Decrement the shopping-tour counter (triggers despawn when it reaches 0)
             entity.onShopVisitComplete();
             
-            // If still shopping, add a small delay before looking for the next shop
+            // If still shopping, always add a delay before looking for the next shop to make him wander around
             if (entity.getBudget() > 0) {
-                // 35% chance to take a break (10-30 seconds). 65% chance to immediately look for the next shop
-                if (entity.getRandom().nextInt(100) < 35) {
-                    entity.delayNextShopSearch(sl.getGameTime(), 200 + entity.getRandom().nextInt(400));
-                }
+                entity.delayNextShopSearch(sl.getGameTime(), 150 + entity.getRandom().nextInt(300)); // 7.5 to 22.5 seconds pause
             }
             
             // Walk away from the shop so the trader doesn't stand frozen in front of it

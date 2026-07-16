@@ -7,6 +7,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.MarketplaceConfig;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSyncPacket;
 import de.bigbull.marketblocks.feature.marketplace.menu.MarketplaceMenu;
@@ -227,10 +228,10 @@ public final class MarketplaceManager {
             RegistriesInit.MARKETPLACE_BUY_TRIGGER.get().trigger(player);
         }
         if (shouldSyncViewers) {
-            if (Config.MARKETPLACE_BUYER_MESSAGE.get()) {
+            if (MarketplaceConfig.MARKETPLACE_BUYER_MESSAGE.get()) {
                 MarketplaceOffer offer = findOffer(offerId);
                 if (offer != null) {
-                    if (Config.MARKETPLACE_BUYER_MESSAGE_GLOBAL.get()) {
+                    if (MarketplaceConfig.MARKETPLACE_BUYER_MESSAGE_GLOBAL.get()) {
                         Component msg = Component.translatable("message.marketblocks.purchase_success.global", player.getDisplayName(), amount, offer.result().getHoverName()).withStyle(ChatFormatting.GREEN);
                         player.server.getPlayerList().broadcastSystemMessage(msg, false);
                     } else {
@@ -946,7 +947,7 @@ public final class MarketplaceManager {
     }
 
     private boolean isGlobalDailyLimit() {
-        return Config.MARKETPLACE_GLOBAL_DAILY_LIMIT.get();
+        return MarketplaceConfig.MARKETPLACE_GLOBAL_DAILY_LIMIT.get();
     }
 
     private int getMaximumPurchasableFromLimits(MarketplaceOffer offer, UUID playerId) {

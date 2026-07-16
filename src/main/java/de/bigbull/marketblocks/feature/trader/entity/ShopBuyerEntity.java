@@ -4,7 +4,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -28,7 +32,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.TraderConfig;
+import de.bigbull.marketblocks.feature.singleoffer.settings.ShopCategory;
+import de.bigbull.marketblocks.feature.trader.ShopBuyerSpawner;
 import de.bigbull.marketblocks.feature.trader.entity.ai.FindShopGoal;
 import de.bigbull.marketblocks.feature.trader.entity.ai.LeaveAndDespawnGoal;
 import de.bigbull.marketblocks.feature.trader.entity.ai.MoveToShopGoal;
@@ -37,10 +43,38 @@ import net.minecraft.core.BlockPos;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Random;
+import javax.annotation.Nullable;
+
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.util.RandomSource;
+import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
 
 public class ShopBuyerEntity extends PathfinderMob {
 
-    private int budget = Config.TRADER_MAX_BUDGET.get();
+    public enum TraderRank {
+        CITIZEN,
+        WEALTHY,
+        NOBLE
+    }
+
+    public enum InterestCategory {
+        FARMER,
+        ALCHEMIST,
+        BLACKSMITH,
+        VALUABLES,
+        GENERAL
+    }
+
+    private static final EntityDataAccessor<Integer> DATA_TRADER_RANK = SynchedEntityData
+            .defineId(ShopBuyerEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_INTEREST_CATEGORY = SynchedEntityData
+            .defineId(ShopBuyerEntity.class, EntityDataSerializers.INT);
+
+    private int budget = TraderConfig.TRADER_MAX_BUDGET.get();
     private BlockPos targetShop = null;
     private int despawnDelay;
     private final Set<BlockPos> visitedShops = new HashSet<>();
@@ -54,6 +88,13 @@ public class ShopBuyerEntity extends PathfinderMob {
      */
     private int successfulPurchases = 0;
 
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_TRADER_RANK, TraderRank.CITIZEN.ordinal());
+        builder.define(DATA_INTEREST_CATEGORY, InterestCategory.GENERAL.ordinal());
+    }
+
     /** Messages 1-3: general, 4-6: post-purchase, 7-8: searching, 9-10: browsing */
     private static final int GENERAL_MSG_START = 1;
     private static final int GENERAL_MSG_END = 3;
@@ -66,8 +107,8 @@ public class ShopBuyerEntity extends PathfinderMob {
 
     public ShopBuyerEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
-        this.despawnDelay = Config.TRADER_DESPAWN_TICKS.get();
-        int maxShops = Config.TRADER_MAX_SHOPS_PER_VISIT.get();
+        this.despawnDelay = TraderConfig.TRADER_DESPAWN_TICKS.get();
+        int maxShops = TraderConfig.TRADER_MAX_SHOPS_PER_VISIT.get();
         this.shopsToVisit = maxShops > 1 ? 1 + this.random.nextInt(maxShops) : 1;
         if (this.getNavigation() instanceof GroundPathNavigation groundNavigation) {
             groundNavigation.setCanFloat(true);
@@ -95,7 +136,7 @@ public class ShopBuyerEntity extends PathfinderMob {
                 mob -> this.level().isDay() && mob.isInvisible()));
         this.goalSelector.addGoal(1, new PanicGoal(this, 0.5D));
 
-        this.goalSelector.addGoal(2, new LeaveAndDespawnGoal(this, 1.0D));
+        this.goalSelector.addGoal(2, new LeaveAndDespawnGoal(this, 0.65D));
         this.goalSelector.addGoal(3, new TradeWithShopGoal(this, 2.5f));
         this.goalSelector.addGoal(4, new MoveToShopGoal(this, 0.85D, 1.25f));
         this.goalSelector.addGoal(5, new FindShopGoal(this, 48));
@@ -112,6 +153,8 @@ public class ShopBuyerEntity extends PathfinderMob {
         compound.putLong("NextShopSearchTime", this.nextShopSearchTime);
         compound.putInt("ShopsToVisit", this.shopsToVisit);
         compound.putInt("SuccessfulPurchases", this.successfulPurchases);
+        compound.putString("TraderRank", this.getTraderRank().name());
+        compound.putString("InterestCategory", this.getInterestCategory().name());
         if (this.targetShop != null) {
             compound.put("TargetShop", NbtUtils.writeBlockPos(this.targetShop));
         }
@@ -135,6 +178,20 @@ public class ShopBuyerEntity extends PathfinderMob {
         super.readAdditionalSaveData(compound);
         if (compound.contains("Budget")) {
             this.budget = compound.getInt("Budget");
+        }
+        if (compound.contains("TraderRank")) {
+            try {
+                this.setTraderRank(TraderRank.valueOf(compound.getString("TraderRank")));
+            } catch (IllegalArgumentException e) {
+                this.setTraderRank(TraderRank.CITIZEN);
+            }
+        }
+        if (compound.contains("InterestCategory")) {
+            try {
+                this.setInterestCategory(InterestCategory.valueOf(compound.getString("InterestCategory")));
+            } catch (IllegalArgumentException e) {
+                this.setInterestCategory(InterestCategory.GENERAL);
+            }
         }
         if (compound.contains("DespawnDelay")) {
             this.despawnDelay = compound.getInt("DespawnDelay");
@@ -166,6 +223,22 @@ public class ShopBuyerEntity extends PathfinderMob {
     @Override
     public boolean removeWhenFarAway(double distanceToClosestPlayer) {
         return false;
+    }
+
+    @Override
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
+        if (this.level() instanceof ServerLevel serverLevel) {
+            ShopBuyerSpawner.onTraderAdded(serverLevel, this);
+        }
+    }
+
+    @Override
+    public void onRemovedFromLevel() {
+        super.onRemovedFromLevel();
+        if (this.level() instanceof ServerLevel serverLevel) {
+            ShopBuyerSpawner.onTraderRemoved(serverLevel, this);
+        }
     }
 
     @Override
@@ -317,5 +390,85 @@ public class ShopBuyerEntity extends PathfinderMob {
         }
         // Default: general message
         return GENERAL_MSG_START + this.getRandom().nextInt(GENERAL_MSG_END - GENERAL_MSG_START + 1);
+    }
+
+    // --- Ranks & Categories ---
+
+    public TraderRank getTraderRank() {
+        return TraderRank.values()[this.entityData.get(DATA_TRADER_RANK)];
+    }
+
+    public void setTraderRank(TraderRank rank) {
+        this.entityData.set(DATA_TRADER_RANK, rank.ordinal());
+    }
+
+    public InterestCategory getInterestCategory() {
+        return InterestCategory.values()[this.entityData.get(DATA_INTEREST_CATEGORY)];
+    }
+
+    public void setInterestCategory(InterestCategory category) {
+        this.entityData.set(DATA_INTEREST_CATEGORY, category.ordinal());
+    }
+
+    public boolean isInterestedIn(ShopCategory category) {
+        if (category == ShopCategory.NONE) {
+            return false;
+        }
+        switch (this.getInterestCategory()) {
+            case FARMER:
+                return category == ShopCategory.FOOD_POTIONS || category == ShopCategory.MISC;
+            case ALCHEMIST:
+                return category == ShopCategory.FOOD_POTIONS || category == ShopCategory.MISC;
+            case BLACKSMITH:
+                return category == ShopCategory.WEAPONS_ARMOR || category == ShopCategory.TOOLS
+                        || category == ShopCategory.BLOCKS;
+            case VALUABLES:
+                return category == ShopCategory.VALUABLES;
+            case GENERAL:
+            default:
+                return true;
+        }
+    }
+
+    @Nullable
+    @Override
+    @SuppressWarnings("deprecation")
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType reason,
+            @Nullable SpawnGroupData spawnData) {
+        RandomSource random = level.getRandom();
+
+        int configMin = TraderConfig.TRADER_MIN_BUDGET.get();
+        int configMax = TraderConfig.TRADER_MAX_BUDGET.get();
+        int roll = random.nextInt(100);
+        ShopBuyerEntity.TraderRank rank;
+        int budget;
+        if (roll < 5) {
+            rank = ShopBuyerEntity.TraderRank.NOBLE;
+            budget = 1024 + random.nextInt(7169); // 1024 - 8192
+        } else if (roll < 30) {
+            rank = ShopBuyerEntity.TraderRank.WEALTHY;
+            budget = 256 + random.nextInt(769); // 256 - 1024
+        } else {
+            rank = ShopBuyerEntity.TraderRank.CITIZEN;
+            budget = 32 + random.nextInt(97); // 32 - 128
+        }
+        budget = Math.max(configMin, Math.min(configMax, budget));
+
+        ShopBuyerEntity.InterestCategory category = ShopBuyerEntity.InterestCategory.values()[random
+                .nextInt(ShopBuyerEntity.InterestCategory.values().length)];
+
+        this.setTraderRank(rank);
+        this.setInterestCategory(category);
+        this.setBudget(budget);
+
+        if (TraderConfig.TRADER_NAMES_ENABLED.get()) {
+            String name = TraderEconomyManager.get().getRandomName(new Random(random.nextLong()));
+            if (name != null) {
+                this.setCustomName(Component.literal(name));
+                this.setCustomNameVisible(true);
+            }
+        }
+
+        return super.finalizeSpawn(level, difficulty, reason, spawnData);
     }
 }

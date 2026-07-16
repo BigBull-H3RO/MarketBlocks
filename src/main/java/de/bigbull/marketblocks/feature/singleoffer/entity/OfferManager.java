@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.feature.singleoffer.entity;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.TraderConfig;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.log.ShopTransactionLogSavedData;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
@@ -20,6 +21,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import de.bigbull.marketblocks.feature.notification.PendingNotificationsSavedData;
 import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
+import de.bigbull.marketblocks.feature.trader.data.NpcEconomySavedData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +29,8 @@ import java.util.UUID;
 
 /**
  * Manages the offer logic for a single-offer shop block entity.
- * Handles offer creation, validation, affordability checks, and bulk purchase execution.
+ * Handles offer creation, validation, affordability checks, and bulk purchase
+ * execution.
  */
 public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     private static final int PAYMENT_SLOT_COUNT = 2;
@@ -189,7 +192,6 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         ShopInventoryManager inv = shopEntity.getInventoryManager();
 
         if (!adminShop && Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
-            inv.updateNeighborCache();
             inv.pullFromInputChest(shopEntity.getInputHandler());
         }
 
@@ -265,10 +267,14 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
         if (buyer instanceof ServerPlayer serverBuyer && Config.SHOP_BUYER_MESSAGE.get()) {
             if (Config.SHOP_BUYER_MESSAGE_GLOBAL.get()) {
-                Component msg = Component.translatable("message.marketblocks.purchase_success.global", serverBuyer.getDisplayName(), actualAmount, result.getHoverName()).withStyle(ChatFormatting.GREEN);
+                Component msg = Component.translatable("message.marketblocks.purchase_success.global",
+                        serverBuyer.getDisplayName(), actualAmount, result.getHoverName())
+                        .withStyle(ChatFormatting.GREEN);
                 serverBuyer.server.getPlayerList().broadcastSystemMessage(msg, false);
             } else {
-                Component msg = Component.translatable("message.marketblocks.purchase_success", actualAmount, result.getHoverName()).withStyle(ChatFormatting.GREEN);
+                Component msg = Component
+                        .translatable("message.marketblocks.purchase_success", actualAmount, result.getHoverName())
+                        .withStyle(ChatFormatting.GREEN);
                 serverBuyer.sendSystemMessage(msg);
             }
         }
@@ -277,24 +283,29 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     }
 
     public int processNpcPurchase() {
-        if (shopEntity.getGeneralSettings().isClosed() || !shopEntity.hasOffer()) return 0;
+        if (shopEntity.getGeneralSettings().isClosed() || !shopEntity.hasOffer())
+            return 0;
 
         boolean adminShop = shopEntity.isAdminShopEnabled();
-        if (adminShop && !Config.TRADER_ALLOW_ADMIN_SHOPS.get()) return 0;
+        if (adminShop && !TraderConfig.TRADER_ALLOW_ADMIN_SHOPS.get())
+            return 0;
         ShopInventoryManager inv = shopEntity.getInventoryManager();
 
         ItemStack p1 = shopEntity.getOfferPayment1();
         ItemStack p2 = shopEntity.getOfferPayment2();
         ItemStack result = shopEntity.getOfferResult();
 
-        if (result.isEmpty()) return 0;
+        if (result.isEmpty())
+            return 0;
 
         int inStock = adminShop ? Integer.MAX_VALUE : inv.countMatchingInput(result, true) / result.getCount();
-        if (inStock <= 0) return 0;
+        if (inStock <= 0)
+            return 0;
 
         int validAmount = adminShop ? 1 : (inv.hasOutputSpace(p1, p2) ? 1 : 0);
         if (validAmount <= 0) {
-            if (!adminShop) inv.updateOutputFullness();
+            if (!adminShop)
+                inv.updateOutputFullness();
             return 0;
         }
 
@@ -308,7 +319,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         shopEntity.incrementVisualPurchaseCounter(1);
         shopEntity.playPurchaseXpSound(1);
 
-        BuyerIdentity buyerIdentity = new BuyerIdentity(new UUID(0L, 0L), Component.translatable("entity.marketblocks.shop_buyer").getString());
+        BuyerIdentity buyerIdentity = new BuyerIdentity(new UUID(0L, 0L), "Shop Buyer");
         appendTransactionEntry(buyerIdentity, p1, p2, result, 1, false);
 
         shopEntity.sync();
@@ -316,6 +327,10 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         shopEntity.updateOfferSlot();
 
         triggerNotifications(buyerIdentity, result, 1, adminShop, inv, p1, p2);
+
+        if (shopEntity.getLevel() instanceof ServerLevel serverLevel) {
+            NpcEconomySavedData.get(serverLevel).registerSale(result.getItem(), 1, serverLevel);
+        }
 
         return 1;
     }
@@ -472,8 +487,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
                 serverLevel.dimension(),
                 shopEntity.getBlockPos(),
                 entry,
-                100
-        );
+                100);
     }
 
     private record BuyerIdentity(UUID uuid, String name) {
@@ -484,7 +498,8 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
             return new BuyerIdentity(directBuyer.getUUID(), directBuyer.getGameProfile().getName());
         }
         if (shopEntity.getAccessManager().purchaseContextBuyerId != null) {
-            return new BuyerIdentity(shopEntity.getAccessManager().purchaseContextBuyerId, shopEntity.getAccessManager().purchaseContextBuyerName);
+            return new BuyerIdentity(shopEntity.getAccessManager().purchaseContextBuyerId,
+                    shopEntity.getAccessManager().purchaseContextBuyerName);
         }
         return null;
     }

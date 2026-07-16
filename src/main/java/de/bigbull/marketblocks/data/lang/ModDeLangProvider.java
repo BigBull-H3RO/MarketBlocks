@@ -25,6 +25,7 @@ public class ModDeLangProvider extends LanguageProvider {
         // === Entities ===
         add("entity.marketblocks.shop_buyer", "Wandernder Shop-Käufer");
         add("item.marketblocks.shop_buyer_spawn_egg", "Wandernder Shop-Käufer Spawn-Ei");
+        addItem(RegistriesInit.TRADE_BOOK, "Handelsbuch");
 
         // === Containers & Menus ===
         add("container.marketblocks.trade_stand", "Handelsstand");
@@ -196,6 +197,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.delete_offer", "Angebot löschen");
         add("gui.marketblocks.marketplace.delete_page", "Seite löschen");
         add("gui.marketblocks.marketplace.inline.limits", "Limits bearbeiten");
+        add("gui.marketblocks.marketplace.inline.limits.disabled_global", "Deaktiviert: Globale Limits sind in der Server-Konfiguration aktiv");
         add("gui.marketblocks.marketplace.inline.pricing", "Preisdynamik bearbeiten");
         add("gui.marketblocks.marketplace.inline.pricing.disabled_global", "Deaktiviert: Globale Preisdynamik ist in der Server-Konfiguration aktiv");
         add("gui.marketblocks.marketplace.mode.edit", "In Bearbeitungsmodus wechseln");
@@ -320,6 +322,7 @@ public class ModDeLangProvider extends LanguageProvider {
 
         // === Jade / Waila Support ===
         add("config.jade.plugin_marketblocks.shop_info", "Shop-Info");
+        add("config.jade.plugin_marketblocks.shop_buyer_info", "Händler-Info");
         add("marketblocks.jade.for", "Für:");
         add("marketblocks.jade.out_of_stock", "Ausverkauft!");
         add("marketblocks.jade.output_full", "Lager voll!");
@@ -385,15 +388,94 @@ public class ModDeLangProvider extends LanguageProvider {
         add("command.marketblocks.sale.failed", "Fehler beim Bearbeiten des Sonderangebots.");
         add("command.marketblocks.stats.shop.header", "--- Top 10 SingleOfferShops ---");
         add("command.marketblocks.stats.shop.empty", "Keine Shops verfügbar.");
-        add("command.marketblocks.stats.shop.unnamed", "Unbenannt");
         add("command.marketblocks.stats.shop.entry", "%s. %s - %s Verkäufe");
         add("command.marketblocks.stats.marketplace.header", "--- Top 10 Marketplace Angebote ---");
         add("command.marketblocks.stats.marketplace.empty", "Keine Angebote verfügbar.");
         add("command.marketblocks.stats.marketplace.entry", "%s. %s - %s Verkäufe");
 
+        // === Trade Book GUI Translations ===
+        add("gui.marketblocks.trade_book.title", "Handelsbuch");
+        add("gui.marketblocks.trade_book.toc.header", "=== HANDELSBUCH ===\n\n");
+        add("gui.marketblocks.trade_book.toc.subheader", "Wirtschaftsbericht für den Markt.\n\n");
+        add("gui.marketblocks.trade_book.toc.my_shops", "Meine Shops");
+        add("gui.marketblocks.trade_book.toc.my_shops.tooltip", "Deine persönliche Shop-Übersicht");
+        add("gui.marketblocks.trade_book.toc.trends", "NPC Trends");
+        add("gui.marketblocks.trade_book.toc.trends.tooltip", "NPC Angebot & Nachfrage");
+        add("gui.marketblocks.trade_book.toc.shop_stats", "Shop-Rangliste");
+        add("gui.marketblocks.trade_book.toc.shop_stats.tooltip", "Top-Shops Rangliste");
+        add("gui.marketblocks.trade_book.toc.market_stats", "Marktplatz-Top");
+        add("gui.marketblocks.trade_book.toc.market_stats.tooltip", "Marktplatz-Statistik");
+        add("gui.marketblocks.trade_book.toc.active_shops", "Spieler-Shops");
+        add("gui.marketblocks.trade_book.toc.active_shops.tooltip", "Aktive Spieler-Shops auf dem Server");
+        add("gui.marketblocks.trade_book.my_shops.title", "=== Meine Shops ===\n\n");
+        add("gui.marketblocks.trade_book.my_shops.empty", "Du hast noch keine Shops.\nPlatziere einen Verkaufsstand oder eine Marktkiste!");
+        add("gui.marketblocks.trade_book.my_shops.summary", "Shops: %s (Offen: %s | Geschl.: %s)\nVerkäufe gesamt: %s\n\n");
+        add("gui.marketblocks.trade_book.my_shops.sales_count", "  Verkäufe: %s\n");
+        add("gui.marketblocks.trade_book.my_shops.sells", "  Verkauft: %s\n");
+        add("gui.marketblocks.trade_book.trends.title", "=== NPC Trends ===\n\n");
+        add("gui.marketblocks.trade_book.trends.hover", "Basiswert: %s Smaragde\nNPC-Einkauf: %s Smaragde");
+        add("gui.marketblocks.trade_book.trends.stable", "\nKeine aktuellen Markttrends.");
+        add("gui.marketblocks.trade_book.shops.title", "=== Top-Verkäufer ===\n\n");
+        add("gui.marketblocks.trade_book.shops.empty", "Keine aktiven Shops auf dem Server.");
+        add("gui.marketblocks.trade_book.shops.entry", "%s. %s:\n");
+        add("gui.marketblocks.trade_book.shops.sales", "   Verkäufe: %s\n");
+        add("gui.marketblocks.trade_book.shops.owner_sales", "  %s | Verkäufe: %s\n");
+        add("gui.marketblocks.trade_book.shops.sales_only", "  Verkäufe: %s\n");
+        add("gui.marketblocks.trade_book.shops.player_stats", "Shops: %s | Verkäufe: %s");
+        add("gui.marketblocks.trade_book.marketplace.title", "=== Marktplatz-Top ===\n\n");
+        add("gui.marketblocks.trade_book.marketplace.empty", "Keine Verkäufe auf dem Marktplatz.");
+        add("gui.marketblocks.trade_book.marketplace.entry", "%s. %s:\n");
+        add("gui.marketblocks.trade_book.marketplace.sales", "   Verkäufe: %s");
+        add("gui.marketblocks.trade_book.marketplace.sale_active", "   ★ SALE: %s");
+        add("gui.marketblocks.trade_book.active.title", "=== Spieler-Shops ===\n\n");
+        add("gui.marketblocks.trade_book.active.empty", "Keine aktiven Shops auf dem Server.");
+        add("gui.marketblocks.trade_book.active.owner", "  Besitzer: %s\n");
+        add("gui.marketblocks.trade_book.active.sells", "  Verkauft: %s\n");
+        add("gui.marketblocks.trade_book.active.hover_tp", "Klicken zum Teleportieren");
+        add("gui.marketblocks.trade_book.active.unknown_owner", "Unbekannt");
+        add("gui.marketblocks.shop.default_name", "Shop #%s");
+        add("gui.marketblocks.shop.named_format", "%s (#%s)");
+        add("gui.marketblocks.trade_book.active.closed", "Geschlossen");
+        add("gui.marketblocks.trade_book.active.no_offer", "Kein Angebot gesetzt");
+
+        add("gui.marketblocks.trade_book.status.out_of_stock", " §c⚠ Ausverkauft");
+        add("gui.marketblocks.trade_book.status.output_full", " §6⚠ Ausgabe voll");
+
         // === Block Registrations ===
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Marktkiste");
         addBlock(RegistriesInit.TRADE_STAND_BLOCK, "Verkaufsstand");
+
+        // === Trade Book Guide ===
+        add("gui.marketblocks.trade_book.toc.guide.intro", "Einführung");
+        add("gui.marketblocks.trade_book.toc.guide.intro.tooltip", "Lies die Grundlagen von MarketBlocks");
+        add("gui.marketblocks.trade_book.toc.guide.visuals", "Optische Anpassung");
+        add("gui.marketblocks.trade_book.toc.guide.visuals.tooltip", "Erfahre, wie du Shops optisch anpassen kannst");
+        add("gui.marketblocks.trade_book.toc.guide.setup", "Setup & Mechaniken");
+        add("gui.marketblocks.trade_book.toc.guide.setup.tooltip", "Erfahre alles über UI, Redstone und Trichter");
+        add("gui.marketblocks.trade_book.toc.guide.advanced", "Fortgeschritten");
+        add("gui.marketblocks.trade_book.toc.guide.advanced.tooltip", "Infos über Co-Besitzer, Economy und Admin-Features");
+
+        add("gui.marketblocks.trade_book.guide.intro.title", "=== Einführung ===\n\n");
+        add("gui.marketblocks.trade_book.guide.intro.text", "Willkommen bei MarketBlocks!\n\nDiese Mod erlaubt es dir, eine florierende Wirtschaft aufzubauen. Du kannst Shops erstellen, um Items mit Spielern oder NPCs zu handeln.");
+
+        add("gui.marketblocks.trade_book.guide.tradestand.title", "=== Verkaufsstand ===\n\n");
+        add("gui.marketblocks.trade_book.guide.tradestand.text", "Der Verkaufsstand ist ein offener Shop. Er zeigt das Item schwebend an. NPCs mögen diese offenen Stände sehr gerne.");
+
+        add("gui.marketblocks.trade_book.guide.marketcrate.title", "=== Marktkiste ===\n\n");
+        add("gui.marketblocks.trade_book.guide.marketcrate.text", "Die Marktkiste ist eine kompakte Shop-Variante ohne schwebendes Item. Ideal für kleine Flächen.");
+
+        add("gui.marketblocks.trade_book.guide.visuals.title", "=== Optik ===\n\n");
+        add("gui.marketblocks.trade_book.guide.visuals.text", "Shops können optisch angepasst werden!\n\nNutze einen Schraubenschlüssel zum Drehen. Aktivierst du den 'NPC-Händler' in den Einstellungen, stellt sich ein freundlicher NPC hinter den Shop!");
+
+        add("gui.marketblocks.trade_book.guide.setup.title", "=== Setup & UI ===\n\n");
+        add("gui.marketblocks.trade_book.guide.setup.text", "Rechtsklick auf deinen Shop öffnet die Einstellungen.\n\nDu kannst Preis, Angebot und Lagerbestand verwalten. Kauflimits lassen sich ebenfalls festlegen.");
+
+        add("gui.marketblocks.trade_book.guide.mechanics.title", "=== Mechaniken ===\n\n");
+        add("gui.marketblocks.trade_book.guide.mechanics.redstone", "Shops senden ein Redstone-Signal basierend auf Füllstand oder wenn sie leer sind. Dies lässt sich im Redstone-Tab konfigurieren.");
+        add("gui.marketblocks.trade_book.guide.mechanics.hopper", "Nutze Trichter (Hoppers), um das Befüllen und Leeren zu automatisieren! Konfiguriere Input/Output im Auto-IO Tab.");
+
+        add("gui.marketblocks.trade_book.guide.advanced.title", "=== Fortgeschritten ===\n\n");
+        add("gui.marketblocks.trade_book.guide.advanced.text", "Du kannst Co-Besitzer hinzufügen.\n\nNPCs haben eine eigene Economy mit Trends! Wenn jeder Holz verkauft, sinkt der Preis. Beobachte dafür die Trends-Seite.");
 
     }
 }

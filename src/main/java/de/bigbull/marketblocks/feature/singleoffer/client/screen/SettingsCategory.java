@@ -1,7 +1,8 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.core.config.Config;
+
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -10,12 +11,12 @@ import net.minecraft.resources.ResourceLocation;
  * New categories can be centrally expanded here.
  */
 public enum SettingsCategory {
-    GENERAL("gui.marketblocks.settings.category.general", "textures/gui/icon/singleoffer/general.png", Config.SHOP_TAB_GENERAL_ENABLED),
-    IO("gui.marketblocks.settings.category.io", "textures/gui/icon/singleoffer/i_o.png", Config.SHOP_TAB_IO_ENABLED),
-    VILLAGER("gui.marketblocks.settings.category.villager", "textures/gui/icon/singleoffer/villager.png", Config.SHOP_TAB_VILLAGER_ENABLED),
-    VISUALS("gui.marketblocks.settings.category.visual", "textures/gui/icon/singleoffer/visuals.png", Config.SHOP_TAB_VISUALS_ENABLED),
-    NOTIFICATIONS("gui.marketblocks.settings.category.notifications", "textures/gui/icon/singleoffer/notification.png", Config.SHOP_TAB_NOTIFICATIONS_ENABLED),
-    ACCESS("gui.marketblocks.settings.category.access", "textures/gui/icon/singleoffer/padlock.png", Config.SHOP_TAB_ACCESS_ENABLED);
+    GENERAL("gui.marketblocks.settings.category.general", "textures/gui/icon/singleoffer/general.png", SingleOfferConfig.SHOP_TAB_GENERAL_ENABLED),
+    IO("gui.marketblocks.settings.category.io", "textures/gui/icon/singleoffer/i_o.png", SingleOfferConfig.SHOP_TAB_IO_ENABLED),
+    VILLAGER("gui.marketblocks.settings.category.villager", "textures/gui/icon/singleoffer/villager.png", SingleOfferConfig.SHOP_TAB_VILLAGER_ENABLED),
+    VISUALS("gui.marketblocks.settings.category.visual", "textures/gui/icon/singleoffer/visuals.png", SingleOfferConfig.SHOP_TAB_VISUALS_ENABLED),
+    NOTIFICATIONS("gui.marketblocks.settings.category.notifications", "textures/gui/icon/singleoffer/notification.png", SingleOfferConfig.SHOP_TAB_NOTIFICATIONS_ENABLED),
+    ACCESS("gui.marketblocks.settings.category.access", "textures/gui/icon/singleoffer/padlock.png", SingleOfferConfig.SHOP_TAB_ACCESS_ENABLED);
 
     private final String translationKey;
     private final ResourceLocation icon;

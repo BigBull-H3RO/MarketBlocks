@@ -29,7 +29,7 @@ public class LeaveAndDespawnGoal extends Goal {
 
     @Override
     public void start() {
-        this.despawnTimer = 200; // 10 seconds – more gradual than the original 7 seconds
+        this.despawnTimer = 600; // 30 seconds max
         entity.setTargetShop(null);
 
         // Try to walk away from the nearest player for a natural exit
@@ -44,7 +44,18 @@ public class LeaveAndDespawnGoal extends Goal {
         }
         
         despawnTimer--;
+        boolean canDespawn = false;
+
         if (despawnTimer <= 0) {
+            canDespawn = true;
+        } else if (despawnTimer < 400) { // After 10 seconds of walking
+            Player nearest = entity.level().getNearestPlayer(entity, 32.0D);
+            if (nearest == null) {
+                canDespawn = true; // No player within 32 blocks, safe to despawn
+            }
+        }
+
+        if (canDespawn) {
             if (entity.level() instanceof ServerLevel serverLevel) {
                 // Poof effect
                 serverLevel.sendParticles(ParticleTypes.POOF, 

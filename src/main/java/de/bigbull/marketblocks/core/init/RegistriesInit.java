@@ -43,11 +43,13 @@ import java.util.function.Supplier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import de.bigbull.marketblocks.feature.trader.entity.ShopBuyerEntity;
+import de.bigbull.marketblocks.feature.trader.item.TradeBookItem;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 
 /**
  * Central registry initialization class for the MarketBlocks mod.
- * Uses NeoForge's DeferredRegisters to safely register all blocks, items, block entities,
+ * Uses NeoForge's DeferredRegisters to safely register all blocks, items, block
+ * entities,
  * menus, sounds, and advancement triggers during the mod loading phase.
  */
 public final class RegistriesInit {
@@ -100,14 +102,10 @@ public final class RegistriesInit {
                                         .strength(2.5F, 3600000.0F)
                                         .sound(SoundType.WOOD)));
 
-
-
         public static final Supplier<BlockEntityType<SingleOfferShopBlockEntity>> SINGLE_OFFER_SHOP_BLOCK_ENTITY = BLOCK_ENTITIES
                         .register("single_offer_shop", () -> BlockEntityType.Builder.of(
                                         SingleOfferShopBlockEntity::new, TRADE_STAND_BLOCK.get(),
                                         MARKETCRATE_BLOCK.get()).build(null));
-
-
 
         public static final Supplier<MenuType<SingleOfferShopMenu>> SINGLE_OFFER_SHOP_MENU = MENU_TYPES
                         .register("single_offer_shop_menu", () -> IMenuTypeExtension.create(SingleOfferShopMenu::new));
@@ -150,6 +148,9 @@ public final class RegistriesInit {
 
         public static final Supplier<Item> SHOP_BUYER_SPAWN_EGG = ITEMS.register("shop_buyer_spawn_egg",
                         () -> new DeferredSpawnEggItem(SHOP_BUYER, 0x0000AA, 0xFFFF00, new Item.Properties()));
+
+        public static final Supplier<Item> TRADE_BOOK = ITEMS.register("trade_book",
+                        () -> new TradeBookItem(new Item.Properties().stacksTo(1)));
 
         public static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
                 DeferredBlock<T> toReturn = BLOCKS.register(name, block);

@@ -1,5 +1,8 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.singleoffer.network.SwitchTabPacket;
@@ -21,22 +24,45 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 
 /**
  * Base screen class for the single-offer shop UI.
- * Provides the shared tab navigation system and renders the shop owner's information.
+ * Provides the shared tab navigation system and renders the shop owner's
+ * information.
  *
  * @param <T> The container menu type.
  */
-public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
+public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerMenu>
+        extends AbstractContainerScreen<T> {
     protected static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_disabled"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_highlighted"),
-            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_selected")
-    );
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button_selected"));
 
-    private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/home.png");
-    private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/singleoffer/inventory.png");
-    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/settings.png");
-    private static final ResourceLocation LOG_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/log.png");
+    protected static final WidgetSprites TAB_BUTTON_SPRITES = new WidgetSprites(
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "tab_button/tab"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "tab_button/tab"),
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "tab_button/tab"), // Hover is identical to
+                                                                                         // unselected
+            ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "tab_button/tab_selected"));
+
+    private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/singleoffer/home.png");
+    private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/singleoffer/inventory.png");
+    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/settings.png");
+    private static final ResourceLocation LOG_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/log.png");
+
+    // Layout configuration for the right side tabs
+    protected static final int SIDE_TAB_WIDTH = 30;
+    protected static final int SIDE_TAB_SELECTED_WIDTH_OFFSET = 5; // Unselected is 30, selected is 35 (35-30=5)
+    protected static final int SIDE_TAB_HEIGHT = 26;
+    protected static final int SIDE_TAB_X_OFFSET = -7;
+
+    protected static final int SIDE_TAB_OFFERS_Y = -4;
+    protected static final int SIDE_TAB_INVENTORY_Y = 26;
+    protected static final int SIDE_TAB_SETTINGS_Y = 56;
+    protected static final int SIDE_TAB_LOG_Y = 127;
 
     private boolean lastIsOwner;
 
@@ -54,46 +80,79 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         lastIsOwner = isOwner();
     }
 
+    protected List<IconButton> sideTabs = new ArrayList<>();
+
     protected AbstractSingleOfferShopScreen(T menu, Inventory inv, Component title) {
         super(menu, inv, title);
     }
 
-    protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory, Runnable onSettings, Runnable onLog,
-                                    boolean inventoryEnabled, boolean settingsEnabled, boolean logEnabled) {
-        addRenderableWidget(new IconButton(
-                x - 2, y - 4, 22, 22,
-                BUTTON_SPRITES, OFFERS_ICON,
-                b -> { if (selectedTab != ShopTab.OFFERS) onOffers.run(); },
-                Component.translatable("gui.marketblocks.offers_tab"),
-                () -> selectedTab == ShopTab.OFFERS
-        ));
+    protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory,
+            Runnable onSettings, Runnable onLog,
+            boolean inventoryEnabled, boolean settingsEnabled, boolean logEnabled) {
 
-        IconButton inventoryButton = addRenderableWidget(new IconButton(
-                x - 2, y + 22, 22, 22,
-                BUTTON_SPRITES, INVENTORY_ICON,
-                b -> { if (selectedTab != ShopTab.INVENTORY) onInventory.run(); },
+        sideTabs.clear();
+        int tabX = x + SIDE_TAB_X_OFFSET;
+
+        int offersWidth = SIDE_TAB_WIDTH + (selectedTab == ShopTab.OFFERS ? SIDE_TAB_SELECTED_WIDTH_OFFSET : 0);
+        IconButton offersButton = new IconButton(
+                tabX, y + SIDE_TAB_OFFERS_Y, offersWidth, SIDE_TAB_HEIGHT,
+                TAB_BUTTON_SPRITES, OFFERS_ICON,
+                b -> {
+                    if (selectedTab != ShopTab.OFFERS)
+                        onOffers.run();
+                },
+                Component.translatable("gui.marketblocks.offers_tab"),
+                () -> selectedTab == ShopTab.OFFERS).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
+        sideTabs.add(offersButton);
+
+        int inventoryWidth = SIDE_TAB_WIDTH + (selectedTab == ShopTab.INVENTORY ? SIDE_TAB_SELECTED_WIDTH_OFFSET : 0);
+        IconButton inventoryButton = new IconButton(
+                tabX, y + SIDE_TAB_INVENTORY_Y, inventoryWidth, SIDE_TAB_HEIGHT,
+                TAB_BUTTON_SPRITES, INVENTORY_ICON,
+                b -> {
+                    if (selectedTab != ShopTab.INVENTORY)
+                        onInventory.run();
+                },
                 Component.translatable("gui.marketblocks.inventory_tab"),
-                () -> selectedTab == ShopTab.INVENTORY
-        ));
+                () -> selectedTab == ShopTab.INVENTORY).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
+        sideTabs.add(inventoryButton);
         inventoryButton.active = inventoryEnabled;
 
-        IconButton settingsButton = addRenderableWidget(new IconButton(
-                x - 2, y + 48, 22, 22,
-                BUTTON_SPRITES, SETTINGS_ICON,
-                b -> { if (selectedTab != ShopTab.SETTINGS) onSettings.run(); },
+        int settingsWidth = SIDE_TAB_WIDTH + (selectedTab == ShopTab.SETTINGS ? SIDE_TAB_SELECTED_WIDTH_OFFSET : 0);
+        IconButton settingsButton = new IconButton(
+                tabX, y + SIDE_TAB_SETTINGS_Y, settingsWidth, SIDE_TAB_HEIGHT,
+                TAB_BUTTON_SPRITES, SETTINGS_ICON,
+                b -> {
+                    if (selectedTab != ShopTab.SETTINGS)
+                        onSettings.run();
+                },
                 Component.translatable("gui.marketblocks.settings_tab"),
-                () -> selectedTab == ShopTab.SETTINGS
-        ));
+                () -> selectedTab == ShopTab.SETTINGS).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
+        sideTabs.add(settingsButton);
         settingsButton.active = settingsEnabled;
 
-        IconButton logButton = addRenderableWidget(new IconButton(
-                x - 2, y + 132, 22, 22,
-                BUTTON_SPRITES, LOG_ICON,
-                b -> { if (selectedTab != ShopTab.LOG) onLog.run(); },
+        int logWidth = SIDE_TAB_WIDTH + (selectedTab == ShopTab.LOG ? SIDE_TAB_SELECTED_WIDTH_OFFSET : 0);
+        IconButton logButton = new IconButton(
+                tabX, y + SIDE_TAB_LOG_Y, logWidth, SIDE_TAB_HEIGHT,
+                TAB_BUTTON_SPRITES, LOG_ICON,
+                b -> {
+                    if (selectedTab != ShopTab.LOG)
+                        onLog.run();
+                },
                 Component.translatable("gui.marketblocks.log_tab"),
-                () -> selectedTab == ShopTab.LOG
-        ));
+                () -> selectedTab == ShopTab.LOG).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
+        sideTabs.add(logButton);
         logButton.active = logEnabled;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        for (IconButton tab : sideTabs) {
+            if (tab.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     /**
@@ -101,9 +160,9 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
      *
      * NOTE: Tab switching requires server notification for the following reasons:
      * 1. Container sync: The server needs to know which tab is active to properly
-     *    handle slot visibility and validation (e.g., OwnerGatedSlot checks)
+     * handle slot visibility and validation (e.g., OwnerGatedSlot checks)
      * 2. State consistency: If a player closes and reopens the menu, the server
-     *    remembers the last active tab
+     * remembers the last active tab
      * 3. Multi-player: Other players viewing the same shop see consistent state
      *
      * The client optimistically updates the tab immediately for responsiveness.
@@ -119,7 +178,8 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         }
     }
 
-    protected void renderOwnerInfo(GuiGraphics guiGraphics, SingleOfferShopBlockEntity blockEntity, boolean isOwner, int imageWidth) {
+    protected void renderOwnerInfo(GuiGraphics guiGraphics, SingleOfferShopBlockEntity blockEntity, boolean isOwner,
+            int imageWidth) {
         if (!isOwner && blockEntity.getOwnerName() != null) {
             String names = blockEntity.getOwnerName();
             if (!blockEntity.getAdditionalOwners().isEmpty()) {
@@ -148,4 +208,3 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         minecraft.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
     }
 }
-
