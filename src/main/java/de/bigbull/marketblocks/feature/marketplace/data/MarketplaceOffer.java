@@ -6,7 +6,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.world.item.ItemStack;
 
-import de.bigbull.marketblocks.core.config.Config;
+
+import de.bigbull.marketblocks.core.config.MarketplaceConfig;
 import java.util.*;
 
 /**
@@ -127,17 +128,24 @@ public final class MarketplaceOffer {
     }
 
     public OfferLimit limits() {
+        if (MarketplaceConfig.MARKETPLACE_GLOBAL_LIMITS_ENABLED.get()) {
+            Integer daily = MarketplaceConfig.MARKETPLACE_GLOBAL_LIMITS_DAILY_LIMIT.get() <= 0 ? null : MarketplaceConfig.MARKETPLACE_GLOBAL_LIMITS_DAILY_LIMIT.get();
+            Integer stock = MarketplaceConfig.MARKETPLACE_GLOBAL_LIMITS_STOCK_LIMIT.get() <= 0 ? null : MarketplaceConfig.MARKETPLACE_GLOBAL_LIMITS_STOCK_LIMIT.get();
+            Integer restock = MarketplaceConfig.MARKETPLACE_GLOBAL_LIMITS_RESTOCK_SECONDS.get() <= 0 ? null : MarketplaceConfig.MARKETPLACE_GLOBAL_LIMITS_RESTOCK_SECONDS.get();
+            boolean isUnlimited = (daily == null && stock == null && restock == null);
+            return new OfferLimit(isUnlimited, daily, stock, restock);
+        }
         return limits;
     }
 
     public DemandPricing pricing() {
-        if (Config.MARKETPLACE_GLOBAL_PRICING_ENABLED.get()) {
+        if (MarketplaceConfig.MARKETPLACE_GLOBAL_PRICING_ENABLED.get()) {
             return new DemandPricing(
                 true,
                 1.0,
-                Config.MARKETPLACE_GLOBAL_PRICING_VOLATILITY.get(),
-                Config.MARKETPLACE_GLOBAL_PRICING_MIN_PERCENT.get() / 100.0,
-                Config.MARKETPLACE_GLOBAL_PRICING_MAX_PERCENT.get() / 100.0
+                MarketplaceConfig.MARKETPLACE_GLOBAL_PRICING_VOLATILITY.get(),
+                MarketplaceConfig.MARKETPLACE_GLOBAL_PRICING_MIN_PERCENT.get() / 100.0,
+                MarketplaceConfig.MARKETPLACE_GLOBAL_PRICING_MAX_PERCENT.get() / 100.0
             );
         }
         return pricing;

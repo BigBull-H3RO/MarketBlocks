@@ -2,6 +2,11 @@ package de.bigbull.marketblocks;
 
 import com.mojang.logging.LogUtils;
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.MarketplaceConfig;
+import de.bigbull.marketblocks.core.config.TraderConfig;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
+import de.bigbull.marketblocks.core.config.TradeStandConfig;
+import de.bigbull.marketblocks.core.config.MarketCrateConfig;
 import de.bigbull.marketblocks.core.event.ModCapabilityEvents;
 import de.bigbull.marketblocks.data.DataGenerators;
 import de.bigbull.marketblocks.network.NetworkHandler;
@@ -27,6 +32,11 @@ public class MarketBlocks {
         RegistriesInit.register(modEventBus);
         CreativeTabInit.CREATIVE_MODE_TABS.register(modEventBus);
 
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC, "marketblocks-common.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC, "marketblocks/main.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, MarketplaceConfig.SPEC, "marketblocks/marketplace.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, TraderConfig.SPEC, "marketblocks/trader/trader.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, SingleOfferConfig.SPEC, "marketblocks/singleoffer/general.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, TradeStandConfig.SPEC, "marketblocks/singleoffer/tradestand.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, MarketCrateConfig.SPEC, "marketblocks/singleoffer/marketcrate.toml");
     }
 }

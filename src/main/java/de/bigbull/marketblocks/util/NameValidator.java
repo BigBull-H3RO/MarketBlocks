@@ -19,7 +19,9 @@ public class NameValidator {
         String sanitized = input.trim();
         
         if (Config.BLOCK_FORMATTING_IN_SHOP_NAME.get()) {
-            sanitized = sanitized.replaceAll("(?i)[§&][0-9A-FK-OR]", "");
+            sanitized = sanitized.replaceAll("(?i)[§&]#[0-9A-F]{6}", "")
+                                 .replaceAll("(?i)[§&]x([§&][0-9A-F]){6}", "")
+                                 .replaceAll("(?i)[§&][0-9A-FK-OR]", "");
         }
         
         int maxLength = Config.MAX_SHOP_NAME_LENGTH.get();
@@ -41,7 +43,9 @@ public class NameValidator {
         String sanitized = input.trim();
         
         if (Config.BLOCK_FORMATTING_IN_SHOP_NAME.get()) {
-            sanitized = sanitized.replaceAll("(?i)[§&][0-9A-FK-OR]", "");
+            sanitized = sanitized.replaceAll("(?i)[§&]#[0-9A-F]{6}", "")
+                                 .replaceAll("(?i)[§&]x([§&][0-9A-F]){6}", "")
+                                 .replaceAll("(?i)[§&][0-9A-FK-OR]", "");
         }
         
         int maxLength = 64;
@@ -63,7 +67,9 @@ public class NameValidator {
         String sanitized = input.trim();
         
         if (Config.BLOCK_FORMATTING_IN_SHOP_NAME.get()) {
-            sanitized = sanitized.replaceAll("(?i)[§&][0-9A-FK-OR]", "");
+            sanitized = sanitized.replaceAll("(?i)[§&]#[0-9A-F]{6}", "")
+                                 .replaceAll("(?i)[§&]x([§&][0-9A-F]){6}", "")
+                                 .replaceAll("(?i)[§&][0-9A-FK-OR]", "");
         }
         
         int maxLength = 32;

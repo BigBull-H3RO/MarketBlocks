@@ -25,6 +25,7 @@ public class ModFrLangProvider extends LanguageProvider {
                 // === Entities ===
                 add("entity.marketblocks.shop_buyer", "Acheteur ambulant");
                 add("item.marketblocks.shop_buyer_spawn_egg", "Œuf d'apparition d'acheteur ambulant");
+                addItem(RegistriesInit.TRADE_BOOK, "Livre de commerce");
 
                 // === Containers & Menus ===
                 add("container.marketblocks.trade_stand", "Stand de commerce");
@@ -190,6 +191,7 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("gui.marketblocks.marketplace.delete_offer", "Supprimer l'offre");
                 add("gui.marketblocks.marketplace.delete_page", "Supprimer la page");
                 add("gui.marketblocks.marketplace.inline.limits", "Modifier les limites");
+                add("gui.marketblocks.marketplace.inline.limits.disabled_global", "Désactivé : Les limites globales sont actives dans la configuration du serveur");
                 add("gui.marketblocks.marketplace.inline.pricing", "Modifier la tarification");
                 add("gui.marketblocks.marketplace.inline.pricing.disabled_global", "Désactivé : La tarification globale est active dans la configuration du serveur");
                 add("gui.marketblocks.marketplace.mode.edit", "Passer en mode édition");
@@ -306,6 +308,7 @@ public class ModFrLangProvider extends LanguageProvider {
 
                 // === Jade / Waila Support ===
                 add("config.jade.plugin_marketblocks.shop_info", "Infos de la boutique");
+                add("config.jade.plugin_marketblocks.shop_buyer_info", "Infos du marchand");
                 add("marketblocks.jade.for", "Pour :");
                 add("marketblocks.jade.out_of_stock", "Rupture de stock !");
                 add("marketblocks.jade.output_full", "Inventaire plein !");
@@ -370,12 +373,62 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("command.marketblocks.sale.not_found", "Offre / Boutique introuvable : %s");
                 add("command.marketblocks.sale.failed", "Échec de la modification des soldes.");
                 add("command.marketblocks.stats.shop.header", "--- Top 10 SingleOfferShops ---");
+                add("command.marketblocks.stats.shop", "Statistiques de la boutique: %s");
                 add("command.marketblocks.stats.shop.empty", "Aucune boutique disponible.");
-                add("command.marketblocks.stats.shop.unnamed", "Sans nom");
                 add("command.marketblocks.stats.shop.entry", "%s. %s - %s Ventes");
+                add("command.marketblocks.stats.shop.total_sales", "Ventes totales: %d");
                 add("command.marketblocks.stats.marketplace.header", "--- Top 10 Offres Marketplace ---");
                 add("command.marketblocks.stats.marketplace.empty", "Aucune offre disponible.");
                 add("command.marketblocks.stats.marketplace.entry", "%s. %s - %s Ventes");
+
+                // === Trade Book GUI Translations ===
+                add("gui.marketblocks.trade_book.title", "Livre de commerce");
+                add("gui.marketblocks.trade_book.toc.header", "=== LIVRE DE COMMERCE ===\n\n");
+                add("gui.marketblocks.trade_book.toc.subheader", "Rapport économique du marché.\n\n");
+                add("gui.marketblocks.trade_book.toc.my_shops", "🏠 Mes boutiques");
+                add("gui.marketblocks.trade_book.toc.my_shops.tooltip", "Aperçu de vos boutiques");
+                add("gui.marketblocks.trade_book.toc.trends", "📊 Tendances PNJ");
+                add("gui.marketblocks.trade_book.toc.trends.tooltip", "Offre et demande de PNJ");
+                add("gui.marketblocks.trade_book.toc.shop_stats", "🏆 Classement boutiques");
+                add("gui.marketblocks.trade_book.toc.shop_stats.tooltip", "Classement des boutiques");
+                add("gui.marketblocks.trade_book.toc.market_stats", "🏛 Top du Marché");
+                add("gui.marketblocks.trade_book.toc.market_stats.tooltip", "Statistiques du marché");
+                add("gui.marketblocks.trade_book.toc.active_shops", "📍 Stands de commerce");
+                add("gui.marketblocks.trade_book.toc.active_shops.tooltip", "Stands de commerce actifs");
+                add("gui.marketblocks.trade_book.my_shops.title", "=== Mes Boutiques ===\n\n");
+                add("gui.marketblocks.trade_book.my_shops.empty", "Vous n'avez pas encore de boutique.\nPlacez un Stand ou une Caisse pour commencer !");
+                add("gui.marketblocks.trade_book.my_shops.summary", "Boutiques : %s (Ouvertes : %s | Fermées : %s)\nVentes totales : %s\n\n");
+                add("gui.marketblocks.trade_book.my_shops.sales_count", "  Ventes : %s\n");
+                add("gui.marketblocks.trade_book.my_shops.sells", "  Vend : %s\n");
+                add("gui.marketblocks.trade_book.trends.title", "=== Tendances PNJ ===\n\n");
+                add("gui.marketblocks.trade_book.trends.hover", "Valeur de base: %s Émeraudes\nAchat PNJ: %s Émeraudes");
+                add("gui.marketblocks.trade_book.trends.stable", "\nAucune tendance de marché actuelle.");
+                add("gui.marketblocks.trade_book.shops.title", "=== Top Vendeurs ===\n\n");
+                add("gui.marketblocks.trade_book.shops.empty", "Aucune boutique active sur le serveur.");
+                add("gui.marketblocks.trade_book.shops.entry", "%s. %s:\n");
+                add("gui.marketblocks.trade_book.shops.sales", "   Ventes: %s\n");
+                add("gui.marketblocks.trade_book.shops.owner_sales", "  %s | Ventes: %s\n");
+                add("gui.marketblocks.trade_book.shops.sales_only", "  Ventes: %s\n");
+                add("gui.marketblocks.trade_book.shops.player_stats", "Boutiques: %s | Ventes: %s\n");
+                add("gui.marketblocks.trade_book.marketplace.title", "=== Top du Marché ===\n\n");
+                add("gui.marketblocks.trade_book.marketplace.empty", "Aucune vente sur le marché.");
+                add("gui.marketblocks.trade_book.marketplace.entry", "%s. %s:\n");
+                add("gui.marketblocks.trade_book.marketplace.sales", "   Ventes: %s\n");
+                add("gui.marketblocks.trade_book.marketplace.sale_active", "   ★ SOLDES : %s\n");
+                add("gui.marketblocks.trade_book.active.title", "=== Stands de Commerce ===\n\n");
+                add("gui.marketblocks.trade_book.active.empty", "Aucun stand actif sur le serveur.");
+                add("gui.marketblocks.trade_book.active.owner", "  Propriétaire: %s\n");
+                add("gui.marketblocks.trade_book.active.sells", "  Vend : %s\n");
+                add("gui.marketblocks.trade_book.active.hover_tp", "Cliquez pour vous téléporter");
+                add("gui.marketblocks.trade_book.active.unknown_owner", "Inconnu");
+                add("gui.marketblocks.shop.default_name", "Boutique #%s");
+                add("gui.marketblocks.shop.named_format", "%s (#%s)");
+                add("gui.marketblocks.trade_book.active.closed", "Fermé");
+                add("gui.marketblocks.trade_book.active.open", "Ouvert");
+                add("gui.marketblocks.trade_book.active.no_offer", "Aucune offre définie");
+
+                add("gui.marketblocks.trade_book.status.out_of_stock", " §c⚠ Rupture de stock");
+                add("gui.marketblocks.trade_book.status.output_full", " §6⚠ Sortie pleine");
 
                 // === Block Registrations ===
                 addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Caisse du marché");

@@ -1,30 +1,53 @@
 package de.bigbull.marketblocks.feature.trader;
 
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.TraderConfig;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
 import de.bigbull.marketblocks.feature.trader.entity.ShopBuyerEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.List;
+import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ShopBuyerSpawner {
 
+    private static final Map<ServerLevel, Set<ShopBuyerEntity>> ACTIVE_TRADERS = new ConcurrentHashMap<>();
+
+    public static void onTraderAdded(ServerLevel level, ShopBuyerEntity entity) {
+        ACTIVE_TRADERS.computeIfAbsent(level, k -> ConcurrentHashMap.newKeySet()).add(entity);
+    }
+
+    public static void onTraderRemoved(ServerLevel level, ShopBuyerEntity entity) {
+        Set<ShopBuyerEntity> set = ACTIVE_TRADERS.get(level);
+        if (set != null) {
+            set.remove(entity);
+            if (set.isEmpty()) {
+                ACTIVE_TRADERS.remove(level);
+            }
+        }
+    }
+
+    public static int getTraderCount(ServerLevel level) {
+        Set<ShopBuyerEntity> set = ACTIVE_TRADERS.get(level);
+        return set != null ? set.size() : 0;
+    }
+
     public static void tick(ServerLevel level) {
-        if (!Config.ENABLE_TRADER_SPAWNING.get())
+        if (!TraderConfig.ENABLE_TRADER_SPAWNING.get())
             return;
         // Only spawn in the Overworld (like vanilla Wandering Trader)
-        if (level.dimension() != net.minecraft.world.level.Level.OVERWORLD)
+        if (level.dimension() != Level.OVERWORLD)
             return;
 
         RandomSource random = level.getRandom();
-        int chance = Config.TRADER_SPAWN_CHANCE.get();
+        int chance = TraderConfig.TRADER_SPAWN_CHANCE.get();
         if (chance <= 0)
             return;
 
@@ -35,7 +58,7 @@ public class ShopBuyerSpawner {
 
     private static void spawnTrader(ServerLevel level, RandomSource random) {
         // Check daytime preference: only spawn during day (tick 0-12000)
-        if (Config.TRADER_PREFER_DAYTIME_SPAWN.get()) {
+        if (TraderConfig.TRADER_PREFER_DAYTIME_SPAWN.get()) {
             long dayTime = level.getDayTime() % 24000;
             if (dayTime >= 12000) {
                 return; // Don't spawn at night
@@ -43,21 +66,21 @@ public class ShopBuyerSpawner {
         }
 
         // Check max trader limit per dimension
-        int maxPerDimension = Config.TRADER_MAX_PER_DIMENSION.get();
-        long currentTraderCount = level.getEntities(RegistriesInit.SHOP_BUYER.get(), entity -> true).size();
+        int maxPerDimension = TraderConfig.TRADER_MAX_PER_DIMENSION.get();
+        long currentTraderCount = getTraderCount(level);
         if (currentTraderCount >= maxPerDimension) {
             return;
         }
 
         ShopDirectorySavedData data = ShopDirectorySavedData.get(level);
-        boolean allowAdminShops = Config.TRADER_ALLOW_ADMIN_SHOPS.get();
+        boolean allowAdminShops = TraderConfig.TRADER_ALLOW_ADMIN_SHOPS.get();
         List<ShopDirectorySavedData.ShopEntry> shops = data.getShops().stream()
                 .filter(s -> s.pos().dimension().equals(level.dimension()) && !s.isClosed()
                         && (allowAdminShops || !s.isAdminShop()))
                 .toList();
 
         boolean spawnNearPlayer = shops.isEmpty()
-                || random.nextInt(100) < Config.TRADER_SPAWN_NEAR_PLAYER_CHANCE_PERCENT.get();
+                || random.nextInt(100) < TraderConfig.TRADER_SPAWN_NEAR_PLAYER_CHANCE_PERCENT.get();
 
         BlockPos targetPos = null;
 
@@ -87,21 +110,7 @@ public class ShopBuyerSpawner {
                 ShopBuyerEntity entity = RegistriesInit.SHOP_BUYER.get().create(level);
                 if (entity != null) {
                     entity.moveTo(spawnPos, 0.0F, 0.0F);
-                    int minBudget = Config.TRADER_MIN_BUDGET.get();
-                    int maxBudget = Config.TRADER_MAX_BUDGET.get();
-                    if (minBudget > maxBudget)
-                        minBudget = maxBudget;
-                    int budget = minBudget + (maxBudget > minBudget ? random.nextInt(maxBudget - minBudget + 1) : 0);
-                    entity.setBudget(budget);
-
-                    // Assign a random name if enabled
-                    if (Config.TRADER_NAMES_ENABLED.get()) {
-                        String name = TraderEconomyManager.get().getRandomName(new java.util.Random(random.nextLong()));
-                        if (name != null) {
-                            entity.setCustomName(Component.literal(name));
-                            entity.setCustomNameVisible(true);
-                        }
-                    }
+                    entity.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), net.minecraft.world.entity.MobSpawnType.NATURAL, null);
 
                     level.addFreshEntity(entity);
                     return;

@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.network;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.marketplace.network.*;
 import de.bigbull.marketblocks.feature.singleoffer.network.*;
+import de.bigbull.marketblocks.feature.trader.network.TradeBookOpenPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -64,6 +65,7 @@ public class NetworkHandler {
 
         registrar.playToClient(MarketplaceSyncPacket.TYPE, MarketplaceSyncPacket.CODEC, MarketplaceSyncPacket::handle);
         registrar.playToClient(LinkedBlocksSyncPacket.TYPE, LinkedBlocksSyncPacket.CODEC, LinkedBlocksSyncPacket::handle);
+        registrar.playToClient(TradeBookOpenPacket.TYPE, TradeBookOpenPacket.CODEC, TradeBookOpenPacket::handle);
     }
 
     private static <T extends CustomPacketPayload> void registerServerPacket(

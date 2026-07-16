@@ -1,15 +1,22 @@
 package de.bigbull.marketblocks.feature.trader.data;
 
 import com.google.gson.*;
+
+
+import de.bigbull.marketblocks.core.config.TraderConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
+import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.SingleItemRecipe;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
@@ -243,10 +250,12 @@ public class TraderEconomyManager {
     }
 
     /**
-     * Returns a random trader name from the configured list, or null if names are empty.
+     * Returns a random trader name from the configured list, or null if names are
+     * empty.
      */
     public String getRandomName(java.util.Random random) {
-        if (traderNames.isEmpty()) return null;
+        if (traderNames.isEmpty())
+            return null;
         return traderNames.get(random.nextInt(traderNames.size()));
     }
 
@@ -266,6 +275,10 @@ public class TraderEconomyManager {
         return baseValues.get(item);
     }
 
+    public Map<Item, Double> getBaseValues() {
+        return Collections.unmodifiableMap(baseValues);
+    }
+
     public void setValue(Item item, double value) {
         baseValues.put(item, value);
         save();
@@ -280,22 +293,33 @@ public class TraderEconomyManager {
      * Tries to evaluate the value of an item.
      * Returns null if no value can be found or calculated.
      */
-    public Double evaluateItem(Item item, RecipeManager recipeManager) {
+    public Double evaluateItem(Item item, RecipeManager recipeManager, ServerLevel level) {
         if (isBlacklisted(item))
             return null;
-        if (baseValues.containsKey(item))
-            return baseValues.get(item);
-        if (calculatedCache.containsKey(item))
-            return calculatedCache.get(item);
 
-        if (recipeManager != null) {
+        Double base = null;
+        if (baseValues.containsKey(item)) {
+            base = baseValues.get(item);
+        } else if (calculatedCache.containsKey(item)) {
+            base = calculatedCache.get(item);
+        } else if (recipeManager != null) {
             Double calc = calculateFromRecipe(item, recipeManager, new HashSet<>());
             if (calc != null) {
                 calculatedCache.put(item, calc);
-                return calc;
+                base = calc;
             }
         }
-        return null;
+
+        if (base == null) {
+            return null;
+        }
+
+        if (level != null) {
+            double multiplier = NpcEconomySavedData.get(level).getDemandMultiplier(item, level);
+            return base * multiplier;
+        }
+
+        return base;
     }
 
     private Double calculateFromRecipe(Item target, RecipeManager recipeManager, Set<Item> visited) {
@@ -303,9 +327,18 @@ public class TraderEconomyManager {
             return null; // Prevent infinite loops
         visited.add(target);
 
-        // Find a crafting recipe that produces this item
+        // Find a recipe that produces this item
         for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
-            if (holder.value() instanceof CraftingRecipe recipe) {
+            if (holder.value() instanceof Recipe<?> recipe) {
+                // Support Crafting, Cooking (Furnace, Blasting, Smoking), and Stonecutting
+                boolean validRecipeType = recipe instanceof CraftingRecipe
+                        || recipe instanceof AbstractCookingRecipe
+                        || recipe instanceof SingleItemRecipe;
+
+                if (!validRecipeType) {
+                    continue;
+                }
+
                 ItemStack resultItem = recipe.getResultItem(null);
                 if (resultItem != null && resultItem.getItem() == target) {
                     double totalValue = 0;
@@ -338,7 +371,10 @@ public class TraderEconomyManager {
                     }
 
                     if (valid && totalValue > 0) {
-                        return totalValue / Math.max(1, resultItem.getCount());
+                        double baseCost = totalValue / Math.max(1, resultItem.getCount());
+                        double bonus = TraderConfig.TRADER_DYNAMIC_PRICING_CRAFTING_BONUS.get();
+                        visited.remove(target);
+                        return baseCost * (1.0 + bonus);
                     }
                 }
             }

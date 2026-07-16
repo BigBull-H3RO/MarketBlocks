@@ -81,6 +81,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private static final String NBT_SALE_END_TIMESTAMP = "SaleEndTimestamp";
     public static final int MAX_TRANSACTION_LOG_ENTRIES = 100;
 
+    private transient boolean lastDirectoryOutOfStock = false;
+
     private final ShopInventoryManager inventoryManager = new ShopInventoryManager(this);
     private final ShopSettingsManager settingsManager = new ShopSettingsManager(this);
     private final ShopVisualManager visualManager = new ShopVisualManager(this);
@@ -284,9 +286,17 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         if (level instanceof ServerLevel serverLevel) {
             ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
             GlobalPos globalPos = GlobalPos.of(serverLevel.dimension(), getBlockPos());
+            boolean isMarketCrate = this.getBlockState().is(RegistriesInit.MARKETCRATE_BLOCK.get());
+            boolean hasShowcase = this.getBlockState().hasProperty(TradeStandBlock.HAS_SHOWCASE) && this.getBlockState().getValue(TradeStandBlock.HAS_SHOWCASE);
+            
+            boolean currentOutOfStock = hasOffer() && !isAdminShopEnabled() && !offerManager.hasResultItemInInput(false);
+            boolean currentOutputFull = !isAdminShopEnabled() && settingsManager.isOutputFull();
+            this.lastDirectoryOutOfStock = currentOutOfStock;
+
             data.registerOrUpdateShop(globalPos, getOwnerId(), getOwnerName(), getShopName(),
                     getGeneralSettings().isClosed(), settingsManager.getShopCategory(), getOfferPayment1(),
-                    getOfferPayment2(), getOfferResult(), totalSales, isAdminShopEnabled());
+                    getOfferPayment2(), getOfferResult(), totalSales, isAdminShopEnabled(), isMarketCrate, hasShowcase,
+                    currentOutOfStock, currentOutputFull);
         }
     }
 
@@ -767,6 +777,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             return;
         }
 
+        boolean wasOutOfStock = this.lastDirectoryOutOfStock;
+
         ItemStack p1 = getOfferPayment1();
         ItemStack p2 = getOfferPayment2();
         boolean stockAvailable = isAdminShopEnabled() || offerManager.hasResultItemInInput(checkNeighbors);
@@ -777,6 +789,13 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             }
         } else {
             offerHandler.setStackInSlot(0, ItemStack.EMPTY);
+        }
+        
+        boolean currentOutOfStock = !isAdminShopEnabled() && !offerManager.hasResultItemInInput(false);
+        if (currentOutOfStock != wasOutOfStock) {
+            if (level != null && !level.isClientSide) {
+                updateShopDirectory();
+            }
         }
     }
 
@@ -894,9 +913,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         int offerInterval = Config.OFFER_UPDATE_INTERVAL.get();
         if (offerInterval > 0 && be.tickCounter % offerInterval == 0) {
-            if (chestExtensionEnabled) {
-                be.updateNeighborCache();
-            }
             if (be.needsOfferRefresh) {
                 be.updateOfferSlot(false);
                 be.needsOfferRefresh = false;
@@ -907,7 +923,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         int chestInterval = Config.CHEST_IO_INTERVAL.get();
         if (chestExtensionEnabled && chestInterval > 0 && be.tickCounter % chestInterval == 0) {
-            be.updateNeighborCache();
             if (be.getIoSettings().autoIo()) {
                 if (be.canProcessIo(SideMode.INPUT)) {
                     be.inventoryManager.pullFromInputChest(be.inputHandler);

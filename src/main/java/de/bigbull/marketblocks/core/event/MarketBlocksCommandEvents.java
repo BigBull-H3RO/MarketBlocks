@@ -22,7 +22,10 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -173,6 +176,28 @@ public final class MarketBlocksCommandEvents {
         if (targetLevel != null) {
             float yaw = hasRot ? (float) DoubleArgumentType.getDouble(context, "yaw") : player.getYRot();
             float pitch = hasRot ? (float) DoubleArgumentType.getDouble(context, "pitch") : player.getXRot();
+
+            // Center X and Z if they are exactly integers (like from the book)
+            if (x == Math.floor(x)) x += 0.5;
+            if (z == Math.floor(z)) z += 0.5;
+
+            BlockPos shopPos = new BlockPos((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
+            BlockState state = targetLevel.getBlockState(shopPos);
+            
+            if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) {
+                Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+                
+                // Move in front of the block
+                x += facing.getStepX();
+                z += facing.getStepZ();
+                
+                // If not explicitly provided, look at the shop block
+                if (!hasRot) {
+                    yaw = facing.getOpposite().toYRot();
+                    pitch = 0;
+                }
+            }
+
             player.teleportTo(targetLevel, x, y, z, yaw, pitch);
         }
         return 1;

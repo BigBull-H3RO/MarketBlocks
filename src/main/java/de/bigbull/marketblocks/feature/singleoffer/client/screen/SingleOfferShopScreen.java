@@ -146,6 +146,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private EditBox nameField;
     private EditBox npcNameField;
 
+    private List<IconButton> categoryTabs = new ArrayList<>();
+
     private boolean saved;
     private String originalName;
     private GeneralSettings.Draft generalDraft;
@@ -312,10 +314,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         boolean canToggleAdminShop = canToggleAdminShop();
 
         if (isOwner) {
-            SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory,
+            categoryTabs = SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory,
                     this::switchSettingsCategory);
             buildSaveButton(be);
         } else {
+            categoryTabs.clear();
             activeSettingsCategory = getFirstEnabledCategory();
         }
 
@@ -479,7 +482,19 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, mouseX, mouseY);
 
-        if (menu.getActiveTab() == ShopTab.OFFERS) {
+        for (IconButton tab : sideTabs) {
+            if (tab.isMouseOver(mouseX, mouseY) && tab.getTooltipMessage() != null) {
+                graphics.renderTooltip(font, tab.getTooltipMessage(), mouseX, mouseY);
+            }
+        }
+
+        if (menu.getActiveTab() == ShopTab.SETTINGS) {
+            for (IconButton tab : categoryTabs) {
+                if (tab.isMouseOver(mouseX, mouseY) && tab.getTooltipMessage() != null) {
+                    graphics.renderTooltip(font, tab.getTooltipMessage(), mouseX, mouseY);
+                }
+            }
+        } else if (menu.getActiveTab() == ShopTab.OFFERS) {
             SingleOfferShopBlockEntity be = menu.getBlockEntity();
             if (be.hasOffer() && !be.isAdminShopEnabled()
                     && isHovering(STATUS_ICON_RECT.x(), STATUS_ICON_RECT.y(), STATUS_ICON_RECT.width(),
@@ -523,11 +538,23 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+        for (IconButton tab : sideTabs) {
+            if (!tab.isSelected()) {
+                tab.renderWidget(graphics, mouseX, mouseY, partialTick);
+            }
+        }
+
         switch (menu.getActiveTab()) {
             case OFFERS -> renderOffersBg(graphics);
             case INVENTORY -> renderInventoryBg(graphics);
-            case SETTINGS -> renderSettingsBg(graphics);
+            case SETTINGS -> renderSettingsBg(graphics, mouseX, mouseY, partialTick);
             case LOG -> renderLogBg(graphics);
+        }
+
+        for (IconButton tab : sideTabs) {
+            if (tab.isSelected()) {
+                tab.renderWidget(graphics, mouseX, mouseY, partialTick);
+            }
         }
     }
 
@@ -567,8 +594,21 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         graphics.blit(INPUT_OUTPUT_ICON, leftPos + 77, topPos + 33, 0, 0, 22, 22, 22, 22);
     }
 
-    private void renderSettingsBg(GuiGraphics graphics) {
+    private void renderSettingsBg(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        for (IconButton tab : categoryTabs) {
+            if (!tab.isSelected()) {
+                tab.renderWidget(graphics, mouseX, mouseY, partialTick);
+            }
+        }
+
         graphics.blit(SETTINGS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+
+        for (IconButton tab : categoryTabs) {
+            if (tab.isSelected()) {
+                tab.renderWidget(graphics, mouseX, mouseY, partialTick);
+            }
+        }
+
         if (menu.isPrimaryOwner() && activeSettingsCategory == SettingsCategory.ACCESS) {
             ResourceLocation scrollerDisabled = ownerListPanel.isListDisabled() ? ACCESS_SCROLLER_LIST_DISABLED_SPRITE
                     : ACCESS_SCROLLER_DISABLED_SPRITE;
@@ -911,6 +951,14 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (menu.getActiveTab() == ShopTab.SETTINGS) {
+            for (IconButton tab : categoryTabs) {
+                if (tab.mouseClicked(mouseX, mouseY, button)) {
+                    return true;
+                }
+            }
+        }
+        
         if (menu.getActiveTab() == ShopTab.LOG && button == 0) {
             int scrollerX = leftPos + LOG_SCROLLER_X_OFFSET;
             int listY = topPos + LOG_LIST_Y_OFFSET;

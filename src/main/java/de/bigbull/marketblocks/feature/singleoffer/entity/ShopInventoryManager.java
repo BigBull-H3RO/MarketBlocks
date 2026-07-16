@@ -277,6 +277,7 @@ public class ShopInventoryManager {
         if (newOutputFull != blockEntity.isOutputFull() || newOutputAlmostFull != blockEntity.isOutputAlmostFull()) {
             blockEntity.getSettingsManager().setOutputFullness(newOutputFull, newOutputAlmostFull);
             blockEntity.sync();
+            blockEntity.updateShopDirectory();
         }
     }
 

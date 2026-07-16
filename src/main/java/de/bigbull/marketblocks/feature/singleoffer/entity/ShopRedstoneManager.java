@@ -88,7 +88,18 @@ public class ShopRedstoneManager {
 
     private void invalidateNeighbor(Direction dir) {
         BlockPos neighbour = shop.getBlockPos().relative(dir);
-        shop.getLevel().invalidateCapabilities(neighbour);
+        if (shop.getLevel() != null) {
+            shop.getLevel().invalidateCapabilities(neighbour);
+            if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get()) {
+                BlockState state = shop.getLevel().getBlockState(neighbour);
+                if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
+                        state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
+                    Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
+                    BlockPos otherPos = neighbour.relative(connectedDir);
+                    shop.getLevel().invalidateCapabilities(otherPos);
+                }
+            }
+        }
     }
 
     public void lockAdjacentChests() {
@@ -106,6 +117,15 @@ public class ShopRedstoneManager {
             shop.getLevel().invalidateCapabilities(shop.getBlockPos());
             BlockPos neighbour = shop.getBlockPos().relative(dir);
             shop.getLevel().invalidateCapabilities(neighbour);
+            if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get()) {
+                BlockState state = shop.getLevel().getBlockState(neighbour);
+                if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
+                        state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
+                    Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
+                    BlockPos otherPos = neighbour.relative(connectedDir);
+                    shop.getLevel().invalidateCapabilities(otherPos);
+                }
+            }
         }
     }
 }

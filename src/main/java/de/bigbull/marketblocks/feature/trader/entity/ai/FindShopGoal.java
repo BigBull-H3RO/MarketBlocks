@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.feature.trader.entity.ai;
 
-import de.bigbull.marketblocks.core.config.Config;
+
+import de.bigbull.marketblocks.core.config.TraderConfig;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
@@ -50,7 +51,7 @@ public class FindShopGoal extends Goal {
         ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
 
         // Pre-filter by dimension and distance, then shuffle for randomness
-        boolean allowAdminShops = Config.TRADER_ALLOW_ADMIN_SHOPS.get();
+        boolean allowAdminShops = TraderConfig.TRADER_ALLOW_ADMIN_SHOPS.get();
         List<ShopDirectorySavedData.ShopEntry> candidates = new ArrayList<>();
         for (ShopDirectorySavedData.ShopEntry shop : data.getShops()) {
             if (!allowAdminShops && shop.isAdminShop())
@@ -105,7 +106,7 @@ public class FindShopGoal extends Goal {
                 continue;
 
             TraderEconomyManager eco = TraderEconomyManager.get();
-            Double resultVal = eco.evaluateItem(result.getItem(), serverLevel.getRecipeManager());
+            Double resultVal = eco.evaluateItem(result.getItem(), serverLevel.getRecipeManager(), serverLevel);
             if (resultVal == null)
                 continue; // Unvalued item, fail-safe: don't buy
 
@@ -115,14 +116,14 @@ public class FindShopGoal extends Goal {
             boolean paymentValid = true;
 
             if (!payment1.isEmpty()) {
-                Double p1Val = eco.evaluateItem(payment1.getItem(), serverLevel.getRecipeManager());
+                Double p1Val = eco.evaluateItem(payment1.getItem(), serverLevel.getRecipeManager(), serverLevel);
                 if (p1Val == null)
                     paymentValid = false;
                 else
                     totalPaymentValue += p1Val * payment1.getCount();
             }
             if (!payment2.isEmpty() && paymentValid) {
-                Double p2Val = eco.evaluateItem(payment2.getItem(), serverLevel.getRecipeManager());
+                Double p2Val = eco.evaluateItem(payment2.getItem(), serverLevel.getRecipeManager(), serverLevel);
                 if (p2Val == null)
                     paymentValid = false;
                 else
@@ -133,11 +134,21 @@ public class FindShopGoal extends Goal {
                 continue;
 
             // Is it a good deal for the trader?
-            // The trader gets `totalResultValue` and gives `totalPaymentValue`.
-            // He wants totalResultValue >= totalPaymentValue
-            if (totalResultValue >= totalPaymentValue) {
-                // Check if he has enough budget
-                if (entity.getBudget() >= totalPaymentValue) {
+            boolean isGoodDeal = totalResultValue >= totalPaymentValue;
+            boolean canAfford = false;
+            
+            if (isGoodDeal) {
+                boolean interested = entity.isInterestedIn(shop.shopCategory());
+                double allowedBudget = interested ? entity.getBudget() : entity.getBudget() * 0.20;
+                canAfford = allowedBudget >= totalPaymentValue;
+            }
+
+            if (isGoodDeal && canAfford) {
+                entity.setTargetShop(pos);
+                return true;
+            } else {
+                // Not buying, but might still do window shopping (20% chance)
+                if (entity.getRandom().nextInt(5) == 0) {
                     entity.setTargetShop(pos);
                     return true;
                 }

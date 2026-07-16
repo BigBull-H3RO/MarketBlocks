@@ -32,3 +32,6 @@ logs/
 
 # project planning
 todo.md
+
+# antigravity agent
+.agents/

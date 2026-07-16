@@ -151,9 +151,7 @@ public final class ShopListCommand {
 
         for (int i = start; i < end; i++) {
             ShopDirectorySavedData.ShopEntry shop = shops.get(i);
-            String shopName = shop.shopName();
-            if (shopName == null || shopName.isEmpty())
-                shopName = "Unnamed Shop";
+            String shopName = ShopDirectorySavedData.formatShopName(shop.shopName(), shop.shopId());
             String owner = shop.ownerName() != null ? shop.ownerName() : "Unknown";
 
             Component status = shop.isClosed()

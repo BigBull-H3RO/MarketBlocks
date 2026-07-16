@@ -52,7 +52,7 @@ public final class ShopStatsCommand {
         } else {
             for (int i = 0; i < limit; i++) {
                 ShopDirectorySavedData.ShopEntry shop = shops.get(i);
-                String name = shop.shopName() != null && !shop.shopName().isEmpty() ? shop.shopName() : Component.translatable("command.marketblocks.stats.shop.unnamed").getString();
+                String name = ShopDirectorySavedData.formatShopName(shop.shopName(), shop.shopId());
                 int sales = shop.totalSales();
                 final int rank = i + 1;
                 source.sendSuccess(() -> Component.translatable("command.marketblocks.stats.shop.entry", rank, name, sales)
