@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.mojang.brigadier.context.CommandContext;
 
+import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
@@ -27,6 +28,7 @@ public final class ShopStatsCommand {
      */
     public static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> buildShopStats() {
         return Commands.literal("stats")
+                .requires(source -> Config.ENABLE_SHOP_STATS_COMMAND.get())
                 .executes(ShopStatsCommand::executeShopStats);
     }
 
@@ -35,6 +37,7 @@ public final class ShopStatsCommand {
      */
     public static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> buildMarketplaceStats() {
         return Commands.literal("stats")
+                .requires(source -> Config.ENABLE_MARKETPLACE_STATS_COMMAND.get())
                 .executes(ShopStatsCommand::executeMarketplaceStats);
     }
 

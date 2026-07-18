@@ -127,11 +127,18 @@ public class TradeWithShopGoal extends Goal {
                     if (v != null) paymentValue += v * p2.getCount();
                 }
 
+                // Budget is tracked in whole emerald units; ceil ensures fractional costs always round up
                 int budgetCost = (int) Math.ceil(paymentValue);
                 boolean interested = entity.isInterestedIn(shop.getGeneralSettings().shopCategory());
                 double allowedBudget = interested ? entity.getBudget() : entity.getBudget() * 0.20;
 
-                if (resultValue > 0 && resultValue >= paymentValue && allowedBudget >= budgetCost) {
+                // Rank-dependent tolerance: Citizens accept fair prices, Nobles want bargains
+                double tolerance = switch (entity.getTraderRank()) {
+                    case CITIZEN -> 0.85;   // Accepts up to 15% markup
+                    case WEALTHY -> 0.95;   // Accepts up to 5% markup
+                    case NOBLE -> 1.0;      // Only buys at or below market value
+                };
+                if (resultValue > 0 && resultValue >= paymentValue * tolerance && allowedBudget >= budgetCost) {
                     canBuy = true;
                     int bought = shop.getOfferManager().processNpcPurchase();
                     if (bought > 0) {

@@ -1,5 +1,8 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
+import de.bigbull.marketblocks.feature.trader.network.TeleportRequestPacket;
+import de.bigbull.marketblocks.network.NetworkHandler;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -164,10 +167,7 @@ public class ShopEntryElement implements ITradeBookElement {
                 context.addTooltip(() -> graphics.renderTooltip(context.getFont(),
                         Component.translatable("gui.marketblocks.trade_book.active.hover_tp"), mouseX, mouseY));
             }, () -> {
-                if (Minecraft.getInstance().player != null) {
-                    Minecraft.getInstance().player.connection
-                            .sendCommand("mb_internal_tp \"" + dim + "\" " + px + " " + py + " " + pz);
-                }
+                NetworkHandler.sendToServer(new TeleportRequestPacket(dim, px, py, pz));
             }));
         } else {
             graphics.drawString(context.getFont(), coords, coordsX, currentY, 0x555555, false);

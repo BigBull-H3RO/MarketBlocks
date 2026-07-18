@@ -250,9 +250,9 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("gui.marketblocks.input", "Input");
                 add("gui.marketblocks.inventory_admin_disabled", "Inventory disabled in admin mode");
                 add("gui.marketblocks.inventory_owner_only", "Only the owner can manage inventory");
-                add("gui.marketblocks.inventory_tab", "Show Inventory");
+                add("gui.marketblocks.inventory_tab", "Inventory");
                 add("gui.marketblocks.inventory_title", "Trade Stand Inventory");
-                add("gui.marketblocks.log_tab", "Show Log");
+                add("gui.marketblocks.log_tab", "Log");
                 add("gui.marketblocks.log_title", "Transaction Log");
                 add("gui.marketblocks.log.clear", "Clear log");
                 add("gui.marketblocks.log.count", "Entries: %s");
@@ -266,7 +266,7 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("gui.marketblocks.mode.edit_active", "EDIT MODE");
                 add("gui.marketblocks.no_players_available", "No players available");
                 add("gui.marketblocks.offers", "Offers");
-                add("gui.marketblocks.offers_tab", "Show Offers");
+                add("gui.marketblocks.offers_tab", "Offers");
                 add("gui.marketblocks.out_of_stock", "Out of Stock");
                 add("gui.marketblocks.output", "Output");
                 add("gui.marketblocks.output_full", "Output Full");
@@ -321,6 +321,17 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("message.marketblocks.shop_buyer.interact.8", "§eI wonder what other shops are around here...§r");
                 add("message.marketblocks.shop_buyer.interact.9", "§eJust browsing for now. Nothing has caught my eye yet.§r");
                 add("message.marketblocks.shop_buyer.interact.10", "§eNice shop you have here! I'll keep it in mind.§r");
+
+                // NPC Rank & Category display (G2)
+                add("message.marketblocks.shop_buyer.info", "§7[%s - %s]");
+                add("entity.marketblocks.shop_buyer.rank.citizen", "Citizen");
+                add("entity.marketblocks.shop_buyer.rank.wealthy", "Wealthy Trader");
+                add("entity.marketblocks.shop_buyer.rank.noble", "Noble Merchant");
+                add("entity.marketblocks.shop_buyer.category.general", "General Trader");
+                add("entity.marketblocks.shop_buyer.category.farmer", "Farmer");
+                add("entity.marketblocks.shop_buyer.category.alchemist", "Alchemist");
+                add("entity.marketblocks.shop_buyer.category.blacksmith", "Blacksmith");
+                add("entity.marketblocks.shop_buyer.category.valuables", "Collector");
 
                 // === Jade / Waila Support ===
                 add("config.jade.plugin_marketblocks.shop_info", "Shop Info");
@@ -483,6 +494,10 @@ public class ModEnLangProvider extends LanguageProvider {
 
                 add("gui.marketblocks.trade_book.guide.advanced.title", "=== Advanced Features ===\n\n");
                 add("gui.marketblocks.trade_book.guide.advanced.text", "You can add co-owners to manage your shop.\n\nNPC buyers have their own economy with trends! If everyone sells wood, the price drops. Keep an eye on the Trends page.");
+
+                // NPC Economy Guide Page (G4)
+                add("gui.marketblocks.trade_book.guide.economy.title", "=== NPC Economy ===\n\n");
+                add("gui.marketblocks.trade_book.guide.economy.text", "NPC Buyers visit your shops and buy items if the deal is good!\n\n§6Pricing:§r Items have base values. Crafted items are worth more (+10% per crafting step).\n\n§6Supply & Demand:§r If an item is sold often, its NPC value drops. Over time, prices recover.\n\n§6NPC Ranks:§r\n• §7Citizen§r – Small budget, buys cheap items\n• §eWealthy§r – Medium budget\n• §6Noble§r – Large budget, buys rare items\n\n§6Interests:§r Each NPC has a specialization (Farmer, Blacksmith, Alchemist, Collector). They prefer items from their category and spend more on them!");
 
         }
 }

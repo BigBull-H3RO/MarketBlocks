@@ -33,7 +33,7 @@ public final class MarketplaceListCommand {
          */
         public static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> build() {
                 return Commands.literal("list")
-                                .requires(source -> source.hasPermission(2))
+                                .requires(source -> source.hasPermission(2) && Config.ENABLE_MARKETPLACE_LIST_COMMAND.get())
                                 .executes(c -> executeMarketplaceList(c, 1))
                                 .then(Commands.argument("page", IntegerArgumentType.integer(1))
                                                 .executes(c -> executeMarketplaceList(c,
@@ -92,10 +92,10 @@ public final class MarketplaceListCommand {
 
                                 String tpCmd = (info.tpPos != null && info.tpYaw != null && info.tpPitch != null)
                                                 ? String.format(Locale.US,
-                                                                "/mb_internal_tp \"%s\" %.2f %.2f %.2f %.2f %.2f",
+                                                                "/marketblocks internal tp \"%s\" %.2f %.2f %.2f %.2f %.2f",
                                                                 pos.dimension().location(), finalTpX, finalTpY,
                                                                 finalTpZ, info.tpYaw, info.tpPitch)
-                                                : String.format(Locale.US, "/mb_internal_tp \"%s\" %.2f %.2f %.2f",
+                                                : String.format(Locale.US, "/marketblocks internal tp \"%s\" %.2f %.2f %.2f",
                                                                 pos.dimension().location(), finalTpX, finalTpY,
                                                                 finalTpZ);
 
@@ -132,7 +132,7 @@ public final class MarketplaceListCommand {
                                         .withStyle(style -> style.withClickEvent(new ClickEvent(
                                                         ClickEvent.Action.RUN_COMMAND,
                                                         String.format(Locale.US,
-                                                                        "/mb_internal_waypoint %d %d %d \"%s\" %s",
+                                                                        "/marketblocks internal waypoint %d %d %d \"%s\" %s",
                                                                         pos.pos().getX(),
                                                                         pos.pos().getY(), pos.pos().getZ(),
                                                                         pos.dimension().location(),

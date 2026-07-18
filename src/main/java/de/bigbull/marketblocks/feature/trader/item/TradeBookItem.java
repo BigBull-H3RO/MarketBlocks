@@ -421,7 +421,13 @@ public class TradeBookItem extends Item {
         private void addNpcTrendsPages(List<Component> pages, ServerPlayer player) {
                 NpcEconomySavedData economyData = NpcEconomySavedData.get(player.serverLevel());
                 Map<Item, Double> baseValues = TraderEconomyManager.get().getBaseValues();
-                List<Item> allItems = new ArrayList<>(baseValues.keySet());
+
+                // Include base-value items AND any items with active saturation (recipe-scanned items)
+                java.util.Set<Item> itemSet = new java.util.LinkedHashSet<>(baseValues.keySet());
+                for (Item saturatedItem : economyData.getSaturatedItems()) {
+                        itemSet.add(saturatedItem);
+                }
+                List<Item> allItems = new ArrayList<>(itemSet);
 
                 Map<Item, Double> multiplierCache = new HashMap<>();
                 List<Item> changedItems = new ArrayList<>();
@@ -467,7 +473,16 @@ public class TradeBookItem extends Item {
                                         itemName = itemName.substring(0, 12) + "..";
                                 }
 
-                                double baseVal = baseValues.get(item);
+                                // Support both base-value and recipe-scanned items
+                                Double baseValObj = baseValues.get(item);
+                                double baseVal;
+                                if (baseValObj != null) {
+                                        baseVal = baseValObj;
+                                } else {
+                                        Double evaluated = TraderEconomyManager.get().evaluateItem(
+                                                        item, player.serverLevel().getRecipeManager(), player.serverLevel());
+                                        baseVal = evaluated != null ? evaluated : 0.0;
+                                }
                                 double currentVal = baseVal * mult;
                                 long roundBase = Math.round(baseVal);
                                 long roundCurrent = Math.round(currentVal);
