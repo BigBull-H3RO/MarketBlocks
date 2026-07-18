@@ -45,7 +45,7 @@ public final class CommandUtils {
                     .append(Component.translatable("command.marketblocks.list.tp").withStyle(ChatFormatting.GRAY))
                     .withStyle(style -> style
                             .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-                                    String.format(Locale.US, "/mb_internal_tp \"%s\" %.2f %.2f %.2f",
+                                    String.format(Locale.US, "/marketblocks internal tp \"%s\" %.2f %.2f %.2f",
                                             pos.dimension().location(), finalTpX, finalTpY, finalTpZ)))
                             .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                                     Component.translatable("command.marketblocks.list.click_to_teleport")))));
@@ -56,7 +56,7 @@ public final class CommandUtils {
                 .append(Component.translatable("command.marketblocks.list.waypoint").withStyle(ChatFormatting.AQUA))
                 .withStyle(style -> style
                         .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-                                String.format(Locale.US, "/mb_internal_waypoint %d %d %d \"%s\" %s", pos.pos().getX(),
+                                String.format(Locale.US, "/marketblocks internal waypoint %d %d %d \"%s\" %s", pos.pos().getX(),
                                         pos.pos().getY(), pos.pos().getZ(), pos.dimension().location(),
                                         finalName.isEmpty() ? "Waypoint" : finalName.replace(" ", "_"))))
                         .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,

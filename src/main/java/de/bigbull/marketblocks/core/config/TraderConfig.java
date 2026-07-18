@@ -37,10 +37,10 @@ public class TraderConfig {
                 .defineInRange("traderSpawnNearPlayerChancePercent", 10, 0, 100);
         TRADER_MIN_BUDGET = BUILDER
                 .comment("Minimum budget value a spawned trader has")
-                .defineInRange("traderMinBudget", 64, 1, 1000000);
+                .defineInRange("traderMinBudget", 32, 1, 1000000);
         TRADER_MAX_BUDGET = BUILDER
                 .comment("Maximum budget value a spawned trader has")
-                .defineInRange("traderMaxBudget", 256, 1, 1000000);
+                .defineInRange("traderMaxBudget", 8192, 1, 1000000);
         TRADER_DESPAWN_TICKS = BUILDER
                 .comment("Time in ticks before a trader despawns. Default: 48000 (~40 minutes, same as vanilla Wandering Trader)")
                 .defineInRange("traderDespawnTicks", 48000, 1200, 240000);

@@ -42,8 +42,8 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
  * Registers all MarketBlocks commands by delegating to dedicated command classes
  * under {@link de.bigbull.marketblocks.core.command}.
  *
- * <p>Also contains the two internal helper commands ({@code mb_internal_waypoint} and
- * {@code mb_internal_tp}) that are triggered via chat click-events and not intended
+ * <p>Also contains the two internal helper commands ({@code marketblocks internal waypoint} and
+ * {@code marketblocks internal tp}) that are triggered via chat click-events and not intended
  * for direct player use.</p>
  */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
@@ -89,39 +89,38 @@ public final class MarketBlocksCommandEvents {
                         .then(Commands.literal("marketplace")
                                 .then(ShopStatsCommand.buildMarketplaceStats())
                                 .then(Commands.literal("open")
-                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer
+                                                && Config.ENABLE_MARKETPLACE_OPEN_COMMAND.get())
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             MarketplaceManager.get().openShop(player);
                                             return 1;
                                         }))
                                 .then(MarketplaceListCommand.build()))
-                        .then(MarketplaceAdminCommand.build(LINK_SUGGESTIONS, buildContext)));
-
-        event.getDispatcher().register(
-                Commands.literal("mb_internal_waypoint")
-                        .then(Commands.argument("x", IntegerArgumentType.integer())
-                                .then(Commands.argument("y", IntegerArgumentType.integer())
-                                        .then(Commands.argument("z", IntegerArgumentType.integer())
-                                                .then(Commands.argument("dim", StringArgumentType.string())
-                                                        .then(Commands
-                                                                .argument("name", StringArgumentType.greedyString())
-                                                                .executes(
-                                                                        MarketBlocksCommandEvents::executeInternalWaypoint)))))));
-
-        event.getDispatcher().register(
-                Commands.literal("mb_internal_tp")
-                        .then(Commands.argument("dim", StringArgumentType.string())
-                                .then(Commands.argument("x", DoubleArgumentType.doubleArg())
-                                        .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                                                .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                                                        .executes(context -> executeInternalTp(context, false))
-                                                        .then(Commands.argument("yaw", DoubleArgumentType.doubleArg())
-                                                                .then(Commands
-                                                                        .argument("pitch",
-                                                                                DoubleArgumentType.doubleArg())
-                                                                        .executes(context -> executeInternalTp(context,
-                                                                                true)))))))));
+                        .then(MarketplaceAdminCommand.build(LINK_SUGGESTIONS, buildContext))
+                        .then(Commands.literal("internal")
+                                .requires(source -> false)
+                                .then(Commands.literal("waypoint")
+                                        .then(Commands.argument("x", IntegerArgumentType.integer())
+                                                .then(Commands.argument("y", IntegerArgumentType.integer())
+                                                        .then(Commands.argument("z", IntegerArgumentType.integer())
+                                                                .then(Commands.argument("dim", StringArgumentType.string())
+                                                                        .then(Commands
+                                                                                .argument("name", StringArgumentType.greedyString())
+                                                                                .executes(
+                                                                                        MarketBlocksCommandEvents::executeInternalWaypoint)))))))
+                                .then(Commands.literal("tp")
+                                        .then(Commands.argument("dim", StringArgumentType.string())
+                                                .then(Commands.argument("x", DoubleArgumentType.doubleArg())
+                                                        .then(Commands.argument("y", DoubleArgumentType.doubleArg())
+                                                                .then(Commands.argument("z", DoubleArgumentType.doubleArg())
+                                                                        .executes(context -> executeInternalTp(context, false))
+                                                                        .then(Commands.argument("yaw", DoubleArgumentType.doubleArg())
+                                                                                .then(Commands
+                                                                                        .argument("pitch",
+                                                                                                DoubleArgumentType.doubleArg())
+                                                                                        .executes(context -> executeInternalTp(context,
+                                                                                                true)))))))))));
     }
 
     // ── Internal helper commands (triggered by chat click-events) ──

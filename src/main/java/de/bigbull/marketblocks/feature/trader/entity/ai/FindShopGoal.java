@@ -44,6 +44,14 @@ public class FindShopGoal extends Goal {
         return findValidShop();
     }
 
+    /**
+     * Returns true with a 20% chance, allowing the trader to window-shop
+     * at a shop even if it has no offer or the deal isn't attractive.
+     */
+    private boolean rollWindowShopping() {
+        return entity.getRandom().nextInt(5) == 0;
+    }
+
     private boolean findValidShop() {
         if (!(entity.level() instanceof ServerLevel serverLevel))
             return false;
@@ -87,8 +95,7 @@ public class FindShopGoal extends Goal {
                 hasOffer = !shop.isClosed();
             }
 
-            boolean isWindowShopping = !hasOffer && entity.getRandom().nextInt(5) == 0; // 20% chance to inspect an
-                                                                                        // empty shop
+            boolean isWindowShopping = !hasOffer && rollWindowShopping();
 
             if (!hasOffer && !isWindowShopping)
                 continue;
@@ -133,8 +140,13 @@ public class FindShopGoal extends Goal {
             if (!paymentValid)
                 continue;
 
-            // Is it a good deal for the trader?
-            boolean isGoodDeal = totalResultValue >= totalPaymentValue;
+            // Is it a good deal for the trader? Tolerance depends on rank.
+            double tolerance = switch (entity.getTraderRank()) {
+                case CITIZEN -> 0.85;   // Accepts up to 15% markup
+                case WEALTHY -> 0.95;   // Accepts up to 5% markup
+                case NOBLE -> 1.0;      // Only buys at or below market value
+            };
+            boolean isGoodDeal = totalResultValue >= totalPaymentValue * tolerance;
             boolean canAfford = false;
             
             if (isGoodDeal) {
@@ -148,7 +160,7 @@ public class FindShopGoal extends Goal {
                 return true;
             } else {
                 // Not buying, but might still do window shopping (20% chance)
-                if (entity.getRandom().nextInt(5) == 0) {
+                if (rollWindowShopping()) {
                     entity.setTargetShop(pos);
                     return true;
                 }

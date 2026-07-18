@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.feature.trader.data;
 import com.google.gson.*;
 
 
+import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.TraderConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -18,6 +19,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.SingleItemRecipe;
 import net.neoforged.fml.loading.FMLPaths;
+import net.minecraft.util.RandomSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,7 +53,7 @@ public class TraderEconomyManager {
             loadTraderNames();
             calculatedCache.clear();
         } catch (IOException e) {
-            e.printStackTrace();
+            MarketBlocks.LOGGER.error("Failed to load trader economy config", e);
         }
     }
 
@@ -85,6 +87,17 @@ public class TraderEconomyManager {
             defaultObj.addProperty("minecraft:blaze_rod", 3.0);
             defaultObj.addProperty("minecraft:ghast_tear", 10.0);
             defaultObj.addProperty("minecraft:phantom_membrane", 2.0);
+
+            // --- Late-Game Items ---
+            defaultObj.addProperty("minecraft:nether_star", 250.0);
+            defaultObj.addProperty("minecraft:elytra", 200.0);
+            defaultObj.addProperty("minecraft:dragon_breath", 5.0);
+            defaultObj.addProperty("minecraft:wither_skeleton_skull", 25.0);
+            defaultObj.addProperty("minecraft:heart_of_the_sea", 50.0);
+            defaultObj.addProperty("minecraft:trident", 100.0);
+            defaultObj.addProperty("minecraft:sponge", 10.0);
+            defaultObj.addProperty("minecraft:end_crystal", 50.0);
+            defaultObj.addProperty("minecraft:dragon_head", 100.0);
 
             // --- Food & Farming ---
             defaultObj.addProperty("minecraft:cooked_beef", 0.1);
@@ -206,9 +219,9 @@ public class TraderEconomyManager {
             }
             Files.writeString(configDir.resolve("trader_blacklist.json"), GSON.toJson(blArr));
 
-            calculatedCache.clear();
+
         } catch (IOException e) {
-            e.printStackTrace();
+            MarketBlocks.LOGGER.error("Failed to save trader economy config", e);
         }
     }
 
@@ -253,7 +266,7 @@ public class TraderEconomyManager {
      * Returns a random trader name from the configured list, or null if names are
      * empty.
      */
-    public String getRandomName(java.util.Random random) {
+    public String getRandomName(RandomSource random) {
         if (traderNames.isEmpty())
             return null;
         return traderNames.get(random.nextInt(traderNames.size()));
@@ -281,11 +294,13 @@ public class TraderEconomyManager {
 
     public void setValue(Item item, double value) {
         baseValues.put(item, value);
+        calculatedCache.remove(item);
         save();
     }
 
     public void removeValue(Item item) {
         baseValues.remove(item);
+        calculatedCache.remove(item);
         save();
     }
 
@@ -339,7 +354,12 @@ public class TraderEconomyManager {
                     continue;
                 }
 
-                ItemStack resultItem = recipe.getResultItem(null);
+                ItemStack resultItem;
+                try {
+                    resultItem = recipe.getResultItem(null);
+                } catch (Exception e) {
+                    continue; // Skip recipes that require registry access
+                }
                 if (resultItem != null && resultItem.getItem() == target) {
                     double totalValue = 0;
                     boolean valid = true;

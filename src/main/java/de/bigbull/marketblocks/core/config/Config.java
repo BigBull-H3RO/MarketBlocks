@@ -43,6 +43,12 @@ public class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_XAEROS_COMPAT;
     public static final ModConfigSpec.BooleanValue ENABLE_JOURNEYMAP_COMPAT;
 
+    public static final ModConfigSpec.BooleanValue ENABLE_MARKETPLACE_OPEN_COMMAND;
+    public static final ModConfigSpec.BooleanValue ENABLE_MARKETPLACE_LIST_COMMAND;
+    public static final ModConfigSpec.BooleanValue ENABLE_MARKETPLACE_STATS_COMMAND;
+    public static final ModConfigSpec.BooleanValue ENABLE_SHOP_LIST_COMMAND;
+    public static final ModConfigSpec.BooleanValue ENABLE_SHOP_STATS_COMMAND;
+
     static {
         COMMON_BUILDER.push("Shop Core");
         ENABLE_DOUBLE_CHEST_SUPPORT = COMMON_BUILDER
@@ -128,6 +134,24 @@ public class Config {
         ENABLE_GLOBAL_OFFER_ITEM_RENDERING = COMMON_BUILDER
                 .comment("Global master switch to enable/disable offer item rendering for all shops. Disable to save performance.")
                 .define("enableGlobalOfferItemRendering", true);
+        COMMON_BUILDER.pop();
+
+        COMMON_BUILDER.push("Commands");
+        ENABLE_MARKETPLACE_OPEN_COMMAND = COMMON_BUILDER
+                .comment("Enable the /marketblocks marketplace open command.")
+                .define("enableMarketplaceOpenCommand", true);
+        ENABLE_MARKETPLACE_LIST_COMMAND = COMMON_BUILDER
+                .comment("Enable the /marketblocks marketplace list command.")
+                .define("enableMarketplaceListCommand", true);
+        ENABLE_MARKETPLACE_STATS_COMMAND = COMMON_BUILDER
+                .comment("Enable the /marketblocks marketplace stats command.")
+                .define("enableMarketplaceStatsCommand", true);
+        ENABLE_SHOP_LIST_COMMAND = COMMON_BUILDER
+                .comment("Enable the /marketblocks shop list command.")
+                .define("enableShopListCommand", true);
+        ENABLE_SHOP_STATS_COMMAND = COMMON_BUILDER
+                .comment("Enable the /marketblocks shop stats command.")
+                .define("enableShopStatsCommand", true);
         COMMON_BUILDER.pop();
 
         COMMON_BUILDER.push("Debug Settings");

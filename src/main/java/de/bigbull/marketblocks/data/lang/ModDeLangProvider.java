@@ -248,9 +248,9 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.input", "Eingang");
         add("gui.marketblocks.inventory_admin_disabled", "Inventar im Admin-Modus deaktiviert");
         add("gui.marketblocks.inventory_owner_only", "Nur der Besitzer kann das Inventar verwalten");
-        add("gui.marketblocks.inventory_tab", "Inventar anzeigen");
+        add("gui.marketblocks.inventory_tab", "Inventar");
         add("gui.marketblocks.inventory_title", "Handelsstand-Inventar");
-        add("gui.marketblocks.log_tab", "Verlauf anzeigen");
+        add("gui.marketblocks.log_tab", "Verlauf");
         add("gui.marketblocks.log_title", "Transaktions-Log");
         add("gui.marketblocks.log.clear", "Log leeren");
         add("gui.marketblocks.log.count", "Einträge: %s");
@@ -264,7 +264,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.mode.edit_active", "EDITOR AKTIV");
         add("gui.marketblocks.no_players_available", "Keine Spieler verfügbar");
         add("gui.marketblocks.offers", "Angebote");
-        add("gui.marketblocks.offers_tab", "Angebote anzeigen");
+        add("gui.marketblocks.offers_tab", "Angebote");
         add("gui.marketblocks.out_of_stock", "Nicht auf Lager");
         add("gui.marketblocks.output", "Ausgang");
         add("gui.marketblocks.output_full", "Ausgabe voll");
@@ -319,6 +319,17 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.shop_buyer.interact.8", "§eIch frage mich, welche anderen Shops es hier noch gibt...§r");
         add("message.marketblocks.shop_buyer.interact.9", "§eIch schaue mich nur um. Noch hat nichts mein Interesse geweckt.§r");
         add("message.marketblocks.shop_buyer.interact.10", "§eSchöner Shop, den du hier hast! Den merke ich mir.§r");
+
+        // NPC Rank & Category display (G2)
+        add("message.marketblocks.shop_buyer.info", "§7[%s - %s]");
+        add("entity.marketblocks.shop_buyer.rank.citizen", "Bürger");
+        add("entity.marketblocks.shop_buyer.rank.wealthy", "Wohlhabender Händler");
+        add("entity.marketblocks.shop_buyer.rank.noble", "Edler Kaufmann");
+        add("entity.marketblocks.shop_buyer.category.general", "Allgemeinhändler");
+        add("entity.marketblocks.shop_buyer.category.farmer", "Bauer");
+        add("entity.marketblocks.shop_buyer.category.alchemist", "Alchemist");
+        add("entity.marketblocks.shop_buyer.category.blacksmith", "Schmied");
+        add("entity.marketblocks.shop_buyer.category.valuables", "Sammler");
 
         // === Jade / Waila Support ===
         add("config.jade.plugin_marketblocks.shop_info", "Shop-Info");
@@ -476,6 +487,10 @@ public class ModDeLangProvider extends LanguageProvider {
 
         add("gui.marketblocks.trade_book.guide.advanced.title", "=== Fortgeschritten ===\n\n");
         add("gui.marketblocks.trade_book.guide.advanced.text", "Du kannst Co-Besitzer hinzufügen.\n\nNPCs haben eine eigene Economy mit Trends! Wenn jeder Holz verkauft, sinkt der Preis. Beobachte dafür die Trends-Seite.");
+
+        // NPC Economy Guide Page (G4)
+        add("gui.marketblocks.trade_book.guide.economy.title", "=== NPC-Wirtschaft ===\n\n");
+        add("gui.marketblocks.trade_book.guide.economy.text", "NPC-Käufer besuchen deine Shops und kaufen Items, wenn der Deal gut ist!\n\n§6Preise:§r Items haben Basiswerte. Gecraftete Items sind mehr wert (+10% pro Crafting-Schritt).\n\n§6Angebot & Nachfrage:§r Wird ein Item oft verkauft, sinkt sein NPC-Wert. Mit der Zeit erholen sich Preise.\n\n§6NPC-Ränge:§r\n\u2022 §7Bürger§r \u2013 Kleines Budget\n\u2022 §eWohlhabend§r \u2013 Mittleres Budget\n\u2022 §6Edel§r \u2013 Gro\u00dfes Budget, kauft Seltenes\n\n§6Interessen:§r Jeder NPC hat eine Spezialisierung (Bauer, Schmied, Alchemist, Sammler). Für bevorzugte Kategorien geben sie mehr Budget aus!");
 
     }
 }

@@ -8,6 +8,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -43,7 +44,7 @@ import net.minecraft.core.BlockPos;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Random;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.world.entity.SpawnGroupData;
@@ -74,7 +75,7 @@ public class ShopBuyerEntity extends PathfinderMob {
     private static final EntityDataAccessor<Integer> DATA_INTEREST_CATEGORY = SynchedEntityData
             .defineId(ShopBuyerEntity.class, EntityDataSerializers.INT);
 
-    private int budget = TraderConfig.TRADER_MAX_BUDGET.get();
+    private int budget = 0;
     private BlockPos targetShop = null;
     private int despawnDelay;
     private final Set<BlockPos> visitedShops = new HashSet<>();
@@ -362,6 +363,14 @@ public class ShopBuyerEntity extends PathfinderMob {
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (!this.level().isClientSide) {
+            // Show rank and interest category so the player knows what this NPC is looking for
+            Component rankInfo = Component.translatable(
+                    "message.marketblocks.shop_buyer.info",
+                    Component.translatable("entity.marketblocks.shop_buyer.rank." + getTraderRank().name().toLowerCase()),
+                    Component.translatable("entity.marketblocks.shop_buyer.category." + getInterestCategory().name().toLowerCase())
+            ).withStyle(ChatFormatting.GRAY);
+            player.sendSystemMessage(rankInfo);
+
             int messageIndex = selectInteractMessage();
             player.sendSystemMessage(Component
                     .translatable("message.marketblocks.shop_buyer.interact." + messageIndex));
@@ -395,7 +404,9 @@ public class ShopBuyerEntity extends PathfinderMob {
     // --- Ranks & Categories ---
 
     public TraderRank getTraderRank() {
-        return TraderRank.values()[this.entityData.get(DATA_TRADER_RANK)];
+        int ordinal = this.entityData.get(DATA_TRADER_RANK);
+        TraderRank[] values = TraderRank.values();
+        return (ordinal >= 0 && ordinal < values.length) ? values[ordinal] : TraderRank.CITIZEN;
     }
 
     public void setTraderRank(TraderRank rank) {
@@ -403,7 +414,9 @@ public class ShopBuyerEntity extends PathfinderMob {
     }
 
     public InterestCategory getInterestCategory() {
-        return InterestCategory.values()[this.entityData.get(DATA_INTEREST_CATEGORY)];
+        int ordinal = this.entityData.get(DATA_INTEREST_CATEGORY);
+        InterestCategory[] values = InterestCategory.values();
+        return (ordinal >= 0 && ordinal < values.length) ? values[ordinal] : InterestCategory.GENERAL;
     }
 
     public void setInterestCategory(InterestCategory category) {
@@ -416,9 +429,10 @@ public class ShopBuyerEntity extends PathfinderMob {
         }
         switch (this.getInterestCategory()) {
             case FARMER:
-                return category == ShopCategory.FOOD_POTIONS || category == ShopCategory.MISC;
+                return category == ShopCategory.FOOD_POTIONS || category == ShopCategory.BLOCKS
+                        || category == ShopCategory.MISC;
             case ALCHEMIST:
-                return category == ShopCategory.FOOD_POTIONS || category == ShopCategory.MISC;
+                return category == ShopCategory.FOOD_POTIONS || category == ShopCategory.VALUABLES;
             case BLACKSMITH:
                 return category == ShopCategory.WEAPONS_ARMOR || category == ShopCategory.TOOLS
                         || category == ShopCategory.BLOCKS;
@@ -462,7 +476,7 @@ public class ShopBuyerEntity extends PathfinderMob {
         this.setBudget(budget);
 
         if (TraderConfig.TRADER_NAMES_ENABLED.get()) {
-            String name = TraderEconomyManager.get().getRandomName(new Random(random.nextLong()));
+            String name = TraderEconomyManager.get().getRandomName(random);
             if (name != null) {
                 this.setCustomName(Component.literal(name));
                 this.setCustomNameVisible(true);

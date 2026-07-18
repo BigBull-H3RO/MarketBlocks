@@ -10,6 +10,15 @@ public class TradeBookGuidePages {
 
     public static void addGuidePages(List<Component> pages) {
         addIntroAndShopTypes(pages);
+        addNpcEconomyGuide(pages);
+    }
+
+    private static void addNpcEconomyGuide(List<Component> pages) {
+        MutableComponent economyPage = Component.translatable("gui.marketblocks.trade_book.guide.economy.title")
+                .withStyle(ChatFormatting.GOLD)
+                .append(Component.translatable("gui.marketblocks.trade_book.guide.economy.text")
+                        .withStyle(ChatFormatting.BLACK));
+        pages.add(economyPage);
     }
 
     public static void addIntroAndShopTypes(List<Component> pages) {

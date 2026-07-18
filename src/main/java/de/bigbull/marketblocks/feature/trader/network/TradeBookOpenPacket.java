@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.feature.trader.network;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.feature.trader.client.TradeBookClientHandler;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -45,14 +46,6 @@ public record TradeBookOpenPacket(List<Component> pages, Map<String, ShopOfferDa
     }
 
     public static void handle(TradeBookOpenPacket packet, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            try {
-                Class<?> handlerClass = Class.forName("de.bigbull.marketblocks.feature.trader.client.TradeBookClientHandler");
-                java.lang.reflect.Method method = handlerClass.getMethod("openScreen", List.class, Map.class);
-                method.invoke(null, packet.pages(), packet.offers());
-            } catch (Exception e) {
-                MarketBlocks.LOGGER.error("Failed to open trade book screen on client", e);
-            }
-        });
+        context.enqueueWork(() -> TradeBookClientHandler.openScreen(packet.pages(), packet.offers()));
     }
 }

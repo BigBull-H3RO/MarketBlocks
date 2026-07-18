@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.network;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.marketplace.network.*;
 import de.bigbull.marketblocks.feature.singleoffer.network.*;
+import de.bigbull.marketblocks.feature.trader.network.TeleportRequestPacket;
 import de.bigbull.marketblocks.feature.trader.network.TradeBookOpenPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -59,6 +60,8 @@ public class NetworkHandler {
         registerServerPacket(registrar, MarketplaceAutoFillPacket.TYPE, MarketplaceAutoFillPacket.CODEC, MarketplaceAutoFillPacket::handle);
         registerServerPacket(registrar, MarketplaceSetOfferPacket.TYPE, MarketplaceSetOfferPacket.CODEC, MarketplaceSetOfferPacket::handle);
         registerServerPacket(registrar, MarketplaceClearTemplatePacket.TYPE, MarketplaceClearTemplatePacket.CODEC, MarketplaceClearTemplatePacket::handle);
+
+        registerServerPacket(registrar, TeleportRequestPacket.TYPE, TeleportRequestPacket.CODEC, TeleportRequestPacket::handle);
 
         registrar.playToClient(OfferStatusPacket.TYPE, OfferStatusPacket.CODEC, OfferStatusPacket::handle);
         registrar.playToClient(TransactionLogSyncPacket.TYPE, TransactionLogSyncPacket.CODEC, TransactionLogSyncPacket::handle);

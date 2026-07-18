@@ -14,14 +14,15 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class ShopBuyerSpawner {
 
-    private static final Map<ServerLevel, Set<ShopBuyerEntity>> ACTIVE_TRADERS = new ConcurrentHashMap<>();
+    private static final Map<ServerLevel, Set<ShopBuyerEntity>> ACTIVE_TRADERS = new HashMap<>();
 
     public static void onTraderAdded(ServerLevel level, ShopBuyerEntity entity) {
-        ACTIVE_TRADERS.computeIfAbsent(level, k -> ConcurrentHashMap.newKeySet()).add(entity);
+        ACTIVE_TRADERS.computeIfAbsent(level, k -> new HashSet<>()).add(entity);
     }
 
     public static void onTraderRemoved(ServerLevel level, ShopBuyerEntity entity) {

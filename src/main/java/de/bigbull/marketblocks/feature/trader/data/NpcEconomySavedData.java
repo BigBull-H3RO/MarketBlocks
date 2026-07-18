@@ -88,6 +88,13 @@ public class NpcEconomySavedData extends SavedData {
     }
 
     /**
+     * Returns a set of all items that currently have saturation > 0.
+     */
+    public java.util.Set<Item> getSaturatedItems() {
+        return java.util.Collections.unmodifiableSet(itemSaturation.keySet());
+    }
+
+    /**
      * Registers a sale to an NPC, increasing the saturation and lowering future values.
      */
     public void registerSale(Item item, int amount, ServerLevel level) {
@@ -98,7 +105,10 @@ public class NpcEconomySavedData extends SavedData {
         applyDecay(level);
 
         double extraSaturation = amount * TraderConfig.TRADER_DYNAMIC_PRICING_SATURATION_PER_UNIT.get();
-        itemSaturation.merge(item, extraSaturation, Double::sum);
+        // Cap saturation to prevent unbounded growth that would make decay take unreasonably long
+        double maxSaturation = 1.0 - TraderConfig.TRADER_DYNAMIC_PRICING_MIN_MULTIPLIER.get() + 0.1;
+        double newVal = Math.min(maxSaturation, itemSaturation.getOrDefault(item, 0.0) + extraSaturation);
+        itemSaturation.put(item, newVal);
         setDirty();
     }
 

@@ -242,9 +242,9 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("gui.marketblocks.input", "Entrada");
                 add("gui.marketblocks.inventory_admin_disabled", "Inventario desactivado en modo admin");
                 add("gui.marketblocks.inventory_owner_only", "Solo el propietario puede gestionar el inventario");
-                add("gui.marketblocks.inventory_tab", "Mostrar inventario");
+                add("gui.marketblocks.inventory_tab", "Inventario");
                 add("gui.marketblocks.inventory_title", "Inventario del puesto");
-                add("gui.marketblocks.log_tab", "Mostrar registro");
+                add("gui.marketblocks.log_tab", "Registro");
                 add("gui.marketblocks.log_title", "Registro de transacciones");
                 add("gui.marketblocks.log.clear", "Limpiar registro");
                 add("gui.marketblocks.log.count", "Entradas: %s");
@@ -258,7 +258,7 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("gui.marketblocks.mode.edit_active", "MODO EDICIÓN");
                 add("gui.marketblocks.no_players_available", "Sin jugadores disponibles");
                 add("gui.marketblocks.offers", "Ofertas");
-                add("gui.marketblocks.offers_tab", "Mostrar ofertas");
+                add("gui.marketblocks.offers_tab", "Ofertas");
                 add("gui.marketblocks.out_of_stock", "Agotado");
                 add("gui.marketblocks.output", "Salida");
                 add("gui.marketblocks.output_full", "Salida llena");
@@ -305,6 +305,17 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("message.marketblocks.shop_buyer.interact.8", "§eMe pregunto qué otras tiendas habrá por aquí...§r");
                 add("message.marketblocks.shop_buyer.interact.9", "§eSolo estoy mirando por ahora. Nada me ha llamado la atención aún.§r");
                 add("message.marketblocks.shop_buyer.interact.10", "§e¡Bonita tienda tienes aquí! La tendré en cuenta.§r");
+
+                // NPC Rank & Category display (G2)
+                add("message.marketblocks.shop_buyer.info", "§7[%s - %s]");
+                add("entity.marketblocks.shop_buyer.rank.citizen", "Ciudadano");
+                add("entity.marketblocks.shop_buyer.rank.wealthy", "Comerciante adinerado");
+                add("entity.marketblocks.shop_buyer.rank.noble", "Noble mercader");
+                add("entity.marketblocks.shop_buyer.category.general", "Comerciante general");
+                add("entity.marketblocks.shop_buyer.category.farmer", "Granjero");
+                add("entity.marketblocks.shop_buyer.category.alchemist", "Alquimista");
+                add("entity.marketblocks.shop_buyer.category.blacksmith", "Herrero");
+                add("entity.marketblocks.shop_buyer.category.valuables", "Coleccionista");
 
                 // === Jade / Waila Support ===
                 add("config.jade.plugin_marketblocks.shop_info", "Información de la tienda");
@@ -429,6 +440,10 @@ public class ModEsLangProvider extends LanguageProvider {
 
                 add("gui.marketblocks.trade_book.status.out_of_stock", " §c⚠ Agotado");
                 add("gui.marketblocks.trade_book.status.output_full", " §6⚠ Salida llena");
+
+                // NPC Economy Guide Page (G4)
+                add("gui.marketblocks.trade_book.guide.economy.title", "=== Economía NPC ===\n\n");
+                add("gui.marketblocks.trade_book.guide.economy.text", "¡Los compradores NPC visitan tus tiendas y compran artículos si la oferta es buena!\n\n§6Precios:§r Los objetos tienen valores base. Los objetos crafteados valen más (+10% por paso de crafteo).\n\n§6Oferta y demanda:§r Si un objeto se vende a menudo, su valor NPC baja. Con el tiempo, los precios se recuperan.\n\n§6Rangos NPC:§r\n• §7Ciudadano§r – Presupuesto bajo\n• §eAdinerado§r – Presupuesto medio\n• §6Noble§r – Gran presupuesto, compra objetos raros\n\n§6Intereses:§r Cada NPC tiene una especialización (Granjero, Herrero, Alquimista, Coleccionista). ¡Gastan más en su categoría preferida!");
 
                 // === Block Registrations ===
                 addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Caja de mercado");
