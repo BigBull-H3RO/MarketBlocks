@@ -8,7 +8,7 @@ Admin Shop Mode is designed for **server-controlled shops** that provide unlimit
 
 To enable Admin Shop Mode on a shop, **both** conditions must be met:
 
-1. **Global admin mode** must be enabled: either via `/marketblocks adminmode true` or by setting `marketblocksAdminModeEnabled = true` in the config.
+1. **Global admin mode** must be enabled: either via `/marketblocks admin editmode true` or by setting `marketblocksAdminModeEnabled = true` in the config.
 2. The player must have **operator rights** (permission level 2).
 
 The Admin Shop toggle is located in the **Access** category of the Settings tab, but it is only visible when both conditions are met.
@@ -44,7 +44,7 @@ Admin Shop Mode does not affect redstone or I/O behavior:
 - Use only for clearly defined server shops (spawn shops, quest rewards, etc.).
 - Regularly review prices and payment items administratively.
 - Consider using the **Closed** status (in General settings) to temporarily disable an admin shop without removing the admin flag.
-- Use the `/marketblocks list` command to get an overview of all shops and their status.
+- Use the `/marketblocks shop list` command to get an overview of all shops and their status.
 
 ## Configuration
 

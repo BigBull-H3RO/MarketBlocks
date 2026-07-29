@@ -14,7 +14,7 @@ MarketBlocks is a NeoForge mod for **Minecraft 1.21.1** with two trading systems
 3. Start the server so configuration files are created.
 4. Optionally adjust global settings in `marketblocks-common.toml` (e.g., admin mode, blast resistance, tab visibility, default values).
 5. Craft a Trade Stand or Market Crate and place it to start your first shop.
-6. Open the Marketplace with the **O** key or via `/marketblocks marketplace`.
+6. Open the Marketplace with the **O** key or via `/marketblocks marketplace open`.
 
 ## Versions & Requirements
 
@@ -36,4 +36,5 @@ MarketBlocks is a NeoForge mod for **Minecraft 1.21.1** with two trading systems
 - **Marketplace**: [JSON configuration](Marketplace-JSON-Configuration-Guide), [in-game management](Marketplace-In-Game-Management), [limits & pricing](Marketplace-Dynamic-Pricing-and-Limits), [troubleshooting](Marketplace-Troubleshooting)
 - **SingleOfferShop**: [setup & roles](SingleOfferShop-Setup-and-Roles), [settings overview](SingleOfferShop-Settings), [visual NPC](SingleOfferShop-Visual-NPC), [offer item visuals](SingleOfferShop-Offer-Item-Visuals), [notifications](SingleOfferShop-Notifications), [access control](SingleOfferShop-Access-Control), [admin shop mode](SingleOfferShop-Admin-Shop-Mode), [examples](SingleOfferShop-Examples-and-Common-Setups), [advancements](SingleOfferShop-Advancements)
 - **[Commands & Permissions](Commands-and-Permissions)**: Commands and permissions by role
+- **[Trader & Trade Book](Trader-and-TradeBook)**: Trader subsystem, Trade Book, and admin controls
 - **[Developer Info](Developer-Info)**: Technical entry points for addons and integrations

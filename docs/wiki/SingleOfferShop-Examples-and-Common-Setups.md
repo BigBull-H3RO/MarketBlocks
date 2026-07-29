@@ -34,7 +34,7 @@ A server-managed shop at spawn that sells essential items for a fixed price.
 - **Offer Item Visuals**: Visible, fullbright on, larger scale for visibility
 
 **Setup Steps:**
-1. Enable global admin mode: `/marketblocks adminmode true`.
+1. Enable global admin mode: `/marketblocks admin editmode true`.
 2. Place a Trade Stand.
 3. Set the offer (e.g., 4 Iron Ingots → 1 Iron Pickaxe).
 4. Go to Settings → Access and enable **Admin Shop Mode**.
@@ -111,6 +111,6 @@ A fully automated shop connected to a farm via hoppers.
 - With high demand, monitor the transaction log and adjust stock levels.
 - Use notifications to stay informed about shop status without having to visit.
 - For shops with multiple admins, use co-owners and enable co-owner notifications.
-- Use the `/marketblocks list` command to get a quick overview of all shops and their status.
+- Use the `/marketblocks shop list` command to get a quick overview of all shops and their status.
 - Use Dynamic Fill Level in visuals to give customers a visual indicator of stock availability.
 - When testing a new shop, use the Closed status to prevent purchases until the offer is finalized.
