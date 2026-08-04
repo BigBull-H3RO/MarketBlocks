@@ -14,8 +14,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
 import java.util.UUID;
-import net.minecraft.util.FormattedCharSequence;
-import java.util.List;
 
 /**
  * Modal dialog for editing the purchase limits of a single marketplace offer.
@@ -37,8 +35,10 @@ public class OfferLimitsEditor extends BaseModalScreen {
         this(parent, offerId, currentLimit, -1, -1);
     }
 
-    public OfferLimitsEditor(Screen parent, UUID offerId, OfferLimit currentLimit, int preferredLeft, int preferredCenterY) {
-        super(Component.translatable("gui.marketblocks.marketplace.editor.limits.title"), parent, PANEL_WIDTH, PANEL_HEIGHT, preferredLeft, preferredCenterY);
+    public OfferLimitsEditor(Screen parent, UUID offerId, OfferLimit currentLimit, int preferredLeft,
+            int preferredCenterY) {
+        super(Component.translatable("gui.marketblocks.marketplace.editor.limits.title"), parent, PANEL_WIDTH,
+                PANEL_HEIGHT, preferredLeft, preferredCenterY);
         this.offerId = offerId;
         this.currentLimit = currentLimit != null ? currentLimit : OfferLimit.unlimited();
     }
@@ -56,9 +56,12 @@ public class OfferLimitsEditor extends BaseModalScreen {
         int inputX = panelLeft + INPUT_X_OFFSET;
         int rowStartY = panelTop + INPUT_START_Y_OFFSET;
 
-        this.dailyLimitInput = createPositiveIntInput(inputX, rowStartY, currentLimit.dailyLimit().map(String::valueOf).orElse(""));
-        this.stockLimitInput = createPositiveIntInput(inputX, rowStartY + ROW_SPACING, currentLimit.stockLimit().map(String::valueOf).orElse(""));
-        this.restockSecondsInput = createPositiveIntInput(inputX, rowStartY + (ROW_SPACING * 2), currentLimit.restockSeconds().map(String::valueOf).orElse(""));
+        this.dailyLimitInput = createPositiveIntInput(inputX, rowStartY,
+                currentLimit.dailyLimit().map(String::valueOf).orElse(""));
+        this.stockLimitInput = createPositiveIntInput(inputX, rowStartY + ROW_SPACING,
+                currentLimit.stockLimit().map(String::valueOf).orElse(""));
+        this.restockSecondsInput = createPositiveIntInput(inputX, rowStartY + (ROW_SPACING * 2),
+                currentLimit.restockSeconds().map(String::valueOf).orElse(""));
     }
 
     private EditBox createPositiveIntInput(int x, int y, String value) {
@@ -70,7 +73,8 @@ public class OfferLimitsEditor extends BaseModalScreen {
     }
 
     private void createActionButtons() {
-        Button saveLimitsButton = Button.builder(Component.translatable("gui.marketblocks.save"), button -> saveLimits())
+        Button saveLimitsButton = Button
+                .builder(Component.translatable("gui.marketblocks.save"), button -> saveLimits())
                 .bounds(panelLeft + 26, panelTop + PANEL_HEIGHT - 28, 84, 20)
                 .build();
         this.addRenderableWidget(saveLimitsButton);
@@ -125,14 +129,18 @@ public class OfferLimitsEditor extends BaseModalScreen {
     protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         int labelX = panelLeft + LABEL_X_OFFSET;
         int rowStartY = panelTop + LABEL_START_Y_OFFSET;
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.daily"), labelX, rowStartY, 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.stock"), labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.restock"), labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.daily"),
+                labelX, rowStartY, 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.stock"),
+                labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.restock"),
+                labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
 
-        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY, "gui.marketblocks.marketplace.editor.limits.daily.tooltip");
-        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + ROW_SPACING, "gui.marketblocks.marketplace.editor.limits.stock.tooltip");
-        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + (ROW_SPACING * 2), "gui.marketblocks.marketplace.editor.limits.restock.tooltip");
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY,
+                "gui.marketblocks.marketplace.editor.limits.daily.tooltip");
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + ROW_SPACING,
+                "gui.marketblocks.marketplace.editor.limits.stock.tooltip");
+        renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + (ROW_SPACING * 2),
+                "gui.marketblocks.marketplace.editor.limits.restock.tooltip");
     }
 }
-
-

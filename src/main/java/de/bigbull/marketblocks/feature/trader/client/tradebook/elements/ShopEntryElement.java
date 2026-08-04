@@ -2,8 +2,6 @@ package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
 import de.bigbull.marketblocks.feature.trader.network.TeleportRequestPacket;
 import de.bigbull.marketblocks.network.NetworkHandler;
-
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;

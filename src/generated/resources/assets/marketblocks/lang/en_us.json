@@ -157,6 +157,8 @@
   "gui.marketblocks.marketplace.editor.limits.stock": "Stock Limit",
   "gui.marketblocks.marketplace.editor.limits.stock.tooltip": "Total available stock for this offer.",
   "gui.marketblocks.marketplace.editor.limits.title": "Limits",
+  "gui.marketblocks.marketplace.editor.pricing.base": "Base Price (%)",
+  "gui.marketblocks.marketplace.editor.pricing.base.tooltip": "Base price scaling factor in percent (e.g. 100 = normal, 150 = 50% markup). Applied before demand adjustments.",
   "gui.marketblocks.marketplace.editor.pricing.disabled": "Pricing OFF",
   "gui.marketblocks.marketplace.editor.pricing.enabled": "Pricing ON",
   "gui.marketblocks.marketplace.editor.pricing.label": "Enable Pricing",
