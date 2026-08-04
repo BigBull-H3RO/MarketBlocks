@@ -25,6 +25,11 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      - name: Increase swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 4
+
       - name: Guard against merge commits from pull requests
         if: github.event_name == 'push'
         run: |
