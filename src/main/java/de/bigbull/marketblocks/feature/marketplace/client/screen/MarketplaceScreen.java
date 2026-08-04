@@ -78,8 +78,6 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private static final int PREVIEW_X_OFFSET = 144;
     private static final int PREVIEW_Y_OFFSET = 43;
 
-    private static final int CONTROLS_X_START = 160;
-    private static final int CONTROLS_Y_START = 102;
 
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "button"),
@@ -413,8 +411,6 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
                 this.maxVisibleRows,
                 PREVIEW_X_OFFSET,
                 PREVIEW_Y_OFFSET,
-                CONTROLS_X_START,
-                CONTROLS_Y_START,
                 RIGHT_BUTTON_SIZE,
                 RIGHT_BUTTON_GAP,
                 BUTTON_SPRITES,

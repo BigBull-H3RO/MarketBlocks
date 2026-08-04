@@ -182,6 +182,8 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("gui.marketblocks.marketplace.editor.pricing.enabled", "Pricing ON");
                 add("gui.marketblocks.marketplace.editor.pricing.label", "Enable Pricing");
                 add("gui.marketblocks.marketplace.editor.pricing.label.tooltip", "If enabled, the price scales dynamically based on market temperature.");
+                add("gui.marketblocks.marketplace.editor.pricing.base", "Base Price (%)");
+                add("gui.marketblocks.marketplace.editor.pricing.base.tooltip", "Base price scaling factor in percent (e.g. 100 = normal, 150 = 50% markup). Applied before demand adjustments.");
                 add("gui.marketblocks.marketplace.editor.pricing.max", "Max Price (%)");
                 add("gui.marketblocks.marketplace.editor.pricing.max.tooltip", "Maximum percentage the price can reach (e.g. 200 = double price).");
                 add("gui.marketblocks.marketplace.editor.pricing.min", "Min Price (%)");

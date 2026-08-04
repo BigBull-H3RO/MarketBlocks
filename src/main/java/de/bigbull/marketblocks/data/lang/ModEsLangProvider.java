@@ -174,6 +174,8 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("gui.marketblocks.marketplace.editor.pricing.enabled", "Fijación de precios ON");
                 add("gui.marketblocks.marketplace.editor.pricing.label", "Activar fijación de precios");
                 add("gui.marketblocks.marketplace.editor.pricing.label.tooltip", "Si se activa, el precio se ajusta dinámicamente según la temperatura del mercado.");
+                add("gui.marketblocks.marketplace.editor.pricing.base", "Precio base (%)");
+                add("gui.marketblocks.marketplace.editor.pricing.base.tooltip", "Factor de escala del precio base en porcentaje (ej. 100 = normal, 150 = 50% de recargo). Se aplica antes de los ajustes de demanda.");
                 add("gui.marketblocks.marketplace.editor.pricing.max", "Precio máx (%)");
                 add("gui.marketblocks.marketplace.editor.pricing.max.tooltip", "Porcentaje máximo que puede alcanzar el precio (ej. 200 = precio duplicado).");
                 add("gui.marketblocks.marketplace.editor.pricing.min", "Precio mín (%)");

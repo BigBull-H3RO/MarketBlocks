@@ -136,11 +136,11 @@ public final class MarketplaceOfferRuntimeState {
     }
 
     public MarketplaceOfferRuntimeState withStockRemaining(Integer stockRemaining) {
-        return new MarketplaceOfferRuntimeState(stockRemaining, purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, purchasedTodayByPlayer, salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().stockRemaining(stockRemaining).build();
     }
 
     public MarketplaceOfferRuntimeState withPurchasedTodayGlobal(int purchasedTodayGlobal) {
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, purchasedTodayByPlayer, salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().purchasedTodayGlobal(purchasedTodayGlobal).build();
     }
 
     public MarketplaceOfferRuntimeState withPurchasedTodayForPlayer(UUID playerId, int purchasedToday) {
@@ -152,35 +152,90 @@ public final class MarketplaceOfferRuntimeState {
                 updated.put(playerId, purchasedToday);
             }
         }
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, updated, salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().purchasedTodayByPlayer(updated).build();
     }
 
     public MarketplaceOfferRuntimeState withClearedPlayerPurchases() {
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, Collections.emptyMap(), salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().purchasedTodayByPlayer(Collections.emptyMap()).build();
     }
 
     public MarketplaceOfferRuntimeState withLastDailyResetDay(long lastDailyResetDay) {
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, purchasedTodayByPlayer, salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().lastDailyResetDay(lastDailyResetDay).build();
     }
 
     public MarketplaceOfferRuntimeState withLastRestockGameTime(long lastRestockGameTime) {
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, purchasedTodayByPlayer, salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().lastRestockGameTime(lastRestockGameTime).build();
     }
 
     public MarketplaceOfferRuntimeState withTemperature(double temperature) {
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, purchasedTodayByPlayer, salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().temperature(temperature).build();
     }
 
     public MarketplaceOfferRuntimeState withLastTemperatureUpdateGameTime(long lastTemperatureUpdateGameTime) {
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, purchasedTodayByPlayer, salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().lastTemperatureUpdateGameTime(lastTemperatureUpdateGameTime).build();
     }
 
     public MarketplaceOfferRuntimeState withLifetimePurchases(int lifetimePurchases) {
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, purchasedTodayByPlayer, salePercent.orElse(null), saleEndTimestamp);
+        return toBuilder().lifetimePurchases(lifetimePurchases).build();
     }
 
     public MarketplaceOfferRuntimeState withSale(Double salePercent, long saleEndTimestamp) {
-        return new MarketplaceOfferRuntimeState(stockRemaining.orElse(null), purchasedTodayGlobal, lastDailyResetDay, lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases, purchasedTodayByPlayer, salePercent, saleEndTimestamp);
+        return toBuilder().salePercent(salePercent).saleEndTimestamp(saleEndTimestamp).build();
+    }
+
+    /**
+     * Creates a mutable builder initialized with the current state.
+     * Use this for batch updates to avoid intermediate object allocation.
+     */
+    public Builder toBuilder() {
+        return new Builder(this);
+    }
+
+    /**
+     * Mutable builder for {@link MarketplaceOfferRuntimeState}.
+     * Allows chaining multiple mutations before creating a single new immutable instance.
+     */
+    public static final class Builder {
+        private Integer stockRemaining;
+        private int purchasedTodayGlobal;
+        private long lastDailyResetDay;
+        private long lastRestockGameTime;
+        private double temperature;
+        private long lastTemperatureUpdateGameTime;
+        private int lifetimePurchases;
+        private Map<UUID, Integer> purchasedTodayByPlayer;
+        private Double salePercent;
+        private long saleEndTimestamp;
+
+        private Builder(MarketplaceOfferRuntimeState source) {
+            this.stockRemaining = source.stockRemaining.orElse(null);
+            this.purchasedTodayGlobal = source.purchasedTodayGlobal;
+            this.lastDailyResetDay = source.lastDailyResetDay;
+            this.lastRestockGameTime = source.lastRestockGameTime;
+            this.temperature = source.temperature;
+            this.lastTemperatureUpdateGameTime = source.lastTemperatureUpdateGameTime;
+            this.lifetimePurchases = source.lifetimePurchases;
+            this.purchasedTodayByPlayer = source.purchasedTodayByPlayer;
+            this.salePercent = source.salePercent.orElse(null);
+            this.saleEndTimestamp = source.saleEndTimestamp;
+        }
+
+        public Builder stockRemaining(Integer stockRemaining) { this.stockRemaining = stockRemaining; return this; }
+        public Builder purchasedTodayGlobal(int v) { this.purchasedTodayGlobal = v; return this; }
+        public Builder lastDailyResetDay(long v) { this.lastDailyResetDay = v; return this; }
+        public Builder lastRestockGameTime(long v) { this.lastRestockGameTime = v; return this; }
+        public Builder temperature(double v) { this.temperature = v; return this; }
+        public Builder lastTemperatureUpdateGameTime(long v) { this.lastTemperatureUpdateGameTime = v; return this; }
+        public Builder lifetimePurchases(int v) { this.lifetimePurchases = v; return this; }
+        public Builder purchasedTodayByPlayer(Map<UUID, Integer> v) { this.purchasedTodayByPlayer = v; return this; }
+        public Builder salePercent(Double v) { this.salePercent = v; return this; }
+        public Builder saleEndTimestamp(long v) { this.saleEndTimestamp = v; return this; }
+
+        public MarketplaceOfferRuntimeState build() {
+            return new MarketplaceOfferRuntimeState(stockRemaining, purchasedTodayGlobal, lastDailyResetDay,
+                    lastRestockGameTime, temperature, lastTemperatureUpdateGameTime, lifetimePurchases,
+                    purchasedTodayByPlayer, salePercent, saleEndTimestamp);
+        }
     }
 
     private List<PlayerDailyPurchase> playerPurchasesForCodec() {

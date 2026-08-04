@@ -180,6 +180,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.editor.pricing.enabled", "Preisdynamik AN");
         add("gui.marketblocks.marketplace.editor.pricing.label", "Preisdynamik aktivieren");
         add("gui.marketblocks.marketplace.editor.pricing.label.tooltip", "Wenn aktiviert, skaliert der Preis dynamisch anhand der Nachfrage/Markttemperatur.");
+        add("gui.marketblocks.marketplace.editor.pricing.base", "Basispreis (%)");
+        add("gui.marketblocks.marketplace.editor.pricing.base.tooltip", "Basis-Preisskalierung in Prozent (z.B. 100 = normal, 150 = 50% Aufschlag). Wird vor der Nachfrage-Anpassung angewendet.");
         add("gui.marketblocks.marketplace.editor.pricing.max", "Maximaler Preis (%)");
         add("gui.marketblocks.marketplace.editor.pricing.max.tooltip", "Maximaler Prozentsatz, den der Preis erreichen kann (z.B. 200 = doppelter Preis).");
         add("gui.marketblocks.marketplace.editor.pricing.min", "Minimaler Preis (%)");

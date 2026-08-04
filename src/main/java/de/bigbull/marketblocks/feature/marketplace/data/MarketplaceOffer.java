@@ -91,7 +91,7 @@ public final class MarketplaceOffer {
     public List<ItemStack> effectivePayments() {
         if (runtimeState.isSaleActive() && runtimeState.salePercent().isPresent()) {
             double percent = runtimeState.salePercent().get();
-            double multiplier = Math.max(0.0, 1.0 + (percent / 100.0));
+            double multiplier = MarketplaceRuntimeMath.computeSaleMultiplier(percent);
             List<ItemStack> effective = new ArrayList<>(payments.size());
             for (ItemStack payment : payments) {
                 if (payment.isEmpty()) {
@@ -122,7 +122,7 @@ public final class MarketplaceOffer {
     /** Returns the current demand-based price multiplier (1.0 when demand pricing is disabled). */
     public double currentPriceMultiplier() {
         if (runtimeState.isSaleActive() && runtimeState.salePercent().isPresent()) {
-            return Math.max(0.0, 1.0 + (runtimeState.salePercent().get() / 100.0));
+            return MarketplaceRuntimeMath.computeSaleMultiplier(runtimeState.salePercent().get());
         }
         return MarketplaceRuntimeMath.computeDemandMultiplier(pricing(), runtimeState.temperature());
     }
