@@ -157,6 +157,8 @@
   "gui.marketblocks.marketplace.editor.limits.stock": "Limite de stock",
   "gui.marketblocks.marketplace.editor.limits.stock.tooltip": "Stock total disponible pour cette offre.",
   "gui.marketblocks.marketplace.editor.limits.title": "Limites",
+  "gui.marketblocks.marketplace.editor.pricing.base": "Prix de base (%)",
+  "gui.marketblocks.marketplace.editor.pricing.base.tooltip": "Facteur de prix de base en pourcentage (ex. 100 = normal, 150 = +50%). Appliqué avant les ajustements de demande.",
   "gui.marketblocks.marketplace.editor.pricing.disabled": "Tarification OFF",
   "gui.marketblocks.marketplace.editor.pricing.enabled": "Tarification ON",
   "gui.marketblocks.marketplace.editor.pricing.label": "Activer la tarification",

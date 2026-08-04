@@ -155,6 +155,8 @@
   "gui.marketblocks.marketplace.editor.limits.stock": "Lagerlimit",
   "gui.marketblocks.marketplace.editor.limits.stock.tooltip": "Gesamter verfügbarer Lagerbestand für dieses Angebot.",
   "gui.marketblocks.marketplace.editor.limits.title": "Limits",
+  "gui.marketblocks.marketplace.editor.pricing.base": "Basispreis (%)",
+  "gui.marketblocks.marketplace.editor.pricing.base.tooltip": "Basis-Preisskalierung in Prozent (z.B. 100 = normal, 150 = 50% Aufschlag). Wird vor der Nachfrage-Anpassung angewendet.",
   "gui.marketblocks.marketplace.editor.pricing.disabled": "Preisdynamik AUS",
   "gui.marketblocks.marketplace.editor.pricing.enabled": "Preisdynamik AN",
   "gui.marketblocks.marketplace.editor.pricing.label": "Preisdynamik aktivieren",
