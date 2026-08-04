@@ -15,6 +15,19 @@ public final class MarketplaceRuntimeMath {
     private MarketplaceRuntimeMath() {
     }
 
+    /**
+     * Computes the effective sale multiplier from a sale percentage.
+     * A sale of {@code -20} means 20% off → multiplier 0.8.
+     * A sale of {@code +50} means 50% surcharge → multiplier 1.5.
+     *
+     * @param salePercent the percentage adjustment (e.g. {@code -20} for 20% discount)
+     * @return the clamped multiplier, always {@code ≥ 0}
+     */
+    public static double computeSaleMultiplier(double salePercent) {
+        return Math.max(0.0, 1.0 + (salePercent / 100.0));
+    }
+
+
     public static final double MIN_TEMPERATURE = -1.0;
     public static final double MAX_TEMPERATURE = 1.0;
     public static final double NEUTRAL_ZONE_MAX = 0.2;
@@ -22,6 +35,7 @@ public final class MarketplaceRuntimeMath {
 
     /**
      * Calculates the price multiplier based on current market temperature.
+     * The result is scaled by {@link DemandPricing#baseMultiplier()} and clamped to the configured range.
      * Returns {@code 1.0} when demand pricing is disabled or {@code pricing} is {@code null}.
      *
      * @param pricing     the pricing configuration; may be {@code null}
@@ -35,15 +49,20 @@ public final class MarketplaceRuntimeMath {
 
         double clampedTemp = Math.max(MIN_TEMPERATURE, Math.min(MAX_TEMPERATURE, temperature));
 
+        double rawMultiplier;
         if (clampedTemp > NEUTRAL_ZONE_MAX) {
             double ratio = (clampedTemp - NEUTRAL_ZONE_MAX) / (MAX_TEMPERATURE - NEUTRAL_ZONE_MAX);
-            return 1.0 + ratio * (pricing.maxMultiplier() - 1.0);
+            rawMultiplier = 1.0 + ratio * (pricing.maxMultiplier() - 1.0);
         } else if (clampedTemp < NEUTRAL_ZONE_MIN) {
             double ratio = (NEUTRAL_ZONE_MIN - clampedTemp) / (NEUTRAL_ZONE_MIN - MIN_TEMPERATURE);
-            return 1.0 - ratio * (1.0 - pricing.minMultiplier());
+            rawMultiplier = 1.0 - ratio * (1.0 - pricing.minMultiplier());
+        } else {
+            rawMultiplier = 1.0d;
         }
 
-        return 1.0d;
+        // Apply baseMultiplier as a scaling factor and clamp to configured bounds
+        double scaled = rawMultiplier * pricing.baseMultiplier();
+        return Math.max(pricing.minMultiplier(), Math.min(pricing.maxMultiplier(), scaled));
     }
 
     /**

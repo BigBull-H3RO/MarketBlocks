@@ -174,6 +174,8 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("gui.marketblocks.marketplace.editor.pricing.enabled", "Tarification ON");
                 add("gui.marketblocks.marketplace.editor.pricing.label", "Activer la tarification");
                 add("gui.marketblocks.marketplace.editor.pricing.label.tooltip", "Si activée, le prix s'ajuste dynamiquement en fonction de la température du marché.");
+                add("gui.marketblocks.marketplace.editor.pricing.base", "Prix de base (%)");
+                add("gui.marketblocks.marketplace.editor.pricing.base.tooltip", "Facteur de prix de base en pourcentage (ex. 100 = normal, 150 = +50%). Appliqué avant les ajustements de demande.");
                 add("gui.marketblocks.marketplace.editor.pricing.max", "Prix max (%)");
                 add("gui.marketblocks.marketplace.editor.pricing.max.tooltip", "Pourcentage maximum que le prix peut atteindre (ex. 200 = prix doublé).");
                 add("gui.marketblocks.marketplace.editor.pricing.min", "Prix min (%)");

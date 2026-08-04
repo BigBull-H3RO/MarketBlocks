@@ -36,15 +36,6 @@ public final class MarketplaceData {
         return pages;
     }
 
-    public void addPage(MarketplacePage page) {
-        pages.add(Objects.requireNonNull(page, "page").copy());
-    }
-
-    public MarketplacePage removePage(int index) {
-        MarketplacePage removed = pages.remove(index);
-        return removed == null ? null : removed.copy();
-    }
-
     public int size() {
         return pages.size();
     }

@@ -969,7 +969,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
 
             int listX = leftPos + LOG_LIST_X_OFFSET;
-            if (mouseX >= listX && mouseX < listX + LOG_LIST_WIDTH) {
+            if (mouseX >= listX && mouseX < listX + LOG_LIST_WIDTH && mouseY >= listY && mouseY < listY + LOG_LIST_HEIGHT) {
                 int currentY = listY - logScrollPixelOffset;
                 List<TransactionLogEntry> entries = menu.getTransactionLogEntries();
                 for (int i = 0; i < entries.size(); i++) {

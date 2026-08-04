@@ -133,15 +133,6 @@ public class OfferLimitsEditor extends BaseModalScreen {
         renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + ROW_SPACING, "gui.marketblocks.marketplace.editor.limits.stock.tooltip");
         renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + (ROW_SPACING * 2), "gui.marketblocks.marketplace.editor.limits.restock.tooltip");
     }
-
-    private void renderTooltipIfHovered(GuiGraphics guiGraphics, int mouseX, int mouseY, int x, int y, String translationKey) {
-        int w = 80;
-        if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + font.lineHeight) {
-            List<FormattedCharSequence> lines = font.split(Component.translatable(translationKey), 200);
-            guiGraphics.renderTooltip(this.font, lines, mouseX, mouseY);
-        }
-    }
 }
-
 
 

@@ -194,34 +194,37 @@ public final class MarketplaceManager {
 
             MarketplaceOfferRuntimeState state = offer.runtimeState();
             OfferLimit limit = offer.limits();
+            MarketplaceOfferRuntimeState.Builder stateBuilder = state.toBuilder();
 
             if (!limit.isUnlimited()) {
                 if (limit.stockLimit().isPresent()) {
                     int remainingStock = state.stockRemaining().orElse(limit.stockLimit().get()) - amount;
-                    state = state.withStockRemaining(Math.max(0, remainingStock));
+                    stateBuilder.stockRemaining(Math.max(0, remainingStock));
                     if (limit.restockSeconds().isPresent()) {
-                        state = state.withLastRestockGameTime(gameTime);
+                        stateBuilder.lastRestockGameTime(gameTime);
                     }
                 }
                 if (limit.dailyLimit().isPresent()) {
                     if (isGlobalDailyLimit()) {
-                        state = state.withPurchasedTodayGlobal(state.purchasedTodayGlobal() + amount);
+                        stateBuilder.purchasedTodayGlobal(state.purchasedTodayGlobal() + amount);
                     } else {
-                        state = state.withPurchasedTodayForPlayer(player.getUUID(), state.purchasedTodayForPlayer(player.getUUID()) + amount);
+                        Map<UUID, Integer> updated = new java.util.HashMap<>(state.purchasedTodayByPlayer());
+                        updated.put(player.getUUID(), state.purchasedTodayForPlayer(player.getUUID()) + amount);
+                        stateBuilder.purchasedTodayByPlayer(updated);
                     }
-                    state = state.withLastDailyResetDay(day);
+                    stateBuilder.lastDailyResetDay(day);
                 }
             }
 
             if (offer.pricing().enabled()) {
                 long currentTimeMs = System.currentTimeMillis();
                 double heated = MarketplaceRuntimeMath.addPurchaseHeat(state.temperature(), offer.pricing().volatility(), amount);
-                state = state.withTemperature(heated).withLastTemperatureUpdateGameTime(currentTimeMs);
+                stateBuilder.temperature(heated).lastTemperatureUpdateGameTime(currentTimeMs);
             }
 
-            state = state.withLifetimePurchases(state.lifetimePurchases() + amount);
+            stateBuilder.lifetimePurchases(state.lifetimePurchases() + amount);
 
-            offer.setRuntimeState(state);
+            offer.setRuntimeState(stateBuilder.build());
             markDirty();
             shouldSyncViewers = true;
 
@@ -512,13 +515,15 @@ public final class MarketplaceManager {
 
     public MarketplaceOffer findOffer(UUID offerId) {
         if (offerId == null) return null;
-        for (MarketplacePage page : data.internalPages()) {
-            int idx = page.findOfferIndex(offerId);
-            if (idx >= 0) {
-                return page.internalOffers().get(idx);
+        synchronized (lock) {
+            for (MarketplacePage page : data.internalPages()) {
+                int idx = page.findOfferIndex(offerId);
+                if (idx >= 0) {
+                    return page.internalOffers().get(idx);
+                }
             }
+            return null;
         }
-        return null;
     }
 
     private MarketplacePage getPage(String name) {
@@ -622,43 +627,7 @@ public final class MarketplaceManager {
             }
         }
 
-        MarketplaceData snapshot = data.copy();
-        CompoundTag encodedSnapshot = encodeSnapshot(snapshot);
-        if (encodedSnapshot == null) {
-            return ViewerSyncBatch.empty();
-        }
-
-        int pageCount = snapshot.size();
-        boolean globalEditModeEnabled = isGlobalEditModeEnabled();
-        Map<UUID, MarketplaceOfferViewState> sharedStates = isGlobalDailyLimit()
-                ? buildOfferViewStates(null, gameTime)
-                : null;
-        CompoundTag sharedEncodedStates = sharedStates != null
-                ? MarketplaceSyncPacket.encodeOfferViewStates(sharedStates)
-                : null;
-
-        List<ViewerSyncTarget> targets = new ArrayList<>(otherOpenViewers.size() + 1);
-        targets.add(new ViewerSyncTarget(
-                source,
-                false,
-                canEdit(source),
-                sharedEncodedStates != null
-                        ? sharedEncodedStates
-                        : MarketplaceSyncPacket.encodeOfferViewStates(buildOfferViewStates(source, gameTime))
-        ));
-
-        for (ServerPlayer viewer : otherOpenViewers) {
-            targets.add(new ViewerSyncTarget(
-                    viewer,
-                    true,
-                    canEdit(viewer),
-                    sharedEncodedStates != null
-                            ? sharedEncodedStates
-                            : MarketplaceSyncPacket.encodeOfferViewStates(buildOfferViewStates(viewer, gameTime))
-            ));
-        }
-
-        return new ViewerSyncBatch(encodedSnapshot, pageCount, globalEditModeEnabled, targets);
+        return collectSyncBatchLocked(source, otherOpenViewers, gameTime);
     }
 
     private ViewerSyncBatch collectOpenViewerSyncBatchLocked(long gameTime) {
@@ -676,6 +645,15 @@ public final class MarketplaceManager {
             return ViewerSyncBatch.empty();
         }
 
+        return collectSyncBatchLocked(null, openViewers, gameTime);
+    }
+
+    /**
+     * Shared sync-batch builder. When {@code source} is non-null, it is added as a non-full-sync
+     * target and {@code otherViewers} receive full syncs. When {@code source} is null, all
+     * {@code otherViewers} receive full syncs.
+     */
+    private ViewerSyncBatch collectSyncBatchLocked(ServerPlayer source, List<ServerPlayer> otherViewers, long gameTime) {
         MarketplaceData snapshot = data.copy();
         CompoundTag encodedSnapshot = encodeSnapshot(snapshot);
         if (encodedSnapshot == null) {
@@ -691,8 +669,21 @@ public final class MarketplaceManager {
                 ? MarketplaceSyncPacket.encodeOfferViewStates(sharedStates)
                 : null;
 
-        List<ViewerSyncTarget> targets = new ArrayList<>(openViewers.size());
-        for (ServerPlayer viewer : openViewers) {
+        int capacity = otherViewers.size() + (source != null ? 1 : 0);
+        List<ViewerSyncTarget> targets = new ArrayList<>(capacity);
+
+        if (source != null) {
+            targets.add(new ViewerSyncTarget(
+                    source,
+                    false,
+                    canEdit(source),
+                    sharedEncodedStates != null
+                            ? sharedEncodedStates
+                            : MarketplaceSyncPacket.encodeOfferViewStates(buildOfferViewStates(source, gameTime))
+            ));
+        }
+
+        for (ServerPlayer viewer : otherViewers) {
             targets.add(new ViewerSyncTarget(
                     viewer,
                     true,
@@ -984,75 +975,79 @@ public final class MarketplaceManager {
 
         OfferLimit limit = offer.limits();
         MarketplaceOfferRuntimeState state = offer.runtimeState();
-        MarketplaceOfferRuntimeState updated = state;
+        MarketplaceOfferRuntimeState.Builder b = state.toBuilder();
 
         if (!limit.isUnlimited() && limit.dailyLimit().isPresent()) {
-            if (updated.lastDailyResetDay() != day) {
-                updated = updated.withPurchasedTodayGlobal(0)
-                        .withClearedPlayerPurchases()
-                        .withLastDailyResetDay(day);
+            if (state.lastDailyResetDay() != day) {
+                b.purchasedTodayGlobal(0)
+                        .purchasedTodayByPlayer(Collections.emptyMap())
+                        .lastDailyResetDay(day);
             }
-        } else if (updated.purchasedTodayGlobal() != 0 || !updated.purchasedTodayByPlayer().isEmpty() || updated.lastDailyResetDay() != 0L) {
-            updated = updated.withPurchasedTodayGlobal(0)
-                    .withClearedPlayerPurchases()
-                    .withLastDailyResetDay(0L);
+        } else if (state.purchasedTodayGlobal() != 0 || !state.purchasedTodayByPlayer().isEmpty() || state.lastDailyResetDay() != 0L) {
+            b.purchasedTodayGlobal(0)
+                    .purchasedTodayByPlayer(Collections.emptyMap())
+                    .lastDailyResetDay(0L);
         }
+
+        // Build an intermediate snapshot so stock logic reads the correct current values
+        MarketplaceOfferRuntimeState intermediate = b.build();
 
         if (!limit.isUnlimited() && limit.stockLimit().isPresent()) {
             int maxStock = limit.stockLimit().get();
-            int currentStock = updated.stockRemaining().orElse(maxStock);
+            int currentStock = intermediate.stockRemaining().orElse(maxStock);
             if (currentStock > maxStock) {
-                updated = updated.withStockRemaining(maxStock);
+                b.stockRemaining(maxStock);
                 currentStock = maxStock;
-            } else if (updated.stockRemaining().isEmpty()) {
-                updated = updated.withStockRemaining(currentStock);
+            } else if (intermediate.stockRemaining().isEmpty()) {
+                b.stockRemaining(currentStock);
             }
 
             if (limit.restockSeconds().isPresent() && currentStock < maxStock) {
                 MarketplaceRuntimeMath.RestockResult restockResult = MarketplaceRuntimeMath.applyRestock(
                         currentStock,
                         maxStock,
-                        updated.lastRestockGameTime(),
+                        intermediate.lastRestockGameTime(),
                         gameTime,
                         limit.restockSeconds().get());
                 if (restockResult.changed()) {
-                    updated = updated.withStockRemaining(restockResult.stockRemaining())
-                            .withLastRestockGameTime(restockResult.lastRestockGameTime());
+                    b.stockRemaining(restockResult.stockRemaining())
+                            .lastRestockGameTime(restockResult.lastRestockGameTime());
                 }
             }
         } else {
-            if (updated.stockRemaining().isPresent()) {
-                updated = updated.withStockRemaining(null);
+            if (intermediate.stockRemaining().isPresent()) {
+                b.stockRemaining(null);
             }
-            if (updated.lastRestockGameTime() != 0L) {
-                updated = updated.withLastRestockGameTime(0L);
+            if (intermediate.lastRestockGameTime() != 0L) {
+                b.lastRestockGameTime(0L);
             }
         }
 
         if (offer.pricing().enabled()) {
             long currentTimeMs = System.currentTimeMillis();
             double decayedTemp = MarketplaceRuntimeMath.computeTemperatureAfterTimeDecay(
-                    updated.temperature(),
+                    intermediate.temperature(),
                     offer.pricing().volatility(),
-                    updated.lastTemperatureUpdateGameTime() <= 0 ? currentTimeMs : updated.lastTemperatureUpdateGameTime(),
+                    intermediate.lastTemperatureUpdateGameTime() <= 0 ? currentTimeMs : intermediate.lastTemperatureUpdateGameTime(),
                     currentTimeMs);
-            if (Double.compare(decayedTemp, updated.temperature()) != 0) {
-                updated = updated.withTemperature(decayedTemp);
+            if (Double.compare(decayedTemp, intermediate.temperature()) != 0) {
+                b.temperature(decayedTemp);
             }
-            updated = updated.withLastTemperatureUpdateGameTime(currentTimeMs);
+            b.lastTemperatureUpdateGameTime(currentTimeMs);
         } else {
-            if (Double.compare(updated.temperature(), 0.0) != 0) {
-                updated = updated.withTemperature(0.0);
+            if (Double.compare(intermediate.temperature(), 0.0) != 0) {
+                b.temperature(0.0);
             }
-            if (updated.lastTemperatureUpdateGameTime() != 0L) {
-                updated = updated.withLastTemperatureUpdateGameTime(0L);
+            if (intermediate.lastTemperatureUpdateGameTime() != 0L) {
+                b.lastTemperatureUpdateGameTime(0L);
             }
         }
 
-        if (updated.salePercent().isPresent() && updated.saleEndTimestamp() > 0L && System.currentTimeMillis() >= updated.saleEndTimestamp()) {
-            updated = updated.withSale(null, 0L);
+        if (intermediate.salePercent().isPresent() && intermediate.saleEndTimestamp() > 0L && System.currentTimeMillis() >= intermediate.saleEndTimestamp()) {
+            b.salePercent(null).saleEndTimestamp(0L);
         }
 
+        MarketplaceOfferRuntimeState updated = b.build();
         if (!updated.equals(state)) {
             offer.setRuntimeState(updated);
             return true;

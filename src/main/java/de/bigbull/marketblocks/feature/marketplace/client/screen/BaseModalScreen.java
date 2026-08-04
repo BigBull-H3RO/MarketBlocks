@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
+import java.util.List;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -8,7 +10,8 @@ import net.minecraft.network.chat.Component;
 
 /**
  * Common base class for modal dialogs rendered over an existing screen.
- * Suppresses background blur and prevents hover/tooltip interactions from the parent screen.
+ * Suppresses background blur and prevents hover/tooltip interactions from the
+ * parent screen.
  */
 public abstract class BaseModalScreen extends Screen {
     private static final int EDGE_PADDING = 8;
@@ -36,7 +39,8 @@ public abstract class BaseModalScreen extends Screen {
     protected int panelLeft;
     protected int panelTop;
 
-    protected BaseModalScreen(Component title, Screen parent, int panelWidth, int panelHeight, int preferredLeft, int preferredCenterY) {
+    protected BaseModalScreen(Component title, Screen parent, int panelWidth, int panelHeight, int preferredLeft,
+            int preferredCenterY) {
         super(title);
         this.parent = parent;
         this.panelWidth = panelWidth;
@@ -48,8 +52,10 @@ public abstract class BaseModalScreen extends Screen {
     protected final void initModalBounds() {
         if (this.preferredLeft >= 0 && this.preferredCenterY >= 0) {
             int preferredTop = this.preferredCenterY - (this.panelHeight / 2);
-            this.panelLeft = Math.min(Math.max(EDGE_PADDING, this.preferredLeft), this.width - this.panelWidth - EDGE_PADDING);
-            this.panelTop = Math.min(Math.max(EDGE_PADDING, preferredTop), this.height - this.panelHeight - EDGE_PADDING);
+            this.panelLeft = Math.min(Math.max(EDGE_PADDING, this.preferredLeft),
+                    this.width - this.panelWidth - EDGE_PADDING);
+            this.panelTop = Math.min(Math.max(EDGE_PADDING, preferredTop),
+                    this.height - this.panelHeight - EDGE_PADDING);
         } else {
             this.panelLeft = (this.width - this.panelWidth) / 2;
             this.panelTop = (this.height - this.panelHeight) / 2;
@@ -108,10 +114,14 @@ public abstract class BaseModalScreen extends Screen {
     }
 
     protected void renderPanelBackground(GuiGraphics guiGraphics) {
-        guiGraphics.fill(this.panelLeft, this.panelTop, this.panelLeft + this.panelWidth, this.panelTop + this.panelHeight, 0xFF151515);
-        guiGraphics.fill(this.panelLeft, this.panelTop, this.panelLeft + this.panelWidth, this.panelTop + 20, 0xFF2B2B2B);
+        guiGraphics.fill(this.panelLeft, this.panelTop, this.panelLeft + this.panelWidth,
+                this.panelTop + this.panelHeight, 0xFF151515);
+        guiGraphics.fill(this.panelLeft, this.panelTop, this.panelLeft + this.panelWidth, this.panelTop + 20,
+                0xFF2B2B2B);
         guiGraphics.renderOutline(this.panelLeft, this.panelTop, this.panelWidth, this.panelHeight, 0xFF555555);
-        guiGraphics.drawString(this.font, this.title, this.panelLeft + (this.panelWidth - this.font.width(this.title)) / 2, this.panelTop + 6, 0xFFFFFF, false);
+        guiGraphics.drawString(this.font, this.title,
+                this.panelLeft + (this.panelWidth - this.font.width(this.title)) / 2, this.panelTop + 6, 0xFFFFFF,
+                false);
     }
 
     protected abstract void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick);
@@ -131,7 +141,24 @@ public abstract class BaseModalScreen extends Screen {
     public boolean isPauseScreen() {
         return false;
     }
+
+    /**
+     * Renders a tooltip when the mouse hovers over a label area.
+     *
+     * @param guiGraphics    the graphics context
+     * @param mouseX         current mouse x coordinate
+     * @param mouseY         current mouse y coordinate
+     * @param x              the x position of the label
+     * @param y              the y position of the label
+     * @param translationKey the translation key for the tooltip text
+     */
+    protected void renderTooltipIfHovered(GuiGraphics guiGraphics, int mouseX, int mouseY, int x, int y,
+            String translationKey) {
+        int w = 80;
+        if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + font.lineHeight) {
+            List<net.minecraft.util.FormattedCharSequence> lines = font.split(Component.translatable(translationKey),
+                    200);
+            guiGraphics.renderTooltip(this.font, lines, mouseX, mouseY);
+        }
+    }
 }
-
-
-

@@ -710,7 +710,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public ItemStack getOfferPayment1() {
         if (isSaleActive() && !offerPayment1.isEmpty()) {
-            double multiplier = Math.max(0.0, 1.0 + (salePercent / 100.0));
+            double multiplier = de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath
+                    .computeSaleMultiplier(salePercent);
             ItemStack adjusted = offerPayment1.copy();
             adjusted.setCount(de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath
                     .scalePaymentCount(offerPayment1.getCount(), multiplier));
@@ -721,7 +722,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public ItemStack getOfferPayment2() {
         if (isSaleActive() && !offerPayment2.isEmpty()) {
-            double multiplier = Math.max(0.0, 1.0 + (salePercent / 100.0));
+            double multiplier = de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath
+                    .computeSaleMultiplier(salePercent);
             ItemStack adjusted = offerPayment2.copy();
             adjusted.setCount(de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath
                     .scalePaymentCount(offerPayment2.getCount(), multiplier));
@@ -742,12 +744,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return offerResult;
     }
 
-    /**
-     * Counts matching payment items in payment slots.
-     *
-     * @param target The target ItemStack to match (must not be null)
-     * @return Total count of matching items, or 0 if target is null/empty
-     */
     public ShopSettingsManager getSettingsManager() {
         return settingsManager;
     }
