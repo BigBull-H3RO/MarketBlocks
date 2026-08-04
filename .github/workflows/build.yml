@@ -19,6 +19,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Increase swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 4
+
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
