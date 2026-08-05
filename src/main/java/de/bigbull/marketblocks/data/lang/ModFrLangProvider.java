@@ -443,6 +443,38 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("gui.marketblocks.trade_book.status.out_of_stock", " §c⚠ Rupture de stock");
                 add("gui.marketblocks.trade_book.status.output_full", " §6⚠ Sortie pleine");
 
+                // === Trade Book Guide ===
+                add("gui.marketblocks.trade_book.toc.guide.intro", "Introduction");
+                add("gui.marketblocks.trade_book.toc.guide.intro.tooltip", "Découvrez les bases de MarketBlocks");
+                add("gui.marketblocks.trade_book.toc.guide.visuals", "Personnalisation visuelle");
+                add("gui.marketblocks.trade_book.toc.guide.visuals.tooltip", "Apprenez à personnaliser visuellement vos boutiques");
+                add("gui.marketblocks.trade_book.toc.guide.setup", "Configuration et Mécaniques");
+                add("gui.marketblocks.trade_book.toc.guide.setup.tooltip", "En savoir plus sur l'interface, la Redstone et les Entonnoirs");
+                add("gui.marketblocks.trade_book.toc.guide.advanced", "Fonctionnalités avancées");
+                add("gui.marketblocks.trade_book.toc.guide.advanced.tooltip", "En savoir plus sur les copropriétaires, l'économie et l'administration");
+
+                add("gui.marketblocks.trade_book.guide.intro.title", "=== Introduction ===\n\n");
+                add("gui.marketblocks.trade_book.guide.intro.text", "Bienvenue dans MarketBlocks !\n\nCe mod vous permet de construire une économie prospère. Vous pouvez créer diverses boutiques pour échanger des objets avec d'autres joueurs ou des PNJ. Regardons les blocs de boutique disponibles.");
+
+                add("gui.marketblocks.trade_book.guide.tradestand.title", "=== Stand de commerce ===\n\n");
+                add("gui.marketblocks.trade_book.guide.tradestand.text", "Une boutique ouverte qui affiche l'objet vendu flottant au-dessus. Les PNJ adorent ces stands !");
+
+                add("gui.marketblocks.trade_book.guide.marketcrate.title", "=== Caisse du marché ===\n\n");
+                add("gui.marketblocks.trade_book.guide.marketcrate.text", "Une variante de boutique compacte sans affichage d'objet flottant. Idéal pour les espaces restreints.");
+
+                add("gui.marketblocks.trade_book.guide.visuals.title", "=== Visuels ===\n\n");
+                add("gui.marketblocks.trade_book.guide.visuals.text", "Les boutiques peuvent être personnalisées visuellement !\n\nUtilisez une clé à molette pour faire pivoter le bloc. Si vous activez le 'Villageois décoratif' dans les paramètres, un PNJ amical se tiendra derrière le bloc de la boutique !");
+
+                add("gui.marketblocks.trade_book.guide.setup.title", "=== Configuration et UI ===\n\n");
+                add("gui.marketblocks.trade_book.guide.setup.text", "Faites un clic droit sur votre boutique pour ouvrir les paramètres.\n\nVous pouvez définir le prix, l'objet que vous vendez et remplir l'inventaire. Vous pouvez également configurer des limites pour les acheteurs.");
+
+                add("gui.marketblocks.trade_book.guide.mechanics.title", "=== Mécaniques ===\n\n");
+                add("gui.marketblocks.trade_book.guide.mechanics.redstone", "Les boutiques émettent un signal Redstone en fonction de leur remplissage ou de leur rupture de stock. Vous pouvez configurer cela dans l'onglet Redstone.");
+                add("gui.marketblocks.trade_book.guide.mechanics.hopper", "Vous pouvez utiliser des entonnoirs pour automatiser le réapprovisionnement et extraire les profits ! Configurez les paramètres d'Entrée/Sortie dans l'onglet Auto-IO.");
+
+                add("gui.marketblocks.trade_book.guide.advanced.title", "=== Fonctionnalités avancées ===\n\n");
+                add("gui.marketblocks.trade_book.guide.advanced.text", "Vous pouvez ajouter des copropriétaires pour gérer votre boutique.\n\nLes acheteurs PNJ ont leur propre économie avec des tendances ! Si tout le monde vend du bois, le prix baisse. Gardez un œil sur la page des Tendances.");
+
                 // NPC Economy Guide Page (G4)
                 add("gui.marketblocks.trade_book.guide.economy.title", "=== Économie NPC ===\n\n");
                 add("gui.marketblocks.trade_book.guide.economy.text", "Les acheteurs NPC visitent vos boutiques et achètent des objets si l'offre est bonne !\n\n§6Prix :§r Les objets ont des valeurs de base. Les objets craftés valent plus (+10% par étape).\n\n§6Offre et demande :§r Si un objet est souvent vendu, sa valeur NPC baisse. Les prix se rétablissent avec le temps.\n\n§6Rangs NPC :§r\n• §7Citoyen§r – Petit budget\n• §eAisé§r – Budget moyen\n• §6Noble§r – Gros budget, achète des raretés\n\n§6Intérêts :§r Chaque NPC a une spécialisation (Fermier, Forgeron, Alchimiste, Collectionneur). Ils dépensent plus pour leur catégorie !");

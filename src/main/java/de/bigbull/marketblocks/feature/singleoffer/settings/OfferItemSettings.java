@@ -76,7 +76,7 @@ public record OfferItemSettings(
                 ByteBufCodecs.BOOL.encode(buf, s.bobbing());
                 ByteBufCodecs.INT.encode(buf, s.count());
                 ByteBufCodecs.FLOAT.encode(buf, s.rotation());
-                ByteBufCodecs.STRING_UTF8.encode(buf, s.layoutMode().serializedName());
+                ByteBufCodecs.stringUtf8(32).encode(buf, s.layoutMode().serializedName());
                 ByteBufCodecs.FLOAT.encode(buf, s.spacingXZ());
                 ByteBufCodecs.FLOAT.encode(buf, s.spacingY());
                 ByteBufCodecs.FLOAT.encode(buf, s.chaosRotation());
@@ -91,7 +91,7 @@ public record OfferItemSettings(
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.INT.decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),
-                    CrateLayoutMode.fromSerialized(ByteBufCodecs.STRING_UTF8.decode(buf)),
+                    CrateLayoutMode.fromSerialized(ByteBufCodecs.stringUtf8(32).decode(buf)),
                     ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),

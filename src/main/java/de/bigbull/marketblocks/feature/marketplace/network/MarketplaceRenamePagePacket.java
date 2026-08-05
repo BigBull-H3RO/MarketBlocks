@@ -16,9 +16,9 @@ public record MarketplaceRenamePagePacket(String oldName, String newName) implem
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "marketplace_rename_page"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceRenamePagePacket> CODEC = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8,
+            ByteBufCodecs.stringUtf8(MarketplaceManager.MAX_PAGE_NAME_LENGTH),
             MarketplaceRenamePagePacket::oldName,
-            ByteBufCodecs.STRING_UTF8,
+            ByteBufCodecs.stringUtf8(MarketplaceManager.MAX_PAGE_NAME_LENGTH),
             MarketplaceRenamePagePacket::newName,
             MarketplaceRenamePagePacket::new
     );

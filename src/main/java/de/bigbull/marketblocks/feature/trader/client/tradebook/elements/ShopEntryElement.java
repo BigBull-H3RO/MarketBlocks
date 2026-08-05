@@ -38,7 +38,7 @@ public class ShopEntryElement implements ITradeBookElement {
     public void render(GuiGraphics graphics, String insertion, int startX, int startY, int mouseX, int mouseY,
             float scale, TradeBookRenderContext context) {
         String[] parts = insertion.split("\\|\\|");
-        if (parts.length < 13)
+        if (parts.length < 14)
             return;
 
         String prefix = parts[1];
@@ -53,6 +53,7 @@ public class ShopEntryElement implements ITradeBookElement {
         int pz = Integer.parseInt(parts[10]);
         String dim = parts[11];
         boolean canTeleport = Boolean.parseBoolean(parts[12]);
+        String shopId = parts[13];
 
         // Render Icon / Status
         String statusIcon = isClosed ? "§c✖" : "§a✔";
@@ -165,7 +166,7 @@ public class ShopEntryElement implements ITradeBookElement {
                 context.addTooltip(() -> graphics.renderTooltip(context.getFont(),
                         Component.translatable("gui.marketblocks.trade_book.active.hover_tp"), mouseX, mouseY));
             }, () -> {
-                NetworkHandler.sendToServer(new TeleportRequestPacket(dim, px, py, pz));
+                NetworkHandler.sendToServer(new TeleportRequestPacket(shopId));
             }));
         } else {
             graphics.drawString(context.getFont(), coords, coordsX, currentY, 0x555555, false);

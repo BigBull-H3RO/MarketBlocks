@@ -27,18 +27,18 @@ public record GeneralSettings(
 
     public static final StreamCodec<ByteBuf, GeneralSettings> STREAM_CODEC = StreamCodec.of(
             (buf, settings) -> {
-                ByteBufCodecs.STRING_UTF8.encode(buf, settings.shopName());
+                ByteBufCodecs.stringUtf8(256).encode(buf, settings.shopName());
                 ByteBufCodecs.BOOL.encode(buf, settings.emitRedstone());
                 ByteBufCodecs.BOOL.encode(buf, settings.purchaseXpFeedbackSound());
                 ByteBufCodecs.BOOL.encode(buf, settings.isClosed());
-                ByteBufCodecs.STRING_UTF8.encode(buf, settings.shopCategory().getId());
+                ByteBufCodecs.stringUtf8(32).encode(buf, settings.shopCategory().getId());
             },
             buf -> new GeneralSettings(
-                    ByteBufCodecs.STRING_UTF8.decode(buf),
+                    ByteBufCodecs.stringUtf8(256).decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
-                    ShopCategory.fromId(ByteBufCodecs.STRING_UTF8.decode(buf))));
+                    ShopCategory.fromId(ByteBufCodecs.stringUtf8(32).decode(buf))));
 
     public GeneralSettings {
         shopName = sanitizeName(shopName);

@@ -256,9 +256,8 @@ public class TradeBookItem extends Item {
                 net.minecraft.core.BlockPos pos = shop.pos().pos();
                 String dim = shop.pos().dimension().location().toString();
 
-                // Construct the marker. We use "||" as delimiter.
                 // Format:
-                // SHOP_ENTRY||prefix||shopNameFull||ownerFull||compactSales||isClosed||offerId||finalStatus||x||y||z||dim||canTeleport
+                // SHOP_ENTRY||prefix||shopNameFull||ownerFull||compactSales||isClosed||offerId||finalStatus||x||y||z||dim||canTeleport||shopId
                 String marker = String.join("||",
                                 "SHOP_ENTRY",
                                 prefix,
@@ -272,7 +271,8 @@ public class TradeBookItem extends Item {
                                 String.valueOf(pos.getY()),
                                 String.valueOf(pos.getZ()),
                                 dim,
-                                String.valueOf(canTeleport));
+                                String.valueOf(canTeleport),
+                                shop.shopId());
 
                 page.append(Component.literal("\u00A0") // Non-breaking space
                                 .withStyle(style -> style.withInsertion("BLOCK_START")));

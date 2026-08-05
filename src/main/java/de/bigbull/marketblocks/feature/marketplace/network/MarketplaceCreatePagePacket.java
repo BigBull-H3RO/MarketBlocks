@@ -16,7 +16,7 @@ public record MarketplaceCreatePagePacket(String pageName) implements CustomPack
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "marketplace_create_page"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceCreatePagePacket> CODEC = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8,
+            ByteBufCodecs.stringUtf8(MarketplaceManager.MAX_PAGE_NAME_LENGTH),
             MarketplaceCreatePagePacket::pageName,
             MarketplaceCreatePagePacket::new
     );

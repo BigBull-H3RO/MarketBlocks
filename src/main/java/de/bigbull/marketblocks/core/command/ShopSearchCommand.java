@@ -143,7 +143,7 @@ public final class ShopSearchCommand {
                 MutableComponent text = Component
                         .translatable("command.marketblocks.marketplacelist.entry", (i + 1), name)
                         .withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                Component.translatable("container.marketblocks.marketplace"))));
+                                Component.translatable("menu.marketblocks.marketplace"))));
 
                 CommandUtils.appendWaypointsAndTp(source, text, pos, name);
                 source.sendSuccess(() -> text, false);

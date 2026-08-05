@@ -45,26 +45,26 @@ public record AccessSettings(
                 if (settings.ownerId() != null) {
                     UUIDUtil.STREAM_CODEC.encode(buf, settings.ownerId());
                 }
-                ByteBufCodecs.STRING_UTF8.encode(buf, settings.ownerName());
+                ByteBufCodecs.stringUtf8(36).encode(buf, settings.ownerName());
 
                 buf.writeInt(settings.additionalOwners().size());
                 settings.additionalOwners().forEach((id, name) -> {
                     UUIDUtil.STREAM_CODEC.encode(buf, id);
-                    ByteBufCodecs.STRING_UTF8.encode(buf, name);
+                    ByteBufCodecs.stringUtf8(32).encode(buf, name);
                 });
 
-                ByteBufCodecs.STRING_UTF8.encode(buf, settings.accessMode().name());
+                ByteBufCodecs.stringUtf8(16).encode(buf, settings.accessMode().name());
                 buf.writeInt(settings.accessList().size());
                 settings.accessList().forEach((id, name) -> {
                     UUIDUtil.STREAM_CODEC.encode(buf, id);
-                    ByteBufCodecs.STRING_UTF8.encode(buf, name);
+                    ByteBufCodecs.stringUtf8(32).encode(buf, name);
                 });
             },
             buf -> {
                 boolean adminEnabled = ByteBufCodecs.BOOL.decode(buf);
                 boolean hasOwner = ByteBufCodecs.BOOL.decode(buf);
                 UUID ownerId = hasOwner ? UUIDUtil.STREAM_CODEC.decode(buf) : null;
-                String ownerName = ByteBufCodecs.STRING_UTF8.decode(buf);
+                String ownerName = ByteBufCodecs.stringUtf8(36).decode(buf);
 
                 int size = buf.readInt();
                 if (size < 0 || size > 100) {
@@ -73,11 +73,11 @@ public record AccessSettings(
                 Map<UUID, String> additionalOwners = new HashMap<>();
                 for (int i = 0; i < size; i++) {
                     UUID id = UUIDUtil.STREAM_CODEC.decode(buf);
-                    String name = ByteBufCodecs.STRING_UTF8.decode(buf);
+                    String name = ByteBufCodecs.stringUtf8(32).decode(buf);
                     additionalOwners.put(id, name);
                 }
 
-                String modeStr = ByteBufCodecs.STRING_UTF8.decode(buf);
+                String modeStr = ByteBufCodecs.stringUtf8(16).decode(buf);
                 AccessMode accessMode = AccessMode.EVERYONE;
                 try {
                     accessMode = AccessMode.valueOf(modeStr);
@@ -91,7 +91,7 @@ public record AccessSettings(
                 Map<UUID, String> accessList = new HashMap<>();
                 for (int i = 0; i < accessSize; i++) {
                     UUID id = UUIDUtil.STREAM_CODEC.decode(buf);
-                    String name = ByteBufCodecs.STRING_UTF8.decode(buf);
+                    String name = ByteBufCodecs.stringUtf8(32).decode(buf);
                     accessList.put(id, name);
                 }
 

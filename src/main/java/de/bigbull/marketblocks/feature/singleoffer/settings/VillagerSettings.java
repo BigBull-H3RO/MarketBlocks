@@ -38,23 +38,23 @@ public record VillagerSettings(
     public static final StreamCodec<ByteBuf, VillagerSettings> STREAM_CODEC = StreamCodec.of(
             (buf, settings) -> {
                 ByteBufCodecs.BOOL.encode(buf, settings.npcEnabled());
-                ByteBufCodecs.STRING_UTF8.encode(buf, settings.npcName());
-                ByteBufCodecs.STRING_UTF8.encode(buf, settings.profession().serializedName());
+                ByteBufCodecs.stringUtf8(64).encode(buf, settings.npcName());
+                ByteBufCodecs.stringUtf8(32).encode(buf, settings.profession().serializedName());
                 ByteBufCodecs.BOOL.encode(buf, settings.purchaseParticlesEnabled());
                 ByteBufCodecs.BOOL.encode(buf, settings.purchaseSoundsEnabled());
                 ByteBufCodecs.BOOL.encode(buf, settings.paymentSlotSoundsEnabled());
                 ByteBufCodecs.BOOL.encode(buf, settings.usePlayerSkin());
-                ByteBufCodecs.STRING_UTF8.encode(buf, settings.playerSkinName());
+                ByteBufCodecs.stringUtf8(36).encode(buf, settings.playerSkinName());
             },
             buf -> new VillagerSettings(
                     ByteBufCodecs.BOOL.decode(buf),
-                    ByteBufCodecs.STRING_UTF8.decode(buf),
-                    VillagerVisualProfession.fromSerialized(ByteBufCodecs.STRING_UTF8.decode(buf)),
+                    ByteBufCodecs.stringUtf8(64).decode(buf),
+                    VillagerVisualProfession.fromSerialized(ByteBufCodecs.stringUtf8(32).decode(buf)),
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
                     ByteBufCodecs.BOOL.decode(buf),
-                    ByteBufCodecs.STRING_UTF8.decode(buf)
+                    ByteBufCodecs.stringUtf8(36).decode(buf)
             )
     );
 

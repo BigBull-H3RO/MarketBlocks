@@ -20,7 +20,7 @@ public record MarketplaceMoveOfferPacket(UUID offerId, String targetPage, int di
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceMoveOfferPacket> CODEC = StreamCodec.composite(
             UUIDUtil.STREAM_CODEC,
             MarketplaceMoveOfferPacket::offerId,
-            ByteBufCodecs.STRING_UTF8,
+            ByteBufCodecs.stringUtf8(MarketplaceManager.MAX_PAGE_NAME_LENGTH),
             MarketplaceMoveOfferPacket::targetPage,
             ByteBufCodecs.VAR_INT,
             MarketplaceMoveOfferPacket::direction,

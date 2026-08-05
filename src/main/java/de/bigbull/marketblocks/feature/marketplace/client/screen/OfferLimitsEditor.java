@@ -3,14 +3,11 @@ package de.bigbull.marketblocks.feature.marketplace.client.screen;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceUpdateOfferLimitsPacket;
 import de.bigbull.marketblocks.feature.marketplace.data.OfferLimit;
-import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceSerialization;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
 import java.util.UUID;
@@ -89,19 +86,8 @@ public class OfferLimitsEditor extends BaseModalScreen {
     private void saveLimits() {
         try {
             OfferLimit newLimit = buildUpdatedLimit();
-            var connection = Minecraft.getInstance().getConnection();
-            if (connection == null) {
-                notifyClient(Component.translatable("message.marketblocks.marketplace.limits.no_connection"));
-                return;
-            }
-            var encodeResult = MarketplaceSerialization.encodeLimit(newLimit, connection.registryAccess());
-            if (encodeResult.error().isEmpty()) {
-                CompoundTag encoded = encodeResult.result().orElseThrow();
-                NetworkHandler.sendToServer(new MarketplaceUpdateOfferLimitsPacket(offerId, encoded));
-                this.onClose();
-            } else {
-                notifyClient(Component.translatable("message.marketblocks.marketplace.limits.invalid_data"));
-            }
+            NetworkHandler.sendToServer(new MarketplaceUpdateOfferLimitsPacket(offerId, newLimit));
+            this.onClose();
         } catch (NumberFormatException e) {
             notifyClient(Component.translatable("message.marketblocks.marketplace.limits.invalid_positive_int"));
         }
