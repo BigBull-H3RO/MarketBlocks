@@ -43,6 +43,16 @@ public class ShopDirectorySavedData extends SavedData {
         return List.copyOf(shops);
     }
 
+    public ShopEntry getShopById(String shopId) {
+        if (shopId == null) return null;
+        for (ShopEntry s : shops) {
+            if (shopId.equals(s.shopId())) {
+                return s;
+            }
+        }
+        return null;
+    }
+
     private String generateUniqueShopId() {
         String id;
         boolean unique;

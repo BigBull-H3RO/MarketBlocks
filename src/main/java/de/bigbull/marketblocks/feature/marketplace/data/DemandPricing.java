@@ -24,6 +24,9 @@ public record DemandPricing(
     ).apply(instance, DemandPricing::new));
 
     public DemandPricing {
+        if (!Double.isFinite(baseMultiplier) || !Double.isFinite(minMultiplier) || !Double.isFinite(maxMultiplier)) {
+            throw new IllegalArgumentException("DemandPricing multipliers must be finite numbers");
+        }
         baseMultiplier = Math.max(0.0d, baseMultiplier);
         minMultiplier = Math.max(0.0d, Math.min(minMultiplier, maxMultiplier));
         maxMultiplier = Math.max(minMultiplier, maxMultiplier);

@@ -1,10 +1,10 @@
 package de.bigbull.marketblocks.feature.singleoffer.menu;
 
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.util.MenuTransferHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -54,7 +54,8 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     private static final Direction[] DIRECTIONS = Direction.values();
 
     private static SingleOfferShopBlockEntity createClientFallbackBlockEntity() {
-        return new SingleOfferShopBlockEntity(BlockPos.ZERO, RegistriesInit.TRADE_STAND_BLOCK.get().defaultBlockState());
+        return new SingleOfferShopBlockEntity(BlockPos.ZERO,
+                RegistriesInit.TRADE_STAND_BLOCK.get().defaultBlockState());
     }
 
     public SingleOfferShopMenu(int containerId, Inventory inv, SingleOfferShopBlockEntity be) {
@@ -271,14 +272,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         }
     }
 
-
     /**
      * Transfers required items from player inventory to payment slot.
      * OPTIMIZATION: Early exit when slot is full to avoid unnecessary iteration.
      * Caches slot references to avoid repeated list lookups.
      */
     private void transferRequiredItems(ItemStack required, int slotIndex) {
-        if (required == null || required.isEmpty()) return;
+        if (required == null || required.isEmpty())
+            return;
 
         Slot targetSlot = this.slots.get(slotIndex);
         ItemStack cur = targetSlot.getItem();
@@ -295,7 +296,8 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             if (!invStack.isEmpty() && ItemStack.isSameItemSameComponents(invStack, required)) {
                 if (cur.isEmpty() || ItemStack.isSameItemSameComponents(invStack, cur)) {
                     int space = maxTargetStack - cur.getCount();
-                    if (space <= 0) break;
+                    if (space <= 0)
+                        break;
 
                     int move = Math.min(space, invStack.getCount());
                     if (move > 0) {
@@ -317,8 +319,10 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (isTab(ShopTab.SETTINGS) || isTab(ShopTab.LOG)) return ItemStack.EMPTY;
-        if (isTab(ShopTab.INVENTORY) && blockEntity.isAdminShopEnabled()) return ItemStack.EMPTY;
+        if (isTab(ShopTab.SETTINGS) || isTab(ShopTab.LOG))
+            return ItemStack.EMPTY;
+        if (isTab(ShopTab.INVENTORY) && blockEntity.isAdminShopEnabled())
+            return ItemStack.EMPTY;
 
         if (index == OFFER_SLOT_INDEX && isTab(ShopTab.OFFERS)) {
             Slot slot = this.slots.get(index);
@@ -362,41 +366,18 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             }
 
             ItemStack offerResult = blockEntity.getOfferResult();
-            if (offerResult.isEmpty()) return ItemStack.EMPTY;
+            if (offerResult.isEmpty())
+                return ItemStack.EMPTY;
 
             int maxPlayerFit = calculateMaxFitInPlayerInventory(offerResult);
-            if (maxPlayerFit <= 0) return ItemStack.EMPTY;
+            if (maxPlayerFit <= 0)
+                return ItemStack.EMPTY;
 
             int bought = blockEntity.processBulkPurchase(maxPlayerFit, player, true);
 
             if (bought > 0) {
-                long remaining = (long) offerResult.getCount() * bought;
-                if (remaining <= 0L) {
-                    return ItemStack.EMPTY;
-                }
-                int maxStack = offerResult.getMaxStackSize();
-
-                ItemStack totalBoughtCopy = offerResult.copy();
-                totalBoughtCopy.setCount((int) Math.min(Integer.MAX_VALUE, remaining));
-
-                while (remaining > 0L) {
-                    int chunkSize = (int) Math.min(remaining, maxStack);
-                    ItemStack chunk = offerResult.copy();
-                    chunk.setCount(chunkSize);
-
-                    if (!this.moveItemStackTo(chunk, TOTAL_SLOTS, this.slots.size(), true)) {
-                        if (!chunk.isEmpty()) {
-                            player.drop(chunk, false);
-                            MarketBlocks.LOGGER.warn("Had to drop items during bulk purchase - pre-check failed for player {}", player.getName().getString());
-                        }
-                    } else {
-                        if (!chunk.isEmpty()) {
-                            player.drop(chunk, false);
-                        }
-                    }
-                    remaining -= (long) chunkSize;
-                }
-
+                ItemStack totalBoughtCopy = MenuTransferHelper.handlePurchaseTransfer(player, offerResult, bought,
+                        chunk -> this.moveItemStackTo(chunk, TOTAL_SLOTS, this.slots.size(), true));
                 blockEntity.updateOfferSlot();
                 return totalBoughtCopy;
             } else {
@@ -459,14 +440,19 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     }
 
     /**
-     * Override clicked to handle special cases for double-click collection (PICKUP_ALL).
+     * Override clicked to handle special cases for double-click collection
+     * (PICKUP_ALL).
      * PICKUP_ALL is blocked for:
-     * 1. Payment slots (0-1): Prevents accidental clearing while player is setting up an offer.
-     *    During offer creation, the player places items in payment slots, and double-clicking
-     *    would collect them all back, which is usually not intended.
-     * 2. Offer slot in template mode: When no offer exists, the offer slot is used to preview
-     *    what item will be sold. Double-clicking shouldn't collect this preview item.
-     * This improves UX by preventing accidental disruption of the offer creation workflow.
+     * 1. Payment slots (0-1): Prevents accidental clearing while player is setting
+     * up an offer.
+     * During offer creation, the player places items in payment slots, and
+     * double-clicking
+     * would collect them all back, which is usually not intended.
+     * 2. Offer slot in template mode: When no offer exists, the offer slot is used
+     * to preview
+     * what item will be sold. Double-clicking shouldn't collect this preview item.
+     * This improves UX by preventing accidental disruption of the offer creation
+     * workflow.
      */
     @Override
     public void clicked(int slotId, int button, ClickType type, Player player) {
@@ -528,6 +514,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     private abstract class BaseSlot extends SlotItemHandler {
         private final ShopTab tab;
+
         BaseSlot(IItemHandler handler, int slot, int x, int y, ShopTab tab) {
             super(handler, slot, x, y);
             this.tab = tab;
@@ -576,7 +563,8 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            if (blockEntity.hasOffer()) return false;
+            if (blockEntity.hasOffer())
+                return false;
             return isOwner();
         }
 
@@ -620,8 +608,10 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         @Override
         public void set(ItemStack stack) {
-            if (blockEntity.hasOffer()) return;
-            if (!isOwner()) return;
+            if (blockEntity.hasOffer())
+                return;
+            if (!isOwner())
+                return;
             super.set(stack);
         }
 

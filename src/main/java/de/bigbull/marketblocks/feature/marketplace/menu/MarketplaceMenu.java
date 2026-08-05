@@ -11,6 +11,7 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceClientState;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewState;
+import de.bigbull.marketblocks.util.MenuTransferHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -361,24 +362,8 @@ public class MarketplaceMenu extends AbstractContainerMenu {
                 if (MarketplaceManager.get().processPurchaseTransactionSlotBased(serverPlayer, currentTradingOffer.id(), amount)) {
                     removeMatchedPayments(paymentMatch, amount);
 
-                    int remaining = resultProto.getCount() * amount;
-                    int maxStack = resultProto.getMaxStackSize();
-
-                    ItemStack totalBoughtCopy = resultProto.copy();
-                    totalBoughtCopy.setCount(remaining);
-
-                    while (remaining > 0) {
-                        int chunkSize = Math.min(remaining, maxStack);
-                        ItemStack chunk = resultProto.copy();
-                        chunk.setCount(chunkSize);
-
-                        if (!this.moveItemStackTo(chunk, TEMPLATE_SLOTS, this.slots.size(), true) && !chunk.isEmpty()) {
-                            player.drop(chunk, false);
-                        } else if (!chunk.isEmpty()) {
-                            player.drop(chunk, false);
-                        }
-                        remaining -= chunkSize;
-                    }
+                    ItemStack totalBoughtCopy = MenuTransferHelper.handlePurchaseTransfer(player, resultProto, amount,
+                            chunk -> this.moveItemStackTo(chunk, TEMPLATE_SLOTS, this.slots.size(), true));
 
                     playPurchaseFeedback(serverPlayer);
                     slotsChanged(tradeContainer);

@@ -40,6 +40,8 @@ public class NameValidator {
             sanitized = stripColorCodes(sanitized);
         }
         
+        sanitized = sanitized.replace("|", "");
+        
         if (sanitized.length() > maxLength) {
             sanitized = sanitized.substring(0, maxLength);
         }

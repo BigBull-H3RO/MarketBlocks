@@ -2,11 +2,9 @@ package de.bigbull.marketblocks.feature.marketplace.network;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
-import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceSerialization;
+import de.bigbull.marketblocks.feature.marketplace.data.OfferLimit;
 import net.minecraft.core.UUIDUtil;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -15,24 +13,37 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.UUID;
 
-public record MarketplaceUpdateOfferLimitsPacket(UUID offerId, CompoundTag limitData) implements CustomPacketPayload {
+public record MarketplaceUpdateOfferLimitsPacket(UUID offerId, OfferLimit limit) implements CustomPacketPayload {
     public static final Type<MarketplaceUpdateOfferLimitsPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "marketplace_update_limits"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceUpdateOfferLimitsPacket> CODEC = new StreamCodec<>() {
+    private static final StreamCodec<RegistryFriendlyByteBuf, OfferLimit> LIMIT_STREAM_CODEC = new StreamCodec<>() {
         @Override
-        public MarketplaceUpdateOfferLimitsPacket decode(RegistryFriendlyByteBuf buf) {
-            UUID id = UUIDUtil.STREAM_CODEC.decode(buf);
-            CompoundTag tag = ByteBufCodecs.TRUSTED_COMPOUND_TAG.decode(buf);
-            return new MarketplaceUpdateOfferLimitsPacket(id, tag);
+        public OfferLimit decode(RegistryFriendlyByteBuf buf) {
+            boolean unlimited = buf.readBoolean();
+            Integer daily = buf.readBoolean() ? buf.readInt() : null;
+            Integer stock = buf.readBoolean() ? buf.readInt() : null;
+            Integer restock = buf.readBoolean() ? buf.readInt() : null;
+            return new OfferLimit(unlimited, daily, stock, restock);
         }
 
         @Override
-        public void encode(RegistryFriendlyByteBuf buf, MarketplaceUpdateOfferLimitsPacket value) {
-            UUIDUtil.STREAM_CODEC.encode(buf, value.offerId());
-            ByteBufCodecs.TRUSTED_COMPOUND_TAG.encode(buf, value.limitData() == null ? new CompoundTag() : value.limitData());
+        public void encode(RegistryFriendlyByteBuf buf, OfferLimit value) {
+            buf.writeBoolean(value.isUnlimited());
+            buf.writeBoolean(value.dailyLimit().isPresent());
+            value.dailyLimit().ifPresent(buf::writeInt);
+            buf.writeBoolean(value.stockLimit().isPresent());
+            value.stockLimit().ifPresent(buf::writeInt);
+            buf.writeBoolean(value.restockSeconds().isPresent());
+            value.restockSeconds().ifPresent(buf::writeInt);
         }
     };
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceUpdateOfferLimitsPacket> CODEC = StreamCodec
+            .composite(
+                    UUIDUtil.STREAM_CODEC, MarketplaceUpdateOfferLimitsPacket::offerId,
+                    LIMIT_STREAM_CODEC, MarketplaceUpdateOfferLimitsPacket::limit,
+                    MarketplaceUpdateOfferLimitsPacket::new);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -44,12 +55,9 @@ public record MarketplaceUpdateOfferLimitsPacket(UUID offerId, CompoundTag limit
             if (!(context.player() instanceof ServerPlayer player) || !MarketplaceManager.get().canEdit(player)) {
                 return;
             }
-            MarketplaceSerialization.decodeLimit(packet.limitData(), player.server.registryAccess()).result()
-                    .ifPresent(limit -> {
-                        if (MarketplaceManager.get().updateOfferLimits(packet.offerId(), limit)) {
-                            MarketplaceManager.get().syncOpenViewers(player);
-                        }
-                    });
+            if (MarketplaceManager.get().updateOfferLimits(packet.offerId(), packet.limit())) {
+                MarketplaceManager.get().syncOpenViewers(player);
+            }
         });
     }
 }

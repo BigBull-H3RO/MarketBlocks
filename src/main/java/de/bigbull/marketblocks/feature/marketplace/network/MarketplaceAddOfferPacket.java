@@ -24,7 +24,7 @@ public record MarketplaceAddOfferPacket(String pageName) implements CustomPacket
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "marketplace_add_offer"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceAddOfferPacket> CODEC = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8,
+            ByteBufCodecs.stringUtf8(MarketplaceManager.MAX_PAGE_NAME_LENGTH),
             MarketplaceAddOfferPacket::pageName,
             MarketplaceAddOfferPacket::new
     );

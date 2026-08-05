@@ -48,7 +48,7 @@ public final class MarketplaceManager {
     private static final String TEMP_FILE_SUFFIX = ".tmp";
     private static final int AUTO_SAVE_TICKS = 20 * 60;
     private static final int RUNTIME_UPKEEP_INTERVAL_TICKS = 20;
-    private static final int MAX_PAGE_NAME_LENGTH = 64;
+    public static final int MAX_PAGE_NAME_LENGTH = 64;
 
 
     private static final MarketplaceManager INSTANCE = new MarketplaceManager();
