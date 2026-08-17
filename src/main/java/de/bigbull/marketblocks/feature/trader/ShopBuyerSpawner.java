@@ -14,12 +14,12 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
 
 public class ShopBuyerSpawner {
 
-    private static final Map<ServerLevel, Set<ShopBuyerEntity>> ACTIVE_TRADERS = new HashMap<>();
+    private static final Map<ServerLevel, Set<ShopBuyerEntity>> ACTIVE_TRADERS = new ConcurrentHashMap<>();
 
     public static void onTraderAdded(ServerLevel level, ShopBuyerEntity entity) {
         ACTIVE_TRADERS.computeIfAbsent(level, k -> new HashSet<>()).add(entity);
@@ -38,6 +38,14 @@ public class ShopBuyerSpawner {
     public static int getTraderCount(ServerLevel level) {
         Set<ShopBuyerEntity> set = ACTIVE_TRADERS.get(level);
         return set != null ? set.size() : 0;
+    }
+
+    /**
+     * Clears all tracked traders. Must be called on server shutdown to prevent
+     * stale ServerLevel references from persisting across restarts.
+     */
+    public static void clearAll() {
+        ACTIVE_TRADERS.clear();
     }
 
     public static void tick(ServerLevel level) {
@@ -91,6 +99,18 @@ public class ShopBuyerSpawner {
                 return;
             ServerPlayer player = players.get(random.nextInt(players.size()));
             targetPos = player.blockPosition();
+
+            // Check if there are any active shops near the player (within 48 blocks)
+            final BlockPos pPos = targetPos;
+            boolean hasShopNearby = shops.stream()
+                    .anyMatch(s -> s.pos().pos().closerToCenterThan(pPos.getCenter(), 48.0));
+
+            if (!hasShopNearby) {
+                // Wilderness / No Shop nearby: extremely rare spawn (5% chance of normal rate)
+                if (random.nextInt(20) != 0) {
+                    return;
+                }
+            }
         } else {
             ShopDirectorySavedData.ShopEntry targetShop = shops.get(random.nextInt(shops.size()));
             targetPos = targetShop.pos().pos();

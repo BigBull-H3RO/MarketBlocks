@@ -335,6 +335,12 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("entity.marketblocks.shop_buyer.category.blacksmith", "Blacksmith");
                 add("entity.marketblocks.shop_buyer.category.valuables", "Collector");
 
+                // Rage & Revenge Easter Egg messages
+                add("message.marketblocks.shop_buyer.rage.1", "§c%s: Stop bothering me! You asked for this!§r");
+                add("message.marketblocks.shop_buyer.rage.2", "§c%s: That's it! I've had enough of you!§r");
+                add("message.marketblocks.shop_buyer.rage.3", "§c%s: You want trouble? You got it!§r");
+                add("message.marketblocks.shop_buyer.revenge", "§c%s: You again?! I haven't forgotten what you did!§r");
+
                 // === Jade / Waila Support ===
                 add("config.jade.plugin_marketblocks.shop_info", "Shop Info");
                 add("config.jade.plugin_marketblocks.shop_buyer_info", "Shop Buyer Info");

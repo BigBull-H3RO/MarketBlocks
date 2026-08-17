@@ -36,6 +36,7 @@ public class ShopSettingsManager {
     private static final String KEY_ACCESS = "Access";
 
     private final SingleOfferShopBlockEntity blockEntity;
+    private final boolean isMarketCrate;
     private GeneralSettings generalSettings;
     private VillagerSettings villagerSettings;
     private OfferItemSettings offerItemSettings;
@@ -49,16 +50,16 @@ public class ShopSettingsManager {
 
     public ShopSettingsManager(SingleOfferShopBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
-        this.generalSettings = createDefaultGeneralSettings();
-        this.villagerSettings = createDefaultVillagerSettings();
-        this.offerItemSettings = createDefaultOfferItemSettings();
-        this.ioSettings = createDefaultIoSettings();
+        this.isMarketCrate = ShopVisualType.from(blockEntity.getBlockState().getBlock()) == ShopVisualType.MARKET_CRATE;
+        this.generalSettings = createDefaultGeneralSettings(isMarketCrate);
+        this.villagerSettings = createDefaultVillagerSettings(isMarketCrate);
+        this.offerItemSettings = createDefaultOfferItemSettings(isMarketCrate);
+        this.ioSettings = createDefaultIoSettings(isMarketCrate);
         this.accessSettings = AccessSettings.DEFAULT;
-        this.notificationSettings = createDefaultNotificationSettings();
+        this.notificationSettings = createDefaultNotificationSettings(isMarketCrate);
     }
 
-    private IoSettings createDefaultIoSettings() {
-        boolean isMarketCrate = isMarketCrate();
+    private static IoSettings createDefaultIoSettings(boolean isMarketCrate) {
         return new IoSettings(
                 IoSettings.DEFAULT.left(),
                 IoSettings.DEFAULT.right(),
@@ -70,8 +71,7 @@ public class ShopSettingsManager {
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_AUTO_IO.get() : TradeStandConfig.TRADESTAND_DEFAULT_AUTO_IO.get());
     }
 
-    private GeneralSettings createDefaultGeneralSettings() {
-        boolean isMarketCrate = isMarketCrate();
+    private static GeneralSettings createDefaultGeneralSettings(boolean isMarketCrate) {
         return new GeneralSettings(
                 "",
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_EMIT_REDSTONE.get()
@@ -82,8 +82,7 @@ public class ShopSettingsManager {
                 ShopCategory.NONE);
     }
 
-    private VillagerSettings createDefaultVillagerSettings() {
-        boolean isMarketCrate = isMarketCrate();
+    private static VillagerSettings createDefaultVillagerSettings(boolean isMarketCrate) {
         return new VillagerSettings(
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_VILLAGER_NPC_ENABLED.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_VILLAGER_NPC_ENABLED.get(),
@@ -101,8 +100,7 @@ public class ShopSettingsManager {
                 "");
     }
 
-    private OfferItemSettings createDefaultOfferItemSettings() {
-        boolean isMarketCrate = isMarketCrate();
+    private static OfferItemSettings createDefaultOfferItemSettings(boolean isMarketCrate) {
         return new OfferItemSettings(
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_VISIBLE.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_ITEM_VISIBLE.get(),
@@ -122,8 +120,7 @@ public class ShopSettingsManager {
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_DYNAMIC_FILL.get() : false);
     }
 
-    private NotificationSettings createDefaultNotificationSettings() {
-        boolean isMarketCrate = isMarketCrate();
+    private static NotificationSettings createDefaultNotificationSettings(boolean isMarketCrate) {
         return new NotificationSettings(
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_NOTIFY_PURCHASE.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_PURCHASE.get(),
@@ -135,8 +132,8 @@ public class ShopSettingsManager {
                         : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_CO_OWNERS.get());
     }
 
-    private boolean isMarketCrate() {
-        return ShopVisualType.from(blockEntity.getBlockState().getBlock()) == ShopVisualType.MARKET_CRATE;
+    public boolean isMarketCrate() {
+        return isMarketCrate;
     }
 
     public GeneralSettings getGeneralSettings() {
@@ -204,7 +201,7 @@ public class ShopSettingsManager {
     }
 
     public void setIoSettings(IoSettings settings, boolean sync) {
-        this.ioSettings = settings == null ? createDefaultIoSettings() : settings;
+        this.ioSettings = settings == null ? createDefaultIoSettings(isMarketCrate) : settings;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
 
@@ -306,22 +303,22 @@ public class ShopSettingsManager {
         if (tag.contains(KEY_GENERAL)) {
             generalSettings = GeneralSettings.load(tag.getCompound(KEY_GENERAL));
         } else {
-            generalSettings = createDefaultGeneralSettings();
+            generalSettings = createDefaultGeneralSettings(isMarketCrate);
         }
         if (tag.contains(KEY_VILLAGER)) {
             villagerSettings = VillagerSettings.load(tag.getCompound(KEY_VILLAGER));
         } else {
-            villagerSettings = createDefaultVillagerSettings();
+            villagerSettings = createDefaultVillagerSettings(isMarketCrate);
         }
         if (tag.contains(KEY_OFFER_ITEM)) {
             offerItemSettings = OfferItemSettings.load(tag.getCompound(KEY_OFFER_ITEM));
         } else {
-            offerItemSettings = createDefaultOfferItemSettings();
+            offerItemSettings = createDefaultOfferItemSettings(isMarketCrate);
         }
         if (tag.contains(KEY_IO)) {
             ioSettings = IoSettings.load(tag.getCompound(KEY_IO));
         } else {
-            ioSettings = createDefaultIoSettings();
+            ioSettings = createDefaultIoSettings(isMarketCrate);
         }
         if (tag.contains(KEY_ACCESS)) {
             accessSettings = AccessSettings.load(tag.getCompound(KEY_ACCESS));
@@ -331,7 +328,7 @@ public class ShopSettingsManager {
         if (tag.contains("Notification")) {
             notificationSettings = NotificationSettings.load(tag.getCompound("Notification"));
         } else {
-            notificationSettings = createDefaultNotificationSettings();
+            notificationSettings = createDefaultNotificationSettings(isMarketCrate);
         }
 
         if (tag.contains("GlobalOfferItemRendering")) {

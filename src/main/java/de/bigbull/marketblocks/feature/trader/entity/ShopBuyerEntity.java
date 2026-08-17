@@ -41,18 +41,27 @@ import de.bigbull.marketblocks.feature.trader.entity.ai.LeaveAndDespawnGoal;
 import de.bigbull.marketblocks.feature.trader.entity.ai.MoveToShopGoal;
 import de.bigbull.marketblocks.feature.trader.entity.ai.TradeWithShopGoal;
 import net.minecraft.core.BlockPos;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.util.RandomSource;
 import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.item.enchantment.Enchantments;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 public class ShopBuyerEntity extends PathfinderMob {
 
@@ -89,6 +98,19 @@ public class ShopBuyerEntity extends PathfinderMob {
      */
     private int successfulPurchases = 0;
 
+    /** Dialog and interaction cooldown tracking (Anti-Spamming) */
+    private final Map<UUID, Long> lastDialogTimes = new HashMap<>();
+
+    /** Click timestamps for Rage Mode Easter Egg trigger */
+    private final Map<UUID, List<Long>> clickTimestamps = new HashMap<>();
+
+    /** Rage state */
+    private boolean isRaging = false;
+
+    /** UUID of the player this trader is angry at (for revenge upon return) */
+    @Nullable
+    private UUID angryTargetUUID = null;
+
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
@@ -119,7 +141,8 @@ public class ShopBuyerEntity extends PathfinderMob {
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.35D);
+                .add(Attributes.MOVEMENT_SPEED, 0.35D)
+                .add(Attributes.ATTACK_DAMAGE, 3.0D);
     }
 
     @Override
@@ -135,7 +158,32 @@ public class ShopBuyerEntity extends PathfinderMob {
                 new ItemStack(Items.MILK_BUCKET),
                 SoundEvents.WANDERING_TRADER_REAPPEARED,
                 mob -> this.level().isDay() && mob.isInvisible()));
-        this.goalSelector.addGoal(1, new PanicGoal(this, 0.5D));
+
+        // Melee attack goal when raging
+        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.25D, false) {
+            @Override
+            public boolean canUse() {
+                return ShopBuyerEntity.this.isRaging() && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return ShopBuyerEntity.this.isRaging() && super.canContinueToUse();
+            }
+        });
+
+        // Panic goal when not raging
+        this.goalSelector.addGoal(1, new PanicGoal(this, 0.5D) {
+            @Override
+            public boolean canUse() {
+                return !ShopBuyerEntity.this.isRaging() && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return !ShopBuyerEntity.this.isRaging() && super.canContinueToUse();
+            }
+        });
 
         this.goalSelector.addGoal(2, new LeaveAndDespawnGoal(this, 0.65D));
         this.goalSelector.addGoal(3, new TradeWithShopGoal(this, 2.5f));
@@ -156,6 +204,10 @@ public class ShopBuyerEntity extends PathfinderMob {
         compound.putInt("SuccessfulPurchases", this.successfulPurchases);
         compound.putString("TraderRank", this.getTraderRank().name());
         compound.putString("InterestCategory", this.getInterestCategory().name());
+        compound.putBoolean("IsRaging", this.isRaging);
+        if (this.angryTargetUUID != null) {
+            compound.putUUID("AngryTargetUUID", this.angryTargetUUID);
+        }
         if (this.targetShop != null) {
             compound.put("TargetShop", NbtUtils.writeBlockPos(this.targetShop));
         }
@@ -206,6 +258,15 @@ public class ShopBuyerEntity extends PathfinderMob {
         if (compound.contains("SuccessfulPurchases")) {
             this.successfulPurchases = compound.getInt("SuccessfulPurchases");
         }
+        if (compound.contains("IsRaging")) {
+            this.isRaging = compound.getBoolean("IsRaging");
+            if (this.isRaging) {
+                equipRageWeapon();
+            }
+        }
+        if (compound.hasUUID("AngryTargetUUID")) {
+            this.angryTargetUUID = compound.getUUID("AngryTargetUUID");
+        }
         NbtUtils.readBlockPos(compound, "TargetShop").ifPresent(pos -> this.targetShop = pos);
 
         // Load visited shops
@@ -243,6 +304,13 @@ public class ShopBuyerEntity extends PathfinderMob {
     }
 
     @Override
+    public void die(DamageSource damageSource) {
+        // Ensure weapon is never dropped upon death
+        this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        super.die(damageSource);
+    }
+
+    @Override
     public void tick() {
         super.tick();
         if (!this.level().isClientSide) {
@@ -250,6 +318,26 @@ public class ShopBuyerEntity extends PathfinderMob {
                 this.despawnDelay--;
                 if (this.despawnDelay <= 0) {
                     this.budget = 0; // Force despawn via LeaveAndDespawnGoal
+                }
+            }
+
+            // Handle Rage and Revenge logic
+            if (TraderConfig.ENABLE_SHOPBUYER_RAGE_MODE.get()) {
+                if (this.isRaging) {
+                    LivingEntity currentTarget = this.getTarget();
+                    if (currentTarget == null || !currentTarget.isAlive() || (currentTarget instanceof Player p && (p.isDeadOrDying() || p.isRemoved()))) {
+                        if (currentTarget instanceof Player p) {
+                            this.angryTargetUUID = p.getUUID();
+                        }
+                        calmDown();
+                    }
+                } else if (this.angryTargetUUID != null) {
+                    double radius = TraderConfig.REVENGE_DETECTION_RADIUS.get();
+                    Player player = this.level().getPlayerByUUID(this.angryTargetUUID);
+                    if (player != null && player.isAlive() && !player.isSpectator() && !player.isCreative()
+                            && this.distanceToSqr(player) < (radius * radius)) {
+                        triggerRevenge(player);
+                    }
                 }
             }
         }
@@ -358,11 +446,41 @@ public class ShopBuyerEntity extends PathfinderMob {
         return currentTime >= this.nextShopSearchTime;
     }
 
-    // --- Player Interaction ---
+    // --- Player Interaction & Rage Mode ---
 
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (!this.level().isClientSide) {
+            long gameTime = this.level().getGameTime();
+            UUID playerUuid = player.getUUID();
+
+            // If already raging against this player, ignore peaceful interaction
+            if (this.isRaging) {
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
+            }
+
+            // Track clicks for Rage Mode Easter Egg trigger
+            if (TraderConfig.ENABLE_SHOPBUYER_RAGE_MODE.get()) {
+                List<Long> clicks = clickTimestamps.computeIfAbsent(playerUuid, k -> new ArrayList<>());
+                clicks.add(gameTime);
+                int windowTicks = TraderConfig.RAGE_CLICK_WINDOW_TICKS.get();
+                clicks.removeIf(t -> (gameTime - t) > windowTicks);
+
+                int threshold = TraderConfig.RAGE_CLICK_THRESHOLD.get();
+                if (clicks.size() >= threshold) {
+                    clicks.clear();
+                    triggerRageMode(player);
+                    return InteractionResult.sidedSuccess(this.level().isClientSide);
+                }
+            }
+
+            // Dialog cooldown (anti-spam): 30 ticks (1.5s) per player
+            Long lastTime = lastDialogTimes.get(playerUuid);
+            if (lastTime != null && (gameTime - lastTime) < 30) {
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
+            }
+            lastDialogTimes.put(playerUuid, gameTime);
+
             // Show rank and interest category so the player knows what this NPC is looking for
             Component rankInfo = Component.translatable(
                     "message.marketblocks.shop_buyer.info",
@@ -378,6 +496,83 @@ public class ShopBuyerEntity extends PathfinderMob {
             this.playSound(SoundEvents.WANDERING_TRADER_NO, this.getSoundVolume(), this.getVoicePitch());
         }
         return InteractionResult.sidedSuccess(this.level().isClientSide);
+    }
+
+    public boolean isRaging() {
+        return isRaging;
+    }
+
+    public void setRaging(boolean raging) {
+        this.isRaging = raging;
+    }
+
+    public void triggerRageMode(Player target) {
+        this.isRaging = true;
+        this.angryTargetUUID = target.getUUID();
+        this.setTarget(target);
+
+        this.playSound(SoundEvents.VINDICATOR_CELEBRATE, 1.0F, 1.0F);
+        equipRageWeapon();
+
+        int msgIndex = 1 + this.random.nextInt(3);
+        String nameStr = this.hasCustomName() ? this.getCustomName().getString() : Component.translatable("entity.marketblocks.shop_buyer").getString();
+        target.sendSystemMessage(Component.translatable("message.marketblocks.shop_buyer.rage." + msgIndex, nameStr));
+    }
+
+    public void triggerRevenge(Player player) {
+        this.isRaging = true;
+        this.setTarget(player);
+        this.playSound(SoundEvents.VINDICATOR_CELEBRATE, 1.0F, 1.0F);
+        equipRageWeapon();
+
+        String nameStr = this.hasCustomName() ? this.getCustomName().getString() : Component.translatable("entity.marketblocks.shop_buyer").getString();
+        player.sendSystemMessage(Component.translatable("message.marketblocks.shop_buyer.revenge", nameStr));
+    }
+
+    public void calmDown() {
+        this.isRaging = false;
+        this.setTarget(null);
+        this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+    }
+
+    private void equipRageWeapon() {
+        ItemStack weapon;
+        switch (this.getTraderRank()) {
+            case NOBLE -> weapon = new ItemStack(Items.NETHERITE_SWORD);
+            case WEALTHY -> weapon = new ItemStack(Items.DIAMOND_SWORD);
+            case CITIZEN -> weapon = new ItemStack(Items.IRON_SWORD);
+            default -> weapon = new ItemStack(Items.IRON_SWORD);
+        }
+
+        int enchantChance = switch (this.getTraderRank()) {
+            case NOBLE -> 90;
+            case WEALTHY -> 60;
+            case CITIZEN -> 30;
+        };
+
+        if (this.random.nextInt(100) < enchantChance) {
+            var registry = this.level().registryAccess().registry(Registries.ENCHANTMENT);
+            if (registry.isPresent()) {
+                var sharpnessHolder = registry.get().getHolder(Enchantments.SHARPNESS);
+                if (sharpnessHolder.isPresent()) {
+                    int level;
+                    if (this.random.nextInt(100) == 0) {
+                        level = 10; // Super rare Sharpness X
+                    } else {
+                        int maxLvl = switch (this.getTraderRank()) {
+                            case NOBLE -> 5;
+                            case WEALTHY -> 4;
+                            case CITIZEN -> 3;
+                        };
+                        level = 1 + this.random.nextInt(maxLvl);
+                    }
+                    weapon.enchant(sharpnessHolder.get(), level);
+                }
+            }
+        }
+
+        this.setItemSlot(EquipmentSlot.MAINHAND, weapon);
+        this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
     }
 
     /**

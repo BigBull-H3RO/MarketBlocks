@@ -76,7 +76,9 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private boolean hasOffer = false;
     private int totalSales = 0;
     private Double salePercent = null;
-    private long saleEndTimestamp = 0L;
+    private long saleEndGameTick = 0L;
+    /** Client-side cached sale-active state, synced from server via update tag. */
+    private boolean saleActiveClient = false;
     private static final String NBT_SALE_PERCENT = "SalePercent";
     private static final String NBT_SALE_END_TIMESTAMP = "SaleEndTimestamp";
     public static final int MAX_TRANSACTION_LOG_ENTRIES = 100;
@@ -682,13 +684,16 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         if (!isAdminShopEnabled() || salePercent == null) {
             return false;
         }
-        if (saleEndTimestamp > 0L && System.currentTimeMillis() >= saleEndTimestamp) {
+        // Client reads the synced boolean flag
+        if (level != null && level.isClientSide) {
+            return saleActiveClient;
+        }
+        // Server checks game time
+        if (saleEndGameTick > 0L && level != null && level.getGameTime() >= saleEndGameTick) {
             salePercent = null;
-            saleEndTimestamp = 0L;
+            saleEndGameTick = 0L;
             setChanged();
-            if (level != null && !level.isClientSide) {
-                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-            }
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
             return false;
         }
         return true;
@@ -698,9 +703,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return isSaleActive() ? salePercent : null;
     }
 
-    public void setSale(Double salePercent, long durationMillis) {
+    /**
+     * Sets a sale on this shop.
+     * @param salePercent the sale percentage (e.g. -20.0 for 20% off), or null to clear
+     * @param durationTicks duration in game ticks (20 ticks = 1 second), or 0 for unlimited
+     */
+    public void setSale(Double salePercent, long durationTicks) {
         this.salePercent = salePercent;
-        this.saleEndTimestamp = durationMillis > 0 ? System.currentTimeMillis() + durationMillis : 0L;
+        this.saleEndGameTick = durationTicks > 0 && level != null ? level.getGameTime() + durationTicks : 0L;
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
@@ -985,10 +995,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         if (tag.contains(NBT_SALE_PERCENT)) {
             salePercent = tag.getDouble(NBT_SALE_PERCENT);
-            saleEndTimestamp = tag.getLong(NBT_SALE_END_TIMESTAMP);
+            saleEndGameTick = tag.getLong(NBT_SALE_END_TIMESTAMP);
         } else {
             salePercent = null;
-            saleEndTimestamp = 0L;
+            saleEndGameTick = 0L;
         }
 
         tickCounter = 0;
@@ -1006,7 +1016,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         if (salePercent != null) {
             tag.putDouble(NBT_SALE_PERCENT, salePercent);
-            tag.putLong(NBT_SALE_END_TIMESTAMP, saleEndTimestamp);
+            tag.putLong(NBT_SALE_END_TIMESTAMP, saleEndGameTick);
         }
     }
 
@@ -1063,7 +1073,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         if (salePercent != null) {
             tag.putDouble(NBT_SALE_PERCENT, salePercent);
-            tag.putLong(NBT_SALE_END_TIMESTAMP, saleEndTimestamp);
+            tag.putLong(NBT_SALE_END_TIMESTAMP, saleEndGameTick);
+            tag.putBoolean("SaleActive", isSaleActive());
         }
 
         return tag;
@@ -1079,10 +1090,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         if (tag.contains(NBT_SALE_PERCENT)) {
             salePercent = tag.getDouble(NBT_SALE_PERCENT);
-            saleEndTimestamp = tag.getLong(NBT_SALE_END_TIMESTAMP);
+            saleEndGameTick = tag.getLong(NBT_SALE_END_TIMESTAMP);
+            saleActiveClient = tag.getBoolean("SaleActive");
         } else {
             salePercent = null;
-            saleEndTimestamp = 0L;
+            saleEndGameTick = 0L;
+            saleActiveClient = false;
         }
 
         settingsManager.load(tag);

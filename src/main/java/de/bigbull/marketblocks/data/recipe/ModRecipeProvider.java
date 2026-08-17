@@ -35,7 +35,6 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('I', Items.IRON_INGOT)
                 .define('S', ItemTags.SIGNS)
                 .unlockedBy("has_emerald", has(Items.EMERALD))
-                .unlockedBy("has_chest", has(Items.CHEST))
                 .save(recipeOutput, getModId("trade_stand"));
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RegistriesInit.MARKETCRATE_BLOCK.get(), 1)
@@ -48,7 +47,6 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('B', Items.BARREL)
                 .define('S', ItemTags.SIGNS)
                 .unlockedBy("has_emerald", has(Items.EMERALD))
-                .unlockedBy("has_chest", has(Items.CHEST))
                 .save(recipeOutput, getModId("marketcrate"));
     }
 

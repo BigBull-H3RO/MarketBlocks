@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
+import net.minecraft.core.BlockPos;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.config.TraderConfig;
@@ -358,47 +359,44 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
         boolean isOutOfStock = inv.countMatchingInput(result, true) < result.getCount();
         if (isOutOfStock && notifSettings.notifyOnOutOfStock()) {
-            long currentTime = serverLevel.getGameTime();
-            long lastNotify = shopEntity.getLastOutOfStockNotifyTime();
-            int cooldown = Config.NOTIFICATION_COOLDOWN.get();
-
-            if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
-                shopEntity.setLastOutOfStockNotifyTime(currentTime);
-                Component msg = shopPrefix.copy()
-                        .append(Component.translatable("message.marketblocks.notifications.out_of_stock"));
-                boolean online = sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
-                if (!online) {
-                    PendingNotificationsSavedData.get(serverLevel)
-                            .addOutOfStock(shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
-                    if (notifSettings.notifyCoOwners()) {
-                        for (UUID coOwner : shopEntity.getAccessSettings().additionalOwners().keySet()) {
-                            PendingNotificationsSavedData.get(serverLevel).addOutOfStock(coOwner,
-                                    shopEntity.getBlockPos());
-                        }
-                    }
-                }
-            }
+            sendCooldownNotification(serverLevel, notifSettings, shopPrefix,
+                    Component.translatable("message.marketblocks.notifications.out_of_stock"),
+                    shopEntity.getLastOutOfStockNotifyTime(),
+                    shopEntity::setLastOutOfStockNotifyTime,
+                    (data, owner, pos) -> data.addOutOfStock(owner, pos));
         }
 
         boolean isOutputFull = !inv.hasOutputSpace(p1, p2);
         if (isOutputFull && notifSettings.notifyOnOutputFull()) {
-            long currentTime = serverLevel.getGameTime();
-            long lastNotify = shopEntity.getLastOutputFullNotifyTime();
-            int cooldown = Config.NOTIFICATION_COOLDOWN.get();
+            sendCooldownNotification(serverLevel, notifSettings, shopPrefix,
+                    Component.translatable("message.marketblocks.notifications.output_full"),
+                    shopEntity.getLastOutputFullNotifyTime(),
+                    shopEntity::setLastOutputFullNotifyTime,
+                    (data, owner, pos) -> data.addOutputFull(owner, pos));
+        }
+    }
 
-            if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
-                shopEntity.setLastOutputFullNotifyTime(currentTime);
-                Component msg = shopPrefix.copy()
-                        .append(Component.translatable("message.marketblocks.notifications.output_full"));
-                boolean online = sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
-                if (!online) {
-                    PendingNotificationsSavedData.get(serverLevel)
-                            .addOutputFull(shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
-                    if (notifSettings.notifyCoOwners()) {
-                        for (UUID coOwner : shopEntity.getAccessSettings().additionalOwners().keySet()) {
-                            PendingNotificationsSavedData.get(serverLevel).addOutputFull(coOwner,
-                                    shopEntity.getBlockPos());
-                        }
+    @FunctionalInterface
+    private interface PendingNotificationAction {
+        void add(PendingNotificationsSavedData data, UUID owner, BlockPos pos);
+    }
+
+    private void sendCooldownNotification(ServerLevel level, NotificationSettings settings, Component prefix,
+            Component message, long lastNotify, java.util.function.LongConsumer updateTime,
+            PendingNotificationAction addPending) {
+        long currentTime = level.getGameTime();
+        int cooldown = Config.NOTIFICATION_COOLDOWN.get();
+
+        if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
+            updateTime.accept(currentTime);
+            Component msg = prefix.copy().append(message);
+            boolean online = sendToOwners(level, settings.notifyCoOwners(), msg);
+            if (!online) {
+                PendingNotificationsSavedData data = PendingNotificationsSavedData.get(level);
+                addPending.add(data, shopEntity.getAccessSettings().ownerId(), shopEntity.getBlockPos());
+                if (settings.notifyCoOwners()) {
+                    for (UUID coOwner : shopEntity.getAccessSettings().additionalOwners().keySet()) {
+                        addPending.add(data, coOwner, shopEntity.getBlockPos());
                     }
                 }
             }

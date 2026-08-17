@@ -181,7 +181,7 @@ public class ShopInventoryManager {
     }
 
     private java.util.List<IItemHandler> prepareOutputSimulationHandlers() {
-        java.util.List<IItemHandler> list = new java.util.ArrayList<>();
+        java.util.List<IItemHandler> list = new java.util.ArrayList<>(7);
         ItemStackHandler outputHandler = blockEntity.getOutputHandler();
         for (int i = 0; i < outputHandler.getSlots(); i++) {
             outputSimulationHandler.setStackInSlot(i, outputHandler.getStackInSlot(i).copy());
