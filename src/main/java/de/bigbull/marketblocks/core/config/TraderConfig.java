@@ -23,6 +23,10 @@ public class TraderConfig {
     public static final ModConfigSpec.DoubleValue TRADER_DYNAMIC_PRICING_MAX_MULTIPLIER;
     public static final ModConfigSpec.DoubleValue TRADER_DYNAMIC_PRICING_SATURATION_PER_UNIT;
     public static final ModConfigSpec.DoubleValue TRADER_DYNAMIC_PRICING_CRAFTING_BONUS;
+    public static final ModConfigSpec.BooleanValue ENABLE_SHOPBUYER_RAGE_MODE;
+    public static final ModConfigSpec.IntValue RAGE_CLICK_THRESHOLD;
+    public static final ModConfigSpec.IntValue RAGE_CLICK_WINDOW_TICKS;
+    public static final ModConfigSpec.DoubleValue REVENGE_DETECTION_RADIUS;
 
     static {
         BUILDER.push("Wandering Trader NPC");
@@ -78,6 +82,18 @@ public class TraderConfig {
         TRADER_DYNAMIC_PRICING_CRAFTING_BONUS = BUILDER
                 .comment("Value multiplier bonus added per crafting step to reward processing (e.g. 0.1 = +10% value per step).")
                 .defineInRange("traderDynamicPricingCraftingBonus", 0.1, 0.0, 1.0);
+        ENABLE_SHOPBUYER_RAGE_MODE = BUILDER
+                .comment("Enable the rage mode Easter Egg where the Shop Buyer attacks players who spam-click it.")
+                .define("enableShopbuyerRageMode", true);
+        RAGE_CLICK_THRESHOLD = BUILDER
+                .comment("Number of clicks needed within the time window to trigger rage mode. Default: 3")
+                .defineInRange("rageClickThreshold", 3, 2, 10);
+        RAGE_CLICK_WINDOW_TICKS = BUILDER
+                .comment("Time window in ticks for counting clicks toward rage mode. Default: 60 (3 seconds)")
+                .defineInRange("rageClickWindowTicks", 60, 20, 200);
+        REVENGE_DETECTION_RADIUS = BUILDER
+                .comment("Radius in blocks for the revenge mechanic after a player dies to the enraged trader. Default: 16.0")
+                .defineInRange("revengeDetectionRadius", 16.0, 4.0, 64.0);
         BUILDER.pop();
 
         SPEC = BUILDER.build();

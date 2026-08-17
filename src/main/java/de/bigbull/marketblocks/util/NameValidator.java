@@ -2,8 +2,14 @@ package de.bigbull.marketblocks.util;
 
 import de.bigbull.marketblocks.core.config.Config;
 
+import java.util.regex.Pattern;
+
 public class NameValidator {
-    
+
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("(?i)[§&]#[0-9A-F]{6}");
+    private static final Pattern EXTENDED_HEX_PATTERN = Pattern.compile("(?i)[§&]x([§&][0-9A-F]){6}");
+    private static final Pattern FORMATTING_PATTERN = Pattern.compile("(?i)[§&][0-9A-FK-OR]");
+
     /**
      * Sanitizes a string according to the security configurations (max length and formatting blocks).
      * Used for shop names.
@@ -50,8 +56,8 @@ public class NameValidator {
     }
 
     private static String stripColorCodes(String input) {
-        return input.replaceAll("(?i)[§&]#[0-9A-F]{6}", "")
-                    .replaceAll("(?i)[§&]x([§&][0-9A-F]){6}", "")
-                    .replaceAll("(?i)[§&][0-9A-FK-OR]", "");
+        String result = HEX_COLOR_PATTERN.matcher(input).replaceAll("");
+        result = EXTENDED_HEX_PATTERN.matcher(result).replaceAll("");
+        return FORMATTING_PATTERN.matcher(result).replaceAll("");
     }
 }

@@ -9,8 +9,9 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import net.minecraft.world.item.ItemStack;
@@ -23,11 +24,12 @@ import de.bigbull.marketblocks.core.config.Config;
 /**
  * Maintains a global registry of all placed single-offer shops (Trade Stands, Market Crates) across the server.
  * This is used for commands (like /marketblocks list) and other global lookup features.
+ * Uses a LinkedHashMap for O(1) lookups by position while preserving insertion order.
  */
 public class ShopDirectorySavedData extends SavedData {
     private static final String DATA_NAME = "marketblocks_shop_directory";
 
-    private final List<ShopEntry> shops = new ArrayList<>();
+    private final Map<GlobalPos, ShopEntry> shopsByPos = new LinkedHashMap<>();
     private static final Random RANDOM = new Random();
 
     public record ShopEntry(GlobalPos pos, UUID ownerUUID, String ownerName, String shopName, String shopId, boolean isClosed, ShopCategory shopCategory, ItemStack payment1, ItemStack payment2, ItemStack result, int totalSales, boolean isAdminShop, boolean isMarketCrate, boolean hasShowcase, boolean isOutOfStock, boolean isOutputFull) {}
@@ -40,12 +42,12 @@ public class ShopDirectorySavedData extends SavedData {
     }
 
     public List<ShopEntry> getShops() {
-        return List.copyOf(shops);
+        return List.copyOf(shopsByPos.values());
     }
 
     public ShopEntry getShopById(String shopId) {
         if (shopId == null) return null;
-        for (ShopEntry s : shops) {
+        for (ShopEntry s : shopsByPos.values()) {
             if (shopId.equals(s.shopId())) {
                 return s;
             }
@@ -60,29 +62,21 @@ public class ShopDirectorySavedData extends SavedData {
             int num = RANDOM.nextInt(0x10000); // 0 to 65535
             id = String.format("%04X", num);
             String finalId = id;
-            unique = shops.stream().noneMatch(s -> finalId.equals(s.shopId()));
+            unique = shopsByPos.values().stream().noneMatch(s -> finalId.equals(s.shopId()));
         } while (!unique);
         return id;
     }
 
     public void registerOrUpdateShop(GlobalPos pos, UUID ownerUUID, String ownerName, String shopName, boolean isClosed, ShopCategory shopCategory, ItemStack payment1, ItemStack payment2, ItemStack result, int totalSales, boolean isAdminShop, boolean isMarketCrate, boolean hasShowcase, boolean isOutOfStock, boolean isOutputFull) {
-        String existingId = null;
-        for (ShopEntry s : shops) {
-            if (s.pos().equals(pos)) {
-                existingId = s.shopId();
-                break;
-            }
-        }
-        
-        String shopId = existingId != null ? existingId : generateUniqueShopId();
-        
-        shops.removeIf(s -> s.pos().equals(pos));
-        shops.add(new ShopEntry(pos, ownerUUID, ownerName, shopName, shopId, isClosed, shopCategory, payment1, payment2, result, totalSales, isAdminShop, isMarketCrate, hasShowcase, isOutOfStock, isOutputFull));
+        ShopEntry existing = shopsByPos.get(pos);
+        String shopId = existing != null ? existing.shopId() : generateUniqueShopId();
+
+        shopsByPos.put(pos, new ShopEntry(pos, ownerUUID, ownerName, shopName, shopId, isClosed, shopCategory, payment1, payment2, result, totalSales, isAdminShop, isMarketCrate, hasShowcase, isOutOfStock, isOutputFull));
         setDirty();
     }
 
     public void unregisterShop(GlobalPos pos) {
-        if (shops.removeIf(s -> s.pos().equals(pos))) {
+        if (shopsByPos.remove(pos) != null) {
             setDirty();
         }
     }
@@ -99,7 +93,7 @@ public class ShopDirectorySavedData extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag list = new ListTag();
-        for (ShopEntry entry : shops) {
+        for (ShopEntry entry : shopsByPos.values()) {
             CompoundTag shopTag = new CompoundTag();
             GlobalPos.CODEC.encodeStart(NbtOps.INSTANCE, entry.pos()).result().ifPresent(nbt -> shopTag.put("Pos", nbt));
             if (entry.ownerUUID() != null) {
@@ -159,10 +153,11 @@ public class ShopDirectorySavedData extends SavedData {
                     ItemStack result = shopTag.contains("Result") ? ItemStack.parseOptional(registries, shopTag.getCompound("Result")) : ItemStack.EMPTY;
                     int totalSales = shopTag.getInt("TotalSales");
 
-                    data.shops.add(new ShopEntry(pos, ownerUUID, ownerName, shopName, shopId, isClosed, shopCategory, payment1, payment2, result, totalSales, isAdminShop, isMarketCrate, hasShowcase, isOutOfStock, isOutputFull));
+                    data.shopsByPos.put(pos, new ShopEntry(pos, ownerUUID, ownerName, shopName, shopId, isClosed, shopCategory, payment1, payment2, result, totalSales, isAdminShop, isMarketCrate, hasShowcase, isOutOfStock, isOutputFull));
                 });
             }
         }
         return data;
     }
 }
+

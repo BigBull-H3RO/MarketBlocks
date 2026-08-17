@@ -56,4 +56,20 @@ public class PacketRateLimiter {
     public static void clearPlayer(UUID playerId) {
         lastPacketTimes.keySet().removeIf(key -> key.playerId().equals(playerId));
     }
+
+    private static long lastCleanupTime = 0L;
+    private static final long CLEANUP_INTERVAL_MS = 300_000L; // 5 minutes
+    private static final long ENTRY_MAX_AGE_MS = 300_000L; // 5 minutes
+
+    /**
+     * Periodically removes stale entries from the rate limit map.
+     * Should be called from the server tick event. Only performs cleanup
+     * every {@link #CLEANUP_INTERVAL_MS} milliseconds to minimize overhead.
+     */
+    public static void periodicCleanup() {
+        long now = System.currentTimeMillis();
+        if (now - lastCleanupTime < CLEANUP_INTERVAL_MS) return;
+        lastCleanupTime = now;
+        lastPacketTimes.entrySet().removeIf(e -> now - e.getValue() > ENTRY_MAX_AGE_MS);
+    }
 }

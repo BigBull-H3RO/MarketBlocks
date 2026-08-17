@@ -531,7 +531,7 @@ public final class MarketplaceAdminCommand {
                 if (shopLevel != null) {
                         if (shopLevel.getBlockEntity(entry.pos()
                                         .pos()) instanceof SingleOfferShopBlockEntity be) {
-                                be.setSale(percent, durationMinutes * 60000L);
+                                be.setSale(percent, durationMinutes * 60L * 20L);
                                 String itemName = entry.result().getCount() + "x "
                                                 + entry.result().getHoverName().getString();
                                 String percentStr = (percent > 0 ? "+" : "")
