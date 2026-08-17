@@ -16,4 +16,5 @@
   - [Advancements](SingleOfferShop-Advancements)
 - [Mod Compatibility](Mod-Compatibility)
 - [Commands & Permissions](Commands-and-Permissions)
+- [Trader & Trade Book](Trader-and-TradeBook)
 - [Developer Info](Developer-Info)

@@ -10,7 +10,7 @@ In the **General** settings tab, owners can set their shop to **Closed**:
 - **Closed**: No one can purchase from the shop, regardless of access mode. Owners and co-owners can still manage the shop.
 - Operators with admin mode enabled bypass the closed status.
 
-The shop's open/closed status is visible in the `/marketblocks list` command.
+The shop's open/closed status is visible in the `/marketblocks shop list` command.
 
 ## Access Modes
 
@@ -81,5 +81,5 @@ When global admin mode is enabled:
 | Config Key | Default | Description |
 | --- | --- | --- |
 | `shopTabAccessEnabled` | `true` | Whether the Access settings tab is visible to players |
-| `marketblocksAdminModeEnabled` | `false` | Global admin mode (controlled by `/marketblocks adminmode`) |
+| `marketblocksAdminModeEnabled` | `false` | Global admin mode (controlled by `/marketblocks admin editmode`) |
 | `maxCoOwnersPerShop` | `10` | Maximum number of co-owners per shop (0–100) |

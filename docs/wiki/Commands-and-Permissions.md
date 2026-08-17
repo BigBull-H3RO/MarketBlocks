@@ -11,6 +11,7 @@ All administrative commands require **operator level 2** (`hasPermission(2)`).
 | `/marketblocks admin editmode [true\|false]` | Enables or disables global admin/edit mode for shops and marketplace. |
 | `/marketblocks admin reload` | Reloads the Marketplace JSON configuration from disk. |
 | `/marketblocks admin resetlimits <player>` | Resets daily purchase limits for a specific player. |
+| `/marketblocks marketplace list [page]` | Lists linked Marketplace blocks in chat (with admin actions like unlink). |
 | `/marketblocks admin marketplace link <name>` | Links any looked-at block in the world to a specific marketplace page/name. |
 | `/marketblocks admin marketplace unlink` | Unlinks the looked-at linked block. |
 | `/marketblocks admin sale shop set|remove` | Configures or removes a temporary sale/discount on a SingleOfferShop. |
@@ -26,7 +27,6 @@ All administrative commands require **operator level 2** (`hasPermission(2)`).
 | `/marketblocks shop search <item> [page]` | Searches for SingleOfferShops buying or selling a specific item. |
 | `/marketblocks shop stats` | Shows the Top 10 SingleOfferShops by total sales. |
 | `/marketblocks marketplace open` | Opens the Marketplace GUI (requires the sender to be a player). |
-| `/marketblocks marketplace list [page]` | Lists all active Marketplace offers in chat. |
 | `/marketblocks marketplace stats` | Shows the Top 10 Marketplace offers by total sales. |
 
 ## Global Admin Mode
@@ -69,5 +69,6 @@ Owners and co-owners always bypass access restrictions. If the shop is **closed*
 ## Permission Notes
 
 - MarketBlocks does not register custom permission nodes — all permission checks use the vanilla operator level system.
+- Some commands can be disabled in config (`enableMarketplaceOpenCommand`, `enableMarketplaceListCommand`, `enableMarketplaceStatsCommand`, `enableShopListCommand`, `enableShopStatsCommand`).
 - For fine-grained permission control, use a server permission mod that can manage operator levels or command-level permissions.
 - Grant critical commands (`reload`, `resetlimits`, `admin editmode`) only to trusted roles.
