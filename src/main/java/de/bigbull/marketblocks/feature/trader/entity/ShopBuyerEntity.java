@@ -141,7 +141,7 @@ public class ShopBuyerEntity extends PathfinderMob {
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.35D)
+                .add(Attributes.MOVEMENT_SPEED, 0.30D)
                 .add(Attributes.ATTACK_DAMAGE, 3.0D);
     }
 
@@ -159,8 +159,8 @@ public class ShopBuyerEntity extends PathfinderMob {
                 SoundEvents.WANDERING_TRADER_REAPPEARED,
                 mob -> this.level().isDay() && mob.isInvisible()));
 
-        // Melee attack goal when raging
-        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.25D, false) {
+        // Melee attack goal when raging (continuous pathing)
+        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.25D, true) {
             @Override
             public boolean canUse() {
                 return ShopBuyerEntity.this.isRaging() && super.canUse();
@@ -498,6 +498,24 @@ public class ShopBuyerEntity extends PathfinderMob {
         return InteractionResult.sidedSuccess(this.level().isClientSide);
     }
 
+    @Override
+    public boolean isWithinMeleeAttackRange(LivingEntity target) {
+        // Provide extended melee attack reach (~2.4 blocks) for sword combat
+        double reach = this.getBbWidth() * 2.0F + 1.2F;
+        double reachSqr = reach * reach + target.getBbWidth();
+        return this.distanceToSqr(target.getX(), target.getY(), target.getZ()) <= reachSqr;
+    }
+
+    @Override
+    public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
+        boolean success = super.doHurtTarget(target);
+        if (success) {
+            this.swing(InteractionHand.MAIN_HAND);
+            this.playSound(SoundEvents.PLAYER_ATTACK_STRONG, 1.0F, 1.0F);
+        }
+        return success;
+    }
+
     public boolean isRaging() {
         return isRaging;
     }
@@ -508,6 +526,7 @@ public class ShopBuyerEntity extends PathfinderMob {
 
     public void triggerRageMode(Player target) {
         this.isRaging = true;
+        this.targetShop = null;
         this.angryTargetUUID = target.getUUID();
         this.setTarget(target);
 
@@ -521,6 +540,7 @@ public class ShopBuyerEntity extends PathfinderMob {
 
     public void triggerRevenge(Player player) {
         this.isRaging = true;
+        this.targetShop = null;
         this.setTarget(player);
         this.playSound(SoundEvents.VINDICATOR_CELEBRATE, 1.0F, 1.0F);
         equipRageWeapon();
