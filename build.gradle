@@ -106,13 +106,50 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-
 }
-
 
 idea {
     module {
         downloadSources = true
         downloadJavadoc = true
+    }
+}
+
+// Optional local deploy task (targets configured in local.properties, kept private from git)
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+
+tasks.register('deployServer') {
+    group = 'deployment'
+    description = 'Deploys the built mod jar to the test server mods folder specified in local.properties'
+    dependsOn 'jar'
+
+    doLast {
+        def targetDirStr = localProperties.getProperty('serverModsDir')
+        if (targetDirStr == null || targetDirStr.trim().isEmpty()) {
+            logger.lifecycle('deployServer übersprungen: serverModsDir ist in local.properties nicht gesetzt.')
+            return
+        }
+
+        def targetDir = file(targetDirStr.trim())
+        if (!targetDir.exists()) {
+            logger.warn("deployServer Warnung: Zielverzeichnis existiert nicht: ${targetDir}")
+            return
+        }
+
+        def jarFile = tasks.named('jar').get().archiveFile.get().asFile
+        delete fileTree(targetDir).matching {
+            include "${project.base.archivesName.get()}-*.jar"
+        }
+
+        copy {
+            from jarFile
+            into targetDir
+        }
+
+        logger.lifecycle("Erfolgreich '${jarFile.name}' nach '${targetDir.absolutePath}' kopiert!")
     }
 }
