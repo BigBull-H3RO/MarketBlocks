@@ -8,7 +8,19 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-version = mod_version
+def isRelease = (project.hasProperty('release') && project.property('release').toString().toBoolean()) ||
+                System.getenv('IS_RELEASE') == 'true'
+
+def effectiveVersion = mod_version
+if (!isRelease && !mod_version.contains('-dev') && !mod_version.contains('-test')) {
+    if (mod_version.contains("-${minecraft_version}")) {
+        effectiveVersion = mod_version.replace("-${minecraft_version}", "-dev-${minecraft_version}")
+    } else {
+        effectiveVersion = "${mod_version}-dev"
+    }
+}
+
+version = effectiveVersion
 group = mod_group_id
 
 repositories {
@@ -80,7 +92,7 @@ tasks.withType(ProcessResources).configureEach {
             mod_id                 : mod_id,
             mod_name               : mod_name,
             mod_license            : mod_license,
-            mod_version            : mod_version,
+            mod_version            : effectiveVersion,
             mod_authors            : mod_authors,
             mod_description        : mod_description
     ]
