@@ -79,7 +79,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew --no-daemon build
+        run: ./gradlew --no-daemon build -Prelease=true
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
@@ -88,4 +88,3 @@ jobs:
           name: MarketBlocks ${{ steps.release_tag.outputs.mod_version }}
           files: build/libs/*.jar
           generate_release_notes: true
-
