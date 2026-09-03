@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
@@ -13,6 +14,7 @@ import de.bigbull.marketblocks.client.gui.IconButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -156,6 +158,24 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
     }
 
     /**
+     * Returns extra areas occupied by side tabs for JEI / REI / EMI exclusions.
+     */
+    public List<Rect2i> getExtraAreas() {
+        if (sideTabs.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Rect2i> areas = new ArrayList<>();
+        for (IconButton tab : sideTabs) {
+            if (tab.visible) {
+                int width = Math.max(tab.getWidth(), 35);
+                int height = Math.max(tab.getHeight(), 27);
+                areas.add(new Rect2i(tab.getX(), tab.getY(), width, height));
+            }
+        }
+        return areas;
+    }
+
+    /**
      * Switches the active tab and notifies the server.
      *
      * NOTE: Tab switching requires server notification for the following reasons:
@@ -180,7 +200,10 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
 
     protected void renderOwnerInfo(GuiGraphics guiGraphics, SingleOfferShopBlockEntity blockEntity, boolean isOwner,
             int imageWidth) {
-        if (!isOwner && blockEntity.getOwnerName() != null) {
+        if (blockEntity.getOwnerId() == null) {
+            return;
+        }
+        if (!isOwner && blockEntity.getOwnerName() != null && !blockEntity.getOwnerName().isBlank()) {
             String names = blockEntity.getOwnerName();
             if (!blockEntity.getAdditionalOwners().isEmpty()) {
                 names += ", " + String.join(", ", blockEntity.getAdditionalOwners().values());

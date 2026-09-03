@@ -19,8 +19,10 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -483,9 +485,12 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        renderContent(guiGraphics, mouseX, mouseY, partialTick, false);
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        renderForegroundWidgets(guiGraphics, mouseX, mouseY, partialTick);
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
+        overlayRenderer.renderTooltips(guiGraphics, createOverlayContext(mouseX, mouseY, false));
         pageSidebar.renderDelayedTooltip(createPageSidebarContext(), guiGraphics, mouseX, mouseY);
+        guiGraphics.flush();
     }
 
     /**
@@ -493,23 +498,12 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
      * AbstractContainerScreen#render.
      */
     public void renderModalBackdrop(GuiGraphics guiGraphics, float partialTick) {
-        this.renderMenuBackground(guiGraphics);
-        renderContent(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick, true);
-    }
-
-    /**
-     * Shared render path for normal screen and modal backdrop mode.
-     */
-    private void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick,
-            boolean suppressInteractions) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-
-        renderStaticOverlay(guiGraphics, mouseX, mouseY, suppressInteractions);
-        renderForegroundWidgets(guiGraphics, mouseX, mouseY, partialTick);
-
-        if (!suppressInteractions) {
-            this.renderTooltip(guiGraphics, mouseX, mouseY);
+        this.renderTransparentBackground(guiGraphics);
+        this.renderBg(guiGraphics, partialTick, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN);
+        for (Renderable renderable : this.renderables) {
+            renderable.render(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick);
         }
+        renderForegroundWidgets(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick);
     }
 
     private void renderForegroundWidgets(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
@@ -698,6 +692,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
             guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 166,
                     topPos + 6, 0xFF5555, false);
         }
+
+        renderStaticOverlay(guiGraphics, mouseX, mouseY, false);
     }
 
     private void renderScroller(GuiGraphics guiGraphics) {
@@ -755,6 +751,26 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         if (button == 0)
             isDragging = false;
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    /**
+     * Returns extra areas occupied by side controls (Limits/Pricing editor buttons and page sidebar)
+     * for JEI / REI / EMI exclusions.
+     */
+    public List<Rect2i> getExtraAreas() {
+        List<Rect2i> areas = new ArrayList<>();
+        // 1. Block entire left side to completely hide JEI bookmarks/navigation in Marketplace
+        if (this.leftPos > 0) {
+            areas.add(new Rect2i(0, 0, this.leftPos, this.height));
+        }
+        // 2. Right editor buttons (Limits & Pricing) - only visible in Edit Mode!
+        if (isLocalEditMode && selectedOfferId != null && findOfferOnSelectedPage(selectedOfferId) != null) {
+            int controlsX = rightEditorButtonsX();
+            int controlsY = rightEditorButtonsY();
+            int totalHeight = (RIGHT_BUTTON_SIZE * 2) + RIGHT_BUTTON_GAP;
+            areas.add(new Rect2i(controlsX, controlsY, RIGHT_BUTTON_SIZE, totalHeight));
+        }
+        return areas;
     }
 
     private boolean isWithinScroller(double mouseX, double mouseY) {

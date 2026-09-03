@@ -6,7 +6,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import de.bigbull.marketblocks.feature.visual.npc.ShopNpcAnimationState;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 
 public class ShopVisualManager {
@@ -24,7 +23,6 @@ public class ShopVisualManager {
     private int visualPurchaseCounter = 0;
     private int visualPaymentSuccessCounter = 0;
     private int visualPaymentFailCounter = 0;
-    private final ShopNpcAnimationState visualAnimationState = new ShopNpcAnimationState();
 
     private final ItemStack[] paymentFeedbackSnapshot = new ItemStack[]{ItemStack.EMPTY, ItemStack.EMPTY};
     private long lastPurchaseXpSoundTick = -1L;
@@ -67,10 +65,6 @@ public class ShopVisualManager {
 
     public int getVisualPaymentFailCounter() {
         return visualPaymentFailCounter;
-    }
-
-    public ShopNpcAnimationState getVisualAnimationState() {
-        return visualAnimationState;
     }
 
     public void incrementVisualPurchaseCounter(int amount) {

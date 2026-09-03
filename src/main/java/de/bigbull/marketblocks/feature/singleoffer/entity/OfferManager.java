@@ -49,6 +49,11 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
             return false;
         }
 
+        if (shopEntity.getOwnerId() == null) {
+            shopEntity.setOwner(player);
+            shopEntity.lockAdjacentChests();
+        }
+
         ItemStack[] slotCopies = copyOfferSlotsFromShop();
         ItemStack[] extractedItems = extractItemsFromOfferSlots(slotCopies);
 

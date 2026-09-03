@@ -182,6 +182,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
         lastHasOffer = menu.getBlockEntity().hasOffer();
         lastMenuFlags = menu.getFlags();
+        sideTabs.clear();
         if (canUseManagementTabs()) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, lastTab,
                     () -> switchTab(ShopTab.OFFERS),
@@ -245,6 +246,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void rebuildUI() {
         clearWidgets();
+        sideTabs.clear();
         if (canUseManagementTabs()) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, menu.getActiveTab(),
                     () -> switchTab(ShopTab.OFFERS),
@@ -272,14 +274,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         boolean isOwner = menu.isOwner();
         offerButton = addRenderableWidget(new OfferTemplateButton(leftPos + 44, topPos + 17, b -> onOfferClicked()));
         offerButton.active = be.hasOffer();
-        if (isOwner) {
-            if (!be.hasOffer()) {
-                addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, CREATE_ICON,
-                        b -> createOffer(), Component.translatable("gui.marketblocks.create_offer"), () -> false));
-            } else {
-                addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, DELETE_ICON,
-                        b -> deleteOffer(), Component.translatable("gui.marketblocks.delete_offer"), () -> false));
-            }
+        if (!be.hasOffer()) {
+            addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, CREATE_ICON,
+                    b -> createOffer(), Component.translatable("gui.marketblocks.create_offer"), () -> false));
+        } else if (isOwner) {
+            addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, DELETE_ICON,
+                    b -> deleteOffer(), Component.translatable("gui.marketblocks.delete_offer"), () -> false));
         }
     }
 
@@ -449,6 +449,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private boolean canUseManagementTabs() {
+        if (!menu.getBlockEntity().hasOffer()) {
+            return false;
+        }
         return menu.isOwner() || menu.canUseTab(ShopTab.SETTINGS) || menu.canUseTab(ShopTab.LOG)
                 || menu.canUseTab(ShopTab.INVENTORY);
     }
@@ -659,7 +662,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int rowHeight = isExpanded ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
 
         boolean isHovered = isHoveringLog(x, y, rowHeight);
-        int rowColor = (index & 1) == 0 ? LOG_ROW_BG_COLOR_A : LOG_ROW_BG_COLOR_B;
+        int rowColor = (index & 1) == 0 ? LOG_ROW_BG_COLOR_A : LOG_ROW_BG_COLORB;
         if (isHovered)
             rowColor = LOG_ROW_HOVER_BG_COLOR;
         graphics.fill(x, y, x + LOG_LIST_WIDTH, y + rowHeight - 1, rowColor);
@@ -734,6 +737,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
         }
     }
+
+    private static final int LOG_ROW_BG_COLORB = 0xFF303030;
 
     private int getLogPreviewX(int rowX) {
         return rowX + LOG_LIST_WIDTH - LOG_PREVIEW_WIDTH - LOG_PREVIEW_RIGHT_PADDING;
@@ -885,14 +890,16 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void renderOffersLabels(GuiGraphics graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        Component title;
         String name = be.getShopName();
         if (name != null && !name.isEmpty()) {
-            title = Component.literal(name);
+            Component title = Component.literal(name);
+            int titleWidth = font.width(title);
+            int centerX = (imageWidth - titleWidth) / 2;
+            graphics.drawString(font, title, centerX, 6, 4210752, false);
         } else {
-            title = Component.translatable("gui.marketblocks.shop_title");
+            Component title = be.getBlockState().getBlock().getName();
+            graphics.drawString(font, title, 8, 6, 4210752, false);
         }
-        graphics.drawString(font, title, 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
@@ -1078,7 +1085,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             playSound(SoundEvents.UI_BUTTON_CLICK);
             return;
         }
-        if (menu.isOwner()) {
+        if (be.getOwnerId() == null || menu.isOwner()) {
             for (int i = 0; i < 3; i++)
                 menu.slots.get(i).set(ItemStack.EMPTY);
             playSound(SoundEvents.UI_BUTTON_CLICK);
@@ -1134,4 +1141,3 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         return font;
     }
 }
-

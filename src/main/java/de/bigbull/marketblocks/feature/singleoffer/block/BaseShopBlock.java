@@ -97,7 +97,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 .setValue(POWERED, false);
     }
 
-
     @Override
     public boolean isSignalSource(BlockState state) {
         return true;
@@ -176,12 +175,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        if (!level.isClientSide && placer instanceof Player player) {
-            if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
-                shopEntity.setOwner(player);
-                shopEntity.lockAdjacentChests();
-            }
-        }
     }
 
     @Override
@@ -197,23 +190,12 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             return InteractionResult.FAIL;
         }
 
-        if (shopEntity.getOwnerId() == null) {
-            if (canRepairMissingOwner(level, player)) {
-                shopEntity.setOwner(player);
-                MarketBlocks.LOGGER.warn("Recovered missing shop owner at {} in {} by {}",
-                        pos, level.dimension().location(), player.getGameProfile().getName());
-            } else {
-                MarketBlocks.LOGGER.warn("Blocked missing-owner recovery attempt at {} in {} by {}",
-                        pos, level.dimension().location(), player.getGameProfile().getName());
-            }
-        }
-
         if (player instanceof ServerPlayer serverPlayer) {
-            if (shopEntity.hasOffer() || shopEntity.isOwner(player)) {
+            if (shopEntity.getOwnerId() == null || shopEntity.hasOffer() || shopEntity.isOwner(player)) {
                 serverPlayer.openMenu(
                         new SimpleMenuProvider(
                                 (id, inv, p) -> new SingleOfferShopMenu(id, inv, shopEntity),
-                                Component.translatable("container.marketblocks.trade_stand")
+                                shopEntity.getDisplayName()
                         ), pos
                 );
             } else {
@@ -230,24 +212,16 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
             return new SimpleMenuProvider(
                     (id, inv, p) -> new SingleOfferShopMenu(id, inv, shop),
-                    Component.translatable("container.marketblocks.trade_stand")
+                    shop.getDisplayName()
             );
         }
         return null;
     }
 
-    private static boolean canRepairMissingOwner(Level level, Player player) {
-        if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer)) {
-            return false;
-        }
-        return serverPlayer.hasPermissions(2) ||
-                serverLevel.getServer().isSingleplayerOwner(serverPlayer.getGameProfile());
-    }
-
     @Override
     public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
-            if (!shop.isOwner(player)) {
+            if (shop.getOwnerId() != null && !shop.isOwner(player)) {
                 if (player instanceof ServerPlayer sp) {
                     sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
                 }
@@ -289,9 +263,10 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         return new SingleOfferShopBlockEntity(pos, state);
     }
 
+    @Nullable
     @Override
-    public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide) return null;
-        return createTickerHelper(type, RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntity::tick);
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        return createTickerHelper(type, RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(),
+                (lvl, pos, st, be) -> SingleOfferShopBlockEntity.tick(lvl, pos, st, be));
     }
 }
