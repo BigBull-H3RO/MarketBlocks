@@ -25,6 +25,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 /**
  * Client-side renderer for the visual NPC (Villager or custom player skin) associated with a shop.
  * Handles rendering the NPC model, spawn/despawn animations, head tracking, and particle effects.
@@ -42,7 +45,13 @@ public final class VisualShopNpcRenderer {
     private static final float SPAWN_BOUNCE_SOUND_VOLUME = 0.72F;
     private static final float SPAWN_BOUNCE_SOUND_PITCH = 1.18F;
 
+    private static final Map<IVisualShopNPC, ShopNpcAnimationState> ANIMATION_STATES = new WeakHashMap<>();
+
     private VisualShopNpcRenderer() {
+    }
+
+    public static ShopNpcAnimationState getAnimationState(IVisualShopNPC host) {
+        return ANIMATION_STATES.computeIfAbsent(host, h -> new ShopNpcAnimationState());
     }
 
     public static void render(IVisualShopNPC host, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
@@ -52,7 +61,7 @@ public final class VisualShopNpcRenderer {
         }
 
         VillagerSettings settings = host.getVillagerSettings();
-        ShopNpcAnimationState state = host.getVisualAnimationState();
+        ShopNpcAnimationState state = getAnimationState(host);
         long now = level.getGameTime();
 
         processAnimationEvents(host, settings, state, level, now);
@@ -351,4 +360,3 @@ public final class VisualShopNpcRenderer {
         }
     }
 }
-

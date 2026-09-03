@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.1.36'
+    id 'net.neoforged.gradle.userdev' version '7.1.38'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -36,6 +36,10 @@ repositories {
     maven {
         name = "JourneyMap (Public)"
         url = "https://jm.gserv.me/repository/maven-public/"
+    }
+    maven {
+        name = "BlameJared Maven"
+        url = "https://maven.blamejared.com/"
     }
 }
 
@@ -81,6 +85,9 @@ dependencies {
     compileOnly "maven.modrinth:jade:15.10.5+neoforge"
     runtimeOnly "maven.modrinth:jade:15.10.5+neoforge"
     compileOnly "info.journeymap:journeymap-api-neoforge:2.0.0-1.21.1-SNAPSHOT"
+    compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${jei_version}"
+    runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${jei_version}"
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -111,7 +118,7 @@ publishing {
     }
     repositories {
         maven {
-            url = uri("${project.projectDir}/repo")
+            url "file://${project.projectDir}/repo"
         }
     }
 }
@@ -124,44 +131,5 @@ idea {
     module {
         downloadSources = true
         downloadJavadoc = true
-    }
-}
-
-// Optional local deploy task (targets configured in local.properties, kept private from git)
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withInputStream { localProperties.load(it) }
-}
-
-tasks.register('deployServer') {
-    group = 'deployment'
-    description = 'Deploys the built mod jar to the test server mods folder specified in local.properties'
-    dependsOn 'jar'
-
-    doLast {
-        def targetDirStr = localProperties.getProperty('serverModsDir')
-        if (targetDirStr == null || targetDirStr.trim().isEmpty()) {
-            logger.lifecycle('deployServer übersprungen: serverModsDir ist in local.properties nicht gesetzt.')
-            return
-        }
-
-        def targetDir = file(targetDirStr.trim())
-        if (!targetDir.exists()) {
-            logger.warn("deployServer Warnung: Zielverzeichnis existiert nicht: ${targetDir}")
-            return
-        }
-
-        def jarFile = tasks.named('jar').get().archiveFile.get().asFile
-        delete fileTree(targetDir).matching {
-            include "${project.base.archivesName.get()}-*.jar"
-        }
-
-        copy {
-            from jarFile
-            into targetDir
-        }
-
-        logger.lifecycle("Erfolgreich '${jarFile.name}' nach '${targetDir.absolutePath}' kopiert!")
     }
 }

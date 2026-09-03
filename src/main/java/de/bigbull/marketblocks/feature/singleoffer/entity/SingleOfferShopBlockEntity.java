@@ -9,7 +9,6 @@ import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.feature.visual.npc.IVisualShopNPC;
-import de.bigbull.marketblocks.feature.visual.npc.ShopNpcAnimationState;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
@@ -97,6 +96,14 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public ShopAccessManager getAccessManager() {
         return accessManager;
+    }
+
+    public ShopSettingsManager getSettingsManager() {
+        return settingsManager;
+    }
+
+    public ShopVisualManager getVisualManager() {
+        return visualManager;
     }
 
     public ShopRedstoneManager getRedstoneManager() {
@@ -304,7 +311,11 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("container.marketblocks.trade_stand");
+        String customName = getShopName();
+        if (customName != null && !customName.isEmpty()) {
+            return Component.literal(customName);
+        }
+        return getBlockState().getBlock().getName();
     }
 
     @Override
@@ -754,14 +765,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return offerResult;
     }
 
-    public ShopSettingsManager getSettingsManager() {
-        return settingsManager;
-    }
-
-    public ShopVisualManager getVisualManager() {
-        return visualManager;
-    }
-
     public void incrementVisualPurchaseCounter(int amount) {
         visualManager.incrementVisualPurchaseCounter(amount);
     }
@@ -1162,11 +1165,6 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     @Override
     public boolean isVisualXpPurchaseFeedbackEnabled() {
         return isPurchaseXpFeedbackSound();
-    }
-
-    @Override
-    public ShopNpcAnimationState getVisualAnimationState() {
-        return visualManager.getVisualAnimationState();
     }
 
 }

@@ -46,7 +46,7 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
 
     /**
      * Handles the packet on the server side.
-     * It verifies that the player is the owner of the shop and then applies the new offer.
+     * It verifies that the player is allowed to create an offer (either unowned shop or owner) and then applies the new offer.
      *
      * @param packet  The packet instance.
      * @param context The context of the packet handling.
@@ -60,7 +60,7 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                         && menu.getBlockEntity() == level.getBlockEntity(packet.pos())
                         && menu.stillValid(player)
                         && menu.getBlockEntity() instanceof SingleOfferShopBlockEntity shopEntity
-                        && shopEntity.isOwner(player)) {
+                        && (shopEntity.getOwnerId() == null || shopEntity.isOwner(player))) {
                     OfferManager manager = shopEntity.getOfferManager();
                     if (!manager.applyOffer(player, packet.payment1(), packet.payment2(), packet.result())) {
                         MarketBlocks.LOGGER.warn("Invalid offer creation attempt by player {}", player.getName().getString());

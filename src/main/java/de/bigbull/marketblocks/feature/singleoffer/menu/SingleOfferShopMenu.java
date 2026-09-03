@@ -93,11 +93,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
         addDataSlots(this.flags);
         addDataSlots(this.tabData);
-        if (isServer) {
-            blockEntity.ensureOwner(player);
-        } else {
-            be.ensureOwner(player);
-        }
         initSlots(inv);
     }
 
@@ -333,10 +328,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                     return ItemStack.EMPTY;
                 }
 
-                if (!isOwner()) {
-                    return ItemStack.EMPTY;
-                }
-
                 ItemStack ret = stack.copy();
                 if (!this.moveItemStackTo(stack, TOTAL_SLOTS, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
@@ -565,20 +556,17 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         public boolean mayPlace(ItemStack stack) {
             if (blockEntity.hasOffer())
                 return false;
-            return isOwner();
+            return true;
         }
 
         @Override
         public boolean mayPickup(Player player) {
             if (player.level().isClientSide) {
-                if (!blockEntity.hasOffer()) {
-                    return isOwner();
-                }
                 return true;
             }
 
             if (!blockEntity.hasOffer()) {
-                return isOwner();
+                return true;
             }
 
             boolean adminShop = blockEntity.isAdminShopEnabled();
@@ -609,8 +597,6 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         @Override
         public void set(ItemStack stack) {
             if (blockEntity.hasOffer())
-                return;
-            if (!isOwner())
                 return;
             super.set(stack);
         }

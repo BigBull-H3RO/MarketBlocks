@@ -30,6 +30,16 @@ public final class MarketplaceOverlayRenderer {
         renderSelectedOfferStatus(guiGraphics, context);
     }
 
+    public void renderTooltips(GuiGraphics guiGraphics, Context context) {
+        if (context.suppressInteractions()) {
+            return;
+        }
+        int listStartX = context.listStartX();
+        int listStartY = context.listStartY();
+        renderHoveredRowTooltip(guiGraphics, context, listStartX, listStartY);
+        renderSelectedOfferStatusTooltips(guiGraphics, context);
+    }
+
     private void renderEmptyState(GuiGraphics guiGraphics, Context context) {
         if (!context.hasPages()) {
             Component noPagesText = Component.translatable("gui.marketblocks.marketplace.no_pages");
@@ -58,8 +68,6 @@ public final class MarketplaceOverlayRenderer {
             currentY += context.rowHeight();
         }
         guiGraphics.disableScissor();
-
-        renderHoveredRowTooltip(guiGraphics, context, listStartX, listStartY);
     }
 
     private void renderSelectedOfferStatus(GuiGraphics guiGraphics, Context context) {
@@ -82,6 +90,26 @@ public final class MarketplaceOverlayRenderer {
         renderRestockStatus(guiGraphics, context, viewState, textX, nextRowY);
     }
 
+    private void renderSelectedOfferStatusTooltips(GuiGraphics guiGraphics, Context context) {
+        UUID selectedOfferId = context.selectedOfferId();
+        if (selectedOfferId == null) {
+            return;
+        }
+        MarketplaceOffer offer = context.offerLookup().apply(selectedOfferId);
+        if (offer == null) {
+            return;
+        }
+
+        MarketplaceOfferViewState viewState = MarketplaceClientState.offerViewState(selectedOfferId);
+        int textX = context.previewX() + 56;
+        int textY = context.previewY() + 60;
+
+        renderAvailabilityIconTooltip(guiGraphics, context, viewState, textX, textY);
+        int nextRowY = renderPriceAndDailyStatusTooltip(guiGraphics, context, viewState, textX, textY);
+        nextRowY = renderStockStatusTooltip(guiGraphics, context, viewState, textX, nextRowY);
+        renderRestockStatusTooltip(guiGraphics, context, viewState, textX, nextRowY);
+    }
+
     private void renderAvailabilityIcon(GuiGraphics guiGraphics, Context context, MarketplaceOfferViewState viewState, int textX, int textY) {
         ResourceLocation availabilityIcon = context.unavailableIconResolver().apply(viewState);
         if (availabilityIcon == null) {
@@ -91,7 +119,17 @@ public final class MarketplaceOverlayRenderer {
         int iconX = textX + 72;
         int iconY = textY - 2;
         guiGraphics.blit(availabilityIcon, iconX, iconY, 0, 0, 16, 16, 16, 16);
-        if (!context.suppressInteractions() && isPointWithinIcon(context.mouseX(), context.mouseY(), iconX, iconY)) {
+    }
+
+    private void renderAvailabilityIconTooltip(GuiGraphics guiGraphics, Context context, MarketplaceOfferViewState viewState, int textX, int textY) {
+        ResourceLocation availabilityIcon = context.unavailableIconResolver().apply(viewState);
+        if (availabilityIcon == null) {
+            return;
+        }
+
+        int iconX = textX + 72;
+        int iconY = textY - 2;
+        if (isPointWithinIcon(context.mouseX(), context.mouseY(), iconX, iconY)) {
             guiGraphics.renderTooltip(context.font(), buildUnavailableOfferTooltip(context, viewState), context.mouseX(), context.mouseY());
         }
     }
@@ -102,9 +140,6 @@ public final class MarketplaceOverlayRenderer {
                 String.format(Locale.ROOT, "%.2f", viewState.priceMultiplier())
         );
         guiGraphics.drawString(context.font(), priceText, textX, textY, 0x404040, false);
-        if (!context.suppressInteractions() && isPointWithinStatusLine(context, textX, textY, priceText)) {
-            guiGraphics.renderTooltip(context.font(), Component.translatable("gui.marketblocks.marketplace.tooltip.price_multiplier"), context.mouseX(), context.mouseY());
-        }
 
         int compactX = textX + context.font().width(priceText) + 8;
         if (viewState.remainingDailyPurchases().isPresent()) {
@@ -112,7 +147,25 @@ public final class MarketplaceOverlayRenderer {
             Component dailyText = Component.translatable("gui.marketblocks.marketplace.status.daily_short", remainingDaily);
             int dailyColor = remainingDaily == 0 ? 0xAA3333 : 0x404040;
             guiGraphics.drawString(context.font(), dailyText, compactX, textY, dailyColor, false);
-            if (!context.suppressInteractions() && isPointWithinStatusLine(context, compactX, textY, dailyText)) {
+        }
+
+        return textY + context.statusLineHeight();
+    }
+
+    private int renderPriceAndDailyStatusTooltip(GuiGraphics guiGraphics, Context context, MarketplaceOfferViewState viewState, int textX, int textY) {
+        Component priceText = Component.translatable(
+                "gui.marketblocks.marketplace.status.price_short",
+                String.format(Locale.ROOT, "%.2f", viewState.priceMultiplier())
+        );
+        if (isPointWithinStatusLine(context, textX, textY, priceText)) {
+            guiGraphics.renderTooltip(context.font(), Component.translatable("gui.marketblocks.marketplace.tooltip.price_multiplier"), context.mouseX(), context.mouseY());
+        }
+
+        int compactX = textX + context.font().width(priceText) + 8;
+        if (viewState.remainingDailyPurchases().isPresent()) {
+            int remainingDaily = viewState.remainingDailyPurchases().get();
+            Component dailyText = Component.translatable("gui.marketblocks.marketplace.status.daily_short", remainingDaily);
+            if (isPointWithinStatusLine(context, compactX, textY, dailyText)) {
                 Component tooltip = remainingDaily == 0
                         ? Component.translatable("gui.marketblocks.marketplace.tooltip.remaining_daily_empty")
                         : Component.translatable("gui.marketblocks.marketplace.tooltip.remaining_daily");
@@ -129,7 +182,16 @@ public final class MarketplaceOverlayRenderer {
             int stockColor = remainingStock == 0 ? 0xAA3333 : 0x404040;
             Component stockText = Component.translatable("gui.marketblocks.marketplace.status.stock_short", remainingStock);
             guiGraphics.drawString(context.font(), stockText, textX, textY, stockColor, false);
-            if (!context.suppressInteractions() && isPointWithinStatusLine(context, textX, textY, stockText)) {
+            return textY + context.statusLineHeight();
+        }
+        return textY;
+    }
+
+    private int renderStockStatusTooltip(GuiGraphics guiGraphics, Context context, MarketplaceOfferViewState viewState, int textX, int textY) {
+        if (viewState.remainingStock().isPresent()) {
+            int remainingStock = viewState.remainingStock().get();
+            Component stockText = Component.translatable("gui.marketblocks.marketplace.status.stock_short", remainingStock);
+            if (isPointWithinStatusLine(context, textX, textY, stockText)) {
                 Component tooltip = remainingStock == 0
                         ? Component.translatable("gui.marketblocks.marketplace.tooltip.remaining_stock_empty")
                         : Component.translatable("gui.marketblocks.marketplace.tooltip.remaining_stock");
@@ -150,7 +212,18 @@ public final class MarketplaceOverlayRenderer {
             Component restockText = Component.translatable("gui.marketblocks.marketplace.status.restock_short", restockValue);
             int restockColor = restockSeconds > 0 ? 0x406080 : 0x2E8B57;
             guiGraphics.drawString(context.font(), restockText, textX, textY, restockColor, false);
-            if (!context.suppressInteractions() && isPointWithinStatusLine(context, textX, textY, restockText)) {
+        }
+    }
+
+    private void renderRestockStatusTooltip(GuiGraphics guiGraphics, Context context, MarketplaceOfferViewState viewState, int textX, int textY) {
+        Optional<Integer> displayRestockSeconds = context.displayRestockSecondsResolver().apply(viewState);
+        if (displayRestockSeconds.isPresent()) {
+            int restockSeconds = displayRestockSeconds.get();
+            String restockValue = restockSeconds > 0
+                    ? MarketplaceRuntimeMath.formatSecondsAsTimer(restockSeconds)
+                    : "0:00";
+            Component restockText = Component.translatable("gui.marketblocks.marketplace.status.restock_short", restockValue);
+            if (isPointWithinStatusLine(context, textX, textY, restockText)) {
                 Component tooltip = restockSeconds > 0
                         ? Component.translatable("gui.marketblocks.marketplace.tooltip.restock_in")
                         : Component.translatable("gui.marketblocks.marketplace.tooltip.restock_ready");
@@ -312,8 +385,3 @@ public final class MarketplaceOverlayRenderer {
         }
     }
 }
-
-
-
-
-
