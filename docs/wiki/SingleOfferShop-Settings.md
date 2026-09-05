@@ -1,99 +1,107 @@
 # SingleOfferShop: Settings Overview
 
-The **Settings** tab in the SingleOfferShop is organized into **6 categories**, each with its own sub-tab. Shop owners (and operators when global admin mode is enabled) can access the settings to customize every aspect of their shop.
+The **Settings** tab in the SingleOfferShop GUI is organized into **6 categories**, each accessible via its own dedicated sub-tab. Shop owners (and operators when global edit mode is enabled) can configure every detail of their shop's behavior, visuals, automation, and security.
+
+---
 
 ## Settings Categories
 
 | Category | Icon | Description |
-| --- | --- | --- |
-| **General** | ⚙️ | Shop name, closed status, redstone emission, XP feedback sound |
-| **I/O** | 🔄 | Side-based hopper/chest input and output, redstone control, auto I/O |
-| **Villager** | 🧑‍🌾 | Visual NPC toggle, name, profession, player skin, particle and sound effects |
-| **Visuals** | 🎨 | Offer item rendering: visibility, scale, speed, rotation, count, layout mode |
-| **Notifications** | 🔔 | Toggle notifications for purchases, out of stock, output full, and co-owners |
-| **Access** | 🔒 | Admin shop toggle, access mode (everyone/whitelist/blacklist), access list |
+|---|:---:|---|
+| **General** | ⚙️ | Custom shop name (max 32 chars), shop open/closed toggle, redstone pulse on sale, XP sound effect on purchase. |
+| **I/O** | 🔄 | Side-based hopper/chest input and output routing, redstone control modes, automatic timed I/O transfers. |
+| **Villager** | 🧑‍🌾 | Visual NPC toggle, custom NPC name, profession selection, player skin mode, celebratory particles, and trading sounds. |
+| **Visuals** | 🎨 | Floating offer item rendering: visibility, fullbright, scale, rotation speed, height offset, and bobbing animation. |
+| **Notifications** | 🔔 | Configurable chat and toast alerts for purchases, out of stock warnings, output full warnings, and co-owner broadcasts. |
+| **Access** | 🔒 | Access mode (Everyone / Whitelist / Blacklist), customer access list, co-owner management, and Admin Shop toggle (operators only). |
 
-Each category is documented in detail on its own page:
+---
 
-- [Visual NPC](SingleOfferShop-Visual-NPC)
-- [Offer Item Visuals](SingleOfferShop-Offer-Item-Visuals)
-- [Notifications](SingleOfferShop-Notifications)
-- [Access Control](SingleOfferShop-Access-Control)
+## Configuration Architecture
 
-## Server-Side Tab Visibility
+MarketBlocks organizes SingleOfferShop configuration cleanly across three dedicated files inside `config/marketblocks/singleoffer/`:
 
-Server administrators can **enable or disable individual settings tabs** via the config file (`marketblocks-common.toml`). When a tab is disabled, players cannot see or interact with it. Instead, the **default values** from the config are applied as fixed settings for all shops.
+1. **`general.toml`**: Global mechanics, blast resistance, survival placement limits, chest extension toggles, and tab visibility.
+2. **`tradestand.toml`**: Default settings and forced fallbacks specifically for newly placed **Trade Stand** blocks.
+3. **`marketcrate.toml`**: Default settings and forced fallbacks specifically for newly placed **Market Crate** blocks.
 
-| Config Key | Default | Controls |
-| --- | --- | --- |
-| `shopTabGeneralEnabled` | `true` | General settings tab |
-| `shopTabIoEnabled` | `true` | I/O settings tab |
-| `shopTabVillagerEnabled` | `true` | Villager/NPC settings tab |
-| `shopTabVisualsEnabled` | `true` | Visuals (offer item) settings tab |
-| `shopTabNotificationsEnabled` | `true` | Notifications settings tab |
-| `shopTabAccessEnabled` | `true` | Access control settings tab |
+---
 
-> **Use case:** If a server wants to enforce a consistent look (e.g., all shops must have NPC enabled with a specific profession), disable the Villager tab and set the desired defaults in the config.
+## Server Mechanics & Limits (`general.toml`)
 
-## Default Values
+Server administrators can fine-tune shop behavior and protections in `config/marketblocks/singleoffer/general.toml`:
 
-When a new shop is placed, it uses the **default values** defined in the config. These also serve as **forced values** when the corresponding tab is disabled.
+```toml
+[ShopMechanics]
+# Explosion resistance for shop blocks (Trade Stand, Market Crate, etc.).
+# Default: 3600000.0 (bedrock level, prevents explosion griefing).
+shopBlastResistance = 3600000.0
 
-### General Defaults
+# Maximum number of shops a player can place in Survival mode (-1 for unlimited)
+maxShopsPerPlayerSurvival = 10
 
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `shopDefaultEmitRedstone` | `false` | Whether new shops emit a redstone pulse on purchase |
-| `shopDefaultPurchaseXpSound` | `true` | XP orb sound on purchase |
-| `shopDefaultIsClosed` | `false` | Whether new shops start closed |
+# Maximum number of co-owners allowed per SingleOffer shop
+maxCoOwnersPerShop = 10
 
-### Villager Defaults
+# Enable automatic pulling from and pushing to adjacent chests (chest extension).
+# Default: false (Hides the I/O tab when disabled).
+enableChestExtension = false
 
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `shopDefaultVillagerNpcEnabled` | `true` | Whether the Visual NPC is enabled by default |
-| `shopDefaultVillagerProfession` | `NONE` | Default NPC profession |
-| `shopDefaultPurchaseParticles` | `true` | Purchase particle effects |
-| `shopDefaultPurchaseSounds` | `true` | Purchase sound effects |
-| `shopDefaultPaymentSlotSounds` | `true` | Payment slot feedback sounds |
-| `shopDefaultUsePlayerSkin` | `false` | Use player skin instead of villager model |
+# Ticks between adjacent chest input/output transfers (Default: 20 ticks = 1 second)
+chestIoInterval = 20
 
-### Visuals Defaults
+# Show warning icon when output inventory is (almost) full
+enableOutputWarning = true
+outputWarningPercent = 90
 
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `shopDefaultItemVisible` | `true` | Show the offer item above the shop |
-| `shopDefaultItemFullbright` | `false` | Render item with full brightness |
-| `shopDefaultItemScale` | `0.75` | Item display scale (0.1–4.0) |
-| `shopDefaultItemSpeed` | `2.0` | Rotation speed (0.0–20.0) |
-| `shopDefaultItemHeightOffset` | `0.0` | Vertical offset (-2.0 to 4.0) |
-| `shopDefaultItemBobbing` | `true` | Bobbing animation |
-| `shopDefaultItemCount` | `1` | Number of rendered items (1–96) |
-| `shopDefaultItemLayoutMode` | `GESTAPELT` | Layout mode for Market Crate (GESTAPELT or LOSE) |
-| `shopDefaultItemDynamicFill` | `false` | Adjust item count based on stock level |
+# Ticks to wait before sending another 'Out of Stock' or 'Output Full' notification (Default: 1200 = 1 minute)
+notificationCooldownTicks = 1200
 
-### Notification Defaults
+[Notifications]
+buyerChatMessage = true
+broadcastPurchaseToAll = false
 
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `shopDefaultNotifyPurchase` | `false` | Notify owner on purchase |
-| `shopDefaultNotifyOutOfStock` | `false` | Notify owner when out of stock |
-| `shopDefaultNotifyOutputFull` | `false` | Notify owner when output is full |
-| `shopDefaultNotifyCoOwners` | `false` | Also notify co-owners |
+[Tabs]
+# Server administrators can disable specific tabs for players across all shops:
+villager = true
+visuals = true
+notifications = true
+```
 
-## Other Global Config Options
+---
 
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `shopBlastResistance` | `3600000.0` | Explosion resistance for all shop blocks. Default is bedrock-level. Set to `6.0` for obsidian-level or `3.0` for wood-like resistance. |
-| `enableDoubleChestSupport` | `false` | Allow double chests next to Trade Stand |
-| `enableChestIoExtensionExperimental` | `false` | Enable experimental chest I/O extension |
-| `offerUpdateInterval` | `5` | Ticks between offer slot updates |
-| `chestIoInterval` | `20` | Ticks between chest I/O transfers |
-| `enableOutputWarning` | `true` | Show warning icon when output is nearly full |
-| `outputWarningPercent` | `90` | Percentage threshold for "nearly full" warning |
-| `notificationCooldownTicks` | `1200` | Minimum ticks (60 seconds) between repeated notifications |
-| `maxCoOwnersPerShop` | `10` | Maximum number of co-owners per shop (0–100) |
-| `enableGlobalOfferItemRendering` | `true` | Global master switch for offer item rendering |
-| `visualNpcForceOffscreenRendering` | `true` | Render NPCs even when near screen borders |
-| `visualNpcRenderViewDistance` | `128` | Maximum render distance for visual NPCs in blocks (16–512) |
+## Default Values per Block Type (`tradestand.toml` & `marketcrate.toml`)
+
+When a player places a new shop block, its initial settings are inherited from the corresponding config file. If a settings tab is disabled via `general.toml`, the default value defined here serves as the permanently enforced rule for all shops:
+
+### General Section
+- `emitRedstone` (Default: `false`): Emits a redstone pulse upon each successful trade.
+- `purchaseXpSound` (Default: `false`): Plays an XP orb ding when a purchase is completed.
+- `isClosed` (Default: `false`): Whether newly placed shops start in a closed state.
+
+### Villager / NPC Section
+- `enabled` (Default: `false`): Whether the visual NPC is rendered above the shop.
+- `profession` (Default: `NONE`): Default villager costume / profession.
+- `usePlayerSkin` (Default: `false`): Displays the shop owner's skin instead of a villager model.
+- `purchaseParticles` (Default: `false`): Emits happy villager green particles upon trade.
+- `purchaseSounds` (Default: `false`): Plays villager trade voice lines on purchase.
+- `paymentSlotSounds` (Default: `false`): Plays villager ambient sounds when payment items are placed.
+
+### Visuals (Floating Item) Section
+- `visible` (Default: `true`): Displays the sold item floating in the showcase.
+- `fullbright` (Default: `false`): Renders the item with maximum brightness ignoring ambient block light.
+- `scale` (Default: `1.0`, range `0.5` to `1.5`): Size scale of the displayed item.
+- `speed` (Default: `0.75`, range `0.0` to `1.5`): Rotation speed of the floating item.
+- `heightOffset` (Default: `0.0`, range `-0.25` to `0.25`): Vertical adjustment.
+- `bobbing` (Default: `false`): Enables smooth floating bobbing animation.
+
+### I/O Automation Section
+- `allowIo` (Default: `false`): Enables hopper / pipe insertion and extraction.
+- `autoIo` (Default: `false`): Automatically pushes and pulls to adjacent storage chests.
+- `redstoneControl` (Default: `IGNORED`): Redstone behavior (`IGNORED`, `LOW`, `HIGH`).
+
+### Notifications Section
+- `notifyPurchase` (Default: `false`): Sends owner a chat notification upon purchase.
+- `notifyOutOfStock` (Default: `false`): Alerts owner when stock is depleted.
+- `notifyOutputFull` (Default: `false`): Alerts owner when payment storage cannot fit more items.
+- `notifyCoOwners` (Default: `false`): Broadcasts alerts to all registered co-owners.

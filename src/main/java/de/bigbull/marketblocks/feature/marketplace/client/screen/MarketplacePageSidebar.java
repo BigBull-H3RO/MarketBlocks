@@ -6,9 +6,11 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -58,6 +60,21 @@ public final class MarketplacePageSidebar {
             }
             y += BUTTON_SPACING_Y;
         }
+    }
+
+    /**
+     * Returns the extra area occupied by the page sidebar column for JEI / REI / EMI exclusions.
+     * Blocks the entire vertical column band from y = 0 to screenHeight so JEI does not place
+     * bookmark icons above or below the buttons in this column.
+     */
+    public List<Rect2i> getExtraAreas(int leftPos, int screenHeight) {
+        int startX = leftPos + SIDEBAR_X_OFFSET;
+        int clampedX = Math.max(0, startX);
+        int width = leftPos - clampedX;
+        if (width <= 0 || screenHeight <= 0) {
+            return Collections.emptyList();
+        }
+        return List.of(new Rect2i(clampedX, 0, width, screenHeight));
     }
 
     public void renderDelayedTooltip(Context context, GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -140,5 +157,3 @@ public final class MarketplacePageSidebar {
         }
     }
 }
-
-

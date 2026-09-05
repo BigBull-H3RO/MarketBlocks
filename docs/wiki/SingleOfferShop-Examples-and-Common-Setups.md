@@ -1,116 +1,110 @@
-# SingleOfferShop: Examples / Common Setups
+# SingleOfferShop: Examples & Common Setups
 
-## Example 1: Player Shop (Survival)
-
-A standard survival shop where a player sells items they have gathered or crafted.
-
-- **Owner**: The player who placed the shop
-- **Access Mode**: Everyone (default)
-- **Admin Shop**: Off
-- **NPC**: Enabled with a Farmer profession
-- **Offer Item Visuals**: Visible, scale 0.75, bobbing enabled
-- **Notifications**: Out of Stock enabled, so the owner gets alerted when restocking is needed
-- **I/O**: Disabled (player manually restocks)
-
-**Setup Steps:**
-1. Place a Trade Stand or Market Crate.
-2. Set the offer (e.g., 1 Diamond → 16 Bread).
-3. Fill the input inventory with Bread.
-4. Optionally name the shop (e.g., "Baker's Stand").
-5. Enable the Visual NPC and set a profession.
+Here are practical, step-by-step setup guides for the most common trading configurations in MarketBlocks.
 
 ---
 
-## Example 2: Spawn Purchase Station (Admin Shop)
+## 🛒 Example 1: Standard Player Shop (Survival SMP)
 
-A server-managed shop at spawn that sells essential items for a fixed price.
+A player-run trading stall selling farmed or mined goods for currency.
 
-- **Owner**: Server operator
-- **Admin Shop**: Enabled (unlimited stock, no output management needed)
+- **Shop Type**: Trade Stand or Market Crate
 - **Access Mode**: Everyone
-- **NPC**: Enabled with Cleric profession
-- **Shop Name**: "Starter Supplies"
-- **Notifications**: Disabled (admin shops don't run out of stock)
-- **Offer Item Visuals**: Visible, fullbright on, larger scale for visibility
+- **Visual Clerk**: Villager with Farmer profession
+- **Showcase**: Floating wheat/bread, slow rotation, bobbing enabled
+- **Notifications**: "Out of Stock" enabled so the owner gets alerted when supplies run low.
+- **I/O**: Manual restocking by the owner.
 
-**Setup Steps:**
-1. Enable global admin mode: `/marketblocks adminmode true`.
-2. Place a Trade Stand.
-3. Set the offer (e.g., 4 Iron Ingots → 1 Iron Pickaxe).
-4. Go to Settings → Access and enable **Admin Shop Mode**.
-5. Customize the NPC and visuals as desired.
+### Setup Walkthrough:
+1. Place down a **Trade Stand** or **Market Crate**.
+2. Right-click to open. Set the desired offer (e.g., 1 Emerald ➔ 16 Bread).
+3. Place stacks of bread into the shop's **Input Inventory**.
+4. Open the **Settings** tab:
+   - In **General**: Name the shop (e.g., `"Sunrise Bakery"`).
+   - In **Villager**: Enable the visual NPC and select `Farmer`.
+   - In **Notifications**: Enable `Notify on Out of Stock`.
+5. Your shop is immediately open for customers!
 
 ---
 
-## Example 3: Community Trading Point (Co-Owner)
+## 🏛️ Example 2: Spawn Hub Station (Server Admin Shop)
 
-A shop managed by multiple players, sharing restocking responsibilities.
+A server-controlled admin shop offering unlimited tools or starter gear for newly joined players.
 
-- **Owner**: Primary owner + 2-3 co-owners
+- **Shop Type**: Trade Stand
+- **Admin Shop Mode**: Enabled (infinite supply, payments are voided)
 - **Access Mode**: Everyone
-- **Admin Shop**: Off
-- **Notifications**: Purchase, Out of Stock, and Output Full enabled, with **Notify Co-Owners** enabled
-- **I/O**: Hopper input from below, auto I/O enabled for automated restocking
+- **Visual Clerk**: Player skin or Cleric villager
+- **Shop Title**: `"Starter Tools"`
 
-**Setup Steps:**
-1. Primary owner places the shop and sets up the offer.
-2. Go to Settings → Access and add co-owners by name.
-3. Enable all notification types and turn on co-owner notifications.
-4. Optionally configure I/O for automation.
-5. Use the transaction log to monitor demand trends.
-
----
-
-## Example 4: Exclusive VIP Shop (Whitelist)
-
-A shop that only sells to specific players, such as a guild shop or premium store.
-
-- **Owner**: Guild leader
-- **Access Mode**: **Whitelist** — only listed players can purchase
-- **Access List**: Guild members added by name
-- **NPC**: Enabled with Weaponsmith profession and a custom name ("Guild Armory")
-- **Offer Item Visuals**: Multi-item display (count: 4, stacked layout)
-
-**Setup Steps:**
-1. Place the shop and set up the offer.
-2. Go to Settings → Access.
-3. Set Access Mode to **Whitelist**.
-4. Add guild members to the access list.
-5. Only those players can now purchase from the shop.
+### Setup Walkthrough:
+1. Enable global edit mode via chat: `/mb admin editmode true`.
+2. Place down a **Trade Stand**.
+3. Set the trade recipe (e.g., 3 Iron Ingots ➔ 1 Iron Pickaxe).
+4. Go to **Settings -> Access**:
+   - Toggle **Admin Shop Mode** to `ON`.
+   - *(Notice that the Inventory tab disappears since stock is infinite!)*
+5. Go to **Settings -> General**: Set the shop name to `"Starter Tools"`.
+6. Go to **Settings -> Visuals**: Enable `Fullbright` to make the pickaxe shine in spawn lighting.
 
 ---
 
-## Example 5: Automated Farm Shop (I/O + Redstone)
+## 🤝 Example 3: Community Guild Store (Co-Owners)
 
-A fully automated shop connected to a farm via hoppers.
+A shop operated collaboratively by a team or faction sharing restocking responsibilities.
 
-- **Owner**: Farm owner
-- **I/O Configuration**:
-  - Back side: INPUT (hopper feeds items from farm)
-  - Bottom side: OUTPUT (collected payments drop into a chest below)
-  - Redstone Control: REQUIRE_SIGNAL (only process I/O when powered)
-- **Auto I/O**: Enabled (automatically pulls from adjacent chests)
-- **Redstone Emission**: Enabled (sends a pulse on each purchase for counters/displays)
-- **Offer Item Visuals**: Dynamic Fill Level enabled (customers can see stock level)
+- **Ownership**: Primary Owner + 3 Guild Co-Owners
+- **Access Mode**: Everyone
+- **Notifications**: All alerts enabled (`Notify Co-Owners = true`)
 
-**Setup Steps:**
-1. Place the shop with a hopper behind it (feeding from the farm).
-2. Place a chest below the shop for collected payments.
-3. Go to Settings → I/O:
-   - Set Back to INPUT
-   - Set Bottom to OUTPUT
-   - Enable Auto I/O
-4. Go to Settings → General: Enable Redstone Emission.
-5. Go to Settings → Visuals: Enable Dynamic Fill Level.
+### Setup Walkthrough:
+1. Primary owner places the shop and sets up the item offer.
+2. Go to **Settings -> Access**:
+   - Add teammate usernames to the **Co-Owners** list.
+3. Go to **Settings -> Notifications**:
+   - Enable `Notify on Purchase`, `Notify on Out of Stock`, and `Notify on Output Full`.
+   - Check `Notify Co-Owners` so all guild managers receive alerts.
+4. Co-owners can now deposit fresh stock, collect earnings, or change prices at any time!
 
 ---
 
-## Setup Tips
+## 🔒 Example 4: VIP / Faction Outlet (Whitelist)
 
-- Start with simple, stable offers first.
-- With high demand, monitor the transaction log and adjust stock levels.
-- Use notifications to stay informed about shop status without having to visit.
-- For shops with multiple admins, use co-owners and enable co-owner notifications.
-- Use the `/marketblocks list` command to get a quick overview of all shops and their status.
-- Use Dynamic Fill Level in visuals to give customers a visual indicator of stock availability.
-- When testing a new shop, use the Closed status to prevent purchases until the offer is finalized.
+A members-only shop that sells discounted high-tier gear exclusively to registered players.
+
+- **Access Mode**: Whitelist
+- **Access List**: Registered member usernames
+- **Visual Clerk**: Player Skin with custom name tag (`"VIP Armory"`)
+
+### Setup Walkthrough:
+1. Place the shop and deposit your merchandise.
+2. Go to **Settings -> Access**:
+   - Switch the Access Mode dropdown to **Whitelist**.
+   - Type in the usernames of permitted buyers and click add.
+3. Non-whitelisted visitors who try to purchase will receive an access denied notice in chat.
+
+---
+
+## ⚙️ Example 5: Automated Farm Vendor (Hopper I/O)
+
+An automated shop connected directly to an automatic mob or crop farm via hoppers and chests.
+
+- **Automation**: Back face inputs crop items; bottom face extracts emerald profits.
+- **Redstone Pulse**: Emits a signal on every completed sale to drive a counter lamp.
+
+### Setup Walkthrough:
+1. Ensure `enableChestExtension = true` in `config/marketblocks/singleoffer/general.toml` (if using adjacent chest extraction).
+2. Connect a hopper pointing into the **Back** of the shop block (from your farm).
+3. Place a hopper or chest below the **Bottom** of the shop to collect incoming payments.
+4. Go to **Settings -> I/O**:
+   - Configure Back as `INPUT` and Bottom as `OUTPUT`.
+5. Go to **Settings -> General**:
+   - Toggle `Emit Redstone` to `ON`. Connect redstone dust behind the block to power note blocks, lamps, or transaction counters!
+
+---
+
+## 💡 Practical Management Tips
+
+- **Check Shop Leaderboards**: Run `/marketblocks stats shops` (or `/mb stats shops`) to see which shops across the server have the highest sales volume.
+- **Find Specific Items**: Need to see where an item is being sold? Run `/marketblocks search <item_id>` to find all matching player shops and marketplace hubs with instant waypoint coordinates!
+- **Launch Sales on Admin Shops**: Run `/mb admin sale shop set <shop> <percent> <minutes>` to give your spawn shops weekend promotional discounts!

@@ -14,143 +14,125 @@
 <a href="https://www.curseforge.com/minecraft/mc-mods/marketblocks/files/all?page=1&pageSize=20"><img src="https://img.shields.io/curseforge/v/1214103?logo=adguard&label=&suffix=%20&style=flat&color=1c1c1c&labelColor=121212&logoColor=5ca424" alt="Version"></a>
 </p>
 
-**MarketBlocks** is a NeoForge mod for **Minecraft 1.21.1** that provides a server-authoritative trading system with two shop types:
+**MarketBlocks** is a modern NeoForge economy and trading mod for **Minecraft 1.21.1** featuring two trading systems:
 
-- **SingleOfferShop** (block-based, one active offer per shop, comes in Trade Stand and Market Crate variants)
-- **Marketplace** (blockless, page-based, centrally managed offer system)
+- 🏪 **SingleOfferShop**: Physical block-based shops with one dedicated offer per block, available as **Trade Stands** (two blocks tall) and **Market Crates** (single block).
+- 🌐 **Marketplace**: A page-based, server-wide trading hub with an in-game editor, dynamic pricing curves, stock limits, and physical hub linking.
 
-The mod focuses on **secure transactions**, **extensive customization**, **clear permission rules**, and **reliable persistence**—ideal for survival servers, SMPs, and modded multiplayer worlds.
+The mod is engineered from the ground up for **server-authoritative security**, **extensive visual customization**, and **multiplayer stability** — ideal for survival servers, SMPs, and large modpacks.
+
+---
 
 ## **✨ Features**
 
-### ✅ **SingleOfferShop**
+### 🏪 **SingleOfferShop (Player & Admin Shops)**
+- **Block Variants**: **Trade Stand** (two blocks tall with glass showcase) and **Market Crate** (single block with crate layouts).
+- **Flexible Pricing**: Supports up to **2 payment item stacks** for **1 result item stack**.
+- **Access Control**: Choose between **Everyone**, **Whitelist**, or **Blacklist** customer modes.
+- **Ownership Model**: Primary owner with up to 10 co-owners with full management privileges.
+- **Admin Shop Mode**: Server-controlled shops with infinite stock and voided payments (requires OP level 2 + edit mode).
+- **Promotional Sales**: Configure timed discounts and sales events on shop offers.
+- **Top 10 Leaderboards**: Track the most profitable shops across the server via `/mb stats shops`.
 
-- Block variants: **Trade Stand** (two blocks tall) and **Market Crate** (single block).
-- Supports up to **2 payment stacks** and **1 result stack**.
-- **Access Control:** Restrict buyers via Whitelist or Blacklist.
-- **Ownership:** Primary owner and up to 10 co-owners with clear UI role handling.
-- Optional **Admin Shop Mode** (no stock required, unlimited supply, server-side validated).
-- **Temporary Sales:** Configure timed discounts and price changes for your shop offers.
-- **Top 10 Statistics:** View the top performing shops by sales numbers.
+### 🌐 **Marketplace (Central Economy Hub)**
+- **Universal Access**: Open instantly via keybind (**O**), chat command (`/mb marketplace open`), or right-clicking linked blocks in the world.
+- **Categorized Tabs**: Clean tabbed interface to organize items into custom categories (Minerals, Produce, Tools, etc.).
+- **Live In-Game Editor**: Operators can create pages, add/edit/reorder offers, and tune pricing live without restarting the server.
+- **Dynamic Demand Pricing**: Realistic price scaling that increases costs under high demand and cools down over time.
+- **Stock & Daily Limits**: Control scarcity with global or per-player daily limits, maximum stock pools, and restock timers.
+- **Physical Market Stalls**: Link any decorative block or NPC counter in spawn hubs using `/mb admin marketplace link`.
 
-### ✅ **Marketplace**
+### 🎨 **Rich Visuals & Animated NPCs**
+- **Floating Item Showcases**: Render offered goods floating, spinning, or bobbing above shops with fullbright, scale, and offset controls.
+- **Visual Clerk NPCs**: Station an animated **Villager** (with 15 selectable professions) or a **Player Model** (using any player's skin) behind the counter.
+- **Stock Indicator**: Market Crates feature dynamic stock rendering that visibly drains as customers purchase goods.
+- **Celebration Feedback**: Happy villager particles and audio feedback on successful transactions.
 
-- Blockless, centralized market system with pages and multiple offers.
-- Open via keybind (**O**), command, or by interacting with any linked block in the world.
-- In-game editor for creating and managing offers (Admin only).
-- **Temporary Sales:** Set up limited-time sales and discounts on marketplace offers.
-- **Top 10 Statistics:** Keep track of the most popular marketplace offers.
-- JSON persistence with backup/restore strategy.
+### ⚙️ **Automation & Redstone Integration**
+- **Sided Hopper / Pipe I/O**: Configure input and output directions for automated inventory routing.
+- **Redstone Signals**: Emit a redstone pulse upon completed transactions to drive lamps, note blocks, or trade counters.
+- **Comparator Output**: Read the fill level of shop storage with standard redstone comparators.
 
-### ✅ **Rich Visuals & NPCs**
-
-- **Offer Item Rendering:** Display the offered item floating, spinning, or stacked above the shop. Features Dynamic Fill Level to visually indicate stock.
-- **Visual NPCs:** Display an interactive Villager (with 15 professions) or a Player Skin above your shop.
-- Configurable particle and sound feedback on purchases.
-
-### ✅ **Secure server-side transactions**
-
-- Server-side validation of item, count, and components.
-- Deterministic purchase logic with **Shift-click bulk buying**.
-- Protection against client-side manipulation.
-
-### ✅ **Limits, Restock & Demand Pricing (Marketplace)**
-
-- Daily limits (global or per-player), stock limits, and restock intervals.
-- **Demand Pricing:** Dynamic price calculation via a flexible multiplier system based on player demand and decay over time.
-
-### ✅ **Automation & Redstone**
-
-- **Auto I/O:** Configurable pull/push of items through adjacent inventories with redstone control.
-- Optional redstone pulse emission on successful purchase.
-- Read shop fill level using a Comparator.
-
-### ✅ **Notifications & QoL**
-
-- **Offline Notifications:** Get notified on login if your shop is out of stock or its output is full.
-- Persistent shop transaction log with smart stacking.
-- Comprehensive Advancement tree to guide players through features.
-- Shop Directory (`/marketblocks shop list`) to view all active shops with filtering by name, owner, or category.
-- **Waypoint Integration:** Seamlessly create waypoints to shops using **JourneyMap** or **Xaero's Minimap** directly from chat!
+### 🔒 **Security & Performance**
+- **Server-Authoritative Validation**: All transaction amounts, items, and data components are strictly verified server-side to prevent dupe or cheat exploits.
+- **Shift-Click Bulk Buying**: Safely purchase maximum allowed quantities in a single click with automated limit checks.
+- **Offline Notifications**: Receive login alerts if your shop ran out of stock or filled its payment storage while you were offline.
+- **Resilient Storage**: Atomic disk writes with automatic `.bak` backups prevent data corruption.
 
 ---
 
-> All transaction logic and permission checks are handled server-side.
+## **🗺️ Integrations & Mod Compatibility**
+
+MarketBlocks is designed to cooperate seamlessly with popular modpack staples:
+
+- **Minimaps & Worldmaps**: Interactive chat search results (`/mb search <item>`) generate instant waypoints in **JourneyMap** and **Xaero's Minimap/Worldmap** (with clean chat fallback coordinates).
+- **JourneyMap Live Markers**: Placed shops and linked marketplace hubs automatically display custom map markers on JourneyMap!
+- **Just Enough Items (JEI)**: Native JEI plugin registers custom GUI tabs as *Extra Areas*, ensuring JEI item panels never overlap or block shop buttons.
+- **Jade / WTHIT**: Looking at any shop block displays live item trade icons, prices, owner name, open/closed status, and out-of-stock warnings.
+- **FTB Chunks**: Native `ftbchunks:interact_whitelist` tag support allows visitors to trade inside claimed chunks out of the box.
+- **Open Parties and Claims (OpenPAC)**: Add `"interact$marketblocks:trade_stand"`, `"interact$marketblocks:trade_stand_top"`, and `"interact$marketblocks:marketcrate"` to `forcedBlockProtectionExceptionList` in `openpartiesandclaims-server.toml`.
 
 ---
 
-## **🛡️ Compatibility (Claiming & Protection Mods)**
+## **💻 Commands & Shorthand Alias**
 
-MarketBlocks is designed to work in secure multiplayer environments. By default, claiming mods block interactions with blocks in claimed chunks, which would prevent players from buying items from your shops. We've ensured seamless compatibility:
+> 💡 **Tip:** Every command starting with `/marketblocks` can also be run using the shorthand **`/mb`** alias!
 
-- **FTB Chunks:** ✅ Fully supported out of the box! We natively include the `ftbchunks:interact_whitelist` data tag, so your shops are always interactable (clickable) in claimed chunks without letting others break them.
-- **Open Parties and Claims (OpenPac):** ⚠️ Requires server config adjustment. OpenPac doesn't use tags for whitelisting. Server Admins must manually add the shop blocks to their config file.
-  - **How to fix:** Open your server's `openpartiesandclaims-server.toml` file and add the shop blocks to the `forcedBlockProtectionExceptionList` like this:
+### Player Commands
+| Command | Alias | Description |
+|---|---|---|
+| `/marketblocks marketplace open` | `/mb marketplace open` | Opens the central Marketplace GUI (keybind: **O**). |
+| `/marketblocks search <item> [page]` | `/mb search <item> [page]` | Searches for player shops and marketplace offers with **[Waypoint]** and **[TP]** buttons. |
+| `/marketblocks stats` | `/mb stats` | Displays top 10 SingleOfferShops and top 10 Marketplace offers. |
+| `/marketblocks stats shops` | `/mb stats shops` | Displays the Top 10 player and admin shops by total sales. |
+| `/marketblocks stats marketplace` | `/mb stats marketplace` | Displays the Top 10 Marketplace offers by total sales. |
 
-    ```toml
-    forcedBlockProtectionExceptionList = ["interact$marketblocks:trade_stand", "interact$marketblocks:trade_stand_top", "interact$marketblocks:marketcrate"]
-    ```
-
-- **Waypoints & HUD:** Fully supports **JourneyMap**, **Xaero's Minimap**, and **Jade** for rich tooltips and easy shop navigation.
+### Operator & Admin Commands (`OP Level 2`)
+| Command | Description |
+|---|---|
+| `/mb admin editmode [true\|false]` | Toggles global edit mode (unlocks in-game Marketplace editor & Admin Shop toggle). |
+| `/mb admin reload` | Hot-reloads `marketplace.json` and trader configurations from disk without server restart. |
+| `/mb admin resetlimits <player>` | Resets daily purchase limits for the specified player. |
+| `/mb admin marketplace link [name] [tp_pos]` | Links the looked-at block to the Marketplace with optional title and teleport landing coordinates. |
+| `/mb admin marketplace unlink [name]` | Removes link from looked-at block or by registered link name. |
+| `/mb admin sale marketplace set <offer> <%> <min>` | Starts a timed discount on a Marketplace offer. |
+| `/mb admin sale marketplace remove <offer>` | Cancels an active discount on a Marketplace offer. |
+| `/mb admin sale shop set <shop> <%> <min>` | Starts a timed discount on an Admin Shop block. |
+| `/mb admin sale shop remove <shop>` | Cancels an active discount on an Admin Shop block. |
 
 ---
 
 ## **⚙️ Configuration**
 
-MarketBlocks is highly configurable via `marketblocks-common.toml`. Key options include:
+MarketBlocks features modular configuration files located inside `config/marketblocks/`:
 
-- Over **50+ config options** for fine-tuning.
-- Server admins can enable or disable individual settings tabs in the UI.
-- Define default values for newly placed shops (e.g., default NPC profession, item scale).
-- Global limits, admin mode toggles, and performance settings (like max render distance for NPCs).
-- Configure blast resistance for shop blocks to protect them from explosions.
-
----
-
-## **📝 Commands**
-
-Main commands are grouped under **`/marketblocks`**:
-
-| Command | Permission | Description |
-| --- | --- | --- |
-| **`/marketblocks shop list [page]`** | `All Players` | Lists all SingleOfferShops. Supports filtering by `owner`, `name`, or `category`. Operators get a [TP] button. All players get a [Waypoint] button. |
-| **`/marketblocks shop search <item> [page]`** | `All Players` | Searches for shops buying or selling a specific item. |
-| **`/marketblocks shop stats`** | `All Players` | Shows the Top 10 SingleOfferShops by total sales. |
-| **`/marketblocks marketplace open`** | `All Players` | Opens the Marketplace GUI. |
-| **`/marketblocks marketplace list [page]`** | `All Players` | Lists all active Marketplace offers in chat. |
-| **`/marketblocks marketplace stats`** | `All Players` | Shows the Top 10 Marketplace offers by total sales. |
-| **`/marketblocks admin editmode [true / false]`** | `OP Level 2` | Enables/disables global admin/edit mode for shops and marketplace. |
-| **`/marketblocks admin reload`** | `OP Level 2` | Reloads marketplace configuration from disk. |
-| **`/marketblocks admin resetlimits <player>`** | `OP Level 2` | Resets daily limits for the specified player. |
-| **`/marketblocks admin marketplace link <name>`** | `OP Level 2` | Links any looked-at block in the world to a specific marketplace page/name. Use `unlink` to remove. |
-| **`/marketblocks admin sale shop set / remove`** | `OP Level 2` | Configures or removes a temporary sale/discount on a SingleOfferShop. |
-| **`/marketblocks admin sale marketplace set / remove`** | `OP Level 2` | Configures or removes a temporary sale/discount on a Marketplace offer. |
-| **`/marketblocks admin trader value set / remove`** | `OP Level 2` | Sets or removes custom currency values for trader entities. |
-| **`/marketblocks admin trader blacklist add / remove`** | `OP Level 2` | Adds or removes trader entities from the blacklist. |
+- **`main.toml`**: First-join trade book, non-OP teleport permissions (`allowNonOpTeleport`), map compatibility toggles.
+- **`client.toml`**: Client-side rendering options (e.g. `enableShopItemRendering` for FPS boost on low-end hardware).
+- **`marketplace.toml`**: Purchase notifications and daily limit scope (`sharedDailyLimits = true/false`).
+- **`singleoffer/general.toml`**: Bedrock-grade blast resistance (`shopBlastResistance`), max survival shops per player, chest I/O extensions, and GUI tab visibility.
+- **`singleoffer/tradestand.toml` & `singleoffer/marketcrate.toml`**: Default visuals, NPC settings, and notifications for newly placed shop blocks.
 
 ---
 
 ## **📚 Documentation**
 
-For detailed guides on setting up shops, configuring visuals, managing the marketplace, and more, please visit the **[MarketBlocks Wiki](https://github.com/BigBull-H3RO/MarketBlocks/wiki)**!
+For complete guides, configuration tutorials, and developer documentation, visit the **[MarketBlocks Wiki](https://github.com/BigBull-H3RO/MarketBlocks/wiki)**!
 
 ---
 
 ## **⚖️ License**
 
-This project is licensed under a split licensing model:
-
-- **Code:** The source code of **MarketBlocks** is licensed under the **MIT License**. See the [`LICENSE.txt`](LICENSE.txt) file for the full license text.
-- **Assets:** All graphical assets (textures, models, icons) and sound files are **strictly All Rights Reserved** and may not be reused without permission. See the [`LICENSE_ASSETS.txt`](LICENSE_ASSETS.txt) file for details.
+This project is licensed under a dual model:
+- **Code**: The source code is licensed under the **MIT License**. See [`LICENSE.txt`](LICENSE.txt).
+- **Assets**: All textures, models, and audio files are **All Rights Reserved** and may not be redistributed without permission. See [`LICENSE_ASSETS.txt`](LICENSE_ASSETS.txt).
 
 ---
 
 <div align="center">
 
-#### 📢 **Found a bug? Have a suggestion?**
+#### 📢 **Found a bug or have a suggestion?**
+Report issues on our [GitHub Issue Tracker](https://github.com/BigBull-H3RO/MarketBlocks/issues)
 
-Report issues to the [Issue Tracker](https://github.com/BigBull-H3RO/MarketBlocks/issues)
-
-#### 💡 Find out more about MarketBlocks on our [Curseforge](https://www.curseforge.com/minecraft/mc-mods/marketblocks) or [Modrinth](https://modrinth.com/mod/marketblocks) Page
+#### 💡 Discover more on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/marketblocks) or [Modrinth](https://modrinth.com/mod/marketblocks)
 
 </div>
