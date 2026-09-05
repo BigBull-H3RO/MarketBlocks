@@ -15,10 +15,10 @@ de.bigbull.marketblocks
 │   ├── gui/                         (Shared UI components: sliders, buttons)
 │   └── mixin/                       (Client-side mixins)
 ├── core/
-│   ├── command/                     (MarketBlocksCommand - /marketblocks list)
+│   ├── command/                     (Dedicated command classes for /marketblocks)
 │   ├── config/                      (Config - all config options)
 │   ├── data/                        (ShopDirectorySavedData)
-│   ├── event/                       (MarketBlocksEvents - server lifecycle, commands)
+│   ├── event/                       (Lifecycle, interaction, and command event handlers)
 │   └── init/                        (RegistriesInit, CreativeTabInit)
 ├── data/                            (Data generators)
 │   ├── advancement/                 (ModAdvancementProvider)
@@ -27,10 +27,8 @@ de.bigbull.marketblocks
 │   ├── log/                         (TransactionLogEntry, ShopTransactionLogSavedData)
 │   ├── marketplace/
 │   │   ├── advancement/             (MarketplaceOpenTrigger, MarketplaceBuyTrigger)
-│   │   ├── block/                   (MarketplaceBlock)
 │   │   ├── client/screen/           (MarketplaceScreen, overlays, editors)
 │   │   ├── data/                    (MarketplaceManager, MarketplaceData, offers, pricing)
-│   │   ├── entity/                  (MarketplaceBlockEntity)
 │   │   ├── menu/                    (MarketplaceMenu, MarketplaceMenuProvider)
 │   │   └── network/                 (All marketplace packets)
 │   ├── notification/                (PendingNotificationsSavedData)
@@ -77,9 +75,10 @@ de.bigbull.marketblocks
 | Class | Purpose |
 | --- | --- |
 | `network/NetworkHandler` | Central registration for all network payloads |
-| `core/event/MarketBlocksEvents` | Server lifecycle, command registration, login notifications |
+| `core/event/MarketBlocksLifecycleEvents` | Server lifecycle hooks, marketplace startup/tick/shutdown, login notifications |
+| `core/event/MarketBlocksCommandEvents` | Command tree registration for `/marketblocks` |
 | `core/config/Config` | All config options (50+) |
-| `core/data/ShopDirectorySavedData` | Global shop registry for `/marketblocks list` |
+| `core/data/ShopDirectorySavedData` | Global shop registry for `/marketblocks shop list` and `/marketblocks shop search` |
 | `feature/log/ShopTransactionLogSavedData` | Persistent transaction log per shop |
 | `feature/notification/PendingNotificationsSavedData` | Offline notification storage |
 
@@ -96,7 +95,7 @@ The SingleOfferShop settings use an **immutable record + mutable draft** pattern
 The mod is server-authoritative with clear network and lifecycle separation.
 
 Especially relevant:
-- Server start/tick/stop flow for Marketplace runtime (`MarketBlocksEvents`)
+- Server start/tick/stop flow for Marketplace runtime (`MarketBlocksLifecycleEvents`)
 - Packet-based mutations with server-side validation
 - Viewer synchronization after relevant state changes
 - Login event for offline notification delivery
