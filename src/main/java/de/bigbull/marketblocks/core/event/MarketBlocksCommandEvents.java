@@ -89,8 +89,7 @@ public final class MarketBlocksCommandEvents {
                         .then(Commands.literal("marketplace")
                                 .then(ShopStatsCommand.buildMarketplaceStats())
                                 .then(Commands.literal("open")
-                                        .requires(source -> source.getEntity() instanceof ServerPlayer
-                                                && Config.ENABLE_MARKETPLACE_OPEN_COMMAND.get())
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             MarketplaceManager.get().openShop(player);
@@ -180,25 +179,14 @@ public final class MarketBlocksCommandEvents {
             if (x == Math.floor(x)) x += 0.5;
             if (z == Math.floor(z)) z += 0.5;
 
-            BlockPos shopPos = new BlockPos((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
-            BlockState state = targetLevel.getBlockState(shopPos);
-            
-            if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) {
-                Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
-                
-                // Move in front of the block
-                x += facing.getStepX();
-                z += facing.getStepZ();
-                
-                // If not explicitly provided, look at the shop block
-                if (!hasRot) {
-                    yaw = facing.getOpposite().toYRot();
-                    pitch = 0;
-                }
-            }
-
             player.teleportTo(targetLevel, x, y, z, yaw, pitch);
+            player.sendSystemMessage(Component.translatable("command.marketblocks.tp.success")
+                    .withStyle(ChatFormatting.GREEN));
+            return 1;
+        } else {
+            player.sendSystemMessage(Component.translatable("command.marketblocks.tp.invalid_dimension")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
         }
-        return 1;
     }
 }

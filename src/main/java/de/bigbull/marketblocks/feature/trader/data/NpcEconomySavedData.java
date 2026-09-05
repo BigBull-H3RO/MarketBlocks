@@ -51,7 +51,7 @@ public class NpcEconomySavedData extends SavedData {
             return;
         }
 
-        double decayRate = TraderConfig.TRADER_DYNAMIC_PRICING_DECAY_RATE.get();
+        double decayRate = TraderConfig.DYNAMIC_PRICING_DECAY_RATE.get();
         if (decayRate > 0 && !itemSaturation.isEmpty()) {
             double decayAmount = diff * decayRate;
             itemSaturation.entrySet().removeIf(entry -> {
@@ -72,7 +72,7 @@ public class NpcEconomySavedData extends SavedData {
      * Calculates the dynamic price multiplier for the given item.
      */
     public double getDemandMultiplier(Item item, ServerLevel level) {
-        if (!TraderConfig.TRADER_DYNAMIC_PRICING_ENABLED.get()) {
+        if (!TraderConfig.DYNAMIC_PRICING_ENABLED.get()) {
             return 1.0;
         }
 
@@ -81,8 +81,8 @@ public class NpcEconomySavedData extends SavedData {
         double saturation = itemSaturation.getOrDefault(item, 0.0);
         double multiplier = 1.0 - saturation;
 
-        double min = TraderConfig.TRADER_DYNAMIC_PRICING_MIN_MULTIPLIER.get();
-        double max = TraderConfig.TRADER_DYNAMIC_PRICING_MAX_MULTIPLIER.get();
+        double min = TraderConfig.DYNAMIC_PRICING_MIN_MULTIPLIER.get();
+        double max = TraderConfig.DYNAMIC_PRICING_MAX_MULTIPLIER.get();
 
         return Math.max(min, Math.min(max, multiplier));
     }
@@ -98,15 +98,15 @@ public class NpcEconomySavedData extends SavedData {
      * Registers a sale to an NPC, increasing the saturation and lowering future values.
      */
     public void registerSale(Item item, int amount, ServerLevel level) {
-        if (!TraderConfig.TRADER_DYNAMIC_PRICING_ENABLED.get() || amount <= 0) {
+        if (!TraderConfig.DYNAMIC_PRICING_ENABLED.get() || amount <= 0) {
             return;
         }
 
         applyDecay(level);
 
-        double extraSaturation = amount * TraderConfig.TRADER_DYNAMIC_PRICING_SATURATION_PER_UNIT.get();
+        double extraSaturation = amount * TraderConfig.DYNAMIC_PRICING_SATURATION_PER_UNIT.get();
         // Cap saturation to prevent unbounded growth that would make decay take unreasonably long
-        double maxSaturation = 1.0 - TraderConfig.TRADER_DYNAMIC_PRICING_MIN_MULTIPLIER.get() + 0.1;
+        double maxSaturation = 1.0 - TraderConfig.DYNAMIC_PRICING_MIN_MULTIPLIER.get() + 0.1;
         double newVal = Math.min(maxSaturation, itemSaturation.getOrDefault(item, 0.0) + extraSaturation);
         itemSaturation.put(item, newVal);
         setDirty();

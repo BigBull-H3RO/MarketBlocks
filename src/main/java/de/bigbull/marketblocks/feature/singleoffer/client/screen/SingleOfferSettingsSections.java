@@ -338,11 +338,10 @@ public final class SingleOfferSettingsSections {
     public record VillagerSectionWidgets(EditBox npcNameField, EditBox playerSkinNameField, Button professionButton) {
     }
 
-    public static void buildOfferItemSection(
+        public static void buildOfferItemSection(
             SingleOfferShopScreen host,
             ShopVisualType visualType,
             OfferItemSettings.Draft draft,
-            boolean offerItemRenderingGloballyEnabled,
             Runnable onDirty,
             Runnable onRebuild) {
         int y = host.settingsTopPos() + 26;
@@ -357,16 +356,8 @@ public final class SingleOfferSettingsSections {
                     b.setMessage(toggleStateLabel(next));
                 })
                 .bounds(leftX, y, 35, 16)
+                .tooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_visible.tooltip")))
                 .build());
-
-        if (!offerItemRenderingGloballyEnabled) {
-            visibleButton.active = false;
-            visibleButton.setTooltip(
-                    Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_disabled_global")));
-        } else {
-            visibleButton.setTooltip(
-                    Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_visible.tooltip")));
-        }
 
         Checkbox fullbrightCheckbox = host.addSettingsWidget(Checkbox.builder(
                 Component.translatable("gui.marketblocks.visuals.offer_item_fullbright"),

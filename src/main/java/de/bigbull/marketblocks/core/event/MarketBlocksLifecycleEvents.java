@@ -6,7 +6,6 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.notification.PendingNotificationsSavedData;
 import de.bigbull.marketblocks.feature.trader.ShopBuyerSpawner;
 import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
-import de.bigbull.marketblocks.network.PacketRateLimiter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -43,7 +42,6 @@ public final class MarketBlocksLifecycleEvents {
     @SubscribeEvent
     public static void handleServerTick(ServerTickEvent.Post event) {
         MarketplaceManager.get().tick();
-        PacketRateLimiter.periodicCleanup();
     }
 
     @SubscribeEvent

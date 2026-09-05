@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.feature.singleoffer.entity;
 
 import net.minecraft.core.BlockPos;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.core.config.TraderConfig;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.log.ShopTransactionLogSavedData;
@@ -197,7 +197,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
 
         ShopInventoryManager inv = shopEntity.getInventoryManager();
 
-        if (!adminShop && Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
+        if (!adminShop && SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) {
             inv.pullFromInputChest(shopEntity.getInputHandler());
         }
 
@@ -271,8 +271,8 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
             RegistriesInit.SHOP_WHOLESALER_TRIGGER.get().trigger(serverBuyer);
         }
 
-        if (buyer instanceof ServerPlayer serverBuyer && Config.SHOP_BUYER_MESSAGE.get()) {
-            if (Config.SHOP_BUYER_MESSAGE_GLOBAL.get()) {
+        if (buyer instanceof ServerPlayer serverBuyer && SingleOfferConfig.BUYER_CHAT_MESSAGE.get()) {
+            if (SingleOfferConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
                 Component msg = Component.translatable("message.marketblocks.purchase_success.global",
                         serverBuyer.getDisplayName(), actualAmount, result.getHoverName())
                         .withStyle(ChatFormatting.GREEN);
@@ -293,7 +293,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
             return 0;
 
         boolean adminShop = shopEntity.isAdminShopEnabled();
-        if (adminShop && !TraderConfig.TRADER_ALLOW_ADMIN_SHOPS.get())
+        if (adminShop && !TraderConfig.ALLOW_ADMIN_SHOPS.get())
             return 0;
         ShopInventoryManager inv = shopEntity.getInventoryManager();
 
@@ -390,7 +390,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
             Component message, long lastNotify, java.util.function.LongConsumer updateTime,
             PendingNotificationAction addPending) {
         long currentTime = level.getGameTime();
-        int cooldown = Config.NOTIFICATION_COOLDOWN.get();
+        int cooldown = SingleOfferConfig.NOTIFICATION_COOLDOWN.get();
 
         if (lastNotify == -1 || (currentTime - lastNotify) >= cooldown) {
             updateTime.accept(currentTime);

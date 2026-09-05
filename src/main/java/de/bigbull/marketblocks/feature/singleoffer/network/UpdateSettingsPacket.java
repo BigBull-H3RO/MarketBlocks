@@ -5,8 +5,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
@@ -95,7 +96,7 @@ public record UpdateSettingsPacket(
                 AccessSettings incomingAccess = packet.accessSettings();
                 AccessSettings existingAccess = blockEntity.getSettingsManager().getAccessSettings();
                 boolean isPrimaryOwner = blockEntity.getAccessManager().isPrimaryOwner(player);
-                boolean isAdminMode = Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.get() && player.hasPermissions(2);
+                boolean isAdminMode = MarketplaceManager.get().isGlobalEditModeEnabled() && player.hasPermissions(2);
 
                 boolean newAdminShopEnabled = existingAccess.adminShopEnabled();
                 if (isAdminMode) {
@@ -114,7 +115,7 @@ public record UpdateSettingsPacket(
                     newAccessMode = incomingAccess.accessMode();
                     newAccessList = incomingAccess.accessList();
 
-                    int maxOwners = Config.MAX_CO_OWNERS_PER_SHOP.get();
+                    int maxOwners = SingleOfferConfig.MAX_CO_OWNERS_PER_SHOP.get();
                     if (newAdditionalOwners.size() > maxOwners) {
                         Map<UUID, String> truncated = new HashMap<>();
                         int count = 0;
@@ -160,4 +161,3 @@ public record UpdateSettingsPacket(
         });
     }
 }
-

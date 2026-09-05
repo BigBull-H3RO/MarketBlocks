@@ -11,12 +11,12 @@ import net.minecraft.resources.ResourceLocation;
  * New categories can be centrally expanded here.
  */
 public enum SettingsCategory {
-    GENERAL("gui.marketblocks.settings.category.general", "textures/gui/icon/singleoffer/general.png", SingleOfferConfig.SHOP_TAB_GENERAL_ENABLED),
-    IO("gui.marketblocks.settings.category.io", "textures/gui/icon/singleoffer/i_o.png", SingleOfferConfig.SHOP_TAB_IO_ENABLED),
+    GENERAL("gui.marketblocks.settings.category.general", "textures/gui/icon/singleoffer/general.png", null),
+    IO("gui.marketblocks.settings.category.io", "textures/gui/icon/singleoffer/i_o.png", SingleOfferConfig.ENABLE_CHEST_EXTENSION),
     VILLAGER("gui.marketblocks.settings.category.villager", "textures/gui/icon/singleoffer/villager.png", SingleOfferConfig.SHOP_TAB_VILLAGER_ENABLED),
     VISUALS("gui.marketblocks.settings.category.visual", "textures/gui/icon/singleoffer/visuals.png", SingleOfferConfig.SHOP_TAB_VISUALS_ENABLED),
     NOTIFICATIONS("gui.marketblocks.settings.category.notifications", "textures/gui/icon/singleoffer/notification.png", SingleOfferConfig.SHOP_TAB_NOTIFICATIONS_ENABLED),
-    ACCESS("gui.marketblocks.settings.category.access", "textures/gui/icon/singleoffer/padlock.png", SingleOfferConfig.SHOP_TAB_ACCESS_ENABLED);
+    ACCESS("gui.marketblocks.settings.category.access", "textures/gui/icon/singleoffer/padlock.png", null);
 
     private final String translationKey;
     private final ResourceLocation icon;
@@ -40,5 +40,3 @@ public enum SettingsCategory {
         return icon;
     }
 }
-
-

@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import net.minecraft.core.BlockPos;
@@ -69,7 +69,7 @@ public class ShopRedstoneManager {
     }
 
     private boolean isChestIoExtensionEnabled() {
-        return Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get();
+        return SingleOfferConfig.ENABLE_CHEST_EXTENSION.get();
     }
 
     public void unlockAdjacentChests() {
@@ -90,14 +90,12 @@ public class ShopRedstoneManager {
         BlockPos neighbour = shop.getBlockPos().relative(dir);
         if (shop.getLevel() != null) {
             shop.getLevel().invalidateCapabilities(neighbour);
-            if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get()) {
-                BlockState state = shop.getLevel().getBlockState(neighbour);
-                if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
-                        state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
-                    Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
-                    BlockPos otherPos = neighbour.relative(connectedDir);
-                    shop.getLevel().invalidateCapabilities(otherPos);
-                }
+            BlockState state = shop.getLevel().getBlockState(neighbour);
+            if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
+                    state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
+                Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
+                BlockPos otherPos = neighbour.relative(connectedDir);
+                shop.getLevel().invalidateCapabilities(otherPos);
             }
         }
     }
@@ -117,14 +115,12 @@ public class ShopRedstoneManager {
             shop.getLevel().invalidateCapabilities(shop.getBlockPos());
             BlockPos neighbour = shop.getBlockPos().relative(dir);
             shop.getLevel().invalidateCapabilities(neighbour);
-            if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get()) {
-                BlockState state = shop.getLevel().getBlockState(neighbour);
-                if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
-                        state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
-                    Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
-                    BlockPos otherPos = neighbour.relative(connectedDir);
-                    shop.getLevel().invalidateCapabilities(otherPos);
-                }
+            BlockState state = shop.getLevel().getBlockState(neighbour);
+            if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
+                    state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
+                Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
+                BlockPos otherPos = neighbour.relative(connectedDir);
+                shop.getLevel().invalidateCapabilities(otherPos);
             }
         }
     }

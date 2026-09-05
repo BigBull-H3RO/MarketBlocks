@@ -1,13 +1,17 @@
 package de.bigbull.marketblocks.core.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
+import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
+import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
@@ -19,10 +23,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
-import de.bigbull.marketblocks.core.config.Config;
-import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
-import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
-import de.bigbull.marketblocks.network.PacketRateLimiter;
 
 /**
  * Handles gameplay-related events on the FORGE/GAME event bus.
@@ -32,11 +32,6 @@ import de.bigbull.marketblocks.network.PacketRateLimiter;
  */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public class ModGameEvents {
-
-    @SubscribeEvent
-    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        PacketRateLimiter.clearPlayer(event.getEntity().getUUID());
-    }
 
     @SubscribeEvent
     public static void onTradeStandShowcaseUse(PlayerInteractEvent.RightClickBlock event) {
@@ -92,7 +87,7 @@ public class ModGameEvents {
             return;
         }
 
-        int maxShops = Config.MAX_SHOPS_PER_PLAYER_SURVIVAL.get();
+        int maxShops = SingleOfferConfig.MAX_SHOPS_PER_PLAYER_SURVIVAL.get();
         if (maxShops < 0) {
             return;
         }

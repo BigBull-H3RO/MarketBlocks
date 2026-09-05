@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -34,7 +34,7 @@ public class ShopInventoryManager {
     public void updateNeighborCache() {
         Level level = blockEntity.getLevel();
         if (level == null) return;
-        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) {
             cachedNeighbors.clear();
             return;
         }
@@ -72,7 +72,7 @@ public class ShopInventoryManager {
     }
 
     public IItemHandler getValidNeighborHandler(Direction dir) {
-        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) {
             return null;
         }
         return cachedNeighbors.get(dir);
@@ -101,7 +101,7 @@ public class ShopInventoryManager {
     public void pullFromInputChest(ItemStackHandler inputHandler) {
         Level level = blockEntity.getLevel();
         if (level == null || level.isClientSide) return;
-        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) return;
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) return;
         for (Direction dir : DIRECTIONS) {
             if (blockEntity.getMode(dir) == SideMode.INPUT) {
                 IItemHandler neighbour = getValidNeighborHandler(dir);
@@ -115,7 +115,7 @@ public class ShopInventoryManager {
     public void pushToOutputChest(ItemStackHandler outputHandler) {
         Level level = blockEntity.getLevel();
         if (level == null || level.isClientSide) return;
-        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) return;
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) return;
         for (Direction dir : DIRECTIONS) {
             if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
                 IItemHandler neighbour = getValidNeighborHandler(dir);
@@ -149,7 +149,7 @@ public class ShopInventoryManager {
                 found += stack.getCount();
             }
         }
-        if (checkNeighbors && Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get() && blockEntity.getLevel() != null) {
+        if (checkNeighbors && SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && blockEntity.getLevel() != null) {
             for (Direction dir : DIRECTIONS) {
                 if (blockEntity.getMode(dir) == SideMode.INPUT) {
                     IItemHandler neighbour = getValidNeighborHandler(dir);
@@ -188,7 +188,7 @@ public class ShopInventoryManager {
         }
         list.add(outputSimulationHandler);
 
-        if (Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+        if (SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
             for (Direction dir : DIRECTIONS) {
                 if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
                     IItemHandler neighbor = getValidNeighborHandler(dir);
@@ -252,7 +252,7 @@ public class ShopInventoryManager {
             filled += stack.getCount();
         }
 
-        if (Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
+        if (SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) {
             for (Direction dir : DIRECTIONS) {
                 if (blockEntity.getMode(dir) != SideMode.OUTPUT) continue;
                 IItemHandler neighbour = getValidNeighborHandler(dir);
@@ -269,8 +269,8 @@ public class ShopInventoryManager {
 
         boolean newOutputFull = total > 0 && filled >= total;
         boolean newOutputAlmostFull = false;
-        if (Config.ENABLE_OUTPUT_WARNING.get()) {
-            int threshold = Config.OUTPUT_WARNING_PERCENT.get();
+        if (SingleOfferConfig.ENABLE_OUTPUT_WARNING.get()) {
+            int threshold = SingleOfferConfig.OUTPUT_WARNING_PERCENT.get();
             newOutputAlmostFull = total > 0 && (filled * 100 >= total * threshold);
         }
 
@@ -291,7 +291,7 @@ public class ShopInventoryManager {
             ItemStack chunk = stack.copy();
             chunk.setCount((int) Math.min(total, maxStack));
             ItemStack remainder = ItemHandlerHelper.insertItem(blockEntity.getOutputHandler(), chunk, false);
-            if (!remainder.isEmpty() && Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+            if (!remainder.isEmpty() && SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
                 for (Direction dir : DIRECTIONS) {
                     if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
                         IItemHandler neighbor = getValidNeighborHandler(dir);
@@ -325,7 +325,7 @@ public class ShopInventoryManager {
             }
         }
 
-        if (Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get() && remaining > 0 && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+        if (SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && remaining > 0 && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
             for (Direction dir : DIRECTIONS) {
                 if (blockEntity.getMode(dir) != SideMode.INPUT) continue;
                 IItemHandler neighbour = getValidNeighborHandler(dir);

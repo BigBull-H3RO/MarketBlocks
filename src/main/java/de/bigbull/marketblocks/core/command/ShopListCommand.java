@@ -8,7 +8,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
-import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.feature.singleoffer.settings.ShopCategory;
 import net.minecraft.ChatFormatting;
@@ -34,7 +33,6 @@ public final class ShopListCommand {
     public static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("shop")
                 .then(Commands.literal("list")
-                        .requires(source -> Config.ENABLE_SHOP_LIST_COMMAND.get())
                         .executes(c -> executeList(c, 1, null, null, null))
                         .then(Commands.argument("page", IntegerArgumentType.integer(1))
                                 .executes(c -> executeList(c, IntegerArgumentType.getInteger(c, "page"), null, null,

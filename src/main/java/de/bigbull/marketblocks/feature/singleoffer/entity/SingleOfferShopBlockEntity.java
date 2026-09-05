@@ -2,8 +2,9 @@ package de.bigbull.marketblocks.feature.singleoffer.entity;
 
 import java.util.function.Supplier;
 
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
@@ -456,17 +457,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean isGlobalAdminModeEnabled() {
-        return Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.get();
-    }
-
-    public boolean isOfferItemRenderingGloballyEnabled() {
-        return level != null && level.isClientSide ? settingsManager.isGlobalOfferItemRenderingEnabled()
-                : Config.ENABLE_GLOBAL_OFFER_ITEM_RENDERING.get();
-    }
-
-    @ApiStatus.Internal
-    public void setOfferItemRenderingGloballyEnabledClient(boolean enabled) {
-        settingsManager.setGlobalOfferItemRenderingEnabled(enabled);
+        return MarketplaceManager.get().isGlobalEditModeEnabled();
     }
 
     public void setAdminShopEnabled(boolean enabled) {
@@ -912,16 +903,17 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         redstoneManager.lockAdjacentChests();
     }
 
+    private static final int OFFER_UPDATE_INTERVAL = 5;
+
     public static void tick(Level level, BlockPos pos, BlockState state, SingleOfferShopBlockEntity be) {
         if (level.isClientSide) {
             return;
         }
 
         be.tickCounter++;
-        boolean chestExtensionEnabled = Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get();
+        boolean chestExtensionEnabled = SingleOfferConfig.ENABLE_CHEST_EXTENSION.get();
 
-        int offerInterval = Config.OFFER_UPDATE_INTERVAL.get();
-        if (offerInterval > 0 && be.tickCounter % offerInterval == 0) {
+        if (be.tickCounter % OFFER_UPDATE_INTERVAL == 0) {
             if (be.needsOfferRefresh) {
                 be.updateOfferSlot(false);
                 be.needsOfferRefresh = false;
@@ -930,7 +922,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             be.updateOutputFullness();
         }
 
-        int chestInterval = Config.CHEST_IO_INTERVAL.get();
+        int chestInterval = SingleOfferConfig.CHEST_IO_INTERVAL.get();
         if (chestExtensionEnabled && chestInterval > 0 && be.tickCounter % chestInterval == 0) {
             if (be.getIoSettings().autoIo()) {
                 if (be.canProcessIo(SideMode.INPUT)) {

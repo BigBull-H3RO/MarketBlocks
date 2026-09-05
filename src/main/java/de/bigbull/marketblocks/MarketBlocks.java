@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks;
 
 import com.mojang.logging.LogUtils;
+import de.bigbull.marketblocks.core.config.ClientConfig;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.config.MarketplaceConfig;
 import de.bigbull.marketblocks.core.config.TraderConfig;
@@ -33,6 +34,7 @@ public class MarketBlocks {
         CreativeTabInit.CREATIVE_MODE_TABS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC, "marketblocks/main.toml");
+        modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC, "marketblocks/client.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, MarketplaceConfig.SPEC, "marketblocks/marketplace.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, TraderConfig.SPEC, "marketblocks/trader/trader.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, SingleOfferConfig.SPEC, "marketblocks/singleoffer/general.toml");

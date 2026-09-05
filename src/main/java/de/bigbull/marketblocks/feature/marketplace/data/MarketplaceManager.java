@@ -6,7 +6,6 @@ import com.google.gson.*;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.config.MarketplaceConfig;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSyncPacket;
@@ -65,6 +64,7 @@ public final class MarketplaceManager {
     private Path configFile;
     private boolean dirty;
     private boolean initialized;
+    private volatile boolean globalEditModeEnabled = false;
     private int ticksSinceSave;
     private int ticksSinceRuntimeUpkeep;
     private long lastRuntimeUpkeepGameTime = Long.MIN_VALUE;
@@ -121,6 +121,7 @@ public final class MarketplaceManager {
                 server = null;
                 configFile = null;
                 initialized = false;
+                globalEditModeEnabled = false;
                 ticksSinceRuntimeUpkeep = 0;
                 resetRuntimeUpkeepMarkers();
             }
@@ -231,10 +232,10 @@ public final class MarketplaceManager {
             RegistriesInit.MARKETPLACE_BUY_TRIGGER.get().trigger(player);
         }
         if (shouldSyncViewers) {
-            if (MarketplaceConfig.MARKETPLACE_BUYER_MESSAGE.get()) {
+            if (MarketplaceConfig.BUYER_CHAT_MESSAGE.get()) {
                 MarketplaceOffer offer = findOffer(offerId);
                 if (offer != null) {
-                    if (MarketplaceConfig.MARKETPLACE_BUYER_MESSAGE_GLOBAL.get()) {
+                    if (MarketplaceConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
                         Component msg = Component.translatable("message.marketblocks.purchase_success.global", player.getDisplayName(), amount, offer.result().getHoverName()).withStyle(ChatFormatting.GREEN);
                         player.server.getPlayerList().broadcastSystemMessage(msg, false);
                     } else {
@@ -312,15 +313,14 @@ public final class MarketplaceManager {
     }
 
     public boolean isGlobalEditModeEnabled() {
-        return Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.get();
+        return globalEditModeEnabled;
     }
 
     public void setGlobalEditModeEnabled(boolean enabled) {
         ViewerSyncBatch viewerSyncBatch = ViewerSyncBatch.empty();
         synchronized (lock) {
-            boolean changed = isGlobalEditModeEnabled() != enabled;
-            Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.set(enabled);
-            Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.save();
+            boolean changed = this.globalEditModeEnabled != enabled;
+            this.globalEditModeEnabled = enabled;
             if (!initialized || !changed) {
                 return;
             }
@@ -938,7 +938,7 @@ public final class MarketplaceManager {
     }
 
     private boolean isGlobalDailyLimit() {
-        return MarketplaceConfig.MARKETPLACE_GLOBAL_DAILY_LIMIT.get();
+        return MarketplaceConfig.SHARED_DAILY_LIMITS.get();
     }
 
     private int getMaximumPurchasableFromLimits(MarketplaceOffer offer, UUID playerId) {

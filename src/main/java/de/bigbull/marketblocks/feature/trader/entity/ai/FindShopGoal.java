@@ -59,7 +59,7 @@ public class FindShopGoal extends Goal {
         ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
 
         // Pre-filter by dimension and distance, then shuffle for randomness
-        boolean allowAdminShops = TraderConfig.TRADER_ALLOW_ADMIN_SHOPS.get();
+        boolean allowAdminShops = TraderConfig.ALLOW_ADMIN_SHOPS.get();
         List<ShopDirectorySavedData.ShopEntry> candidates = new ArrayList<>();
         for (ShopDirectorySavedData.ShopEntry shop : data.getShops()) {
             if (!allowAdminShops && shop.isAdminShop())

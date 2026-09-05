@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.core.event;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -28,35 +28,24 @@ public class ChestSecurityHandler {
     public static void onChestPlaced(BlockEvent.EntityPlaceEvent event) {
         if (!(event.getLevel() instanceof Level level)) return;
         if (level.isClientSide()) return;
-        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) return;
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) return;
 
         BlockState state = event.getPlacedBlock();
         if (!(state.getBlock() instanceof ChestBlock)) return;
 
-        if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get()) {
-            if (state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
-                Direction dir = ChestBlock.getConnectedDirection(state);
-                BlockPos otherPos = event.getPos().relative(dir);
-                if (isAdjacentToShop(level, event.getPos()) || isAdjacentToShop(level, otherPos)) {
-                    level.invalidateCapabilities(event.getPos());
-                    level.invalidateCapabilities(otherPos);
-                }
-            }
-            return;
-        }
-
         if (state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
-            Direction direction = ChestBlock.getConnectedDirection(state);
-            BlockPos otherPos = event.getPos().relative(direction);
+            Direction dir = ChestBlock.getConnectedDirection(state);
+            BlockPos otherPos = event.getPos().relative(dir);
             if (isAdjacentToShop(level, event.getPos()) || isAdjacentToShop(level, otherPos)) {
-                event.setCanceled(true);
+                level.invalidateCapabilities(event.getPos());
+                level.invalidateCapabilities(otherPos);
             }
         }
     }
 
     @SubscribeEvent
     public static void onRightClick(PlayerInteractEvent.RightClickBlock event) {
-        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) return;
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) return;
         Level level = event.getLevel();
         BlockPos pos = event.getPos();
         BlockEntity be = level.getBlockEntity(pos);
@@ -73,7 +62,7 @@ public class ChestSecurityHandler {
     }
 
     private static SingleOfferShopBlockEntity findShop(Level level, BlockPos pos) {
-        if (!Config.ENABLE_CHEST_IO_EXTENSION_EXPERIMENTAL.get()) {
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) {
             return null;
         }
         SingleOfferShopBlockEntity shop = findShopSingle(level, pos);
@@ -81,13 +70,11 @@ public class ChestSecurityHandler {
             return shop;
         }
 
-        if (Config.ENABLE_DOUBLE_CHEST_SUPPORT.get()) {
-            BlockState state = level.getBlockState(pos);
-            if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
-                Direction direction = ChestBlock.getConnectedDirection(state);
-                BlockPos otherPos = pos.relative(direction);
-                return findShopSingle(level, otherPos);
-            }
+        BlockState state = level.getBlockState(pos);
+        if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+            Direction direction = ChestBlock.getConnectedDirection(state);
+            BlockPos otherPos = pos.relative(direction);
+            return findShopSingle(level, otherPos);
         }
 
         return null;

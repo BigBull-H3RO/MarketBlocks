@@ -12,7 +12,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 
@@ -76,15 +75,7 @@ public class NetworkHandler {
             CustomPacketPayload.Type<T> type, 
             StreamCodec<? super RegistryFriendlyByteBuf, T> codec, 
             IPayloadHandler<T> handler) {
-        
-        registrar.playToServer(type, codec, (packet, context) -> {
-            if (context.player() instanceof Player player) {
-                if (!PacketRateLimiter.canProcessPacket(player, type)) {
-                    return;
-                }
-            }
-            handler.handle(packet, context);
-        });
+        registrar.playToServer(type, codec, handler);
     }
 
     /**

@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.core.config.ClientConfig;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopRenderConfig;
@@ -49,17 +50,18 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
     @Override
     public boolean shouldRenderOffScreen(SingleOfferShopBlockEntity blockEntity) {
-        return true;
+        return false;
     }
 
     @Override
     public boolean shouldRender(SingleOfferShopBlockEntity blockEntity, Vec3 cameraPos) {
-        return true;
+        return Vec3.atCenterOf(blockEntity.getBlockPos()).closerThan(cameraPos, this.getViewDistance());
     }
 
     @Override
     public int getViewDistance() {
-        return 256;
+        double scale = Minecraft.getInstance().options.entityDistanceScaling().get();
+        return (int) (64 * scale);
     }
 
     @Override
@@ -73,7 +75,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         VisualShopNpcRenderer.render(blockEntity, partialTick, poseStack, defaultBufferSource, packedLight);
 
-        if (!blockEntity.hasOffer()) {
+        if (!blockEntity.hasOffer() || !ClientConfig.ENABLE_SHOP_ITEM_RENDERING.get()) {
             return;
         }
 
@@ -88,7 +90,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         ItemStack result = blockEntity.getOfferResult();
         OfferItemSettings offerSettings = blockEntity.getOfferItemSettings();
-        boolean renderOfferItem = blockEntity.isOfferItemRenderingGloballyEnabled() && offerSettings.visible();
+        boolean renderOfferItem = offerSettings.visible();
 
         int actualPackedLightFront = offerSettings.fullbright() ? LightTexture.FULL_BRIGHT : packedLight;
 

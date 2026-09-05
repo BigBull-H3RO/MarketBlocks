@@ -129,18 +129,14 @@ public final class MarketplaceEditorControls {
             callbacks.addWidget(
                     new IconButton(controlsX, controlsY, 20, 20, context.buttonSprites(), context.limitsIcon(),
                             ignored -> callbacks.openOfferLimitsEditor(selectedOffer),
-                            de.bigbull.marketblocks.core.config.MarketplaceConfig.MARKETPLACE_GLOBAL_LIMITS_ENABLED.get()
-                                    ? Component.translatable("gui.marketblocks.marketplace.inline.limits.disabled_global")
-                                    : Component.translatable("gui.marketblocks.marketplace.inline.limits"),
+                            Component.translatable("gui.marketblocks.marketplace.inline.limits"),
                             () -> false));
 
             callbacks.addWidget(
                     new IconButton(controlsX, controlsY + context.rightButtonSize() + context.rightButtonGap(), 20, 20,
                             context.buttonSprites(), context.pricingIcon(),
                             ignored -> callbacks.openOfferPricingEditor(selectedOffer),
-                            de.bigbull.marketblocks.core.config.MarketplaceConfig.MARKETPLACE_GLOBAL_PRICING_ENABLED.get()
-                                    ? Component.translatable("gui.marketblocks.marketplace.inline.pricing.disabled_global")
-                                    : Component.translatable("gui.marketblocks.marketplace.inline.pricing"),
+                            Component.translatable("gui.marketblocks.marketplace.inline.pricing"),
                             () -> false));
         }
     }

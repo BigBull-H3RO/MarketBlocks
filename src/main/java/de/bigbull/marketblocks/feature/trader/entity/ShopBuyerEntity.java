@@ -126,12 +126,16 @@ public class ShopBuyerEntity extends PathfinderMob {
     private static final int SEARCHING_MSG_START = 7;
     private static final int SEARCHING_MSG_END = 8;
     private static final int BROWSING_MSG_START = 9;
+    private static final int RAGE_CLICK_THRESHOLD = 3;
+    private static final int RAGE_CLICK_WINDOW_TICKS = 60;
+    private static final double REVENGE_DETECTION_RADIUS = 16.0;
+
     private static final int BROWSING_MSG_END = 10;
 
     public ShopBuyerEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
-        this.despawnDelay = TraderConfig.TRADER_DESPAWN_TICKS.get();
-        int maxShops = TraderConfig.TRADER_MAX_SHOPS_PER_VISIT.get();
+        this.despawnDelay = TraderConfig.DESPAWN_TICKS.get();
+        int maxShops = TraderConfig.MAX_SHOPS_PER_VISIT.get();
         this.shopsToVisit = maxShops > 1 ? 1 + this.random.nextInt(maxShops) : 1;
         if (this.getNavigation() instanceof GroundPathNavigation groundNavigation) {
             groundNavigation.setCanFloat(true);
@@ -322,7 +326,7 @@ public class ShopBuyerEntity extends PathfinderMob {
             }
 
             // Handle Rage and Revenge logic
-            if (TraderConfig.ENABLE_SHOPBUYER_RAGE_MODE.get()) {
+            if (TraderConfig.RAGE_MODE_ENABLED.get()) {
                 if (this.isRaging) {
                     LivingEntity currentTarget = this.getTarget();
                     if (currentTarget == null || !currentTarget.isAlive() || (currentTarget instanceof Player p && (p.isDeadOrDying() || p.isRemoved()))) {
@@ -332,7 +336,7 @@ public class ShopBuyerEntity extends PathfinderMob {
                         calmDown();
                     }
                 } else if (this.angryTargetUUID != null) {
-                    double radius = TraderConfig.REVENGE_DETECTION_RADIUS.get();
+                    double radius = REVENGE_DETECTION_RADIUS;
                     Player player = this.level().getPlayerByUUID(this.angryTargetUUID);
                     if (player != null && player.isAlive() && !player.isSpectator() && !player.isCreative()
                             && this.distanceToSqr(player) < (radius * radius)) {
@@ -460,13 +464,13 @@ public class ShopBuyerEntity extends PathfinderMob {
             }
 
             // Track clicks for Rage Mode Easter Egg trigger
-            if (TraderConfig.ENABLE_SHOPBUYER_RAGE_MODE.get()) {
+            if (TraderConfig.RAGE_MODE_ENABLED.get()) {
                 List<Long> clicks = clickTimestamps.computeIfAbsent(playerUuid, k -> new ArrayList<>());
                 clicks.add(gameTime);
-                int windowTicks = TraderConfig.RAGE_CLICK_WINDOW_TICKS.get();
+                int windowTicks = RAGE_CLICK_WINDOW_TICKS;
                 clicks.removeIf(t -> (gameTime - t) > windowTicks);
 
-                int threshold = TraderConfig.RAGE_CLICK_THRESHOLD.get();
+                int threshold = RAGE_CLICK_THRESHOLD;
                 if (clicks.size() >= threshold) {
                     clicks.clear();
                     triggerRageMode(player);
@@ -666,8 +670,8 @@ public class ShopBuyerEntity extends PathfinderMob {
             @Nullable SpawnGroupData spawnData) {
         RandomSource random = level.getRandom();
 
-        int configMin = TraderConfig.TRADER_MIN_BUDGET.get();
-        int configMax = TraderConfig.TRADER_MAX_BUDGET.get();
+        int configMin = TraderConfig.MIN_BUDGET.get();
+        int configMax = TraderConfig.MAX_BUDGET.get();
         int roll = random.nextInt(100);
         ShopBuyerEntity.TraderRank rank;
         int budget;
@@ -690,7 +694,7 @@ public class ShopBuyerEntity extends PathfinderMob {
         this.setInterestCategory(category);
         this.setBudget(budget);
 
-        if (TraderConfig.TRADER_NAMES_ENABLED.get()) {
+        if (TraderConfig.NAMES_ENABLED.get()) {
             String name = TraderEconomyManager.get().getRandomName(random);
             if (name != null) {
                 this.setCustomName(Component.literal(name));

@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.singleoffer.entity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.core.config.MarketCrateConfig;
 import de.bigbull.marketblocks.core.config.TradeStandConfig;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
@@ -19,9 +19,7 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.ShopCategory;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.ChestType;
 
 /**
  * Manages all configuration settings for a single-offer shop block entity.
@@ -46,7 +44,6 @@ public class ShopSettingsManager {
 
     private boolean outputAlmostFull = false;
     private boolean outputFull = false;
-    private boolean globalOfferItemRenderingEnabled = true;
 
     public ShopSettingsManager(SingleOfferShopBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
@@ -205,21 +202,6 @@ public class ShopSettingsManager {
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
 
-        if (!Config.ENABLE_DOUBLE_CHEST_SUPPORT.get() && blockEntity.getLevel() != null) {
-            Direction facing = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
-            for (Direction dir : Direction.values()) {
-                SideMode mode = this.ioSettings.getMode(dir, facing);
-                if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
-                    BlockPos neighborPos = blockEntity.getBlockPos().relative(dir);
-                    BlockState state = blockEntity.getLevel().getBlockState(neighborPos);
-                    if (state.getBlock() instanceof ChestBlock &&
-                            state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
-                        this.ioSettings = this.ioSettings.withMode(dir, facing, SideMode.DISABLED);
-                    }
-                }
-            }
-        }
-
         blockEntity.setChanged();
 
         for (Direction dir : Direction.values()) {
@@ -262,15 +244,6 @@ public class ShopSettingsManager {
             blockEntity.sync();
     }
 
-    public boolean isGlobalOfferItemRenderingEnabled() {
-        return globalOfferItemRenderingEnabled;
-    }
-
-    public void setGlobalOfferItemRenderingEnabled(boolean enabled) {
-        this.globalOfferItemRenderingEnabled = enabled;
-        blockEntity.setChanged();
-    }
-
     public boolean isOutputFull() {
         return outputFull;
     }
@@ -292,8 +265,7 @@ public class ShopSettingsManager {
         tag.put(KEY_ACCESS, accessSettings.save());
         tag.put("Notification", notificationSettings.save());
 
-        tag.putBoolean("GlobalOfferItemRendering", globalOfferItemRenderingEnabled);
-        if (Config.ENABLE_OUTPUT_WARNING.get()) {
+        if (SingleOfferConfig.ENABLE_OUTPUT_WARNING.get()) {
             tag.putBoolean("OutputWarning", outputAlmostFull);
         }
         tag.putBoolean("OutputFull", outputFull);
@@ -331,11 +303,6 @@ public class ShopSettingsManager {
             notificationSettings = createDefaultNotificationSettings(isMarketCrate);
         }
 
-        if (tag.contains("GlobalOfferItemRendering")) {
-            globalOfferItemRenderingEnabled = tag.getBoolean("GlobalOfferItemRendering");
-        } else {
-            globalOfferItemRenderingEnabled = true;
-        }
         outputAlmostFull = tag.getBoolean("OutputWarning");
         outputFull = tag.getBoolean("OutputFull");
     }
