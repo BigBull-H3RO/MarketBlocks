@@ -493,6 +493,10 @@ public final class MarketplaceManager {
         return true;
     }
 
+    public boolean clearOfferSale(UUID offerId) {
+        return setOfferSale(offerId, null, 0L);
+    }
+
     public boolean resetLimitsForPlayer(UUID playerId) {
         synchronized (lock) {
             ensureInitialized();

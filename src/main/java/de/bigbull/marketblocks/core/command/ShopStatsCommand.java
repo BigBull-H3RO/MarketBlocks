@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.core.command;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
@@ -14,8 +15,8 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
 /**
- * Handles the {@code /marketblocks shop stats} and {@code /marketblocks marketplace stats} commands.
- * Displays a top-10 leaderboard sorted by total sales.
+ * Handles the {@code /marketblocks stats [shops|marketplace]} command.
+ * Displays top-10 leaderboards sorted by total sales.
  */
 public final class ShopStatsCommand {
 
@@ -23,19 +24,19 @@ public final class ShopStatsCommand {
     }
 
     /**
-     * Builds the {@code stats} sub-node for {@code /marketblocks shop stats}.
+     * Builds the Brigadier command node for {@code /marketblocks stats [shops|marketplace]}.
      */
-    public static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> buildShopStats() {
+    public static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("stats")
-                .executes(ShopStatsCommand::executeShopStats);
-    }
-
-    /**
-     * Builds the {@code stats} sub-node for {@code /marketblocks marketplace stats}.
-     */
-    public static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> buildMarketplaceStats() {
-        return Commands.literal("stats")
-                .executes(ShopStatsCommand::executeMarketplaceStats);
+                .executes(context -> {
+                    executeShopStats(context);
+                    executeMarketplaceStats(context);
+                    return 1;
+                })
+                .then(Commands.literal("shops")
+                        .executes(ShopStatsCommand::executeShopStats))
+                .then(Commands.literal("marketplace")
+                        .executes(ShopStatsCommand::executeMarketplaceStats));
     }
 
     private static int executeShopStats(CommandContext<CommandSourceStack> context) {

@@ -720,6 +720,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         updateShopDirectory();
     }
 
+    public void clearSale() {
+        setSale(null, 0L);
+    }
+
     public ItemStack getOfferPayment1() {
         if (isSaleActive() && !offerPayment1.isEmpty()) {
             double multiplier = de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath

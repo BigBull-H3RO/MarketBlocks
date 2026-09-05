@@ -75,6 +75,12 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("command.marketblocks.unlink.success", "§a¡Bloque desvinculado exitosamente!");
                 add("command.marketblocks.unlink.success_name", "§aDesvinculado del mercado: §e%s");
                 add("command.marketblocks.waypoint.created", "§aEnlaces de Waypoint creados:");
+                add("command.marketblocks.internal.waypoint.coords", "Coordenadas del punto de ruta para %s: X: %d, Y: %d, Z: %d (%s)");
+                add("command.marketblocks.internal.waypoint.journeymap", "Punto de ruta de JourneyMap creado / enlace generado.");
+                add("command.marketblocks.internal.waypoint.xaero", "Enlace de punto de ruta de Xaero's Minimap:");
+                add("command.marketblocks.internal.tp.no_permission", "No tienes permiso para teletransportarte a las tiendas.");
+                add("command.marketblocks.internal.tp.invalid_dimension", "No se pudo encontrar la dimensión de destino.");
+                add("command.marketblocks.internal.tp.success", "¡Teletransportado a la tienda!");
 
                 // === GUI - Settings ===
                 add("gui.marketblocks.access.edit_access_list", "Lista de acceso");

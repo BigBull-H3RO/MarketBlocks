@@ -24,28 +24,36 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
-import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
-import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
-import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Handles all {@code /marketblocks admin ...} and
- * {@code /marketblocks marketplace ...} admin subcommands:
- * editmode, reload, resetlimits, link, unlink.
+ * Handles {@code /marketblocks admin} subcommands for operators:
+ * <ul>
+ * <li>{@code editmode [true|false]} - toggles global edit mode</li>
+ * <li>{@code reload} - reloads marketplace configurations from disk</li>
+ * <li>{@code resetlimits <player>} - resets lifetime and stock limits for a
+ * player</li>
+ * <li>{@code marketplace link [name] [tp_pos]} - links a block to the
+ * marketplace</li>
+ * <li>{@code marketplace unlink [name]} - unlinks a block from the
+ * marketplace</li>
+ * <li>{@code sale marketplace <set|remove>} - manages temporary sales for
+ * marketplace offers</li>
+ * <li>{@code sale shop <set|remove>} - manages temporary sales for admin
+ * shops</li>
+ * </ul>
  */
 public final class MarketplaceAdminCommand {
 
@@ -69,7 +77,7 @@ public final class MarketplaceAdminCommand {
                                                         .append(payments.get(1).getHoverName().getString());
                                 }
                                 String tooltip = page.name() + " | " + offer.result().getCount() + "x "
-                                                + offer.result().getHoverName().getString() + " (Preis: "
+                                                + offer.result().getHoverName().getString() + " (Price: "
                                                 + cost.toString() + ")";
                                 builder.suggest("\"" + suggestionKey + "\"", new LiteralMessage(tooltip));
                         }
@@ -96,7 +104,7 @@ public final class MarketplaceAdminCommand {
                                 String tooltip = (entry.shopName() != null && !entry.shopName().isEmpty()
                                                 ? entry.shopName()
                                                 : "AdminShop") + " | " + entry.result().getCount() + "x "
-                                                + entry.result().getHoverName().getString() + " (Preis: "
+                                                + entry.result().getHoverName().getString() + " (Price: "
                                                 + cost.toString() + ")";
                                 builder.suggest("\"" + suggestionKey + "\"", new LiteralMessage(tooltip));
                         }
@@ -111,66 +119,50 @@ public final class MarketplaceAdminCommand {
          * Builds the Brigadier command node for {@code admin} subcommands.
          */
         public static LiteralArgumentBuilder<CommandSourceStack> build(
-                        SuggestionProvider<CommandSourceStack> linkSuggestions,
-                        CommandBuildContext buildContext) {
+                        SuggestionProvider<CommandSourceStack> linkSuggestions) {
                 return Commands.literal("admin")
                                 .requires(source -> source.hasPermission(2))
                                 .then(Commands.literal("editmode")
                                                 .executes(context -> {
-                                                        MarketplaceManager manager = MarketplaceManager.get();
-                                                        boolean enabled = !manager.isGlobalEditModeEnabled();
-                                                        setGlobalAdminModeAndNotify(enabled, context.getSource());
+                                                        boolean currentState = MarketplaceManager.get()
+                                                                        .isGlobalEditModeEnabled();
+                                                        setGlobalAdminModeAndNotify(!currentState, context.getSource());
                                                         return 1;
                                                 })
                                                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                                                                 .executes(context -> {
-                                                                        boolean enabled = BoolArgumentType
-                                                                                        .getBool(context, "enabled");
+                                                                        boolean enabled = BoolArgumentType.getBool(
+                                                                                        context,
+                                                                                        "enabled");
                                                                         setGlobalAdminModeAndNotify(enabled,
                                                                                         context.getSource());
                                                                         return 1;
                                                                 })))
                                 .then(Commands.literal("reload")
                                                 .executes(context -> {
-                                                        CommandSourceStack source = context.getSource();
                                                         MarketplaceManager.get().reload();
-                                                        source.sendSuccess(
-                                                                        () -> Component.translatable(
+                                                        de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager.get().load();
+                                                        context.getSource()
+                                                                        .sendSuccess(() -> Component.translatable(
                                                                                         "command.marketblocks.reload.success"),
-                                                                        true);
+                                                                                        true);
                                                         return 1;
                                                 }))
                                 .then(Commands.literal("resetlimits")
                                                 .then(Commands.argument("player", EntityArgument.player())
                                                                 .executes(context -> {
-                                                                        CommandSourceStack source = context.getSource();
-                                                                        try {
-                                                                                ServerPlayer player = EntityArgument
-                                                                                                .getPlayer(context,
-                                                                                                                "player");
-                                                                                boolean changed = MarketplaceManager
-                                                                                                .get()
-                                                                                                .resetLimitsForPlayer(
-                                                                                                                player.getUUID());
-                                                                                if (changed) {
-                                                                                        source.sendSuccess(
-                                                                                                        () -> Component.translatable(
+                                                                        ServerPlayer target = EntityArgument.getPlayer(
+                                                                                        context,
+                                                                                        "player");
+                                                                        MarketplaceManager.get()
+                                                                                        .resetLimitsForPlayer(
+                                                                                                        target.getUUID());
+                                                                        context.getSource()
+                                                                                        .sendSuccess(() -> Component
+                                                                                                        .translatable(
                                                                                                                         "command.marketblocks.resetlimits.success",
-                                                                                                                        player.getName().getString()),
+                                                                                                                        target.getName()),
                                                                                                         true);
-                                                                                } else {
-                                                                                        source.sendSuccess(
-                                                                                                        () -> Component.translatable(
-                                                                                                                        "command.marketblocks.resetlimits.no_changes",
-                                                                                                                        player.getName().getString()),
-                                                                                                        true);
-                                                                                }
-                                                                        } catch (Exception e) {
-                                                                                source.sendFailure(
-                                                                                                Component.translatable(
-                                                                                                                "command.marketblocks.player_not_found"));
-                                                                                return 0;
-                                                                        }
                                                                         return 1;
                                                                 })))
                                 .then(Commands.literal("marketplace")
@@ -194,109 +186,11 @@ public final class MarketplaceAdminCommand {
                                                                                                                                 context,
                                                                                                                                 "tp_pos"))))))
                                                 .then(Commands.literal("unlink")
-                                                                .requires(source -> source.hasPermission(2))
                                                                 .executes(MarketplaceAdminCommand::executeMarketplaceUnlink)
                                                                 .then(Commands.argument("name",
                                                                                 StringArgumentType.string())
                                                                                 .suggests(linkSuggestions)
                                                                                 .executes(MarketplaceAdminCommand::executeMarketplaceUnlinkByName))))
-                                .then(Commands.literal("trader")
-                                                .then(Commands.literal("value")
-                                                                .then(Commands.literal("set")
-                                                                                .then(Commands.argument("item",
-                                                                                                ItemArgument.item(
-                                                                                                                buildContext))
-                                                                                                .then(Commands.argument(
-                                                                                                                "value",
-                                                                                                                DoubleArgumentType
-                                                                                                                                .doubleArg(0))
-                                                                                                                .executes(context -> {
-                                                                                                                        Item item = ItemArgument
-                                                                                                                                        .getItem(context,
-                                                                                                                                                        "item")
-                                                                                                                                        .getItem();
-                                                                                                                        double val = DoubleArgumentType
-                                                                                                                                        .getDouble(context,
-                                                                                                                                                        "value");
-                                                                                                                        TraderEconomyManager
-                                                                                                                                        .get()
-                                                                                                                                        .setValue(item, val);
-                                                                                                                        context.getSource()
-                                                                                                                                        .sendSuccess(() -> Component
-                                                                                                                                                        .translatable(
-                                                                                                                                                                        "command.marketblocks.trader.value.set",
-                                                                                                                                                                        Component.translatable(
-                                                                                                                                                                                        item.getDescriptionId()),
-                                                                                                                                                                        val),
-                                                                                                                                                        true);
-                                                                                                                        return 1;
-                                                                                                                }))))
-                                                                .then(Commands.literal("remove")
-                                                                                .then(Commands.argument("item",
-                                                                                                ItemArgument.item(
-                                                                                                                buildContext))
-                                                                                                .executes(context -> {
-                                                                                                        Item item = ItemArgument
-                                                                                                                        .getItem(context,
-                                                                                                                                        "item")
-                                                                                                                        .getItem();
-                                                                                                        TraderEconomyManager
-                                                                                                                        .get()
-                                                                                                                        .removeValue(item);
-                                                                                                        context.getSource()
-                                                                                                                        .sendSuccess(() -> Component
-                                                                                                                                        .translatable(
-                                                                                                                                                        "command.marketblocks.trader.value.remove",
-                                                                                                                                                        Component.translatable(
-                                                                                                                                                                        item.getDescriptionId())),
-                                                                                                                                        true);
-                                                                                                        return 1;
-                                                                                                }))))
-                                                .then(Commands.literal("blacklist")
-                                                                .then(Commands.literal("add")
-                                                                                .then(Commands.argument("item",
-                                                                                                ItemArgument.item(
-                                                                                                                buildContext))
-                                                                                                .executes(context -> {
-                                                                                                        Item item = ItemArgument
-                                                                                                                        .getItem(context,
-                                                                                                                                        "item")
-                                                                                                                        .getItem();
-                                                                                                        TraderEconomyManager
-                                                                                                                        .get()
-                                                                                                                        .setBlacklisted(item,
-                                                                                                                                        true);
-                                                                                                        context.getSource()
-                                                                                                                        .sendSuccess(() -> Component
-                                                                                                                                        .translatable(
-                                                                                                                                                        "command.marketblocks.trader.blacklist.add",
-                                                                                                                                                        Component.translatable(
-                                                                                                                                                                        item.getDescriptionId())),
-                                                                                                                                        true);
-                                                                                                        return 1;
-                                                                                                })))
-                                                                .then(Commands.literal("remove")
-                                                                                .then(Commands.argument("item",
-                                                                                                ItemArgument.item(
-                                                                                                                buildContext))
-                                                                                                .executes(context -> {
-                                                                                                        Item item = ItemArgument
-                                                                                                                        .getItem(context,
-                                                                                                                                        "item")
-                                                                                                                        .getItem();
-                                                                                                        TraderEconomyManager
-                                                                                                                        .get()
-                                                                                                                        .setBlacklisted(item,
-                                                                                                                                        false);
-                                                                                                        context.getSource()
-                                                                                                                        .sendSuccess(() -> Component
-                                                                                                                                        .translatable(
-                                                                                                                                                        "command.marketblocks.trader.blacklist.remove",
-                                                                                                                                                        Component.translatable(
-                                                                                                                                                                        item.getDescriptionId())),
-                                                                                                                                        true);
-                                                                                                        return 1;
-                                                                                                })))))
                                 .then(Commands.literal("sale")
                                                 .then(Commands.literal("marketplace")
                                                                 .then(Commands.literal("set")
@@ -342,42 +236,21 @@ public final class MarketplaceAdminCommand {
                                                                                                                                                                 offerStr));
                                                                                                                 return 1;
                                                                                                         }
-                                                                                                        try {
-                                                                                                                MarketplaceOffer offer = MarketplaceManager
-                                                                                                                                .get()
-                                                                                                                                .findOffer(offerId);
-                                                                                                                boolean success = MarketplaceManager
-                                                                                                                                .get()
-                                                                                                                                .setOfferSale(offerId,
-                                                                                                                                                null,
-                                                                                                                                                0L);
-                                                                                                                if (success) {
-                                                                                                                        String itemName = offer != null
-                                                                                                                                        ? (offer.result()
-                                                                                                                                                        .getCount()
-                                                                                                                                                        + "x "
-                                                                                                                                                        + offer.result().getHoverName()
-                                                                                                                                                                        .getString())
-                                                                                                                                        : offerStr;
-                                                                                                                        context.getSource()
-                                                                                                                                        .sendSuccess(
-                                                                                                                                                        () -> Component.translatable(
-                                                                                                                                                                        "command.marketblocks.sale.remove.success",
-                                                                                                                                                                        itemName),
-                                                                                                                                                        true);
-                                                                                                                } else {
-                                                                                                                        context.getSource()
-                                                                                                                                        .sendFailure(
-                                                                                                                                                        Component.translatable(
-                                                                                                                                                                        "command.marketblocks.sale.not_found",
-                                                                                                                                                                        offerStr));
-                                                                                                                }
-                                                                                                        } catch (Exception e) {
+                                                                                                        boolean success = MarketplaceManager
+                                                                                                                        .get()
+                                                                                                                        .clearOfferSale(offerId);
+                                                                                                        if (success) {
                                                                                                                 context.getSource()
-                                                                                                                                .sendFailure(
-                                                                                                                                                Component.translatable(
-                                                                                                                                                                "command.marketblocks.sale.failed"));
+                                                                                                                                .sendSuccess(
+                                                                                                                                                () -> Component.translatable(
+                                                                                                                                                                "command.marketblocks.sale.remove.success"),
+                                                                                                                                                true);
+                                                                                                                return 1;
                                                                                                         }
+                                                                                                        context.getSource()
+                                                                                                                        .sendFailure(
+                                                                                                                                        Component.translatable(
+                                                                                                                                                        "command.marketblocks.sale.failed"));
                                                                                                         return 1;
                                                                                                 }))))
                                                 .then(Commands.literal("shop")
@@ -419,8 +292,8 @@ public final class MarketplaceAdminCommand {
                                                                                                                         shopStr);
                                                                                                         if (entry == null) {
                                                                                                                 context.getSource()
-                                                                                                                                .sendFailure(Component
-                                                                                                                                                .translatable(
+                                                                                                                                .sendFailure(
+                                                                                                                                                Component.translatable(
                                                                                                                                                                 "command.marketblocks.sale.not_found",
                                                                                                                                                                 shopStr));
                                                                                                                 return 1;
@@ -434,18 +307,11 @@ public final class MarketplaceAdminCommand {
                                                                                                                 if (shopLevel.getBlockEntity(
                                                                                                                                 entry.pos()
                                                                                                                                                 .pos()) instanceof SingleOfferShopBlockEntity be) {
-                                                                                                                        be.setSale(null, 0L);
-                                                                                                                        String itemName = entry
-                                                                                                                                        .result()
-                                                                                                                                        .getCount()
-                                                                                                                                        + "x "
-                                                                                                                                        + entry.result().getHoverName()
-                                                                                                                                                        .getString();
+                                                                                                                        be.clearSale();
                                                                                                                         context.getSource()
-                                                                                                                                        .sendSuccess(() -> Component
-                                                                                                                                                        .translatable(
-                                                                                                                                                                        "command.marketblocks.sale.remove.success",
-                                                                                                                                                                        itemName),
+                                                                                                                                        .sendSuccess(
+                                                                                                                                                        () -> Component.translatable(
+                                                                                                                                                                        "command.marketblocks.sale.remove.success"),
                                                                                                                                                         true);
                                                                                                                         return 1;
                                                                                                                 }

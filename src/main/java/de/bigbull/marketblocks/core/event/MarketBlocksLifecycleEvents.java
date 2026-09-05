@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -19,7 +20,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import java.util.Set;
 
 /**
- * Handles server lifecycle events like start, stop, tick, and player login.
+ * Handles server lifecycle events like start, stop, tick, player login, and data reloads.
  */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public final class MarketBlocksLifecycleEvents {
@@ -37,6 +38,16 @@ public final class MarketBlocksLifecycleEvents {
     public static void handleServerStop(ServerStoppingEvent event) {
         MarketplaceManager.get().shutdown();
         ShopBuyerSpawner.clearAll();
+    }
+
+    @SubscribeEvent
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener((barrier, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
+            barrier.wait(null).thenRunAsync(() -> {
+                MarketplaceManager.get().reload();
+                TraderEconomyManager.get().load();
+            }, gameExecutor)
+        );
     }
 
     @SubscribeEvent
