@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.feature.singleoffer.network;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
@@ -45,7 +45,7 @@ public record ToggleAdminShopModePacket(BlockPos pos, boolean enabled) implement
             if (!player.hasPermissions(2)) {
                 return;
             }
-            if (!Config.MARKETBLOCKS_ADMIN_MODE_ENABLED.get()) {
+            if (!MarketplaceManager.get().isGlobalEditModeEnabled()) {
                 return;
             }
 

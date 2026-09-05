@@ -36,46 +36,85 @@ public class TradeStandConfig {
     public static final ModConfigSpec.BooleanValue TRADESTAND_DEFAULT_NOTIFY_CO_OWNERS;
 
     static {
-        BUILDER.push("TradeStand - Default Values");
-        BUILDER.comment("These values are used as starting values for new TradeStands. If a tab is disabled above, these serve as fixed forced values.");
-        
-        BUILDER.push("General Defaults");
-        TRADESTAND_DEFAULT_EMIT_REDSTONE = BUILDER.define("tradestandDefaultEmitRedstone", false);
-        TRADESTAND_DEFAULT_PURCHASE_XP_SOUND = BUILDER.define("tradestandDefaultPurchaseXpSound", false);
-        TRADESTAND_DEFAULT_IS_CLOSED = BUILDER.define("tradestandDefaultIsClosed", false);
+        BUILDER.push("General");
+        TRADESTAND_DEFAULT_EMIT_REDSTONE = BUILDER
+                .comment("Emit redstone signal when a trade occurs (Default: false)")
+                .define("emitRedstone", false);
+        TRADESTAND_DEFAULT_PURCHASE_XP_SOUND = BUILDER
+                .comment("Play XP pickup sound upon successful trade (Default: false)")
+                .define("purchaseXpSound", false);
+        TRADESTAND_DEFAULT_IS_CLOSED = BUILDER
+                .comment("Whether newly placed TradeStands start as closed (Default: false)")
+                .define("isClosed", false);
         BUILDER.pop();
-        
-        BUILDER.push("Villager Defaults");
-        TRADESTAND_DEFAULT_VILLAGER_NPC_ENABLED = BUILDER.define("tradestandDefaultVillagerNpcEnabled", false);
-        TRADESTAND_DEFAULT_VILLAGER_PROFESSION = BUILDER.defineEnum("tradestandDefaultVillagerProfession", VillagerVisualProfession.NONE);
-        TRADESTAND_DEFAULT_PURCHASE_PARTICLES = BUILDER.define("tradestandDefaultPurchaseParticles", false);
-        TRADESTAND_DEFAULT_PURCHASE_SOUNDS = BUILDER.define("tradestandDefaultPurchaseSounds", false);
-        TRADESTAND_DEFAULT_PAYMENT_SLOT_SOUNDS = BUILDER.define("tradestandDefaultPaymentSlotSounds", false);
-        TRADESTAND_DEFAULT_USE_PLAYER_SKIN = BUILDER.define("tradestandDefaultUsePlayerSkin", false);
+
+        BUILDER.push("Villager");
+        TRADESTAND_DEFAULT_VILLAGER_NPC_ENABLED = BUILDER
+                .comment("Show visual NPC by default (Default: false)")
+                .define("enabled", false);
+        TRADESTAND_DEFAULT_VILLAGER_PROFESSION = BUILDER
+                .comment("Default profession of the visual NPC")
+                .defineEnum("profession", VillagerVisualProfession.NONE);
+        TRADESTAND_DEFAULT_PURCHASE_PARTICLES = BUILDER
+                .comment("Spawn happy villager particles upon trade (Default: false)")
+                .define("purchaseParticles", false);
+        TRADESTAND_DEFAULT_PURCHASE_SOUNDS = BUILDER
+                .comment("Play villager trade sound upon purchase (Default: false)")
+                .define("purchaseSounds", false);
+        TRADESTAND_DEFAULT_PAYMENT_SLOT_SOUNDS = BUILDER
+                .comment("Play villager ambient sounds when payment slots change (Default: false)")
+                .define("paymentSlotSounds", false);
+        TRADESTAND_DEFAULT_USE_PLAYER_SKIN = BUILDER
+                .comment("Use the owner's player skin for the visual NPC (Default: false)")
+                .define("usePlayerSkin", false);
         BUILDER.pop();
-        
-        BUILDER.push("Visuals Defaults");
-        TRADESTAND_DEFAULT_ITEM_VISIBLE = BUILDER.define("tradestandDefaultItemVisible", true);
-        TRADESTAND_DEFAULT_ITEM_FULLBRIGHT = BUILDER.define("tradestandDefaultItemFullbright", false);
-        TRADESTAND_DEFAULT_ITEM_SCALE = BUILDER.defineInRange("tradestandDefaultItemScale", 1.0, 0.5, 1.5);
-        TRADESTAND_DEFAULT_ITEM_SPEED = BUILDER.defineInRange("tradestandDefaultItemSpeed", 0.75, 0.0, 1.5);
-        TRADESTAND_DEFAULT_ITEM_HEIGHT_OFFSET = BUILDER.defineInRange("tradestandDefaultItemHeightOffset", 0.0, -0.25, 0.25);
-        TRADESTAND_DEFAULT_ITEM_BOBBING = BUILDER.define("tradestandDefaultItemBobbing", false);
+
+        BUILDER.push("Visuals");
+        TRADESTAND_DEFAULT_ITEM_VISIBLE = BUILDER
+                .comment("Display floating offer item (Default: true)")
+                .define("visible", true);
+        TRADESTAND_DEFAULT_ITEM_FULLBRIGHT = BUILDER
+                .comment("Render item with full brightness (Default: false)")
+                .define("fullbright", false);
+        TRADESTAND_DEFAULT_ITEM_SCALE = BUILDER
+                .comment("Scale of the floating item (Default: 1.0)")
+                .defineInRange("scale", 1.0, 0.5, 1.5);
+        TRADESTAND_DEFAULT_ITEM_SPEED = BUILDER
+                .comment("Rotation speed of the floating item (Default: 0.75)")
+                .defineInRange("speed", 0.75, 0.0, 1.5);
+        TRADESTAND_DEFAULT_ITEM_HEIGHT_OFFSET = BUILDER
+                .comment("Vertical height offset of the floating item (Default: 0.0)")
+                .defineInRange("heightOffset", 0.0, -0.25, 0.25);
+        TRADESTAND_DEFAULT_ITEM_BOBBING = BUILDER
+                .comment("Enable gentle up/down bobbing motion (Default: false)")
+                .define("bobbing", false);
         BUILDER.pop();
-        
-        BUILDER.push("I/O Defaults");
-        TRADESTAND_DEFAULT_REDSTONE_CONTROL = BUILDER.defineEnum("tradestandDefaultRedstoneControl", IoRedstoneControl.IGNORED);
-        TRADESTAND_DEFAULT_ALLOW_IO = BUILDER.define("tradestandDefaultAllowIo", false);
-        TRADESTAND_DEFAULT_AUTO_IO = BUILDER.define("tradestandDefaultAutoIo", false);
+
+        BUILDER.push("IO");
+        TRADESTAND_DEFAULT_REDSTONE_CONTROL = BUILDER
+                .comment("Redstone control mode for chest IO (IGNORED, LOW, HIGH)")
+                .defineEnum("redstoneControl", IoRedstoneControl.IGNORED);
+        TRADESTAND_DEFAULT_ALLOW_IO = BUILDER
+                .comment("Allow chest IO interactions (Default: false)")
+                .define("allowIo", false);
+        TRADESTAND_DEFAULT_AUTO_IO = BUILDER
+                .comment("Automatically pull/push items periodically (Default: false)")
+                .define("autoIo", false);
         BUILDER.pop();
-        
-        BUILDER.push("Notification Defaults");
-        TRADESTAND_DEFAULT_NOTIFY_PURCHASE = BUILDER.define("tradestandDefaultNotifyPurchase", false);
-        TRADESTAND_DEFAULT_NOTIFY_OUT_OF_STOCK = BUILDER.define("tradestandDefaultNotifyOutOfStock", false);
-        TRADESTAND_DEFAULT_NOTIFY_OUTPUT_FULL = BUILDER.define("tradestandDefaultNotifyOutputFull", false);
-        TRADESTAND_DEFAULT_NOTIFY_CO_OWNERS = BUILDER.define("tradestandDefaultNotifyCoOwners", false);
-        BUILDER.pop();
-        
+
+        BUILDER.push("Notifications");
+        TRADESTAND_DEFAULT_NOTIFY_PURCHASE = BUILDER
+                .comment("Notify owner upon purchase (Default: false)")
+                .define("notifyPurchase", false);
+        TRADESTAND_DEFAULT_NOTIFY_OUT_OF_STOCK = BUILDER
+                .comment("Notify owner when stock is empty (Default: false)")
+                .define("notifyOutOfStock", false);
+        TRADESTAND_DEFAULT_NOTIFY_OUTPUT_FULL = BUILDER
+                .comment("Notify owner when output inventory is full (Default: false)")
+                .define("notifyOutputFull", false);
+        TRADESTAND_DEFAULT_NOTIFY_CO_OWNERS = BUILDER
+                .comment("Send notifications to co-owners as well (Default: false)")
+                .define("notifyCoOwners", false);
         BUILDER.pop();
 
         SPEC = BUILDER.build();

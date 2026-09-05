@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Mth;
 
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import net.minecraft.client.Minecraft;
@@ -291,7 +291,7 @@ public class SingleOfferOwnerListPanel {
             return;
         }
 
-        int maxOwners = Config.MAX_CO_OWNERS_PER_SHOP.get();
+        int maxOwners = SingleOfferConfig.MAX_CO_OWNERS_PER_SHOP.get();
         boolean limitReached = listMode == ListMode.OWNERS && collectSelectedOwners().size() >= maxOwners;
 
         int visible = Math.min(OWNER_VISIBLE_ROWS, ownerOrder.size());

@@ -38,7 +38,7 @@ public class TraderEconomyManager {
     private Path configDir;
 
     private TraderEconomyManager() {
-        this.configDir = FMLPaths.CONFIGDIR.get().resolve("marketblocks");
+        this.configDir = FMLPaths.CONFIGDIR.get().resolve("marketblocks").resolve("trader");
     }
 
     public static TraderEconomyManager get() {
@@ -48,12 +48,29 @@ public class TraderEconomyManager {
     public void load() {
         try {
             Files.createDirectories(configDir);
+            migrateOldFiles();
             loadValues();
             loadBlacklist();
             loadTraderNames();
             calculatedCache.clear();
         } catch (IOException e) {
             MarketBlocks.LOGGER.error("Failed to load trader economy config", e);
+        }
+    }
+
+    private void migrateOldFiles() {
+        Path oldDir = FMLPaths.CONFIGDIR.get().resolve("marketblocks");
+        for (String filename : List.of("trader_item_values.json", "trader_blacklist.json", "trader_names.json")) {
+            Path oldFile = oldDir.resolve(filename);
+            Path newFile = configDir.resolve(filename);
+            if (Files.exists(oldFile) && !Files.exists(newFile)) {
+                try {
+                    Files.move(oldFile, newFile);
+                    MarketBlocks.LOGGER.info("Migrated old trader config file {} to {}", oldFile, newFile);
+                } catch (IOException e) {
+                    MarketBlocks.LOGGER.warn("Failed to migrate old trader config file {} to {}", oldFile, newFile, e);
+                }
+            }
         }
     }
 
@@ -392,7 +409,7 @@ public class TraderEconomyManager {
 
                     if (valid && totalValue > 0) {
                         double baseCost = totalValue / Math.max(1, resultItem.getCount());
-                        double bonus = TraderConfig.TRADER_DYNAMIC_PRICING_CRAFTING_BONUS.get();
+                        double bonus = TraderConfig.DYNAMIC_PRICING_CRAFTING_BONUS.get();
                         visited.remove(target);
                         return baseCost * (1.0 + bonus);
                     }

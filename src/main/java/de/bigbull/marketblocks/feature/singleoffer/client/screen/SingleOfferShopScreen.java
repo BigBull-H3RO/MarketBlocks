@@ -349,7 +349,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     ShopVisualType visualType = ShopVisualType.from(be.getBlockState().getBlock());
                     if (visualType != ShopVisualType.UNKNOWN) {
                         SingleOfferSettingsSections.buildOfferItemSection(this, visualType, offerItemDraft,
-                                be.isOfferItemRenderingGloballyEnabled(), this::markDirty, this::rebuildUI);
+                                this::markDirty, this::rebuildUI);
                     }
                 }
             }

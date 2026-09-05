@@ -1,7 +1,6 @@
 package de.bigbull.marketblocks.client.mixin;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -53,7 +52,7 @@ public abstract class MultiPlayerGameModeMixin {
         }
 
         long gameTime = minecraft.level.getGameTime();
-        if (Config.ENABLE_MIXIN_DESYNC_LOGGING.get() && gameTime - marketblocks$lastDesyncLogTick >= 20L) {
+        if (gameTime - marketblocks$lastDesyncLogTick >= 20L) {
             marketblocks$lastDesyncLogTick = gameTime;
             MarketBlocks.LOGGER.debug("[MarketBlocks] Mining target fallback: top block at {} has no valid base block at {}", pos, basePos);
         }
@@ -61,4 +60,3 @@ public abstract class MultiPlayerGameModeMixin {
         return pos;
     }
 }
-

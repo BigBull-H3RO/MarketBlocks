@@ -41,50 +41,97 @@ public class MarketCrateConfig {
     public static final ModConfigSpec.BooleanValue MARKETCRATE_DEFAULT_NOTIFY_CO_OWNERS;
 
     static {
-        BUILDER.push("MarketCrate - Default Values");
-        BUILDER.comment("These values are used as starting values for new MarketCrates. If a tab is disabled above, these serve as fixed forced values.");
-        
-        BUILDER.push("General Defaults");
-        MARKETCRATE_DEFAULT_EMIT_REDSTONE = BUILDER.define("marketcrateDefaultEmitRedstone", false);
-        MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND = BUILDER.define("marketcrateDefaultPurchaseXpSound", false);
-        MARKETCRATE_DEFAULT_IS_CLOSED = BUILDER.define("marketcrateDefaultIsClosed", false);
+        BUILDER.push("General");
+        MARKETCRATE_DEFAULT_EMIT_REDSTONE = BUILDER
+                .comment("Emit redstone signal when a trade occurs (Default: false)")
+                .define("emitRedstone", false);
+        MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND = BUILDER
+                .comment("Play XP pickup sound upon successful trade (Default: false)")
+                .define("purchaseXpSound", false);
+        MARKETCRATE_DEFAULT_IS_CLOSED = BUILDER
+                .comment("Whether newly placed Market Crates start as closed (Default: false)")
+                .define("isClosed", false);
         BUILDER.pop();
-        
-        BUILDER.push("Villager Defaults");
-        MARKETCRATE_DEFAULT_VILLAGER_NPC_ENABLED = BUILDER.define("marketcrateDefaultVillagerNpcEnabled", false);
-        MARKETCRATE_DEFAULT_VILLAGER_PROFESSION = BUILDER.defineEnum("marketcrateDefaultVillagerProfession", VillagerVisualProfession.NONE);
-        MARKETCRATE_DEFAULT_PURCHASE_PARTICLES = BUILDER.define("marketcrateDefaultPurchaseParticles", false);
-        MARKETCRATE_DEFAULT_PURCHASE_SOUNDS = BUILDER.define("marketcrateDefaultPurchaseSounds", false);
-        MARKETCRATE_DEFAULT_PAYMENT_SLOT_SOUNDS = BUILDER.define("marketcrateDefaultPaymentSlotSounds", false);
-        MARKETCRATE_DEFAULT_USE_PLAYER_SKIN = BUILDER.define("marketcrateDefaultUsePlayerSkin", false);
+
+        BUILDER.push("Villager");
+        MARKETCRATE_DEFAULT_VILLAGER_NPC_ENABLED = BUILDER
+                .comment("Show visual NPC by default (Default: false)")
+                .define("enabled", false);
+        MARKETCRATE_DEFAULT_VILLAGER_PROFESSION = BUILDER
+                .comment("Default profession of the visual NPC")
+                .defineEnum("profession", VillagerVisualProfession.NONE);
+        MARKETCRATE_DEFAULT_PURCHASE_PARTICLES = BUILDER
+                .comment("Spawn happy villager particles upon trade (Default: false)")
+                .define("purchaseParticles", false);
+        MARKETCRATE_DEFAULT_PURCHASE_SOUNDS = BUILDER
+                .comment("Play villager trade sound upon purchase (Default: false)")
+                .define("purchaseSounds", false);
+        MARKETCRATE_DEFAULT_PAYMENT_SLOT_SOUNDS = BUILDER
+                .comment("Play villager ambient sounds when payment slots change (Default: false)")
+                .define("paymentSlotSounds", false);
+        MARKETCRATE_DEFAULT_USE_PLAYER_SKIN = BUILDER
+                .comment("Use the owner's player skin for the visual NPC (Default: false)")
+                .define("usePlayerSkin", false);
         BUILDER.pop();
-        
-        BUILDER.push("Visuals Defaults");
-        MARKETCRATE_DEFAULT_ITEM_VISIBLE = BUILDER.define("marketcrateDefaultItemVisible", true);
-        MARKETCRATE_DEFAULT_ITEM_FULLBRIGHT = BUILDER.define("marketcrateDefaultItemFullbright", false);
-        MARKETCRATE_DEFAULT_ITEM_SCALE = BUILDER.defineInRange("marketcrateDefaultItemScale", 1.0, 0.25, 1.5);
-        MARKETCRATE_DEFAULT_ITEM_COUNT = BUILDER.defineInRange("marketcrateDefaultItemCount", 1, 1, 96);
-        MARKETCRATE_DEFAULT_ITEM_LAYOUT_MODE = BUILDER.defineEnum("marketcrateDefaultItemLayoutMode", CrateLayoutMode.STACKED);
-        MARKETCRATE_DEFAULT_ITEM_DYNAMIC_FILL = BUILDER.define("marketcrateDefaultItemDynamicFill", false);
-        MARKETCRATE_DEFAULT_ITEM_ROTATION = BUILDER.defineInRange("marketcrateDefaultItemRotation", 0.0, 0.0, 360.0);
-        MARKETCRATE_DEFAULT_ITEM_SPACING_XZ = BUILDER.defineInRange("marketcrateDefaultItemSpacingXZ", 0.0, -0.5, 0.5);
-        MARKETCRATE_DEFAULT_ITEM_SPACING_Y = BUILDER.defineInRange("marketcrateDefaultItemSpacingY", 0.0, 0.0, 2.0);
-        MARKETCRATE_DEFAULT_ITEM_CHAOS_ROTATION = BUILDER.defineInRange("marketcrateDefaultItemChaosRotation", 0.0, 0.0, 1.0);
+
+        BUILDER.push("Visuals");
+        MARKETCRATE_DEFAULT_ITEM_VISIBLE = BUILDER
+                .comment("Display items in the crate (Default: true)")
+                .define("visible", true);
+        MARKETCRATE_DEFAULT_ITEM_FULLBRIGHT = BUILDER
+                .comment("Render item with full brightness (Default: false)")
+                .define("fullbright", false);
+        MARKETCRATE_DEFAULT_ITEM_SCALE = BUILDER
+                .comment("Scale of items inside the crate (Default: 1.0)")
+                .defineInRange("scale", 1.0, 0.25, 1.5);
+        MARKETCRATE_DEFAULT_ITEM_COUNT = BUILDER
+                .comment("Number of rendered items inside the crate (Default: 1)")
+                .defineInRange("itemCount", 1, 1, 96);
+        MARKETCRATE_DEFAULT_ITEM_LAYOUT_MODE = BUILDER
+                .comment("Layout mode for items inside the crate (STACKED, GRID, CIRCLE, RANDOM)")
+                .defineEnum("layoutMode", CrateLayoutMode.STACKED);
+        MARKETCRATE_DEFAULT_ITEM_DYNAMIC_FILL = BUILDER
+                .comment("Dynamically scale rendered item count based on remaining stock (Default: false)")
+                .define("dynamicFill", false);
+        MARKETCRATE_DEFAULT_ITEM_ROTATION = BUILDER
+                .comment("Base rotation angle in degrees (Default: 0.0)")
+                .defineInRange("rotation", 0.0, 0.0, 360.0);
+        MARKETCRATE_DEFAULT_ITEM_SPACING_XZ = BUILDER
+                .comment("Horizontal spacing between items (Default: 0.0)")
+                .defineInRange("spacingXZ", 0.0, -0.5, 0.5);
+        MARKETCRATE_DEFAULT_ITEM_SPACING_Y = BUILDER
+                .comment("Vertical spacing between item layers (Default: 0.0)")
+                .defineInRange("spacingY", 0.0, 0.0, 2.0);
+        MARKETCRATE_DEFAULT_ITEM_CHAOS_ROTATION = BUILDER
+                .comment("Random jitter / chaos rotation amount (Default: 0.0)")
+                .defineInRange("chaosRotation", 0.0, 0.0, 1.0);
         BUILDER.pop();
-        
-        BUILDER.push("I/O Defaults");
-        MARKETCRATE_DEFAULT_REDSTONE_CONTROL = BUILDER.defineEnum("marketcrateDefaultRedstoneControl", IoRedstoneControl.IGNORED);
-        MARKETCRATE_DEFAULT_ALLOW_IO = BUILDER.define("marketcrateDefaultAllowIo", false);
-        MARKETCRATE_DEFAULT_AUTO_IO = BUILDER.define("marketcrateDefaultAutoIo", false);
+
+        BUILDER.push("IO");
+        MARKETCRATE_DEFAULT_REDSTONE_CONTROL = BUILDER
+                .comment("Redstone control mode for chest IO (IGNORED, LOW, HIGH)")
+                .defineEnum("redstoneControl", IoRedstoneControl.IGNORED);
+        MARKETCRATE_DEFAULT_ALLOW_IO = BUILDER
+                .comment("Allow chest IO interactions (Default: false)")
+                .define("allowIo", false);
+        MARKETCRATE_DEFAULT_AUTO_IO = BUILDER
+                .comment("Automatically pull/push items periodically (Default: false)")
+                .define("autoIo", false);
         BUILDER.pop();
-        
-        BUILDER.push("Notification Defaults");
-        MARKETCRATE_DEFAULT_NOTIFY_PURCHASE = BUILDER.define("marketcrateDefaultNotifyPurchase", false);
-        MARKETCRATE_DEFAULT_NOTIFY_OUT_OF_STOCK = BUILDER.define("marketcrateDefaultNotifyOutOfStock", false);
-        MARKETCRATE_DEFAULT_NOTIFY_OUTPUT_FULL = BUILDER.define("marketcrateDefaultNotifyOutputFull", false);
-        MARKETCRATE_DEFAULT_NOTIFY_CO_OWNERS = BUILDER.define("marketcrateDefaultNotifyCoOwners", false);
-        BUILDER.pop();
-        
+
+        BUILDER.push("Notifications");
+        MARKETCRATE_DEFAULT_NOTIFY_PURCHASE = BUILDER
+                .comment("Notify owner upon purchase (Default: false)")
+                .define("notifyPurchase", false);
+        MARKETCRATE_DEFAULT_NOTIFY_OUT_OF_STOCK = BUILDER
+                .comment("Notify owner when stock is empty (Default: false)")
+                .define("notifyOutOfStock", false);
+        MARKETCRATE_DEFAULT_NOTIFY_OUTPUT_FULL = BUILDER
+                .comment("Notify owner when output inventory is full (Default: false)")
+                .define("notifyOutputFull", false);
+        MARKETCRATE_DEFAULT_NOTIFY_CO_OWNERS = BUILDER
+                .comment("Send notifications to co-owners as well (Default: false)")
+                .define("notifyCoOwners", false);
         BUILDER.pop();
 
         SPEC = BUILDER.build();

@@ -33,7 +33,7 @@ public final class MarketplaceListCommand {
          */
         public static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> build() {
                 return Commands.literal("list")
-                                .requires(source -> source.hasPermission(2) && Config.ENABLE_MARKETPLACE_LIST_COMMAND.get())
+                                .requires(source -> source.hasPermission(2) )
                                 .executes(c -> executeMarketplaceList(c, 1))
                                 .then(Commands.argument("page", IntegerArgumentType.integer(1))
                                                 .executes(c -> executeMarketplaceList(c,

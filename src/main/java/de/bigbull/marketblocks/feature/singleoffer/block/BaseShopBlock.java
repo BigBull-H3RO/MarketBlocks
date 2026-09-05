@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import de.bigbull.marketblocks.MarketBlocks;
-import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
@@ -150,7 +150,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 state.getValue(ComparatorBlock.FACING) == sourceToComparator.getOpposite();
     }
 
-
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
@@ -255,7 +254,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public float getExplosionResistance() {
-        return Config.SHOP_BLAST_RESISTANCE.get().floatValue();
+        return SingleOfferConfig.SHOP_BLAST_RESISTANCE.get().floatValue();
     }
 
     @Override
