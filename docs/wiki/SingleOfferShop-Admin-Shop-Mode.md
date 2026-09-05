@@ -2,52 +2,61 @@
 
 ## Purpose
 
-Admin Shop Mode is designed for **server-controlled shops** that provide unlimited stock without classic inventory management. These are ideal for spawn shops, starter areas, or any shop where the server controls the supply.
+**Admin Shop Mode** is designed for server-controlled economy shops that supply unlimited items without requiring physical inventory management. These are ideal for server spawn malls, starter markets, quest turn-ins, or currency sinks where the server controls trade.
 
-## Requirements
+---
 
-To enable Admin Shop Mode on a shop, **both** conditions must be met:
+## Enabling Admin Shop Mode
 
-1. **Global admin mode** must be enabled: either via `/marketblocks adminmode true` or by setting `marketblocksAdminModeEnabled = true` in the config.
-2. The player must have **operator rights** (permission level 2).
+To convert a player shop block (Trade Stand or Market Crate) into an Admin Shop, **two conditions** must be met:
 
-The Admin Shop toggle is located in the **Access** category of the Settings tab, but it is only visible when both conditions are met.
+1. **Global Edit Mode must be enabled**: Run `/marketblocks admin editmode true` (or `/mb admin editmode true`).
+2. The player must have **Operator rights** (permission level 2).
 
-## Behavior
+When both conditions are met, an **Admin Shop** toggle switch becomes visible in the **Access** sub-tab of the shop's Settings menu.
 
-With Admin Shop Mode enabled on a specific shop:
+---
 
-| Aspect | Normal Shop | Admin Shop |
-| --- | --- | --- |
-| **Input stock** | Required for sales | Not required — unlimited supply |
-| **Output capacity** | Must have space | Not checked — payment items vanish |
-| **Inventory tab** | Accessible to owners | Hidden (inaccessible) |
-| **Owner requirement** | Must be set by a player | Operators act as owners |
+## Behavior Comparison
 
-### Operator Privileges
+| Feature | Normal Player Shop | Admin Shop |
+|---|---|---|
+| **Input Inventory (Stock)** | Requires physical items to sell | **Unlimited** — Items are generated on purchase |
+| **Output Inventory (Earnings)** | Must have free space to accept payments | **Infinite / Void** — Payments are consumed into the void |
+| **Inventory Tab** | Accessible to owners/co-owners | **Completely Hidden** for all players |
+| **Out of Stock Warnings** | Triggers when input slots are empty | **Never** triggers (always stocked) |
+| **Ownership** | Primary Owner + up to 10 Co-Owners | Operators act as owners |
 
-When global admin mode is active:
+---
 
-- **Operators are treated as owners** of all shops — they can access all tabs and modify any settings.
-- Operators bypass **access restrictions** (whitelist, blacklist, closed status).
-- This allows server admins to manage any shop on the server without needing to be added as a co-owner.
+## Operator Privileges in Edit Mode
 
-## Redstone and I/O
+When global edit mode is active (`/mb admin editmode true`):
+- Operators can open and manage any player shop on the server.
+- Operators bypass all access restrictions (whitelists, blacklists, and closed status).
+- Operators can toggle Admin Shop status on or off at any time.
 
-Admin Shop Mode does not affect redstone or I/O behavior:
+---
 
-- Redstone pulses still fire on purchase (if enabled).
-- I/O settings still apply, though the input/output inventories are bypassed for purchases.
+## Admin Shop Sales & Discounts
 
-## Recommendations
+Just like the Marketplace, Admin Shops support timed sales! Operators can start promotional events or weekend discounts on specific admin shops using chat commands:
 
-- Use only for clearly defined server shops (spawn shops, quest rewards, etc.).
-- Regularly review prices and payment items administratively.
-- Consider using the **Closed** status (in General settings) to temporarily disable an admin shop without removing the admin flag.
-- Use the `/marketblocks list` command to get an overview of all shops and their status.
+- **Start a Timed Sale**:
+  ```
+  /marketblocks admin sale shop set <shop> <percent> <duration_minutes>
+  ```
+  *Example:* `/mb admin sale shop set "Spawn Bakery" 25 120` (applies a 25% discount for 2 hours).  
+  *Tab completion automatically suggests all available admin shops!*
 
-## Configuration
+- **Cancel a Sale**:
+  ```
+  /marketblocks admin sale shop remove <shop>
+  ```
 
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `marketblocksAdminModeEnabled` | `false` | Global admin mode — also controls Marketplace edit access |
+---
+
+## Searching and Navigating to Admin Shops
+
+- **Leaderboards**: View the top performing shops using `/marketblocks stats shops` (or `/mb stats shops`).
+- **Item Search**: Players can search for items sold by admin shops using `/marketblocks search <item>` (or `/mb search <item>`). Search results in chat include interactive **[Waypoint]** and **[TP]** buttons.

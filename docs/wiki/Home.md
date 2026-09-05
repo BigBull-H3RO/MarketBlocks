@@ -1,39 +1,56 @@
 # MarketBlocks Wiki
 
-Welcome to the official MarketBlocks wiki.
+Welcome to the official MarketBlocks documentation.
 
-MarketBlocks is a NeoForge mod for **Minecraft 1.21.1** with two trading systems:
+MarketBlocks is a feature-rich trading and economy mod for **Minecraft 1.21.1 (NeoForge)** offering two unified trading architectures:
 
-- **SingleOfferShop** (block-based, one active offer per shop, features block variants like Trade Stand and Market Crate)
-- **Marketplace** (page-based, centrally managed, accessible via keybind or command)
+- **SingleOfferShop**: Block-based shops with one dedicated trade offer per shop, featuring block variants like the **Trade Stand** and **Market Crate**.
+- **Marketplace**: A page-based, server-wide trading hub with an in-game editor, dynamic pricing curves, stock limits, and linked world stalls.
 
-## Quick Start / Installation
+---
 
-1. Install **NeoForge for Minecraft 1.21.1** on server and client.
-2. Put the latest `marketblocks` JAR into the `mods` folder.
-3. Start the server so configuration files are created.
-4. Optionally adjust global settings in `marketblocks-common.toml` (e.g., admin mode, blast resistance, tab visibility, default values).
-5. Craft a Trade Stand or Market Crate and place it to start your first shop.
-6. Open the Marketplace with the **O** key or via `/marketblocks marketplace`.
+## Quick Start & Installation
 
-## Versions & Requirements
+1. Install **NeoForge for Minecraft 1.21.1** on your server and client.
+2. Place the latest `marketblocks` JAR into your `mods` folder.
+3. Start the server to generate default configurations under `config/marketblocks/`.
+4. *(Optional)* Fine-tune economy or mechanics across the modular configs:
+   - `main.toml`: First-join trade book, non-OP teleport permissions, map integration toggles.
+   - `marketplace.toml`: Shared daily limits, purchase chat broadcasts.
+   - `singleoffer/general.toml`: Blast resistance, survival placement limits, chest I/O extensions, tab visibility.
+   - `singleoffer/tradestand.toml` & `singleoffer/marketcrate.toml`: Default values for newly placed shop blocks.
+5. Craft a **Trade Stand** or **Market Crate** to launch your first player shop.
+6. Open the server Marketplace using the **O** key or via `/marketblocks marketplace open` (or `/mb marketplace open`).
 
-- **Minecraft:** 1.21.1
-- **Modloader:** NeoForge
-- **Mod:** MarketBlocks
+---
 
-> Important: This wiki uses the current names: **Marketplace** and **SingleOfferShop**.
+## Key Highlights
 
-## Key Features
+- 🏪 **SingleOfferShop**: Player-owned shops with primary & co-owners, whitelist/blacklist access control, visual clerk NPCs, floating item showcases, automated hopper I/O, redstone signals, and transaction history.
+- 🌐 **Marketplace**: Centralized category pages with an in-game editor (`/mb admin editmode`), dynamic demand-based pricing, timed sale discounts, and linked physical market stalls.
+- ⚡ **Streamlined Commands**: Complete command tree with convenient **`/mb`** shorthand alias (e.g., `/mb search <item>` or `/mb stats`).
+- 🗺️ **Mod Integrations**: Native out-of-the-box support for **JourneyMap**, **Xaero's Minimap/Worldmap**, **Jade**, **JEI**, **FTB Chunks**, and **OpenPAC**.
+- 🔒 **Server-Authoritative**: All trades, mutations, and permissions are validated server-side with atomic disk writes and automatic backups.
 
-- **SingleOfferShop**: Block-based shops with owner system, co-owners, access control (whitelist/blacklist), visual NPCs, offer item rendering, notifications, I/O automation, redstone integration, transaction logs, and advancements
-- **Marketplace**: JSON-driven page-and-offer system with in-game editor, demand-based pricing, stock/daily limits, and restocking
-- **Server-authoritative**: All transactions and mutations are validated server-side
-- **Highly configurable**: 50+ config options including tab visibility toggles and default values for new shops
+---
 
 ## Wiki Navigation
 
-- **Marketplace**: [JSON configuration](Marketplace-JSON-Configuration-Guide), [in-game management](Marketplace-In-Game-Management), [limits & pricing](Marketplace-Dynamic-Pricing-and-Limits), [troubleshooting](Marketplace-Troubleshooting)
-- **SingleOfferShop**: [setup & roles](SingleOfferShop-Setup-and-Roles), [settings overview](SingleOfferShop-Settings), [visual NPC](SingleOfferShop-Visual-NPC), [offer item visuals](SingleOfferShop-Offer-Item-Visuals), [notifications](SingleOfferShop-Notifications), [access control](SingleOfferShop-Access-Control), [admin shop mode](SingleOfferShop-Admin-Shop-Mode), [examples](SingleOfferShop-Examples-and-Common-Setups), [advancements](SingleOfferShop-Advancements)
-- **[Commands & Permissions](Commands-and-Permissions)**: Commands and permissions by role
-- **[Developer Info](Developer-Info)**: Technical entry points for addons and integrations
+- **Marketplace**:
+  - [In-Game Management](Marketplace-In-Game-Management)
+  - [JSON Configuration Guide](Marketplace-JSON-Configuration-Guide)
+  - [Dynamic Pricing & Limits](Marketplace-Dynamic-Pricing-and-Limits)
+  - [Troubleshooting](Marketplace-Troubleshooting)
+- **SingleOfferShop**:
+  - [Setup & Roles](SingleOfferShop-Setup-and-Roles)
+  - [Settings Overview](SingleOfferShop-Settings)
+  - [Visual NPC](SingleOfferShop-Visual-NPC)
+  - [Offer Item Visuals](SingleOfferShop-Offer-Item-Visuals)
+  - [Notifications](SingleOfferShop-Notifications)
+  - [Access Control](SingleOfferShop-Access-Control)
+  - [Admin Shop Mode](SingleOfferShop-Admin-Shop-Mode)
+  - [Examples & Common Setups](SingleOfferShop-Examples-and-Common-Setups)
+  - [Advancements](SingleOfferShop-Advancements)
+- **[Mod Compatibility & Integrations](Mod-Compatibility)**: Minimaps, Jade HUD, JEI panels, and Land Claiming protections.
+- **[Commands & Permissions](Commands-and-Permissions)**: Complete command reference and role access matrix.
+- **[Developer Info](Developer-Info)**: Technical architecture, saved data models, and addon entry points.

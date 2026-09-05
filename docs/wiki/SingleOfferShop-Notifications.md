@@ -1,69 +1,55 @@
 # SingleOfferShop: Notifications
 
-The **Notifications** system keeps shop owners informed about important events in their shops, even when they are offline or away from the shop.
+The **Notifications** system keeps shop owners informed about sales and inventory bottlenecks, ensuring you never miss a trade or lose business due to an unemptied cashbox.
+
+---
 
 ## Notification Types
 
-| Event | Description |
-| --- | --- |
-| **Purchase** | A customer bought something from your shop. |
-| **Out of Stock** | Your shop's input inventory has run out of the offered item. No more sales are possible until restocked. |
-| **Output Full** | Your shop's output inventory is full. No more sales are possible until items are removed. |
+| Event | Icon | Description |
+|---|:---:|---|
+| **Purchase** | 💰 | A customer successfully purchased goods from your shop. Includes buyer name and quantity. |
+| **Out of Stock** | ⚠️ | Your input inventory has run dry. No further sales can occur until restocked. |
+| **Output Full** | 🛑 | Your payment storage has no free space to accept incoming payment items. |
 
-## How Notifications Work
+---
 
-### Real-Time Notifications
+## Delivery Modes
 
-When a notification event occurs, the server checks if the shop owner (and optionally co-owners) is online:
+### Real-Time Alerts
+If the primary owner (or co-owners) is online when a purchase or warning happens, a private chat notification is delivered immediately.
 
-- **Online owners** receive a chat message immediately.
-- **Offline owners** have the notification stored and delivered when they next log in.
+### Offline Notifications on Login
+If you are offline when your shop runs out of stock or fills its output inventory:
+- The alert is safely stored server-side.
+- The moment you log back onto the server, a summary message lists which shops require attention along with their coordinates and dimensions.
 
-### Offline Notification Delivery
+### Cooldown Protection
+To eliminate chat spam when customers purchase stacks of items in rapid succession, notifications are throttled by a configurable cooldown (default: 1200 ticks = 60 seconds).
 
-When a player logs in, the system checks for any pending notifications:
+---
 
-- **Out of Stock**: Shows the number of affected shops and lists each shop's coordinates.
-- **Output Full**: Shows the number of affected shops and lists each shop's coordinates.
+## Per-Shop Configuration (Notifications Tab)
 
-These notifications are delivered once and then cleared. The data is persisted server-side, so it survives server restarts.
+In each shop's **Settings -> Notifications** tab, owners can selectively enable or disable:
 
-### Notification Cooldown
+- **Notify on Purchase**: Send a chat message upon every transaction.
+- **Notify on Out of Stock**: Alert when input stock reaches zero.
+- **Notify on Output Full**: Alert when payments cannot be accepted.
+- **Notify Co-Owners**: Forward all active notifications to registered co-owners.
 
-To prevent notification spam (e.g., during rapid repeated purchases), there is a configurable cooldown:
+---
 
-- **Default**: 1200 ticks (60 seconds)
-- During the cooldown, the same type of notification for the same shop will not be sent again.
+## Server Configuration
 
-## Configuration
+Server administrators can fine-tune notification rules in `config/marketblocks/singleoffer/`:
 
-### Per-Shop Settings (Notifications Tab)
+- **In `general.toml`**:
+  - `notificationCooldownTicks = 1200`: Minimum ticks between repeated notifications for the same shop.
+  - `enableOutputWarning = true`: Displays a yellow/red warning badge directly on the GUI when output storage exceeds capacity threshold.
+  - `outputWarningPercent = 90`: Capacity percentage considered "nearly full".
+  - `buyerChatMessage = true`: Sends the buyer a receipt message.
+  - `broadcastPurchaseToAll = false`: Server-wide broadcast on purchase.
 
-Each setting can be toggled individually in the **Notifications** category of the Settings tab:
-
-| Setting | Default | Description |
-| --- | --- | --- |
-| **Notify on Purchase** | ❌ Off | Send a message when someone buys from this shop |
-| **Notify on Out of Stock** | ❌ Off | Send a message when this shop runs out of stock |
-| **Notify on Output Full** | ❌ Off | Send a message when the output inventory is full |
-| **Notify Co-Owners** | ❌ Off | Also send notifications to all co-owners, not just the primary owner |
-
-> **Note:** All notification toggles default to **off** for new shops. Enable the ones you need.
-
-### Server-Side Config
-
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `notificationCooldownTicks` | `1200` | Minimum ticks between repeated notifications of the same type (0 = no cooldown). Default is 60 seconds. |
-| `shopTabNotificationsEnabled` | `true` | Whether the Notifications settings tab is visible to players |
-| `enableOutputWarning` | `true` | Show a visual warning icon in the GUI when the output inventory is nearly full |
-| `outputWarningPercent` | `90` | Percentage threshold (1–100) for the "nearly full" output warning |
-
-### Default Values for New Shops
-
-| Config Key | Default |
-| --- | --- |
-| `shopDefaultNotifyPurchase` | `false` |
-| `shopDefaultNotifyOutOfStock` | `false` |
-| `shopDefaultNotifyOutputFull` | `false` |
-| `shopDefaultNotifyCoOwners` | `false` |
+- **In `tradestand.toml` and `marketcrate.toml`**:
+  - Default settings for newly placed shop blocks (`notifyPurchase`, `notifyOutOfStock`, `notifyOutputFull`, `notifyCoOwners`).

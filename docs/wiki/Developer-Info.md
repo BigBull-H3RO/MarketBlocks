@@ -1,135 +1,87 @@
 # Developer Info
 
-This page is for developers building addons, integrations, and server extensions.
+This page provides an architectural overview for mod developers building addons, integrations, and server extensions for MarketBlocks.
+
+---
 
 ## Project Structure
 
-The codebase is organized by feature slices under a `feature/` package:
+The codebase is organized into domain-driven packages and feature slices:
 
 ```
 de.bigbull.marketblocks
-├── MarketBlocks                     (Mod entry point)
-├── MarketBlocksClient               (Client-side entry point)
+├── MarketBlocks                     (Mod entry point & config registration)
+├── MarketBlocksClient               (Client-side entry point & keybinds)
 ├── client/
-│   ├── event/                       (Client event handlers)
-│   ├── gui/                         (Shared UI components: sliders, buttons)
-│   └── mixin/                       (Client-side mixins)
+│   ├── event/                       (ClientGameEvents, BlockOutlineHandler)
+│   ├── gui/                         (Shared UI components: sliders, custom edit boxes)
+│   └── mixin/                       (ClientLevelMixin for block breaking progress)
+├── compat/
+│   ├── jade/                        (Jade HUD providers for shops & wandering buyers)
+│   ├── jei/                         (JEI plugin for GUI bounds and extra areas)
+│   └── journeymap/                  (Live shop & marketplace map markers)
 ├── core/
-│   ├── command/                     (MarketBlocksCommand - /marketblocks list)
-│   ├── config/                      (Config - all config options)
-│   ├── data/                        (ShopDirectorySavedData)
-│   ├── event/                       (MarketBlocksEvents - server lifecycle, commands)
+│   ├── command/                     (MarketplaceAdminCommand, ShopSearchCommand, ShopStatsCommand)
+│   ├── config/                      (Config, ClientConfig, MarketplaceConfig, SingleOfferConfig, etc.)
+│   ├── data/                        (ShopDirectorySavedData, MarketplaceLinkSavedData)
+│   ├── event/                       (MarketBlocksCommandEvents, MarketBlocksLifecycleEvents, etc.)
 │   └── init/                        (RegistriesInit, CreativeTabInit)
-├── data/                            (Data generators)
-│   ├── advancement/                 (ModAdvancementProvider)
-│   ├── blockstate/lang/loot/recipe/tag/
+├── data/                            (NeoForge data generators for advancements, lang, models, recipes)
 ├── feature/
 │   ├── log/                         (TransactionLogEntry, ShopTransactionLogSavedData)
 │   ├── marketplace/
 │   │   ├── advancement/             (MarketplaceOpenTrigger, MarketplaceBuyTrigger)
-│   │   ├── block/                   (MarketplaceBlock)
-│   │   ├── client/screen/           (MarketplaceScreen, overlays, editors)
-│   │   ├── data/                    (MarketplaceManager, MarketplaceData, offers, pricing)
-│   │   ├── entity/                  (MarketplaceBlockEntity)
-│   │   ├── menu/                    (MarketplaceMenu, MarketplaceMenuProvider)
-│   │   └── network/                 (All marketplace packets)
+│   │   ├── client/screen/           (MarketplaceScreen, overlays, in-game editor dialogs)
+│   │   ├── data/                    (MarketplaceManager, MarketplaceData, MarketplaceOffer, DemandPricing)
+│   │   └── menu/                    (MarketplaceMenu)
 │   ├── notification/                (PendingNotificationsSavedData)
 │   ├── singleoffer/
-│   │   ├── advancement/             (All shop advancement triggers)
-│   │   ├── block/                   (BaseShopBlock, TradeStandBlock, MarketCrateBlock, ...)
+│   │   ├── advancement/             (ShopSellTrigger, ShopWholesalerTrigger, etc.)
+│   │   ├── block/                   (TradeStandBlock, TradeStandTopBlock, MarketCrateBlock, shapes)
 │   │   ├── client/render/           (SingleOfferShopBlockEntityRenderer)
-│   │   ├── client/screen/           (Shop screens, SettingsCategory, settings sections)
+│   │   ├── client/screen/           (SingleOfferShopScreen, SettingsCategory sections)
 │   │   ├── entity/                  (SingleOfferShopBlockEntity, OfferManager, ShopInventoryManager, ShopSettingsManager)
 │   │   ├── menu/                    (SingleOfferShopMenu, ShopTab)
-│   │   ├── network/                 (All shop packets)
-│   │   └── settings/                (GeneralSettings, IoSettings, VillagerSettings, OfferItemSettings, NotificationSettings, AccessSettings, AccessMode, IoRedstoneControl)
-│   └── visual/
-│       ├── npc/                     (IVisualShopNPC, VillagerVisualProfession, placement, animation)
-│       └── render/                  (VisualShopNpcRenderer)
-└── network/                         (NetworkHandler - central packet registration)
+│   │   └── settings/                (GeneralSettings, IoSettings, VillagerSettings, OfferItemSettings, etc.)
+│   ├── trader/                      (ShopBuyerEntity, TraderEconomyManager)
+│   └── visual/                      (VisualShopNPC, VillagerVisualProfession, VisualShopNpcRenderer)
+└── network/                         (NetworkHandler - central packet payload registration)
 ```
 
-## Key Entry Points
+---
 
-### SingleOfferShop
+## Core Systems & Key Entry Points
 
-| Class | Purpose |
-| --- | --- |
-| `feature/singleoffer/entity/SingleOfferShopBlockEntity` | Core block entity — inventory, offer system, ownership, settings |
-| `feature/singleoffer/entity/OfferManager` | Offer creation, validation, purchase logic |
-| `feature/singleoffer/entity/ShopInventoryManager` | I/O, neighbor cache, chest extension |
-| `feature/singleoffer/entity/ShopSettingsManager` | Manages all settings records (General, IO, Villager, Visuals, Notifications, Access) |
-| `feature/singleoffer/menu/SingleOfferShopMenu` | Menu with 4 tabs (Offers, Inventory, Settings, Log) |
-| `feature/singleoffer/settings/*` | Immutable settings records with serialization, network codecs, and mutable Draft classes |
+### 1. SingleOfferShop
+- **`SingleOfferShopBlockEntity`**: Core block entity handling inventories, offer evaluation, ownership, sided capability exposures, and settings management.
+- **`OfferManager`**: Server-authoritative purchase execution, payment validation, and test-purchase simulations.
+- **`ShopSettingsManager`**: Manages immutable settings records with serialization, network sync codecs, and mutable draft objects for GUI editing.
+- **`ShopInventoryManager`**: Handles input stock, output earnings, and sided hopper/chest I/O.
 
-### Marketplace
+### 2. Marketplace
+- **`MarketplaceManager`**: Central singleton service controlling marketplace lifecycle, background tick updates, atomic disk persistence, and real-time client synchronization.
+- **`MarketplaceData` & `MarketplaceOffer`**: Server-authoritative data models defining category pages, offers, daily limits, stock counters, and dynamic pricing curves.
+- **`MarketplaceRuntimeMath`**: Mathematical utilities for demand step increments, cooling decay curves, and percent discount sales.
 
-| Class | Purpose |
-| --- | --- |
-| `feature/marketplace/data/MarketplaceManager` | Singleton — lifecycle, tick, persistence, purchase processing |
-| `feature/marketplace/data/MarketplaceData` | Root data container (pages + offers) |
-| `feature/marketplace/data/MarketplaceOffer` | Single offer with limits, pricing, and runtime state |
-| `feature/marketplace/data/DemandPricing` | Demand-based dynamic pricing |
-| `feature/marketplace/menu/MarketplaceMenu` | Menu for the Marketplace GUI |
+### 3. SavedData Persistence
+- **`ShopDirectorySavedData`**: Global registry tracking all placed player and admin shops across dimensions (queried by `/marketblocks search` and `/marketblocks stats shops`).
+- **`MarketplaceLinkSavedData`**: Global registry of world blocks linked to the Marketplace via `/marketblocks admin marketplace link`.
+- **`ShopTransactionLogSavedData`**: Per-shop transactional ledger recording the last 100 customer trades.
+- **`PendingNotificationsSavedData`**: Persistent queue for offline stock and full-output alerts delivered upon player login.
 
-### Cross-Cutting
+---
 
-| Class | Purpose |
-| --- | --- |
-| `network/NetworkHandler` | Central registration for all network payloads |
-| `core/event/MarketBlocksEvents` | Server lifecycle, command registration, login notifications |
-| `core/config/Config` | All config options (50+) |
-| `core/data/ShopDirectorySavedData` | Global shop registry for `/marketblocks list` |
-| `feature/log/ShopTransactionLogSavedData` | Persistent transaction log per shop |
-| `feature/notification/PendingNotificationsSavedData` | Offline notification storage |
+## Settings Architecture (Record + Mutable Draft)
 
-## Settings Architecture
+Settings in MarketBlocks utilize an **immutable record + mutable draft** design pattern:
+1. **Immutable Records** (e.g. `GeneralSettings`, `VillagerSettings`): The canonical, thread-safe state stored on the server BlockEntity. Contains `STREAM_CODEC` for network packets and `save()` / `load()` methods for NBT tags.
+2. **Mutable Drafts** (e.g. `GeneralSettings.Draft`): Client-side staging objects bound to GUI widgets (text boxes, sliders, toggles). When the player clicks save, the draft compiles into an immutable record (`toSettings()`) and dispatches via `UpdateSettingsPacket`.
 
-The SingleOfferShop settings use an **immutable record + mutable draft** pattern:
+---
 
-1. **Immutable Record** (e.g., `GeneralSettings`): The canonical settings state. Contains `save()` / `load()` for NBT, a `STREAM_CODEC` for network sync, and `with*()` factory methods.
-2. **Mutable Draft** (e.g., `GeneralSettings.Draft`): Used by the GUI for building up changes. The draft is converted to a settings record via `toSettings()` and sent to the server via `UpdateSettingsPacket`.
-3. **ShopSettingsManager**: Holds all current settings for a block entity and handles sync/persistence.
+## Server-Authoritative Architecture
 
-## Events / Hooks
-
-The mod is server-authoritative with clear network and lifecycle separation.
-
-Especially relevant:
-- Server start/tick/stop flow for Marketplace runtime (`MarketBlocksEvents`)
-- Packet-based mutations with server-side validation
-- Viewer synchronization after relevant state changes
-- Login event for offline notification delivery
-
-## Advancement Triggers
-
-All triggers are registered in `RegistriesInit` and live under `feature/singleoffer/advancement/` and `feature/marketplace/advancement/`:
-
-| Trigger | Description |
-| --- | --- |
-| `ShopSellTrigger` | Fires with cumulative sell count |
-| `ShopNpcTrigger` | NPC enabled |
-| `ShopNpcCustomizeTrigger` | NPC name or profession changed |
-| `ShopCoOwnerTrigger` | Co-owner added |
-| `ShopOutOfStockTrigger` | Shop went out of stock |
-| `ShopWholesalerTrigger` | Bulk purchase occurred |
-| `ShopRedstoneTrigger` | Redstone emission enabled |
-| `ShopAutoIoTrigger` | Auto I/O enabled |
-| `ShopAdminModeTrigger` | Admin shop mode enabled |
-| `MarketplaceOpenTrigger` | Marketplace opened |
-| `MarketplaceBuyTrigger` | Purchase from Marketplace |
-
-## Data Formats / Integration
-
-- Marketplace persistence via JSON: `<world>/marketblocks/marketplace.json`
-- Backup/restore strategy with `.bak`
-- Shop data stored via BlockEntity NBT
-- Transaction log and notification data stored as `SavedData`
-- Runtime views are kept separate from persistent configuration
-
-## Integration Principles
-
-- No client-side assumptions for critical transactions
-- Apply changes only through validated server paths
-- For external tools, plan defensive parsing and fallbacks
-- Use the `feature/*` → `core/*` dependency direction; avoid direct feature-to-feature dependencies
+MarketBlocks follows strict server-authoritative design principles:
+- **No Client Purchase Authority**: Clients send intents; the server simulates, validates stock and payment slots, moves items, and broadcasts updates.
+- **Permission Validation**: All admin commands and in-game editor actions strictly require `hasPermission(2)` and active global edit mode.
+- **Safe Disk I/O**: The marketplace file (`<world>/marketblocks/marketplace.json`) writes to a temporary file before atomic renaming, preserving a `.bak` copy on every save.

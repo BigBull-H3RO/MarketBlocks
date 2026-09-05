@@ -759,16 +759,27 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
      */
     public List<Rect2i> getExtraAreas() {
         List<Rect2i> areas = new ArrayList<>();
-        // 1. Block entire left side to completely hide JEI bookmarks/navigation in Marketplace
-        if (this.leftPos > 0) {
-            areas.add(new Rect2i(0, 0, this.leftPos, this.height));
-        }
+        // 1. Page sidebar buttons on the left side (block the entire vertical column band from top to bottom)
+        areas.addAll(this.pageSidebar.getExtraAreas(this.leftPos, this.height));
+
         // 2. Right editor buttons (Limits & Pricing) - only visible in Edit Mode!
         if (isLocalEditMode && selectedOfferId != null && findOfferOnSelectedPage(selectedOfferId) != null) {
             int controlsX = rightEditorButtonsX();
             int controlsY = rightEditorButtonsY();
             int totalHeight = (RIGHT_BUTTON_SIZE * 2) + RIGHT_BUTTON_GAP;
             areas.add(new Rect2i(controlsX, controlsY, RIGHT_BUTTON_SIZE, totalHeight));
+        }
+
+        // 3. Header editor buttons (Add, Rename, Delete page) - only visible in Edit Mode!
+        if (isLocalEditMode && menu.canUseEditMode()) {
+            int headerX = this.leftPos + 4;
+            int headerY = this.topPos - 22;
+            int clampedY = Math.max(0, headerY);
+            int height = (headerY + 20) - clampedY;
+            if (height > 0) {
+                int width = (this.cachedData == null || this.cachedData.pages().isEmpty()) ? 20 : 68;
+                areas.add(new Rect2i(headerX, clampedY, width, height));
+            }
         }
         return areas;
     }

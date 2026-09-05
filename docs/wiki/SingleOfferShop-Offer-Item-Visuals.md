@@ -1,75 +1,43 @@
 # SingleOfferShop: Offer Item Visuals
 
-The **Visuals** settings tab lets shop owners customize how the offered item is displayed above their shop block. Items can be shown floating, spinning, and bobbing — with full control over size, speed, count, and layout.
+The **Visuals** settings tab lets shop owners customize how sold items are showcased above their shop blocks. Goods can be displayed floating, rotating, and gently bobbing — with precise control over size, speed, elevation, and layout.
 
-## Enabling Item Display
+---
 
-By default, the offer item is rendered above the shop when an offer is active. You can toggle this in the **Visuals** category of the Settings tab.
-
-> **Global Master Switch:** Server admins can disable all offer item rendering across the entire server using `enableGlobalOfferItemRendering = false` in the config. This overrides individual shop settings.
-
-## Display Options
-
-### Basic Settings
+## Showcase Customization Options
 
 | Setting | Range | Default | Description |
-| --- | --- | --- | --- |
-| **Visible** | on/off | ✅ On | Whether to show the item at all |
-| **Fullbright** | on/off | ❌ Off | Render the item at full brightness regardless of lighting |
-| **Scale** | 0.1 – 4.0 | 0.75 | Size of the displayed item |
-| **Speed** | 0.0 – 20.0 | 2.0 | Rotation speed of the item |
-| **Height Offset** | -2.0 – 4.0 | 0.0 | Vertical offset from the default position |
-| **Bobbing** | on/off | ✅ On | Gentle up-and-down floating animation |
-| **Rotation** | 0° – 360° | 0° | Fixed rotation offset for the item |
+|---|:---:|:---:|---|
+| **Visible** | Toggle | On | Toggles whether the floating offer item is rendered at all. |
+| **Fullbright** | Toggle | Off | Renders the item with maximum brightness, ignoring ambient shadow or dark caves. |
+| **Scale** | 0.5 – 1.5 | 1.0 | Adjusts the scale of the displayed item. |
+| **Speed** | 0.0 – 1.5 | 0.75 | Adjusts the rotation speed of the item. Set to 0 for a static display. |
+| **Height Offset** | -0.25 – 0.25 | 0.0 | Moves the item up or down relative to the counter surface. |
+| **Bobbing** | Toggle | Off | Enables a gentle floating up-and-down oscillation motion. |
 
-### Multi-Item Display
+---
 
-| Setting | Range | Default | Description |
-| --- | --- | --- | --- |
-| **Count** | 1 – 96 | 1 | Number of items to render simultaneously |
-| **Spacing XZ** | -0.5 – 2.0 | 0.0 | Horizontal spacing between items |
-| **Spacing Y** | -0.5 – 2.0 | 0.0 | Vertical spacing between items |
-| **Chaos Rotation** | 0.0 – 1.0 | 0.1 | Randomness of item rotation (0 = uniform, 1 = chaotic) |
+## Multi-Item Display & Crate Layouts
 
-### Layout Modes (Market Crate)
+When using the **Market Crate** block variant:
+- Items can be rendered in bulk directly inside the crate.
+- Supports **Stacked** (neat grid) or **Loose** (natural scattered) arrangements.
+- **Dynamic Stock Level Indicator**: When enabled, the visual quantity of items resting in the crate visibly depletes as customers buy stock, offering an intuitive at-a-glance stock meter for shoppers passing by.
 
-The Market Crate block supports two layout modes for displaying multiple items:
+---
 
-| Mode | Description |
-| --- | --- |
-| **GESTAPELT** (Stacked) | Items are arranged in a neat, grid-like pattern. Default mode. |
-| **LOSE** (Loose/Scattered) | Items are placed in a more natural, scattered arrangement. |
+## Performance & Server Configuration
 
-### Dynamic Fill Level
+MarketBlocks is designed to maintain high framerates even in crowded player malls with dozens of shops:
 
-When **Dynamic Fill Level** is enabled, the number of rendered items adjusts automatically based on the shop's current stock level. A fully stocked shop shows the configured number of items, while a nearly empty shop shows fewer.
+### Client Performance (`config/marketblocks/client.toml`)
+```toml
+[Rendering]
+# Set to false on low-end PCs to disable all floating items,
+# crate contents, and front recipe displays for a maximum FPS boost:
+enableShopItemRendering = true
+```
 
-This provides a visual indicator to customers about how much stock is left.
-
-## Trade Stand vs. Market Crate
-
-- **Trade Stand**: Items float above the top of the two-block-tall stand. Best for single or small-count items.
-- **Market Crate**: Items render inside/above the crate. The layout mode (GESTAPELT/LOSE) only applies to Market Crates with count > 1.
-
-## Configuration
-
-### Server-Side Config
-
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `enableGlobalOfferItemRendering` | `true` | Global master switch — disable to save performance on busy servers |
-| `shopTabVisualsEnabled` | `true` | Whether the Visuals settings tab is visible to players |
-
-### Default Values for New Shops
-
-| Config Key | Default |
-| --- | --- |
-| `shopDefaultItemVisible` | `true` |
-| `shopDefaultItemFullbright` | `false` |
-| `shopDefaultItemScale` | `0.75` |
-| `shopDefaultItemSpeed` | `2.0` |
-| `shopDefaultItemHeightOffset` | `0.0` |
-| `shopDefaultItemBobbing` | `true` |
-| `shopDefaultItemCount` | `1` |
-| `shopDefaultItemLayoutMode` | `GESTAPELT` |
-| `shopDefaultItemDynamicFill` | `false` |
+### Server Enforcement (`config/marketblocks/singleoffer/`)
+- **Disable Tab**: In `general.toml`, setting `[Tabs] visuals = false` hides the tab from players and locks all shops to server defaults.
+- **Default Visuals**: In `tradestand.toml` and `marketcrate.toml`, define standard fallback values for scale, speed, fullbright, and bobbing for newly placed shops.

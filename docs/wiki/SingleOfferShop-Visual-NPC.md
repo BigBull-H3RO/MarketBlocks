@@ -1,85 +1,73 @@
 # SingleOfferShop: Visual NPC
 
-The **Visual NPC** system allows shop owners to display an interactive NPC figure above their shop. The NPC can appear as a **Villager** with a configurable profession or as a **Player Skin** of any Minecraft player.
+The **Visual NPC** feature lets shop owners position an animated clerk above their shop block. The NPC can appear as a **Villager** with configurable professions or as a **Player Model** adopting any Minecraft player's skin.
+
+---
 
 ## Enabling the NPC
 
-1. Open your shop and go to the **Settings** tab.
-2. Select the **Villager** category.
-3. Toggle the NPC on. A villager will appear above the shop block.
+1. Open your shop and navigate to the **Settings** tab.
+2. Click the **Villager** (🧑‍🌾) sub-tab.
+3. Toggle the NPC switch on. The clerk will appear positioned directly above the counter.
 
-> **Note:** The NPC can only be placed if there is enough space above the shop. The placement is validated automatically. If the NPC cannot be placed (e.g., blocked by another block), it will not appear.
+> ⚠️ **Clearance Required:** The block space directly above the shop must be free of solid blocks. If the space is obstructed, the NPC will not appear until space is cleared.
 
-## NPC Modes
+---
 
-### Villager Mode (Default)
+## NPC Appearance Modes
 
-- Displays a Villager entity model above the shop
-- Choose from **15 professions** to change the Villager's appearance:
+### 1. Villager Mode (Default)
+Displays a classic Villager model. You can choose from **15 villager professions**:
 
-| Profession | Profession | Profession |
-| --- | --- | --- |
-| None (default) | Armorer | Butcher |
+| Professions | Professions | Professions |
+|---|---|---|
+| None (Unemployed) | Armorer | Butcher |
 | Cartographer | Cleric | Farmer |
 | Fisherman | Fletcher | Leatherworker |
 | Librarian | Mason | Nitwit |
 | Shepherd | Toolsmith | Weaponsmith |
 
-- Cycle through professions using the profession button in the Villager settings tab.
+*Cycle through professions using the arrow/cycle button in the Villager tab.*
 
-### Player Skin Mode
+### 2. Player Skin Mode
+- Toggle **Use Player Skin** to replace the villager model with a player character model.
+- Enter the **Player Name** in the text box.
+- MarketBlocks will fetch and render the official skin corresponding to that account name.
 
-- Toggle **Use Player Skin** to display a player model instead of a villager.
-- Enter the **player name** (up to 36 characters) to load their skin.
-- The NPC will render with the specified player's skin.
+---
 
-## NPC Name
+## Custom Name Tag
 
-- Set a custom NPC name (up to 32 characters) that appears above the NPC's head.
-- Allowed characters: letters, numbers, spaces, underscores, and hyphens.
-- Leave empty for no name tag.
+- Enter a custom name (up to 32 characters) to display a floating name tag above the clerk's head.
+- Supports letters, numbers, spaces, hyphens, and underscores.
+- Leave empty to hide the name tag.
 
-## Purchase Feedback Effects
+---
 
-The Villager settings tab also controls the visual and audio feedback when a purchase occurs:
+## Trade Celebrations & Sound Effects
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **Purchase Particles** | ✅ On | Spawns particle effects on the NPC when a purchase is made |
-| **Purchase Sounds** | ✅ On | Plays a sound effect on purchase |
-| **Payment Slot Sounds** | ✅ On | Plays feedback sounds when items are placed in or removed from payment slots (success/fail sounds based on whether the payment matches the offer) |
+The Villager tab includes feedback settings to make purchases feel rewarding:
 
-## NPC Animations
+| Setting | Default | Effect |
+|---|:---:|---|
+| **Purchase Particles** | Enabled | Emits emerald-green happy villager particles upon each trade. |
+| **Purchase Sounds** | Enabled | Plays villager affirmation voice lines when goods are bought. |
+| **Payment Slot Sounds** | Enabled | Plays interactive feedback chimes when currency is placed in payment slots. |
 
-The Visual NPC has a built-in animation system that responds to shop events:
+---
 
-- **Purchase animation**: The NPC reacts when a customer buys something.
-- **Payment feedback**: Visual feedback based on payment slot interactions (success or failure).
-- Animations are synced between server and client using animation nonce and event counters.
+## XP Pickup Audio Feedback
 
-## XP Feedback Sound
+Located in **Settings -> General**:
+- **Purchase XP Sound**: Plays a satisfying experience orb ding on purchase. The pitch scales smoothly with transaction volume (higher pitch for bulk purchases). Includes a built-in cooldown to prevent ear fatigue during rapid trades.
 
-In the **General** settings tab, there is an additional audio feature:
-
-- **Purchase XP Sound**: When enabled, plays an experience orb sound on each purchase. The pitch scales with the purchase amount (louder for bulk purchases). This has a short cooldown to prevent audio spam.
+---
 
 ## Configuration
 
-### Server-Side Config
-
-| Config Key | Default | Description |
-| --- | --- | --- |
-| `visualNpcForceOffscreenRendering` | `true` | Render NPCs even when near screen borders. Disable for stricter culling and better performance. |
-| `visualNpcRenderViewDistance` | `128` | Maximum distance in blocks for rendering Visual NPCs (16–512). |
-| `shopTabVillagerEnabled` | `true` | Whether the Villager settings tab is visible to players. |
-
-### Default Values for New Shops
-
-| Config Key | Default |
-| --- | --- |
-| `shopDefaultVillagerNpcEnabled` | `true` |
-| `shopDefaultVillagerProfession` | `NONE` |
-| `shopDefaultPurchaseParticles` | `true` |
-| `shopDefaultPurchaseSounds` | `true` |
-| `shopDefaultPaymentSlotSounds` | `true` |
-| `shopDefaultUsePlayerSkin` | `false` |
+- **Client Optimization (`config/marketblocks/client.toml`)**:
+  - `enableShopItemRendering = true`: Master toggle for low-end graphics cards.
+- **Server Management (`config/marketblocks/singleoffer/general.toml`)**:
+  - `[Tabs] villager = true`: Set to `false` if you wish to hide the NPC tab for all players on the server.
+- **Per-Block Defaults**:
+  - Configure default NPC state, profession, sounds, and particles in `config/marketblocks/singleoffer/tradestand.toml` and `marketcrate.toml`.
