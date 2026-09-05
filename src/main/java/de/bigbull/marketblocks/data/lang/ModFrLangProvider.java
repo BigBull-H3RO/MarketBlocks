@@ -75,6 +75,12 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("command.marketblocks.unlink.success", "§aBloc délié avec succès !");
                 add("command.marketblocks.unlink.success_name", "§aDélié de la place du marché : §e%s");
                 add("command.marketblocks.waypoint.created", "§aLiens de partage Waypoint créés :");
+                add("command.marketblocks.internal.waypoint.coords", "Coordonnées du waypoint pour %s : X: %d, Y: %d, Z: %d (%s)");
+                add("command.marketblocks.internal.waypoint.journeymap", "Waypoint JourneyMap créé / lien généré.");
+                add("command.marketblocks.internal.waypoint.xaero", "Lien de waypoint Xaero's Minimap :");
+                add("command.marketblocks.internal.tp.no_permission", "Vous n'avez pas la permission de vous téléporter aux boutiques.");
+                add("command.marketblocks.internal.tp.invalid_dimension", "La dimension cible est introuvable.");
+                add("command.marketblocks.internal.tp.success", "Téléporté à la boutique !");
 
                 // === GUI - Settings ===
                 add("gui.marketblocks.access.edit_access_list", "Liste d'accès");

@@ -76,6 +76,12 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("command.marketblocks.unlink.success", "§aSuccessfully unlinked block!");
                 add("command.marketblocks.unlink.success_name", "§aUnlinked from Marketplace: §e%s");
                 add("command.marketblocks.waypoint.created", "§aWaypoint sharing links created:");
+                add("command.marketblocks.internal.waypoint.coords", "Waypoint coordinates for %s: X: %d, Y: %d, Z: %d (%s)");
+                add("command.marketblocks.internal.waypoint.journeymap", "JourneyMap waypoint created / link generated.");
+                add("command.marketblocks.internal.waypoint.xaero", "Xaero's Minimap waypoint link:");
+                add("command.marketblocks.internal.tp.no_permission", "You do not have permission to teleport to shops.");
+                add("command.marketblocks.internal.tp.invalid_dimension", "The target dimension could not be found.");
+                add("command.marketblocks.internal.tp.success", "Teleported to shop!");
 
                 // === GUI - Settings ===
                 add("gui.marketblocks.access.edit_access_list", "Access List");

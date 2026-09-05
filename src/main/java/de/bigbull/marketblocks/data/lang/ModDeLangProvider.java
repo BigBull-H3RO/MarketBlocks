@@ -77,6 +77,12 @@ public class ModDeLangProvider extends LanguageProvider {
         add("command.marketblocks.unlink.success", "§aBlock erfolgreich entlinkt!");
         add("command.marketblocks.unlink.success_name", "§aVom Marktplatz entlinkt: §e%s");
         add("command.marketblocks.waypoint.created", "§aWegpunkt-Links erfolgreich erstellt:");
+        add("command.marketblocks.internal.waypoint.coords", "Wegpunkt-Koordinaten für %s: X: %d, Y: %d, Z: %d (%s)");
+        add("command.marketblocks.internal.waypoint.journeymap", "JourneyMap-Wegpunkt erstellt / Link generiert.");
+        add("command.marketblocks.internal.waypoint.xaero", "Xaero's Minimap Wegpunkt-Link:");
+        add("command.marketblocks.internal.tp.no_permission", "Du hast keine Berechtigung, dich zu Shops zu teleportieren.");
+        add("command.marketblocks.internal.tp.invalid_dimension", "Die Zieldimension wurde nicht gefunden.");
+        add("command.marketblocks.internal.tp.success", "Zum Shop teleportiert!");
 
         // === GUI - Settings ===
         add("gui.marketblocks.access.edit_access_list", "Zugriffsliste");

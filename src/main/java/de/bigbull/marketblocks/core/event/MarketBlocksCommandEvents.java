@@ -11,8 +11,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.command.MarketplaceAdminCommand;
-import de.bigbull.marketblocks.core.command.MarketplaceListCommand;
-import de.bigbull.marketblocks.core.command.ShopListCommand;
 import de.bigbull.marketblocks.core.command.ShopSearchCommand;
 import de.bigbull.marketblocks.core.command.ShopStatsCommand;
 import de.bigbull.marketblocks.core.config.Config;
@@ -39,12 +37,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 /**
- * Registers all MarketBlocks commands by delegating to dedicated command classes
- * under {@link de.bigbull.marketblocks.core.command}.
- *
- * <p>Also contains the two internal helper commands ({@code marketblocks internal waypoint} and
- * {@code marketblocks internal tp}) that are triggered via chat click-events and not intended
- * for direct player use.</p>
+ * Registers all MarketBlocks commands and handles internal click-action
+ * subcommands.
  */
 @EventBusSubscriber(modid = MarketBlocks.MODID)
 public final class MarketBlocksCommandEvents {
@@ -54,9 +48,9 @@ public final class MarketBlocksCommandEvents {
 
     private static final com.mojang.brigadier.suggestion.SuggestionProvider<CommandSourceStack> LINK_SUGGESTIONS = (
             context, builder) -> {
-        MarketplaceLinkSavedData data = MarketplaceLinkSavedData.get(context.getSource().getLevel());
-        String input = builder.getRemaining().toLowerCase(Locale.ROOT);
-        for (Map.Entry<GlobalPos, MarketplaceLinkSavedData.LinkInfo> entry : data.getLinkedBlocks()
+        String input = builder.getRemainingLowerCase();
+        for (Map.Entry<GlobalPos, MarketplaceLinkSavedData.LinkInfo> entry : MarketplaceLinkSavedData
+                .get(context.getSource().getLevel()).getLinkedBlocks()
                 .entrySet()) {
             String name = entry.getValue().name;
             if (name != null && !name.isEmpty()) {
@@ -82,23 +76,21 @@ public final class MarketBlocksCommandEvents {
     public static void registerCommands(RegisterCommandsEvent event) {
         var buildContext = event.getBuildContext();
 
-        event.getDispatcher().register(
+        var rootNode = event.getDispatcher().register(
                 Commands.literal("marketblocks")
                         .then(ShopSearchCommand.build(buildContext))
-                        .then(ShopListCommand.build())
+                        .then(ShopStatsCommand.build())
                         .then(Commands.literal("marketplace")
-                                .then(ShopStatsCommand.buildMarketplaceStats())
                                 .then(Commands.literal("open")
                                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                                         .executes(context -> {
                                             ServerPlayer player = context.getSource().getPlayerOrException();
                                             MarketplaceManager.get().openShop(player);
                                             return 1;
-                                        }))
-                                .then(MarketplaceListCommand.build()))
-                        .then(MarketplaceAdminCommand.build(LINK_SUGGESTIONS, buildContext))
+                                        })))
+                        .then(MarketplaceAdminCommand.build(LINK_SUGGESTIONS))
                         .then(Commands.literal("internal")
-                                .requires(source -> false)
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.literal("waypoint")
                                         .then(Commands.argument("x", IntegerArgumentType.integer())
                                                 .then(Commands.argument("y", IntegerArgumentType.integer())
@@ -120,6 +112,8 @@ public final class MarketBlocksCommandEvents {
                                                                                                 DoubleArgumentType.doubleArg())
                                                                                         .executes(context -> executeInternalTp(context,
                                                                                                 true)))))))))));
+
+        event.getDispatcher().register(Commands.literal("mb").redirect(rootNode));
     }
 
     // ── Internal helper commands (triggered by chat click-events) ──
@@ -138,55 +132,79 @@ public final class MarketBlocksCommandEvents {
         String xaeroDim = dim.replace("minecraft:", "Internal-") + "-waypoints";
 
         String xaeroWaypoint = String.format(Locale.US,
-                "xaero-waypoint:%s:%s:%d:%d:%d:4:false:0:%s",
-                cleanName, label, x, y, z, xaeroDim);
-        String jmWaypoint = String.format(Locale.US,
-                "[x:%d,y:%d,z:%d,dim:%s,name:%s]", x, y, z, dim, cleanName);
+                "xaero_waypoint:%s:%s:%d:%d:%d:1:false:0:Internal-dim%s",
+                name, label, x, y, z, xaeroDim);
 
-        player.sendSystemMessage(Component.translatable("command.marketblocks.waypoint.created")
-                .withStyle(ChatFormatting.GREEN));
+        boolean hasJourneyMap = ModList.get().isLoaded("journeymap");
+        boolean hasXaero = ModList.get().isLoaded("xaerominimap")
+                || ModList.get().isLoaded("xaeroworldmap");
 
-        if (Config.ENABLE_XAEROS_COMPAT.get() && ModList.get().isLoaded("xaerominimap")) {
-            player.sendSystemMessage(Component.literal("Xaero's Minimap: ")
-                    .append(Component.literal(xaeroWaypoint).withStyle(ChatFormatting.AQUA)));
+        if (!hasJourneyMap && !hasXaero) {
+            player.sendSystemMessage(Component.translatable("command.marketblocks.internal.waypoint.coords",
+                    name, x, y, z, dim).withStyle(ChatFormatting.GOLD));
+            return 1;
         }
-        if (Config.ENABLE_JOURNEYMAP_COMPAT.get() && ModList.get().isLoaded("journeymap")) {
-            player.sendSystemMessage(Component.literal("JourneyMap: ")
-                    .append(Component.literal(jmWaypoint).withStyle(ChatFormatting.AQUA)));
+
+        if (hasJourneyMap) {
+            player.sendSystemMessage(Component.translatable("command.marketblocks.internal.waypoint.journeymap")
+                    .withStyle(ChatFormatting.YELLOW));
         }
+
+        if (hasXaero) {
+            player.sendSystemMessage(Component.translatable("command.marketblocks.internal.waypoint.xaero")
+                    .withStyle(ChatFormatting.YELLOW));
+            player.sendSystemMessage(Component.literal(xaeroWaypoint).withStyle(ChatFormatting.GRAY));
+        }
+
         return 1;
     }
 
-    private static int executeInternalTp(CommandContext<CommandSourceStack> context, boolean hasRot)
+    private static int executeInternalTp(CommandContext<CommandSourceStack> context, boolean withRotation)
             throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
+
         if (!Config.ALLOW_NON_OP_TELEPORT.get() && !player.hasPermissions(2)) {
-            player.sendSystemMessage(Component.translatable("commands.help.failed").withStyle(ChatFormatting.RED));
+            player.sendSystemMessage(
+                    Component.translatable("command.marketblocks.internal.tp.no_permission")
+                            .withStyle(ChatFormatting.RED));
             return 0;
         }
-        String dimStr = StringArgumentType.getString(context, "dim");
+
+        String dim = StringArgumentType.getString(context, "dim");
         double x = DoubleArgumentType.getDouble(context, "x");
         double y = DoubleArgumentType.getDouble(context, "y");
         double z = DoubleArgumentType.getDouble(context, "z");
 
-        ResourceKey<Level> dim = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(dimStr));
-        ServerLevel targetLevel = context.getSource().getServer().getLevel(dim);
-        if (targetLevel != null) {
-            float yaw = hasRot ? (float) DoubleArgumentType.getDouble(context, "yaw") : player.getYRot();
-            float pitch = hasRot ? (float) DoubleArgumentType.getDouble(context, "pitch") : player.getXRot();
+        ResourceKey<Level> worldKey = ResourceKey.create(Registries.DIMENSION,
+                ResourceLocation.parse(dim));
+        ServerLevel targetLevel = player.getServer().getLevel(worldKey);
 
-            // Center X and Z if they are exactly integers (like from the book)
-            if (x == Math.floor(x)) x += 0.5;
-            if (z == Math.floor(z)) z += 0.5;
-
-            player.teleportTo(targetLevel, x, y, z, yaw, pitch);
-            player.sendSystemMessage(Component.translatable("command.marketblocks.tp.success")
-                    .withStyle(ChatFormatting.GREEN));
-            return 1;
-        } else {
-            player.sendSystemMessage(Component.translatable("command.marketblocks.tp.invalid_dimension")
-                    .withStyle(ChatFormatting.RED));
+        if (targetLevel == null) {
+            player.sendSystemMessage(
+                    Component.translatable("command.marketblocks.internal.tp.invalid_dimension")
+                            .withStyle(ChatFormatting.RED));
             return 0;
         }
+
+        float yaw = player.getYRot();
+        float pitch = player.getXRot();
+
+        if (withRotation) {
+            yaw = (float) DoubleArgumentType.getDouble(context, "yaw");
+            pitch = (float) DoubleArgumentType.getDouble(context, "pitch");
+        } else {
+            BlockPos targetBlock = BlockPos.containing(x, y, z);
+            BlockState state = targetLevel.getBlockState(targetBlock);
+            if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) {
+                Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+                yaw = facing.toYRot();
+            }
+        }
+
+        player.teleportTo(targetLevel, x, y, z, yaw, pitch);
+        player.sendSystemMessage(
+                Component.translatable("command.marketblocks.internal.tp.success")
+                        .withStyle(ChatFormatting.GREEN));
+        return 1;
     }
 }
