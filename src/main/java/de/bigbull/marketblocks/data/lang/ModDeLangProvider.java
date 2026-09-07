@@ -36,47 +36,46 @@ public class ModDeLangProvider extends LanguageProvider {
         add("key.marketblocks.open_marketplace", "Marktplatz öffnen");
 
         // === Commands ===
-        // === Commands ===
         add("command.marketblocks.break.denied",
-                "§cDu kannst diesen Block nicht abbauen, solange er mit einem Marktplatz verlinkt ist!");
-        add("command.marketblocks.break.unlinked", "§eDer Block wurde vom Marktplatz entlinkt.");
-        add("command.marketblocks.link.already_linked", "§cDieser Block ist bereits mit einem Marktplatz verlinkt.");
-        add("command.marketblocks.link.not_looking_at_block", "§cDu musst einen Block ansehen, um ihn zu verlinken.");
-        add("command.marketblocks.link.success", "§aBlock erfolgreich mit Marktplatz verlinkt!");
+                "\u00a7cDu kannst diesen Block nicht abbauen, solange er mit einem Marktplatz verlinkt ist!");
+        add("command.marketblocks.break.unlinked", "\u00a7eDer Block wurde vom Marktplatz entlinkt.");
+        add("command.marketblocks.link.already_linked", "\u00a7cDieser Block ist bereits mit einem Marktplatz verlinkt.");
+        add("command.marketblocks.link.not_looking_at_block", "\u00a7cDu musst einen Block ansehen, um ihn zu verlinken.");
+        add("command.marketblocks.link.success", "\u00a7aBlock erfolgreich mit Marktplatz verlinkt!");
         add("command.marketblocks.list.click_to_delete", "Klicken zum Löschen");
         add("command.marketblocks.list.click_to_teleport", "Klicken zum Teleportieren");
         add("command.marketblocks.list.click_to_waypoint", "Klicken für Wegpunkt-Links im Chat");
         add("command.marketblocks.list.delete", "[Löschen]");
         add("command.marketblocks.list.tp", "[Teleport]");
         add("command.marketblocks.list.waypoint", "[Wegpunkt]");
-        add("command.marketblocks.list.page_header", "§8======== §6§lShops (Seite %s/%s) §8========");
+        add("command.marketblocks.list.page_header", "\u00a78======== \u00a76\u00a7lShops (Seite %s/%s) \u00a78========");
         add("command.marketblocks.list.prev", "[< Zurück]");
         add("command.marketblocks.list.next", "[Weiter >]");
-        add("command.marketblocks.marketplacelist.entry", "§8▪ §6Marktplatz §e%s");
-        add("command.marketblocks.marketplacelist.page_header", "§8======== §6§lMarktplatz-Liste (Seite %s/%s) §8========");
-        add("command.marketblocks.marketplacelist.no_links", "§cKeine Marktplätze gefunden.");
-        add("command.marketblocks.player_not_found", "§cSpieler nicht gefunden");
-        add("command.marketblocks.reload.success", "§aMarketBlocks-Konfiguration erfolgreich neu geladen!");
-        add("command.marketblocks.resetlimits.no_changes", "§eEs wurden keine Tageslimits zurückgesetzt.");
-        add("command.marketblocks.resetlimits.success", "§aTageslimits erfolgreich zurückgesetzt.");
-        add("command.marketblocks.search.header", "§8======== §6§lShops, die %s verkaufen (Seite %s/%s) §8========");
-        add("command.marketblocks.search.no_shops", "§cKeine Shops oder Marktplätze gefunden, die %s verkaufen.");
+        add("command.marketblocks.marketplacelist.entry", "\u00a78\u25aa \u00a76Marktplatz \u00a7e%s");
+        add("command.marketblocks.marketplacelist.page_header", "\u00a78======== \u00a76\u00a7lMarktplatz-Liste (Seite %s/%s) \u00a78========");
+        add("command.marketblocks.marketplacelist.no_links", "\u00a7cKeine Marktplätze gefunden.");
+        add("command.marketblocks.player_not_found", "\u00a7cSpieler nicht gefunden");
+        add("command.marketblocks.reload.success", "\u00a7aMarketBlocks-Konfiguration erfolgreich neu geladen!");
+        add("command.marketblocks.resetlimits.no_changes", "\u00a7eEs wurden keine Tageslimits zurückgesetzt.");
+        add("command.marketblocks.resetlimits.success", "\u00a7aTageslimits erfolgreich zurückgesetzt.");
+        add("command.marketblocks.search.header", "\u00a78======== \u00a76\u00a7lShops, die %s verkaufen (Seite %s/%s) \u00a78========");
+        add("command.marketblocks.search.no_shops", "\u00a7cKeine Shops oder Marktplätze gefunden, die %s verkaufen.");
         add("command.marketblocks.shoplist.closed", "GESCHLOSSEN");
-        add("command.marketblocks.shoplist.entry", "§8▪ §7[%s§7] §e%s §8(von §7%s§8)");
-        add("command.marketblocks.shoplist.header", "§8======== §6§lShop-Liste §8========");
-        add("command.marketblocks.shoplist.no_shops", "§cKeine Shops verfügbar.");
+        add("command.marketblocks.shoplist.entry", "\u00a78\u25aa \u00a77[%s\u00a77] \u00a7e%s \u00a78(von \u00a77%s\u00a78)");
+        add("command.marketblocks.shoplist.header", "\u00a78======== \u00a76\u00a7lShop-Liste \u00a78========");
+        add("command.marketblocks.shoplist.no_shops", "\u00a7cKeine Shops verfügbar.");
         add("command.marketblocks.shoplist.open", "OFFEN");
         add("command.marketblocks.shoplist.hover.shop", "Shop: %s");
         add("command.marketblocks.shoplist.hover.owner", "Besitzer: %s");
         add("command.marketblocks.shoplist.hover.status", "Status: %s");
         add("command.marketblocks.shoplist.hover.offer", "Angebot:");
-        add("command.marketblocks.shoplist.hover.arrow", "➔");
-        add("command.marketblocks.unlink.not_found", "§cKonnte die Marktplatz-Verlinkung nicht finden.");
-        add("command.marketblocks.unlink.not_linked", "§cDieser Block ist nicht verlinkt.");
-        add("command.marketblocks.unlink.not_looking_at_block", "§cDu musst einen Block ansehen, um ihn zu entlinken.");
-        add("command.marketblocks.unlink.success", "§aBlock erfolgreich entlinkt!");
-        add("command.marketblocks.unlink.success_name", "§aVom Marktplatz entlinkt: §e%s");
-        add("command.marketblocks.waypoint.created", "§aWegpunkt-Links erfolgreich erstellt:");
+        add("command.marketblocks.shoplist.hover.arrow", "\u2794");
+        add("command.marketblocks.unlink.not_found", "\u00a7cKonnte die Marktplatz-Verlinkung nicht finden.");
+        add("command.marketblocks.unlink.not_linked", "\u00a7cDieser Block ist nicht verlinkt.");
+        add("command.marketblocks.unlink.not_looking_at_block", "\u00a7cDu musst einen Block ansehen, um ihn zu entlinken.");
+        add("command.marketblocks.unlink.success", "\u00a7aBlock erfolgreich entlinkt!");
+        add("command.marketblocks.unlink.success_name", "\u00a7aVom Marktplatz entlinkt: \u00a7e%s");
+        add("command.marketblocks.waypoint.created", "\u00a7aWegpunkt-Links erfolgreich erstellt:");
         add("command.marketblocks.internal.waypoint.coords", "Wegpunkt-Koordinaten für %s: X: %d, Y: %d, Z: %d (%s)");
         add("command.marketblocks.internal.waypoint.journeymap", "JourneyMap-Wegpunkt erstellt / Link generiert.");
         add("command.marketblocks.internal.waypoint.xaero", "Xaero's Minimap Wegpunkt-Link:");
@@ -99,16 +98,23 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.io.redstone_control.require_signal", "Hoch (Signal benötigt)");
         add("gui.marketblocks.io.redstone_control.tooltip", "Redstone-Steuerungsmodus für diese Seite.");
         add("gui.marketblocks.settings_owner_only", "Nur der Besitzer kann Einstellungen ändern");
-        add("gui.marketblocks.settings_tab", "Einstellungen anzeigen");
+        add("gui.marketblocks.settings_tab", "Einstellungen");
         add("gui.marketblocks.settings_title", "Shop-Einstellungen");
         add("gui.marketblocks.toggle.off", "AUS");
         add("gui.marketblocks.toggle.on", "AN");
         add("gui.marketblocks.settings.category.access", "Zugriff");
+        add("gui.marketblocks.settings.category.access.title", "Zugriffseinstellungen");
         add("gui.marketblocks.settings.category.general", "Allgemein");
+        add("gui.marketblocks.settings.category.general.title", "Allgemeine Einstellungen");
         add("gui.marketblocks.settings.category.io", "I/O");
+        add("gui.marketblocks.settings.category.io.title", "I/O-Einstellungen");
         add("gui.marketblocks.settings.category.notifications", "Benachrichtigungen");
+        add("gui.marketblocks.settings.category.notifications.title", "Benachrichtigungs-Einstellungen");
         add("gui.marketblocks.settings.category.villager", "NPC");
+        add("gui.marketblocks.settings.category.villager.title", "NPC-Einstellungen");
         add("gui.marketblocks.settings.category.visual", "Visual");
+        add("gui.marketblocks.settings.category.visual.title", "Visuelle Einstellungen");
+        add("gui.marketblocks.settings.reset", "Standardeinstellungen wiederherstellen");
         add("gui.marketblocks.visuals.bobbing", "Wippen (Bobbing)");
         add("gui.marketblocks.visuals.chaos_rotation", "Chaos-Rotation");
         add("gui.marketblocks.visuals.count", "Anzahl");
@@ -128,6 +134,12 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.offer_item_visible.tooltip",
                 "Zeigt oder versteckt das schwebende/dargestellte Angebot.");
         add("gui.marketblocks.visuals.payment_sounds", "Bezahl-Sounds");
+        add("gui.marketblocks.visuals.npc_sounds", "NPC-Sounds");
+                add("gui.marketblocks.visuals.npc_sounds.tooltip", "Bestimmt, wann der NPC Sounds abspielt (Kauf, Bezahlslots oder aus).");
+                add("gui.marketblocks.visuals.npc_sounds.all", "Alle");
+                add("gui.marketblocks.visuals.npc_sounds.purchase", "Nur Kauf");
+                add("gui.marketblocks.visuals.npc_sounds.payment", "Nur Bezahlung");
+                add("gui.marketblocks.visuals.npc_sounds.off", "Aus");
         add("gui.marketblocks.visuals.player_skin_name", "Spielername");
         add("gui.marketblocks.visuals.profession", "Beruf");
         add("gui.marketblocks.visuals.profession.armorer", "Rüstungsschmied");
@@ -170,9 +182,9 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.notifications.purchase", "Kaufbenachrichtigung");
         add("gui.marketblocks.notifications.purchase.tooltip",
                 "Werde im Chat benachrichtigt, wenn jemand aus deinem Shop kauft.");
-        add("message.marketblocks.notifications.out_of_stock", "§cDein Shop ist leer!§r");
-        add("message.marketblocks.notifications.output_full", "§cDas Ausgabe-Inventar deines Shops ist voll!§r");
-        add("message.marketblocks.notifications.purchase", "§a%s kaufte %sx %s aus deinem Shop.§r");
+        add("message.marketblocks.notifications.out_of_stock", "\u00a7cDein Shop ist leer!\u00a7r");
+        add("message.marketblocks.notifications.output_full", "\u00a7cDas Ausgabe-Inventar deines Shops ist voll!\u00a7r");
+        add("message.marketblocks.notifications.purchase", "\u00a7a%s kaufte %sx %s aus deinem Shop.\u00a7r");
 
         // === GUI - Marketplace Editors ===
         add("gui.marketblocks.marketplace.editor.limits.daily", "Tageslimit");
@@ -204,34 +216,36 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.marketplace.add_page", "Seite hinzufügen");
         add("gui.marketblocks.marketplace.delete_offer", "Angebot löschen");
         add("gui.marketblocks.marketplace.delete_page", "Seite löschen");
-        add("gui.marketblocks.marketplace.inline.limits", "Limits bearbeiten");
-        add("gui.marketblocks.marketplace.inline.limits.disabled_global", "Deaktiviert: Globale Limits sind in der Server-Konfiguration aktiv");
-        add("gui.marketblocks.marketplace.inline.pricing", "Preisdynamik bearbeiten");
-        add("gui.marketblocks.marketplace.inline.pricing.disabled_global", "Deaktiviert: Globale Preisdynamik ist in der Server-Konfiguration aktiv");
-        add("gui.marketblocks.marketplace.mode.edit", "In Bearbeitungsmodus wechseln");
-        add("gui.marketblocks.marketplace.mode.view", "In Ansichtsmodus wechseln");
-        add("gui.marketblocks.marketplace.move_offer", "Angebot verschieben");
-        add("gui.marketblocks.marketplace.move_offer_down", "Angebot nach unten verschieben");
-        add("gui.marketblocks.marketplace.move_offer_up", "Angebot nach oben verschieben");
-        add("gui.marketblocks.marketplace.no_offers", "Keine Angebote");
-        add("gui.marketblocks.marketplace.no_pages", "Keine Seiten\nvorhanden");
-        add("gui.marketblocks.marketplace.rename_page", "Seite umbenennen");
-        add("gui.marketblocks.marketplace.status.daily_short", "D:%s");
-        add("gui.marketblocks.marketplace.status.price_short", "x%s");
-        add("gui.marketblocks.marketplace.status.restock_short", "R:%s");
-        add("gui.marketblocks.marketplace.status.stock_short", "S:%s");
-        add("gui.marketblocks.marketplace.tooltip.price_multiplier", "Preisfaktor.");
-        add("gui.marketblocks.marketplace.tooltip.remaining_daily", "Deine restlichen Käufe heute.");
-        add("gui.marketblocks.marketplace.tooltip.remaining_daily_empty", "Tageslimit erreicht.");
-        add("gui.marketblocks.marketplace.tooltip.remaining_stock", "Verbleibende Käufe aus Bestand.");
-        add("gui.marketblocks.marketplace.tooltip.remaining_stock_empty", "Nicht auf Lager.");
-        add("gui.marketblocks.marketplace.tooltip.restock_in", "Zeit bis zum Auffüllen.");
-        add("gui.marketblocks.marketplace.tooltip.restock_ready", "Auffüllen ist jetzt fällig.");
-        add("gui.marketblocks.marketplace.tooltip.unavailable_daily", "Nicht kaufbar: Tageslimit erreicht.");
-        add("gui.marketblocks.marketplace.tooltip.unavailable_generic", "Nicht kaufbar.");
-        add("gui.marketblocks.marketplace.tooltip.unavailable_restock", "Nicht kaufbar: Auffüllen läuft.");
-        add("gui.marketblocks.marketplace.tooltip.unavailable_stock", "Nicht kaufbar: kein Bestand.");
-        add("gui.marketblocks.marketplace.unnamed_page", "Seite %s");
+        add("gui.marketblocks.inline.limits", "Limits bearbeiten");
+        add("gui.marketblocks.inline.limits.disabled_global", "Deaktiviert: Globale Limits sind in der Server-Konfiguration aktiv");
+        add("gui.marketblocks.inline.pricing", "Preisdynamik bearbeiten");
+        add("gui.marketblocks.inline.pricing.disabled_global", "Deaktiviert: Globale Preisdynamik ist in der Server-Konfiguration aktiv");
+        add("gui.marketblocks.mode.edit", "In Bearbeitungsmodus wechseln");
+        add("gui.marketblocks.mode.view", "In Ansichtsmodus wechseln");
+        add("gui.marketblocks.move_offer", "Angebot verschieben");
+        add("gui.marketblocks.move_offer_down", "Angebot nach unten verschieben");
+        add("gui.marketblocks.move_offer_up", "Angebot nach oben verschieben");
+        add("gui.marketblocks.no_offers", "Keine Angebote");
+        add("gui.marketblocks.no_pages", "Keine Seiten\nvorhanden");
+        add("gui.marketblocks.rename_page", "Seite umbenennen");
+        add("gui.marketblocks.sidebar.next", "Nächste Kategorieseite");
+        add("gui.marketblocks.sidebar.prev", "Vorherige Kategorieseite");
+        add("gui.marketblocks.status.daily_short", "D:%s");
+        add("gui.marketblocks.status.price_short", "x%s");
+        add("gui.marketblocks.status.restock_short", "R:%s");
+        add("gui.marketblocks.status.stock_short", "S:%s");
+        add("gui.marketblocks.tooltip.price_multiplier", "Preisfaktor.");
+        add("gui.marketblocks.tooltip.remaining_daily", "Deine restlichen Käufe heute.");
+        add("gui.marketblocks.tooltip.remaining_daily_empty", "Tageslimit erreicht.");
+        add("gui.marketblocks.tooltip.remaining_stock", "Verbleibende Käufe aus Bestand.");
+        add("gui.marketblocks.tooltip.remaining_stock_empty", "Nicht auf Lager.");
+        add("gui.marketblocks.tooltip.restock_in", "Zeit bis zum Auffüllen.");
+        add("gui.marketblocks.tooltip.restock_ready", "Auffüllen ist jetzt fällig.");
+        add("gui.marketblocks.tooltip.unavailable_daily", "Nicht kaufbar: Tageslimit erreicht.");
+        add("gui.marketblocks.tooltip.unavailable_generic", "Nicht kaufbar.");
+        add("gui.marketblocks.tooltip.unavailable_restock", "Nicht kaufbar: Auffüllen läuft.");
+        add("gui.marketblocks.tooltip.unavailable_stock", "Nicht kaufbar: kein Bestand.");
+        add("gui.marketblocks.unnamed_page", "Seite %s");
 
         // === GUI - General ===
         add("gui.marketblocks.admin_shop.disabled", "Admin-Shop: AUS");
@@ -277,8 +291,10 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.output", "Ausgang");
         add("gui.marketblocks.output_full", "Ausgabe voll");
         add("gui.marketblocks.owner", "Besitzer: %s");
-        add("gui.marketblocks.purchase_xp_sound", "XP-Sound beim Kauf");
-        add("gui.marketblocks.purchase_xp_sound.tooltip", "Spielt einen XP-Sound ab, wenn ein Spieler etwas kauft");
+        add("gui.marketblocks.purchase_sound", "Kauf-Sound");
+        add("gui.marketblocks.purchase_sound.tooltip", "Spielt einen Sound ab, wenn ein Spieler etwas kauft");
+        add("gui.marketblocks.purchase_xp_sound", "Kauf-Sound");
+        add("gui.marketblocks.purchase_xp_sound.tooltip", "Spielt einen Sound ab, wenn ein Spieler etwas kauft");
         add("gui.marketblocks.save", "Speichern");
         add("gui.marketblocks.shop_closed", "Shop geschlossen");
         add("gui.marketblocks.shop_closed.tooltip", "Ist dies aktiv, können nur Besitzer einkaufen.");
@@ -300,6 +316,8 @@ public class ModDeLangProvider extends LanguageProvider {
                 "Bitte nur positive ganze Zahlen für Limits eingeben.");
         add("message.marketblocks.marketplace.limits.no_connection",
                 "Limits konnten nicht gespeichert werden: keine Serververbindung.");
+        add("message.marketblocks.marketplace.page_limit_reached",
+                "Die maximale Anzahl von %s Seiten wurde erreicht.");
         add("message.marketblocks.marketplace.page_name_blank", "Der Seitenname darf nicht leer sein.");
         add("message.marketblocks.marketplace.page_name_duplicate", "Eine Seite mit dem Namen '%s' existiert bereits.");
         add("message.marketblocks.marketplace.page_name_too_long", "Der Seitenname darf maximal %s Zeichen lang sein.");
@@ -317,19 +335,19 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.trade_stand.break_not_empty", "Du musst zuerst alle Items und Auszahlungen leeren!");
         add("message.marketblocks.shop.limit_reached", "Du kannst maximal %s Shops platzieren!");
         
-        add("message.marketblocks.shop_buyer.interact.1", "§eIch bin auf der Suche nach guten Waren zum Kaufen!§r");
-        add("message.marketblocks.shop_buyer.interact.2", "§eHast du etwas Interessantes im Angebot?§r");
-        add("message.marketblocks.shop_buyer.interact.3", "§eIch reise umher, um Dinge zu kaufen. Vielleicht hast du, was ich suche!§r");
-        add("message.marketblocks.shop_buyer.interact.4", "§eIch habe gerade ein tolles Angebot gefunden! Ich liebe es, hier einzukaufen!§r");
-        add("message.marketblocks.shop_buyer.interact.5", "§eNoch ein guter Kauf! Meine Tasche wird langsam schwer.§r");
-        add("message.marketblocks.shop_buyer.interact.6", "§eIch habe bekommen, was ich brauchte, dank dieser Shops!§r");
-        add("message.marketblocks.shop_buyer.interact.7", "§eHmm, ich suche nach etwas Bestimmtem...§r");
-        add("message.marketblocks.shop_buyer.interact.8", "§eIch frage mich, welche anderen Shops es hier noch gibt...§r");
-        add("message.marketblocks.shop_buyer.interact.9", "§eIch schaue mich nur um. Noch hat nichts mein Interesse geweckt.§r");
-        add("message.marketblocks.shop_buyer.interact.10", "§eSchöner Shop, den du hier hast! Den merke ich mir.§r");
+        add("message.marketblocks.shop_buyer.interact.1", "\u00a7eIch bin auf der Suche nach guten Waren zum Kaufen!\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.2", "\u00a7eHast du etwas Interessantes im Angebot?\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.3", "\u00a7eIch reise umher, um Dinge zu kaufen. Vielleicht hast du, was ich suche!\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.4", "\u00a7eIch habe gerade ein tolles Angebot gefunden! Ich liebe es, hier einzukaufen!\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.5", "\u00a7eNoch ein guter Kauf! Meine Tasche wird langsam schwer.\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.6", "\u00a7eIch habe bekommen, was ich brauchte, dank dieser Shops!\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.7", "\u00a7eHmm, ich suche nach etwas Bestimmtem...\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.8", "\u00a7eIch frage mich, welche anderen Shops es hier noch gibt...\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.9", "\u00a7eIch schaue mich nur um. Noch hat nichts mein Interesse geweckt.\u00a7r");
+        add("message.marketblocks.shop_buyer.interact.10", "\u00a7eSchöner Shop, den du hier hast! Den merke ich mir.\u00a7r");
 
         // NPC Rank & Category display (G2)
-        add("message.marketblocks.shop_buyer.info", "§7[%s - %s]");
+        add("message.marketblocks.shop_buyer.info", "\u00a77[%s - %s]");
         add("entity.marketblocks.shop_buyer.rank.citizen", "Bürger");
         add("entity.marketblocks.shop_buyer.rank.wealthy", "Wohlhabender Händler");
         add("entity.marketblocks.shop_buyer.rank.noble", "Edler Kaufmann");
@@ -340,10 +358,10 @@ public class ModDeLangProvider extends LanguageProvider {
         add("entity.marketblocks.shop_buyer.category.valuables", "Sammler");
 
         // Rage & Revenge Easter Egg messages
-        add("message.marketblocks.shop_buyer.rage.1", "§c%s: Hör auf mich zu nerven! Das hast du jetzt davon!§r");
-        add("message.marketblocks.shop_buyer.rage.2", "§c%s: Das war's! Ich habe genug von dir!§r");
-        add("message.marketblocks.shop_buyer.rage.3", "§c%s: Du willst Ärger? Den kannst du haben!§r");
-        add("message.marketblocks.shop_buyer.revenge", "§c%s: Du schon wieder?! Ich habe dich nicht vergessen!§r");
+        add("message.marketblocks.shop_buyer.rage.1", "\u00a7c%s: Hör auf mich zu nerven! Das hast du jetzt davon!\u00a7r");
+        add("message.marketblocks.shop_buyer.rage.2", "\u00a7c%s: Das war's! Ich habe genug von dir!\u00a7r");
+        add("message.marketblocks.shop_buyer.rage.3", "\u00a7c%s: Du willst Ärger? Den kannst du haben!\u00a7r");
+        add("message.marketblocks.shop_buyer.revenge", "\u00a7c%s: Du schon wieder?! Ich habe dich nicht vergessen!\u00a7r");
 
         // === Jade / Waila Support ===
         add("config.jade.plugin_marketblocks.shop_info", "Shop-Info");
@@ -394,9 +412,9 @@ public class ModDeLangProvider extends LanguageProvider {
         add("subtitles.marketblocks.visual_npc_fall", "Dorfbewohner landet");
 
         // === Login Notifications ===
-        add("gui.marketblocks.notifications.login.out_of_stock", "§c[MarketBlocks] %s deiner Shops sind ausverkauft!§r");
-        add("gui.marketblocks.notifications.login.output_full", "§c[MarketBlocks] Bei %s deiner Shops ist das Ausgabelager voll!§r");
-        add("gui.marketblocks.notifications.login.coordinate", "§7 - Position: X: %s, Y: %s, Z: %s§r");
+        add("gui.marketblocks.notifications.login.out_of_stock", "\u00a7c[MarketBlocks] %s deiner Shops sind ausverkauft!\u00a7r");
+        add("gui.marketblocks.notifications.login.output_full", "\u00a7c[MarketBlocks] Bei %s deiner Shops ist das Ausgabelager voll!\u00a7r");
+        add("gui.marketblocks.notifications.login.coordinate", "\u00a77 - Position: X: %s, Y: %s, Z: %s\u00a7r");
 
         // === Purchase Confirmations ===
         add("message.marketblocks.purchase_success", "Du hast erfolgreich %s x %s gekauft.");
@@ -412,8 +430,10 @@ public class ModDeLangProvider extends LanguageProvider {
         add("command.marketblocks.sale.not_found", "Angebot / Shop nicht gefunden: %s");
         add("command.marketblocks.sale.failed", "Fehler beim Bearbeiten des Sonderangebots.");
         add("command.marketblocks.stats.shop.header", "--- Top 10 SingleOfferShops ---");
+        add("command.marketblocks.stats.shop", "Shop-Statistiken für: %s");
         add("command.marketblocks.stats.shop.empty", "Keine Shops verfügbar.");
         add("command.marketblocks.stats.shop.entry", "%s. %s - %s Verkäufe");
+        add("command.marketblocks.stats.shop.total_sales", "Verkäufe gesamt: %d");
         add("command.marketblocks.stats.marketplace.header", "--- Top 10 Marketplace Angebote ---");
         add("command.marketblocks.stats.marketplace.empty", "Keine Angebote verfügbar.");
         add("command.marketblocks.stats.marketplace.entry", "%s. %s - %s Verkäufe");
@@ -451,7 +471,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.trade_book.marketplace.empty", "Keine Verkäufe auf dem Marktplatz.");
         add("gui.marketblocks.trade_book.marketplace.entry", "%s. %s:\n");
         add("gui.marketblocks.trade_book.marketplace.sales", "   Verkäufe: %s");
-        add("gui.marketblocks.trade_book.marketplace.sale_active", "   ★ SALE: %s");
+        add("gui.marketblocks.trade_book.marketplace.sale_active", "   \u2605 SALE: %s");
         add("gui.marketblocks.trade_book.active.title", "=== Spieler-Shops ===\n\n");
         add("gui.marketblocks.trade_book.active.empty", "Keine aktiven Shops auf dem Server.");
         add("gui.marketblocks.trade_book.active.owner", "  Besitzer: %s\n");
@@ -461,10 +481,11 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.shop.default_name", "Shop #%s");
         add("gui.marketblocks.shop.named_format", "%s (#%s)");
         add("gui.marketblocks.trade_book.active.closed", "Geschlossen");
+        add("gui.marketblocks.trade_book.active.open", "Offen");
         add("gui.marketblocks.trade_book.active.no_offer", "Kein Angebot gesetzt");
 
-        add("gui.marketblocks.trade_book.status.out_of_stock", " §c⚠ Ausverkauft");
-        add("gui.marketblocks.trade_book.status.output_full", " §6⚠ Ausgabe voll");
+        add("gui.marketblocks.trade_book.status.out_of_stock", " \u00a7c\u26a0 Ausverkauft");
+        add("gui.marketblocks.trade_book.status.output_full", " \u00a76\u26a0 Ausgabe voll");
 
         // === Block Registrations ===
         addBlock(RegistriesInit.MARKETCRATE_BLOCK, "Marktkiste");
@@ -504,7 +525,7 @@ public class ModDeLangProvider extends LanguageProvider {
 
         // NPC Economy Guide Page (G4)
         add("gui.marketblocks.trade_book.guide.economy.title", "=== NPC-Wirtschaft ===\n\n");
-        add("gui.marketblocks.trade_book.guide.economy.text", "NPC-Käufer besuchen deine Shops und kaufen Items, wenn der Deal gut ist!\n\n§6Preise:§r Items haben Basiswerte. Gecraftete Items sind mehr wert (+10% pro Crafting-Schritt).\n\n§6Angebot & Nachfrage:§r Wird ein Item oft verkauft, sinkt sein NPC-Wert. Mit der Zeit erholen sich Preise.\n\n§6NPC-Ränge:§r\n\u2022 §7Bürger§r \u2013 Kleines Budget\n\u2022 §eWohlhabend§r \u2013 Mittleres Budget\n\u2022 §6Edel§r \u2013 Gro\u00dfes Budget, kauft Seltenes\n\n§6Interessen:§r Jeder NPC hat eine Spezialisierung (Bauer, Schmied, Alchemist, Sammler). Für bevorzugte Kategorien geben sie mehr Budget aus!");
+        add("gui.marketblocks.trade_book.guide.economy.text", "NPC-Käufer besuchen deine Shops und kaufen Items, wenn der Deal gut ist!\n\n\u00a76Preise:\u00a7r Items haben Basiswerte. Gecraftete Items sind mehr wert (+10% pro Crafting-Schritt).\n\n\u00a76Angebot & Nachfrage:\u00a7r Wird ein Item oft verkauft, sinkt sein NPC-Wert. Mit der Zeit erholen sich Preise.\n\n\u00a76NPC-Ränge:\u00a7r\n\u2022 \u00a77Bürger\u00a7r \u2013 Kleines Budget\n\u2022 \u00a7eWohlhabend\u00a7r \u2013 Mittleres Budget\n\u2022 \u00a76Edel\u00a7r \u2013 Großes Budget, kauft Seltenes\n\n\u00a76Interessen:\u00a7r Jeder NPC hat eine Spezialisierung (Bauer, Schmied, Alchemist, Sammler). Für bevorzugte Kategorien geben sie mehr Budget aus!");
 
     }
 }

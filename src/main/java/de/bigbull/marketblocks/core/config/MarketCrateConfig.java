@@ -10,7 +10,7 @@ public class MarketCrateConfig {
     public static final ModConfigSpec SPEC;
 
     public static final ModConfigSpec.BooleanValue MARKETCRATE_DEFAULT_EMIT_REDSTONE;
-    public static final ModConfigSpec.BooleanValue MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND;
+    public static final ModConfigSpec.BooleanValue MARKETCRATE_DEFAULT_PURCHASE_SOUND;
     public static final ModConfigSpec.BooleanValue MARKETCRATE_DEFAULT_IS_CLOSED;
 
     public static final ModConfigSpec.BooleanValue MARKETCRATE_DEFAULT_VILLAGER_NPC_ENABLED;
@@ -45,9 +45,9 @@ public class MarketCrateConfig {
         MARKETCRATE_DEFAULT_EMIT_REDSTONE = BUILDER
                 .comment("Emit redstone signal when a trade occurs (Default: false)")
                 .define("emitRedstone", false);
-        MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND = BUILDER
-                .comment("Play XP pickup sound upon successful trade (Default: false)")
-                .define("purchaseXpSound", false);
+        MARKETCRATE_DEFAULT_PURCHASE_SOUND = BUILDER
+                .comment("Play sound upon successful trade (Default: true)")
+                .define("purchaseSound", true);
         MARKETCRATE_DEFAULT_IS_CLOSED = BUILDER
                 .comment("Whether newly placed Market Crates start as closed (Default: false)")
                 .define("isClosed", false);
@@ -61,11 +61,11 @@ public class MarketCrateConfig {
                 .comment("Default profession of the visual NPC")
                 .defineEnum("profession", VillagerVisualProfession.NONE);
         MARKETCRATE_DEFAULT_PURCHASE_PARTICLES = BUILDER
-                .comment("Spawn happy villager particles upon trade (Default: false)")
-                .define("purchaseParticles", false);
+                .comment("Spawn happy villager particles upon trade (Default: true)")
+                .define("purchaseParticles", true);
         MARKETCRATE_DEFAULT_PURCHASE_SOUNDS = BUILDER
-                .comment("Play villager trade sound upon purchase (Default: false)")
-                .define("purchaseSounds", false);
+                .comment("Play villager trade sound upon purchase (Default: true)")
+                .define("purchaseSounds", true);
         MARKETCRATE_DEFAULT_PAYMENT_SLOT_SOUNDS = BUILDER
                 .comment("Play villager ambient sounds when payment slots change (Default: false)")
                 .define("paymentSlotSounds", false);
@@ -121,14 +121,14 @@ public class MarketCrateConfig {
 
         BUILDER.push("Notifications");
         MARKETCRATE_DEFAULT_NOTIFY_PURCHASE = BUILDER
-                .comment("Notify owner upon purchase (Default: false)")
-                .define("notifyPurchase", false);
+                .comment("Notify owner upon purchase (Default: true)")
+                .define("notifyPurchase", true);
         MARKETCRATE_DEFAULT_NOTIFY_OUT_OF_STOCK = BUILDER
-                .comment("Notify owner when stock is empty (Default: false)")
-                .define("notifyOutOfStock", false);
+                .comment("Notify owner when stock is empty (Default: true)")
+                .define("notifyOutOfStock", true);
         MARKETCRATE_DEFAULT_NOTIFY_OUTPUT_FULL = BUILDER
-                .comment("Notify owner when output inventory is full (Default: false)")
-                .define("notifyOutputFull", false);
+                .comment("Notify owner when output inventory is full (Default: true)")
+                .define("notifyOutputFull", true);
         MARKETCRATE_DEFAULT_NOTIFY_CO_OWNERS = BUILDER
                 .comment("Send notifications to co-owners as well (Default: false)")
                 .define("notifyCoOwners", false);

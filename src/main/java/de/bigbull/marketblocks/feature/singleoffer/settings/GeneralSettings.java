@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import de.bigbull.marketblocks.util.NameValidator;
 
 /**
- * Settings for the General tab: shop name, redstone emission, and XP feedback
+ * Settings for the General tab: shop name, redstone emission, and feedback
  * sound.
  */
 public record GeneralSettings(
@@ -23,7 +23,7 @@ public record GeneralSettings(
     private static final String KEY_IS_CLOSED = "IsClosed";
     private static final String KEY_SHOP_CATEGORY = "ShopCategory";
 
-    public static final GeneralSettings DEFAULT = new GeneralSettings("", false, false, false, ShopCategory.NONE);
+    public static final GeneralSettings DEFAULT = new GeneralSettings("", false, true, false, ShopCategory.NONE);
 
     public static final StreamCodec<ByteBuf, GeneralSettings> STREAM_CODEC = StreamCodec.of(
             (buf, settings) -> {

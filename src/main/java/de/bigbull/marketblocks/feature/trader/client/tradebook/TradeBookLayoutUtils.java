@@ -65,7 +65,7 @@ public class TradeBookLayoutUtils {
 
     public static void renderInlineOffer(GuiGraphics graphics, ShopOfferData offer, int x, int y, String status, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
         int itemY = y - 5;
-        graphics.blit(OFFER_GUI, x - 2, itemY - 5, 1, 3, 94, 26, 96, 32);
+        graphics.blit(OFFER_GUI, x - 3, itemY - 6, 0, 2, 96, 28, 96, 32);
 
         int p1x = x + OfferTemplateButton.PAYMENT_1_X_OFFSET;
         int p2x = x + OfferTemplateButton.PAYMENT_2_X_OFFSET;

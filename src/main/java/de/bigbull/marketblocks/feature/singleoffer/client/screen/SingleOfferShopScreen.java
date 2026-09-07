@@ -16,6 +16,7 @@ import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
+import de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode;
 import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.GeneralSettings;
@@ -69,6 +70,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             "textures/gui/icon/delete.png");
     private static final ResourceLocation CLEAR_LOG = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
             "textures/gui/icon/clear_log.png");
+    private static final ResourceLocation RESET_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+            "textures/gui/icon/reset.png");
     private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
             "textures/gui/icon/singleoffer/input_output.png");
     private static final ResourceLocation TRADE_ARROW_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
@@ -317,6 +320,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             categoryTabs = SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory,
                     this::switchSettingsCategory);
             buildSaveButton(be);
+            buildResetButton();
         } else {
             categoryTabs.clear();
             activeSettingsCategory = getFirstEnabledCategory();
@@ -361,6 +365,52 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
             case NOTIFICATIONS -> buildSettingsNotificationSection(be);
         }
+    }
+
+    private void buildResetButton() {
+        addRenderableWidget(new IconButton(
+                leftPos + 6,
+                topPos + imageHeight - 24,
+                18,
+                18,
+                BUTTON_SPRITES_18,
+                RESET_ICON,
+                ignored -> resetCurrentCategorySettings(),
+                Component.translatable("gui.marketblocks.settings.reset"),
+                () -> false));
+    }
+
+    private void resetCurrentCategorySettings() {
+        switch (activeSettingsCategory) {
+            case GENERAL -> {
+                generalDraft = new GeneralSettings.Draft(GeneralSettings.DEFAULT);
+                if (nameField != null) {
+                    nameField.setValue("");
+                }
+            }
+            case IO -> ioDraft = new IoSettings.Draft(IoSettings.DEFAULT);
+            case VILLAGER -> {
+                villagerDraft = new VillagerSettings.Draft(VillagerSettings.DEFAULT);
+                if (npcNameField != null) {
+                    npcNameField.setValue("");
+                }
+            }
+            case VISUALS -> offerItemDraft = new OfferItemSettings.Draft(OfferItemSettings.DEFAULT);
+            case ACCESS -> {
+                if (!menu.isPrimaryOwner()) {
+                    return;
+                }
+                boolean adminEnabled = accessDraft != null && accessDraft.adminShopEnabled();
+                UUID ownerId = accessDraft != null ? accessDraft.ownerId() : null;
+                String ownerName = accessDraft != null ? accessDraft.ownerName() : "";
+                accessDraft = new AccessSettings.Draft(new AccessSettings(
+                        adminEnabled, ownerId, ownerName, Map.of(), AccessMode.EVERYONE, Map.of()));
+                ownerListPanel.clearData();
+            }
+            case NOTIFICATIONS -> notificationDraft = new NotificationSettings.Draft(NotificationSettings.DEFAULT);
+        }
+        markDirty();
+        rebuildUI();
     }
 
     private void buildSaveButton(SingleOfferShopBlockEntity be) {
@@ -1034,7 +1084,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
         if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS
                 && menu.isPrimaryOwner()) {
-            if (ownerListPanel.onMouseScrolled(scrollY))
+            if (ownerListPanel.onMouseScrolled(mouseX, mouseY, scrollY, leftPos))
                 return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);

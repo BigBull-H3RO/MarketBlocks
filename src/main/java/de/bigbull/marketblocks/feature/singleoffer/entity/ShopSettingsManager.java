@@ -73,8 +73,8 @@ public class ShopSettingsManager {
                 "",
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_EMIT_REDSTONE.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_EMIT_REDSTONE.get(),
-                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_PURCHASE_XP_SOUND.get()
-                        : TradeStandConfig.TRADESTAND_DEFAULT_PURCHASE_XP_SOUND.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_PURCHASE_SOUND.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_PURCHASE_SOUND.get(),
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_IS_CLOSED.get() : TradeStandConfig.TRADESTAND_DEFAULT_IS_CLOSED.get(),
                 ShopCategory.NONE);
     }

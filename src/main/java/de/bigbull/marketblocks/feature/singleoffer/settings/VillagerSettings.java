@@ -32,7 +32,7 @@ public record VillagerSettings(
     private static final String KEY_PLAYER_SKIN_NAME = "PlayerSkinName";
 
     public static final VillagerSettings DEFAULT = new VillagerSettings(
-            false, "", VillagerVisualProfession.NONE, false, false, false, false, ""
+            false, "", VillagerVisualProfession.NONE, true, true, false, false, ""
     );
 
     public static final StreamCodec<ByteBuf, VillagerSettings> STREAM_CODEC = StreamCodec.of(
