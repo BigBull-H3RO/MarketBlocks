@@ -68,7 +68,7 @@ public final class SingleOfferSettingsSections {
                 continue;
 
             boolean isSelected = category == activeCategory;
-            int currentHeight = isSelected ? 32 : 28;
+            int currentHeight = isSelected ? SETTINGS_CATEGORY_BUTTON_HEIGHT : 28;
             int currentY = isSelected ? y : y + 1;
 
             IconButton tabButton = new IconButton(
@@ -329,7 +329,7 @@ public final class SingleOfferSettingsSections {
         int y = host.settingsTopPos() + 26;
         int leftX = host.settingsLeftPos() + 8;
 
-        Button visibleButton = host.addSettingsWidget(Button.builder(
+        host.addSettingsWidget(Button.builder(
                 toggleStateLabel(draft.visible()),
                 b -> {
                     boolean next = !draft.visible();
