@@ -1,13 +1,10 @@
 package de.bigbull.marketblocks.feature.singleoffer.entity;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
 import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.core.config.MarketCrateConfig;
 import de.bigbull.marketblocks.core.config.TradeStandConfig;
-import de.bigbull.marketblocks.feature.singleoffer.SideMode;
-import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
@@ -19,7 +16,6 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.ShopCategory;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Manages all configuration settings for a single-offer shop block entity.
@@ -64,8 +60,10 @@ public class ShopSettingsManager {
                 IoSettings.DEFAULT.back(),
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_REDSTONE_CONTROL.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_REDSTONE_CONTROL.get(),
-                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ALLOW_IO.get() : TradeStandConfig.TRADESTAND_DEFAULT_ALLOW_IO.get(),
-                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_AUTO_IO.get() : TradeStandConfig.TRADESTAND_DEFAULT_AUTO_IO.get());
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ALLOW_IO.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_ALLOW_IO.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_AUTO_IO.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_AUTO_IO.get());
     }
 
     private static GeneralSettings createDefaultGeneralSettings(boolean isMarketCrate) {
@@ -75,7 +73,8 @@ public class ShopSettingsManager {
                         : TradeStandConfig.TRADESTAND_DEFAULT_EMIT_REDSTONE.get(),
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_PURCHASE_SOUND.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_PURCHASE_SOUND.get(),
-                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_IS_CLOSED.get() : TradeStandConfig.TRADESTAND_DEFAULT_IS_CLOSED.get(),
+                isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_IS_CLOSED.get()
+                        : TradeStandConfig.TRADESTAND_DEFAULT_IS_CLOSED.get(),
                 ShopCategory.NONE);
     }
 

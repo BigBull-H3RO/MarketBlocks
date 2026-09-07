@@ -1,6 +1,5 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
@@ -43,7 +42,8 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Base class for all shop blocks.
  * Contains shared logic for ownership, redstone signals and interactions.
- * Shape and render configuration are separated so that display offsets per variant
+ * Shape and render configuration are separated so that display offsets per
+ * variant
  * can be maintained independently from collision/interaction shapes.
  */
 public abstract class BaseShopBlock extends BaseEntityBlock {
@@ -76,7 +76,8 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos,
+            CollisionContext context) {
         return getShopConfig().getShape();
     }
 
@@ -133,13 +134,16 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     }
 
     private static boolean hasComparatorReadPath(BlockGetter level, BlockPos sourcePos, Direction sourceToComparator) {
-        if (sourceToComparator.getAxis().isVertical()) return false;
+        if (sourceToComparator.getAxis().isVertical())
+            return false;
 
         BlockPos neighborPos = sourcePos.relative(sourceToComparator);
         BlockState neighborState = level.getBlockState(neighborPos);
 
-        if (isComparatorReadingFromBlock(neighborState, sourceToComparator)) return true;
-        if (!neighborState.isRedstoneConductor(level, neighborPos)) return false;
+        if (isComparatorReadingFromBlock(neighborState, sourceToComparator))
+            return true;
+        if (!neighborState.isRedstoneConductor(level, neighborPos))
+            return false;
 
         BlockPos comparatorPos = neighborPos.relative(sourceToComparator);
         return isComparatorReadingFromBlock(level.getBlockState(comparatorPos), sourceToComparator);
@@ -151,7 +155,8 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos,
+            boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
             shopEntity.updateNeighborCache();
@@ -182,8 +187,10 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-        if (level.isClientSide) return InteractionResult.SUCCESS;
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+            BlockHitResult hitResult) {
+        if (level.isClientSide)
+            return InteractionResult.SUCCESS;
 
         if (!(level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity)) {
             return InteractionResult.FAIL;
@@ -194,11 +201,11 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                 serverPlayer.openMenu(
                         new SimpleMenuProvider(
                                 (id, inv, p) -> new SingleOfferShopMenu(id, inv, shopEntity),
-                                shopEntity.getDisplayName()
-                        ), pos
-                );
+                                shopEntity.getDisplayName()),
+                        pos);
             } else {
-                serverPlayer.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.no_offer"), true);
+                serverPlayer.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.no_offer"),
+                        true);
                 return InteractionResult.FAIL;
             }
         }
@@ -211,14 +218,14 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
             return new SimpleMenuProvider(
                     (id, inv, p) -> new SingleOfferShopMenu(id, inv, shop),
-                    shop.getDisplayName()
-            );
+                    shop.getDisplayName());
         }
         return null;
     }
 
     @Override
-    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest,
+            FluidState fluid) {
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
             if (shop.getOwnerId() != null && !shop.isOwner(player)) {
                 if (player instanceof ServerPlayer sp) {
@@ -264,7 +271,8 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
+            BlockEntityType<T> type) {
         return createTickerHelper(type, RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(),
                 (lvl, pos, st, be) -> SingleOfferShopBlockEntity.tick(lvl, pos, st, be));
     }

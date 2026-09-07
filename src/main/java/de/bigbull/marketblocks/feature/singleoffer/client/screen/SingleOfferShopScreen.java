@@ -711,7 +711,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int rowHeight = isExpanded ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
 
         boolean isHovered = isHoveringLog(x, y, rowHeight);
-        int rowColor = (index & 1) == 0 ? LOG_ROW_BG_COLOR_A : LOG_ROW_BG_COLORB;
+        int rowColor = (index & 1) == 0 ? LOG_ROW_BG_COLOR_A : LOG_ROW_BG_COLOR_B;
         if (isHovered)
             rowColor = LOG_ROW_HOVER_BG_COLOR;
         graphics.fill(x, y, x + LOG_LIST_WIDTH, y + rowHeight - 1, rowColor);
@@ -786,8 +786,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
         }
     }
-
-    private static final int LOG_ROW_BG_COLORB = 0xFF303030;
 
     private int getLogPreviewX(int rowX) {
         return rowX + LOG_LIST_WIDTH - LOG_PREVIEW_WIDTH - LOG_PREVIEW_RIGHT_PADDING;
@@ -1014,7 +1012,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 }
             }
         }
-        
+
         if (menu.getActiveTab() == ShopTab.LOG && button == 0) {
             int scrollerX = leftPos + LOG_SCROLLER_X_OFFSET;
             int listY = topPos + LOG_LIST_Y_OFFSET;
@@ -1025,7 +1023,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
 
             int listX = leftPos + LOG_LIST_X_OFFSET;
-            if (mouseX >= listX && mouseX < listX + LOG_LIST_WIDTH && mouseY >= listY && mouseY < listY + LOG_LIST_HEIGHT) {
+            if (mouseX >= listX && mouseX < listX + LOG_LIST_WIDTH && mouseY >= listY
+                    && mouseY < listY + LOG_LIST_HEIGHT) {
                 int currentY = listY - logScrollPixelOffset;
                 List<TransactionLogEntry> entries = menu.getTransactionLogEntries();
                 for (int i = 0; i < entries.size(); i++) {
