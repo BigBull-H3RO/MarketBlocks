@@ -953,7 +953,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void renderInventoryLabels(GuiGraphics graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        graphics.drawString(font, Component.translatable("gui.marketblocks.inventory_title"), 8, 6, 4210752, false);
+        graphics.drawString(font, Component.translatable("gui.marketblocks.input"), 8, 6, 4210752, false);
+        graphics.drawString(font, Component.translatable("gui.marketblocks.output"), 98, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
         if (be.isAdminShopEnabled()) {
             Component info = Component.translatable("gui.marketblocks.inventory_admin_disabled");
@@ -969,7 +970,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void renderSettingsLabels(GuiGraphics graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        graphics.drawString(font, Component.translatable("gui.marketblocks.settings_title"), 8, 6, 4210752, false);
+        Component headerTitle = activeSettingsCategory != null ? activeSettingsCategory.headerTitle()
+                : Component.translatable("gui.marketblocks.settings_title");
+        graphics.drawString(font, headerTitle, 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
         if (menu.isOwner() && activeSettingsCategory == SettingsCategory.GENERAL) {
             graphics.drawString(font, Component.translatable("gui.marketblocks.shop_name"), 10, 20, 4210752, false);
