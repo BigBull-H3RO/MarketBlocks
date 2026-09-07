@@ -185,6 +185,11 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
 
         if (dataChanged) {
+            if (isLocalEditMode && cachedData != null && current.pages().size() > cachedData.pages().size()) {
+                int newPageIndex = current.pages().size() - 1;
+                menu.setSelectedPageClient(newPageIndex);
+                NetworkHandler.sendToServer(new MarketplaceSelectPagePacket(newPageIndex));
+            }
             cachedData = current;
         }
 
@@ -719,6 +724,9 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (pageSidebar.handleMouseScrolled(mouseX, mouseY, scrollY, createPageSidebarContext(), pageSidebarCallbacks)) {
+            return true;
+        }
         if (isScrollBarActive()) {
             int direction = (int) Math.signum(scrollY);
             if (direction != 0)
@@ -860,6 +868,11 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         public void onPageSelected(int pageIndex) {
             MarketplaceScreen.this.onPageSelected(pageIndex);
         }
+
+        @Override
+        public void rebuildUi() {
+            MarketplaceScreen.this.rebuildUi();
+        }
     }
 
     private static class TextInputScreen extends BaseModalScreen {
@@ -931,4 +944,3 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
     }
 }
-

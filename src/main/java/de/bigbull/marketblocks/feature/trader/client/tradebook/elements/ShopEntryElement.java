@@ -29,9 +29,9 @@ public class ShopEntryElement implements ITradeBookElement {
     public int getExtraHeight(String insertion) {
         String[] parts = insertion.split("\\|\\|");
         if (parts.length > 1 && parts[1].equals("my_shop")) {
-            return 45;
+            return 48;
         }
-        return 50;
+        return 54;
     }
 
     @Override
@@ -103,9 +103,9 @@ public class ShopEntryElement implements ITradeBookElement {
                             mouseX, mouseY));
                 }, null));
             }
-            currentY += 12; // Abstand zwischen Spielernamen und Angebot (bleibt konstant)
+            currentY += 14; // Abstand zwischen Spielernamen und Angebot
         } else {
-            currentY = startY + 16; // Abstand zwischen Shopnamen und Angebot bei "My Shops" (hier verändern!)
+            currentY = startY + 18; // Abstand zwischen Shopnamen und Angebot bei "My Shops"
         }
 
         // Render Head (Left), Offer (Center), Compass (Right)
@@ -124,17 +124,17 @@ public class ShopEntryElement implements ITradeBookElement {
                     renderCompass(graphics, startX, currentY, px, py, pz, dim, scale);
                 }
             }
-            currentY += 20;
+            currentY += 21;
         } else {
             // No offer background
             int offerX = startX + 30;
-            int frameX = offerX - 2;
-            int frameY = currentY - 4;
-            graphics.blit(TradeBookLayoutUtils.OFFER_GUI, frameX, frameY, 1, 3, 94, 26, 96, 32);
+            int frameX = offerX - 3;
+            int frameY = currentY - 5;
+            graphics.blit(TradeBookLayoutUtils.OFFER_GUI, frameX, frameY, 0, 2, 96, 28, 96, 32);
 
             String noOfferStr = Component.translatable("gui.marketblocks.trade_book.active.no_offer").getString();
             int noOfferWidth = context.getFont().width(noOfferStr);
-            int noOfferX = frameX + (94 - noOfferWidth) / 2; // Centered inside the frame
+            int noOfferX = frameX + (96 - noOfferWidth) / 2; // Centered inside the frame
 
             if (!prefix.equals("my_shop")) {
                 TradeBookLayoutUtils.renderPlayerHead(graphics, ownerFull, startX + 5, currentY + 3, scale, 10);
@@ -144,11 +144,11 @@ public class ShopEntryElement implements ITradeBookElement {
             if (canTeleport) {
                 renderCompass(graphics, startX, currentY, px, py, pz, dim, scale);
             }
-            currentY += 20;
+            currentY += 21;
         }
 
         // Coordinates
-        currentY += 3;
+        currentY += 4;
         String coords = px + ", " + py + ", " + pz;
         int coordsWidth = context.getFont().width(coords);
         int coordsX = startX + ((int) (TradeBookLayoutUtils.TEXT_WIDTH / scale) - coordsWidth) / 2;

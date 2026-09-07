@@ -6,6 +6,7 @@ import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceDeletePage
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceRenamePagePacket;
 import de.bigbull.marketblocks.client.gui.IconButton;
 import de.bigbull.marketblocks.client.gui.VanillaIconButton;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -50,10 +51,12 @@ public final class MarketplaceEditorControls {
     }
 
     private void addPageCreateButton(Context context, Callbacks callbacks, int headerX, int headerY) {
-        callbacks.addWidget(new IconButton(headerX, headerY, 20, 20, context.buttonSprites(), context.addPageIcon(),
+        IconButton addBtn = new IconButton(headerX, headerY, 20, 20, context.buttonSprites(), context.addPageIcon(),
                 ignored -> callbacks.openTextInput(Component.translatable("gui.marketblocks.marketplace.add_page"), "",
                         false, name -> NetworkHandler.sendToServer(new MarketplaceCreatePagePacket(name))),
-                Component.translatable("gui.marketblocks.marketplace.add_page"), () -> false));
+                Component.translatable("gui.marketblocks.marketplace.add_page"), () -> false);
+        addBtn.active = context.pages().size() < MarketplaceManager.MAX_PAGES;
+        callbacks.addWidget(addBtn);
     }
 
     private void addPageEditButtons(Context context, Callbacks callbacks, int headerX, int headerY,

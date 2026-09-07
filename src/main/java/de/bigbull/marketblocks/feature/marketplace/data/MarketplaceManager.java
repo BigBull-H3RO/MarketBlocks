@@ -48,7 +48,7 @@ public final class MarketplaceManager {
     private static final int AUTO_SAVE_TICKS = 20 * 60;
     private static final int RUNTIME_UPKEEP_INTERVAL_TICKS = 20;
     public static final int MAX_PAGE_NAME_LENGTH = 64;
-
+    public static final int MAX_PAGES = 100;
 
     private static final MarketplaceManager INSTANCE = new MarketplaceManager();
 
@@ -350,6 +350,9 @@ public final class MarketplaceManager {
     public MutationResult<MarketplacePage> createPage(String name) {
         synchronized (lock) {
             ensureInitialized();
+            if (data.internalPages().size() >= MAX_PAGES) {
+                return MutationResult.failure(Component.translatable("message.marketblocks.marketplace.page_limit_reached", MAX_PAGES));
+            }
             MutationResult<String> validation = validatePageName(name, null);
             if (!validation.isSuccess()) {
                 return MutationResult.failure(validation.errorMessage());
@@ -1102,4 +1105,3 @@ public final class MarketplaceManager {
     }
 
 }
-

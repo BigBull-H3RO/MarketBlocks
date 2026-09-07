@@ -145,7 +145,7 @@ public final class SingleOfferSettingsSections {
         emitCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.emit_redstone.tooltip")));
 
         Checkbox xpSoundCheckbox = host.addSettingsWidget(Checkbox.builder(
-                Component.translatable("gui.marketblocks.purchase_xp_sound"),
+                Component.translatable("gui.marketblocks.purchase_sound"),
                 host.settingsFont())
                 .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 110)
                 .selected(draft.purchaseXpFeedbackSound())
@@ -155,7 +155,7 @@ public final class SingleOfferSettingsSections {
                 })
                 .build());
         xpSoundCheckbox
-                .setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.purchase_xp_sound.tooltip")));
+                .setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.purchase_sound.tooltip")));
 
         return nameField;
     }
@@ -302,30 +302,12 @@ public final class SingleOfferSettingsSections {
         particlesCheckbox
                 .setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_particles")));
 
-        Checkbox soundsCheckbox = host.addSettingsWidget(Checkbox.builder(
-                Component.translatable("gui.marketblocks.visuals.purchase_sounds"),
-                host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 108)
-                .selected(draft.purchaseSoundsEnabled())
-                .onValueChange((checkbox, value) -> {
-                    draft.setPurchaseSoundsEnabled(value);
-                    onDirty.run();
-                })
-                .build());
-        soundsCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.purchase_sounds")));
-
-        Checkbox paymentSoundsCheckbox = host.addSettingsWidget(Checkbox.builder(
-                Component.translatable("gui.marketblocks.visuals.payment_sounds"),
-                host.settingsFont())
-                .pos(host.settingsLeftPos() + 8, host.settingsTopPos() + 128)
-                .selected(draft.paymentSlotSoundsEnabled())
-                .onValueChange((checkbox, value) -> {
-                    draft.setPaymentSlotSoundsEnabled(value);
-                    onDirty.run();
-                })
-                .build());
-        paymentSoundsCheckbox
-                .setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.payment_sounds")));
+        Button soundsButton = host.addSettingsWidget(Button.builder(npcSoundsLabel(draft), b -> {
+            cycleNpcSounds(draft);
+            onDirty.run();
+            b.setMessage(npcSoundsLabel(draft));
+        }).bounds(host.settingsLeftPos() + 8, host.settingsTopPos() + 110, 158, 16).build());
+        soundsButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.npc_sounds.tooltip")));
 
         boolean blocked = placementResult != null && !placementResult.canSpawn() && !draft.npcEnabled();
         if (blocked) {
@@ -496,6 +478,71 @@ public final class SingleOfferSettingsSections {
         return Component.translatable("gui.marketblocks.visuals.profession").append(": ")
                 .append(Component.translatable(draft.profession().translationKey()));
     }
+    public enum NpcSoundMode {
+        ALL("all"),
+        PURCHASE("purchase"),
+        PAYMENT("payment"),
+        OFF("off");
+
+        private final String id;
+
+        NpcSoundMode(String id) {
+            this.id = id;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public static NpcSoundMode from(boolean purchase, boolean payment) {
+            if (purchase && payment) return ALL;
+            if (purchase) return PURCHASE;
+            if (payment) return PAYMENT;
+            return OFF;
+        }
+
+        public NpcSoundMode next() {
+            return switch (this) {
+                case ALL -> PURCHASE;
+                case PURCHASE -> PAYMENT;
+                case PAYMENT -> OFF;
+                case OFF -> ALL;
+            };
+        }
+
+        public void applyTo(VillagerSettings.Draft draft) {
+            switch (this) {
+                case ALL -> {
+                    draft.setPurchaseSoundsEnabled(true);
+                    draft.setPaymentSlotSoundsEnabled(true);
+                }
+                case PURCHASE -> {
+                    draft.setPurchaseSoundsEnabled(true);
+                    draft.setPaymentSlotSoundsEnabled(false);
+                }
+                case PAYMENT -> {
+                    draft.setPurchaseSoundsEnabled(false);
+                    draft.setPaymentSlotSoundsEnabled(true);
+                }
+                case OFF -> {
+                    draft.setPurchaseSoundsEnabled(false);
+                    draft.setPaymentSlotSoundsEnabled(false);
+                }
+            }
+        }
+    }
+
+    private static Component npcSoundsLabel(VillagerSettings.Draft draft) {
+        NpcSoundMode mode = NpcSoundMode.from(draft.purchaseSoundsEnabled(), draft.paymentSlotSoundsEnabled());
+        return Component.translatable("gui.marketblocks.visuals.npc_sounds").append(": ")
+                .append(Component.translatable("gui.marketblocks.visuals.npc_sounds." + mode.getId()));
+    }
+
+    private static void cycleNpcSounds(VillagerSettings.Draft draft) {
+        NpcSoundMode current = NpcSoundMode.from(draft.purchaseSoundsEnabled(), draft.paymentSlotSoundsEnabled());
+        current.next().applyTo(draft);
+    }
+
 
     public static void buildNotificationSection(SingleOfferShopScreen host,
             NotificationSettings.Draft draft, Runnable onDirty) {

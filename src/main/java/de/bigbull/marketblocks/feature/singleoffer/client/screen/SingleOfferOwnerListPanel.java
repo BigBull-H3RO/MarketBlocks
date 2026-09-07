@@ -159,7 +159,7 @@ public class SingleOfferOwnerListPanel {
         int barX = leftPos + OWNER_SCROLLBAR_X_OFFSET;
         int barY = ownerListBaseY;
 
-        if (mouseX >= barX && mouseX < barX + SCROLLER_WIDTH && mouseY >= barY && mouseY < barY + listHeight) {
+        if (mouseX >= barX && mouseX <= barX + SCROLLER_WIDTH && mouseY >= barY && mouseY <= barY + listHeight) {
             ownerScrolling = true;
             return true;
         }
@@ -167,35 +167,63 @@ public class SingleOfferOwnerListPanel {
     }
 
     public boolean onMouseDragged(double mouseY) {
-        if (!ownerScrolling || !isOwnerScrollActive() || noPlayers) {
+        if (!ownerScrolling) {
             return false;
         }
 
-        int top = ownerListBaseY;
-        int bottom = top + OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
-
-        ownerScrollOffs = ((float) mouseY - (float) top - (SCROLLER_HEIGHT / 2.0F))
-                / ((float) (bottom - top) - (float) SCROLLER_HEIGHT);
-        ownerScrollOffs = Mth.clamp(ownerScrollOffs, 0.0F, 1.0F);
-
+        int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
+        int barFull = Math.max(1, listHeight - SCROLLER_HEIGHT);
+        float rel = (float) (mouseY - ownerListBaseY - SCROLLER_HEIGHT / 2.0F) / (float) barFull;
+        ownerScrollOffs = Mth.clamp(rel, 0.0F, 1.0F);
         setOwnerScrollFromOffs();
         return true;
     }
 
-    public void onMouseReleased() {
-        ownerScrolling = false;
+    public boolean onMouseReleased() {
+        if (ownerScrolling) {
+            ownerScrolling = false;
+            return true;
+        }
+        return false;
     }
 
-    public boolean onMouseScrolled(double scrollY) {
+    public boolean onMouseScrolled(double mouseX, double mouseY, double scrollY, int leftPos) {
         if (!isOwnerScrollActive() || noPlayers) {
             return false;
         }
 
-        int offRows = getOwnerOffscreenRows();
-        ownerScrollOffs = (float) ((double) ownerScrollOffs - scrollY / (double) offRows);
-        ownerScrollOffs = Mth.clamp(ownerScrollOffs, 0.0F, 1.0F);
-        setOwnerScrollFromOffs();
-        return true;
+        int listX = leftPos + OWNER_PANEL_X_OFFSET;
+        int listY = ownerListBaseY;
+        if (mouseX >= listX && mouseX <= listX + OWNER_PANEL_WIDTH
+                && mouseY >= listY && mouseY <= listY + OWNER_PANEL_HEIGHT) {
+            int offRows = getOwnerOffscreenRows();
+            if (offRows > 0) {
+                ownerScrollOffs = Mth.clamp(ownerScrollOffs - (float) (scrollY / (double) offRows), 0.0F, 1.0F);
+                setOwnerScrollFromOffs();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void flushToDraft(AccessSettings.Draft accessDraft) {
+        if (listDisabled) {
+            return;
+        }
+
+        Map<UUID, String> updated = new HashMap<>();
+        for (Map.Entry<UUID, Boolean> entry : ownerSelected.entrySet()) {
+            if (Boolean.TRUE.equals(entry.getValue())) {
+                UUID id = entry.getKey();
+                updated.put(id, resolveName(id, storedNames));
+            }
+        }
+
+        if (listMode == ListMode.OWNERS) {
+            accessDraft.setAdditionalOwners(updated);
+        } else {
+            accessDraft.setAccessList(updated);
+        }
     }
 
     public boolean noPlayers() {
@@ -227,7 +255,7 @@ public class SingleOfferOwnerListPanel {
         return stored.getOrDefault(id, "");
     }
 
-    private void clearData() {
+    public void clearData() {
         ownerCheckboxes.clear();
         ownerOrder.clear();
         ownerSelected.clear();

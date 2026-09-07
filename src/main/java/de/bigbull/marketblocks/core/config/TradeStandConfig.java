@@ -9,7 +9,7 @@ public class TradeStandConfig {
     public static final ModConfigSpec SPEC;
 
     public static final ModConfigSpec.BooleanValue TRADESTAND_DEFAULT_EMIT_REDSTONE;
-    public static final ModConfigSpec.BooleanValue TRADESTAND_DEFAULT_PURCHASE_XP_SOUND;
+    public static final ModConfigSpec.BooleanValue TRADESTAND_DEFAULT_PURCHASE_SOUND;
     public static final ModConfigSpec.BooleanValue TRADESTAND_DEFAULT_IS_CLOSED;
 
     public static final ModConfigSpec.BooleanValue TRADESTAND_DEFAULT_VILLAGER_NPC_ENABLED;
@@ -40,9 +40,9 @@ public class TradeStandConfig {
         TRADESTAND_DEFAULT_EMIT_REDSTONE = BUILDER
                 .comment("Emit redstone signal when a trade occurs (Default: false)")
                 .define("emitRedstone", false);
-        TRADESTAND_DEFAULT_PURCHASE_XP_SOUND = BUILDER
-                .comment("Play XP pickup sound upon successful trade (Default: false)")
-                .define("purchaseXpSound", false);
+        TRADESTAND_DEFAULT_PURCHASE_SOUND = BUILDER
+                .comment("Play sound upon successful trade (Default: true)")
+                .define("purchaseSound", true);
         TRADESTAND_DEFAULT_IS_CLOSED = BUILDER
                 .comment("Whether newly placed TradeStands start as closed (Default: false)")
                 .define("isClosed", false);
@@ -56,11 +56,11 @@ public class TradeStandConfig {
                 .comment("Default profession of the visual NPC")
                 .defineEnum("profession", VillagerVisualProfession.NONE);
         TRADESTAND_DEFAULT_PURCHASE_PARTICLES = BUILDER
-                .comment("Spawn happy villager particles upon trade (Default: false)")
-                .define("purchaseParticles", false);
+                .comment("Spawn happy villager particles upon trade (Default: true)")
+                .define("purchaseParticles", true);
         TRADESTAND_DEFAULT_PURCHASE_SOUNDS = BUILDER
-                .comment("Play villager trade sound upon purchase (Default: false)")
-                .define("purchaseSounds", false);
+                .comment("Play villager trade sound upon purchase (Default: true)")
+                .define("purchaseSounds", true);
         TRADESTAND_DEFAULT_PAYMENT_SLOT_SOUNDS = BUILDER
                 .comment("Play villager ambient sounds when payment slots change (Default: false)")
                 .define("paymentSlotSounds", false);
@@ -104,14 +104,14 @@ public class TradeStandConfig {
 
         BUILDER.push("Notifications");
         TRADESTAND_DEFAULT_NOTIFY_PURCHASE = BUILDER
-                .comment("Notify owner upon purchase (Default: false)")
-                .define("notifyPurchase", false);
+                .comment("Notify owner upon purchase (Default: true)")
+                .define("notifyPurchase", true);
         TRADESTAND_DEFAULT_NOTIFY_OUT_OF_STOCK = BUILDER
-                .comment("Notify owner when stock is empty (Default: false)")
-                .define("notifyOutOfStock", false);
+                .comment("Notify owner when stock is empty (Default: true)")
+                .define("notifyOutOfStock", true);
         TRADESTAND_DEFAULT_NOTIFY_OUTPUT_FULL = BUILDER
-                .comment("Notify owner when output inventory is full (Default: false)")
-                .define("notifyOutputFull", false);
+                .comment("Notify owner when output inventory is full (Default: true)")
+                .define("notifyOutputFull", true);
         TRADESTAND_DEFAULT_NOTIFY_CO_OWNERS = BUILDER
                 .comment("Send notifications to co-owners as well (Default: false)")
                 .define("notifyCoOwners", false);

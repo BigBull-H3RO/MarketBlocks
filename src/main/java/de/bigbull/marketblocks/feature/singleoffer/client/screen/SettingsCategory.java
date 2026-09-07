@@ -36,6 +36,10 @@ public enum SettingsCategory {
         return Component.translatable(translationKey);
     }
 
+    public Component headerTitle() {
+        return Component.translatable(translationKey + ".title");
+    }
+
     public ResourceLocation icon() {
         return icon;
     }
