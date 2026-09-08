@@ -404,7 +404,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 UUID ownerId = accessDraft != null ? accessDraft.ownerId() : null;
                 String ownerName = accessDraft != null ? accessDraft.ownerName() : "";
                 accessDraft = new AccessSettings.Draft(new AccessSettings(
-                        adminEnabled, ownerId, ownerName, Map.of(), AccessMode.EVERYONE, Map.of()));
+                        adminEnabled, ownerId, ownerName, Map.of(), AccessMode.WHITELIST, Map.of()));
                 ownerListPanel.clearData();
             }
             case NOTIFICATIONS -> notificationDraft = new NotificationSettings.Draft(NotificationSettings.DEFAULT);
@@ -667,6 +667,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             ownerListPanel.renderBackground(graphics, leftPos, OWNER_LIST_PANEL_BG, OWNER_LIST_PANEL_DISABLE_BG,
                     ACCESS_SCROLLER_SPRITE,
                     scrollerDisabled);
+        }
+
+        if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VISUALS) {
+            ShopVisualType visualType = ShopVisualType.from(menu.getBlockEntity().getBlockState().getBlock());
+            SingleOfferSettingsSections.renderVisualsBg(graphics, font, visualType, leftPos, topPos);
         }
     }
 
@@ -1063,6 +1068,18 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 && menu.isPrimaryOwner()) {
             if (ownerListPanel.onMouseDragged(mouseY))
                 return true;
+        }
+        if (this.getFocused() != null && this.isDragging() && button == 0) {
+            if (this.getFocused().mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+                return true;
+            }
+        }
+        for (var child : this.children()) {
+            if (child instanceof de.bigbull.marketblocks.client.gui.CustomSlider slider && slider.isDragging()) {
+                if (slider.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+                    return true;
+                }
+            }
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }

@@ -242,10 +242,29 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         this.transactionLogEntries = entries == null ? List.of() : List.copyOf(entries);
     }
 
+    @Override
+    public boolean canPlayerBuy() {
+        if (!player.level().isClientSide) {
+            return blockEntity.canPlayerBuy(player);
+        }
+        return hasFlag(SingleOfferShopBlockEntity.CAN_BUY_FLAG);
+    }
+
+    @Override
+    public boolean isClosed() {
+        if (!player.level().isClientSide) {
+            return blockEntity.getGeneralSettings().isClosed();
+        }
+        return hasFlag(SingleOfferShopBlockEntity.CLOSED_FLAG);
+    }
+
     /**
      * Fills the payment slots with the required items from the player's inventory.
      */
     public void fillPaymentSlots(ItemStack... required) {
+        if (!canPlayerBuy()) {
+            return;
+        }
         clearPaymentSlots();
         for (int i = 0; i < PAYMENT_SLOTS && i < required.length; i++) {
             ItemStack req = required[i];
@@ -318,11 +337,16 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             return ItemStack.EMPTY;
         if (isTab(ShopTab.INVENTORY) && blockEntity.isAdminShopEnabled())
             return ItemStack.EMPTY;
+        if (index < 0 || index >= this.slots.size())
+            return ItemStack.EMPTY;
 
         if (index == OFFER_SLOT_INDEX && isTab(ShopTab.OFFERS)) {
             Slot slot = this.slots.get(index);
 
             if (!blockEntity.hasOffer()) {
+                if (!isOwner()) {
+                    return ItemStack.EMPTY;
+                }
                 ItemStack stack = slot.getItem();
                 if (stack.isEmpty()) {
                     return ItemStack.EMPTY;
@@ -339,6 +363,10 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 }
                 blockEntity.updateOfferSlot();
                 return ret;
+            }
+
+            if (!canPlayerBuy()) {
+                return ItemStack.EMPTY;
             }
 
             boolean adminShop = blockEntity.isAdminShopEnabled();
@@ -390,6 +418,9 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         } else {
             if (isTab(ShopTab.OFFERS)) {
                 if (!blockEntity.hasOffer()) {
+                    if (!isOwner()) {
+                        return ItemStack.EMPTY;
+                    }
                     this.moveItemStackTo(stack, 0, PAYMENT_SLOTS, false);
                     if (!stack.isEmpty()) {
                         Slot offerSlot = this.slots.get(OFFER_SLOT_INDEX);
@@ -401,6 +432,9 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                         return ItemStack.EMPTY;
                     }
                 } else {
+                    if (!canPlayerBuy()) {
+                        return ItemStack.EMPTY;
+                    }
                     if (!this.moveItemStackTo(stack, 0, PAYMENT_SLOTS, false)) {
                         return ItemStack.EMPTY;
                     }
@@ -459,16 +493,20 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             if (!player.level().isClientSide
                     && slotId == OFFER_SLOT_INDEX
                     && type == ClickType.PICKUP
-                    && blockEntity.hasOffer()
-                    && blockEntity.getOfferHandler().getStackInSlot(0).isEmpty()) {
-                boolean adminShop = blockEntity.isAdminShopEnabled();
-                if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                    && blockEntity.hasOffer()) {
+                if (!canPlayerBuy()) {
                     return;
                 }
-                if (!adminShop && blockEntity.isOutputSpaceMissing()) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
-                    return;
+                if (blockEntity.getOfferHandler().getStackInSlot(0).isEmpty()) {
+                    boolean adminShop = blockEntity.isAdminShopEnabled();
+                    if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
+                        player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                        return;
+                    }
+                    if (!adminShop && blockEntity.isOutputSpaceMissing()) {
+                        player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                        return;
+                    }
                 }
             }
 
@@ -529,6 +567,22 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         GatedSlot(IItemHandler handler, int slot, int x, int y, ShopTab tab) {
             super(handler, slot, x, y, tab);
         }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            if (!blockEntity.hasOffer()) {
+                return isOwner();
+            }
+            return canPlayerBuy();
+        }
+
+        @Override
+        public boolean mayPickup(Player player) {
+            if (!blockEntity.hasOffer()) {
+                return isOwner();
+            }
+            return true;
+        }
     }
 
     private class OwnerGatedSlot extends BaseSlot {
@@ -556,27 +610,31 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         public boolean mayPlace(ItemStack stack) {
             if (blockEntity.hasOffer())
                 return false;
-            return true;
+            return isOwner();
         }
 
         @Override
         public boolean mayPickup(Player player) {
-            if (player.level().isClientSide) {
-                return true;
+            if (!blockEntity.hasOffer()) {
+                return isOwner();
             }
 
-            if (!blockEntity.hasOffer()) {
-                return true;
+            if (!canPlayerBuy()) {
+                return false;
             }
 
             boolean adminShop = blockEntity.isAdminShopEnabled();
             if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
-                player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                if (!player.level().isClientSide) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                }
                 return false;
             }
 
             if (!adminShop && blockEntity.isOutputSpaceMissing()) {
-                player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                if (!player.level().isClientSide) {
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                }
                 return false;
             }
 
@@ -586,12 +644,25 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         @Override
         public ItemStack remove(int amount) {
             if (!blockEntity.hasOffer()) {
-                return super.remove(amount);
+                return isOwner() ? super.remove(amount) : ItemStack.EMPTY;
             }
-            if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide) {
-                return super.remove(amount);
+            if (!canPlayerBuy()) {
+                return ItemStack.EMPTY;
             }
             return blockEntity.isOfferAvailable() ? super.remove(amount) : ItemStack.EMPTY;
+        }
+
+        @Override
+        public ItemStack getItem() {
+            if (blockEntity.hasOffer() && !canPlayerBuy()) {
+                return ItemStack.EMPTY;
+            }
+            return super.getItem();
+        }
+
+        @Override
+        public boolean hasItem() {
+            return !getItem().isEmpty();
         }
 
         @Override

@@ -117,6 +117,10 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("gui.marketblocks.visuals.bobbing", "Flotaci\u00f3n");
                 add("gui.marketblocks.visuals.chaos_rotation", "Rotaci\u00f3n ca\u00f3tica");
                 add("gui.marketblocks.visuals.count", "Cantidad de objetos");
+                add("gui.marketblocks.visuals.count_short", "Cant.:");
+                add("gui.marketblocks.visuals.display", "VisualizaciÃ³n:");
+                add("gui.marketblocks.visuals.group.item_arrangement", "DISPOSICIÃ“N DE OBJETOS");
+                add("gui.marketblocks.visuals.group.visuals_transformations", "EFECTOS Y TRANSFORMACIONES");
                 add("gui.marketblocks.visuals.dynamic_fill_level", "Llenado din\u00e1mico");
                 add("gui.marketblocks.visuals.error.no_surface", "\u00a1No hay superficie de puesto detr\u00e1s de la tienda!");
                 add("gui.marketblocks.visuals.error.space_blocked", "\u00a1Espacio bloqueado!");
@@ -292,7 +296,7 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("gui.marketblocks.purchase_xp_sound.tooltip", "Reproduce un sonido cuando un jugador compra algo");
                 add("gui.marketblocks.save", "Guardar");
                 add("gui.marketblocks.shop_closed", "Tienda en pausa");
-                add("gui.marketblocks.shop_closed.tooltip", "Si est\u00e1 activa, solo los propietarios pueden comprar objetos.");
+                add("gui.marketblocks.shop_closed.tooltip", "Si est\u00e1 activa, la tienda est\u00e1 pausada y nadie puede comprar objetos.");
                 add("gui.marketblocks.shop_name", "Nombre de la tienda");
                 add("gui.marketblocks.shop_title", "Puesto de comercio");
                 add("gui.marketblocks.side.back", "Atr\u00e1s");

@@ -6,7 +6,6 @@ import net.minecraft.network.chat.Component;
  * Defines the access control mode for a shop.
  */
 public enum AccessMode {
-    EVERYONE("gui.marketblocks.access.mode.everyone"),
     WHITELIST("gui.marketblocks.access.mode.whitelist"),
     BLACKLIST("gui.marketblocks.access.mode.blacklist");
 
