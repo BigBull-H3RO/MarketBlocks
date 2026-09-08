@@ -1,8 +1,10 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
 import de.bigbull.marketblocks.client.gui.FloatSlider;
+import de.bigbull.marketblocks.client.gui.GroupBox;
 import de.bigbull.marketblocks.client.gui.IconButton;
 import de.bigbull.marketblocks.client.gui.IntSlider;
+import de.bigbull.marketblocks.client.gui.MiniArrowButton;
 import de.bigbull.marketblocks.client.gui.SideModeButton;
 import de.bigbull.marketblocks.feature.singleoffer.block.CrateLayoutMode;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
@@ -13,6 +15,8 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
@@ -23,6 +27,7 @@ import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -41,9 +46,7 @@ public final class SingleOfferSettingsSections {
         return new WidgetSprites(
                 ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix),
                 ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix),
-                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix), // Hover
-                                                                                                                    // equals
-                                                                                                                    // unselected
+                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix), // Hover equals unselected
                 ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_selected_" + suffix));
     }
 
@@ -320,15 +323,46 @@ public final class SingleOfferSettingsSections {
     public record VillagerSectionWidgets(EditBox npcNameField, EditBox playerSkinNameField, Button professionButton) {
     }
 
-        public static void buildOfferItemSection(
+    /**
+     * Renders background group boxes and static labels for the Visuals tab.
+     */
+    public static void renderVisualsBg(GuiGraphics graphics, Font font, ShopVisualType visualType, int leftPos, int topPos) {
+        Component displayLabel = Component.translatable("gui.marketblocks.visuals.display");
+        graphics.drawString(font, displayLabel, leftPos + 130 - font.width(displayLabel), topPos + 6, 0x404040, false);
+
+        switch (visualType) {
+            case MARKET_CRATE -> {
+                GroupBox.render(graphics, font,
+                        Component.translatable("gui.marketblocks.visuals.group.item_arrangement"),
+                        leftPos + 7, topPos + 19, 162, 49);
+
+                Component countLabel = Component.translatable("gui.marketblocks.visuals.count_short");
+                graphics.drawString(font, countLabel, leftPos + 13, topPos + 51, 0x404040, false);
+
+                GroupBox.render(graphics, font,
+                        Component.translatable("gui.marketblocks.visuals.group.visuals_transformations"),
+                        leftPos + 7, topPos + 71, 162, 67);
+            }
+            case TRADE_STAND -> {
+                GroupBox.render(graphics, font,
+                        Component.translatable("gui.marketblocks.visuals.group.visuals_transformations"),
+                        leftPos + 7, topPos + 19, 162, 75);
+            }
+            case UNKNOWN -> {
+            }
+        }
+    }
+
+    public static void buildOfferItemSection(
             SingleOfferShopScreen host,
             ShopVisualType visualType,
             OfferItemSettings.Draft draft,
             Runnable onDirty,
             Runnable onRebuild) {
-        int y = host.settingsTopPos() + 26;
-        int leftX = host.settingsLeftPos() + 8;
+        int leftX = host.settingsLeftPos() + 12;
 
+        int topBtnX = host.settingsLeftPos() + 134;
+        int topBtnY = host.settingsTopPos() + 3;
         host.addSettingsWidget(Button.builder(
                 toggleStateLabel(draft.visible()),
                 b -> {
@@ -337,129 +371,160 @@ public final class SingleOfferSettingsSections {
                     onDirty.run();
                     b.setMessage(toggleStateLabel(next));
                 })
-                .bounds(leftX, y, 35, 16)
+                .bounds(topBtnX, topBtnY, 34, 14)
                 .tooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_visible.tooltip")))
                 .build());
 
-        Checkbox fullbrightCheckbox = host.addSettingsWidget(Checkbox.builder(
-                Component.translatable("gui.marketblocks.visuals.offer_item_fullbright"),
-                host.settingsFont())
-                .pos(leftX + 40, y)
-                .selected(draft.fullbright())
-                .onValueChange((checkbox, value) -> {
-                    draft.setFullbright(value);
-                    onDirty.run();
-                })
-                .build());
-        fullbrightCheckbox.setTooltip(
-                Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_fullbright.tooltip")));
-        y += 20;
-
         switch (visualType) {
-            case TRADE_STAND -> {
-                host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16,
-                        Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 1.5f, draft.scale(), value -> {
-                            draft.setScale(value);
-                            onDirty.run();
-                        }));
-                host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16,
-                        Component.translatable("gui.marketblocks.visuals.speed"), 0.0f, 1.5f, draft.speed(), value -> {
-                            draft.setSpeed(value);
-                            onDirty.run();
-                        }));
-                y += 20;
-
-                host.addSettingsWidget(
-                        new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.height"),
-                                -0.25f, 0.25f, draft.heightOffset(), value -> {
-                                    draft.setHeightOffset(value);
-                                    onDirty.run();
-                                }));
-                host.addSettingsWidget(Checkbox.builder(
-                        Component.translatable("gui.marketblocks.visuals.bobbing"),
-                        host.settingsFont())
-                        .pos(leftX + 82, y)
-                        .selected(draft.bobbing())
-                        .onValueChange((checkbox, value) -> {
-                            draft.setBobbing(value);
-                            onDirty.run();
-                        })
-                        .build());
-            }
             case MARKET_CRATE -> {
-                host.addSettingsWidget(
-                        new IntSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.count"), 1,
-                                OfferItemSettings.MAX_COUNT, draft.count(), value -> {
-                                    draft.setCount(value);
-                                    onDirty.run();
-                                }));
+                CrateLayoutMode currentMode = draft.layoutMode();
+                Button layoutModeButton = host.addSettingsWidget(Button.builder(
+                        Component.translatable("gui.marketblocks.visuals.layout_mode").append(": ")
+                                .append(Component.translatable(currentMode.translationKey())),
+                        b -> {
+                            CrateLayoutMode nextMode = draft.layoutMode().next();
+                            draft.setLayoutMode(nextMode);
+                            onDirty.run();
+                            onRebuild.run();
+                        }).bounds(leftX, host.settingsTopPos() + 27, 152, 16).build());
+                layoutModeButton.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.layout_mode")));
 
-                host.addSettingsWidget(Checkbox.builder(
+                Component countShort = Component.translatable("gui.marketblocks.visuals.count_short");
+                int labelWidth = host.settingsFont().width(countShort);
+                int countBoxX = Math.max(leftX + labelWidth + 4, host.settingsLeftPos() + 48);
+                int countBoxWidth = 20;
+
+                EditBox countBox = host.addSettingsWidget(new EditBox(
+                        host.settingsFont(),
+                        countBoxX,
+                        host.settingsTopPos() + 47,
+                        countBoxWidth,
+                        15,
+                        Component.translatable("gui.marketblocks.visuals.count")));
+                countBox.setMaxLength(2);
+                countBox.setValue(String.valueOf(draft.count()));
+                countBox.setFilter(val -> val.isEmpty() || (val.matches("\\d{1,2}") && Integer.parseInt(val) <= OfferItemSettings.MAX_COUNT));
+                countBox.setResponder(val -> {
+                    if (!val.isEmpty()) {
+                        try {
+                            int c = Math.clamp(Integer.parseInt(val), 1, OfferItemSettings.MAX_COUNT);
+                            draft.setCount(c);
+                            onDirty.run();
+                        } catch (NumberFormatException ignored) {}
+                    }
+                });
+
+                int arrowX = countBoxX + countBoxWidth + 2;
+                host.addSettingsWidget(new MiniArrowButton(arrowX, host.settingsTopPos() + 47, 11, 7, true, () -> {
+                    int next = Math.min(OfferItemSettings.MAX_COUNT, draft.count() + 1);
+                    draft.setCount(next);
+                    countBox.setValue(String.valueOf(next));
+                    onDirty.run();
+                }));
+                host.addSettingsWidget(new MiniArrowButton(arrowX, host.settingsTopPos() + 55, 11, 7, false, () -> {
+                    int next = Math.max(1, draft.count() - 1);
+                    draft.setCount(next);
+                    countBox.setValue(String.valueOf(next));
+                    onDirty.run();
+                }));
+
+                int cbX = arrowX + 15;
+                Checkbox dynamicFillCheckbox = host.addSettingsWidget(Checkbox.builder(
                         Component.translatable("gui.marketblocks.visuals.dynamic_fill_level"),
                         host.settingsFont())
-                        .pos(leftX + 85, y)
+                        .pos(cbX, host.settingsTopPos() + 46)
                         .selected(draft.dynamicFillLevel())
                         .onValueChange((checkbox, value) -> {
                             draft.setDynamicFillLevel(value);
                             onDirty.run();
                         })
                         .build());
-                y += 20;
+                dynamicFillCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.dynamic_fill_level.tooltip")));
 
-                CrateLayoutMode currentMode = draft.layoutMode();
-                Button layoutModeButton = host.addSettingsWidget(Button.builder(
-                        Component.translatable(currentMode.translationKey()),
-                        b -> {
-                            CrateLayoutMode nextMode = draft.layoutMode().next();
-                            draft.setLayoutMode(nextMode);
+                Checkbox fullbrightCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item_fullbright"),
+                        host.settingsFont())
+                        .pos(leftX, host.settingsTopPos() + 79)
+                        .selected(draft.fullbright())
+                        .onValueChange((checkbox, value) -> {
+                            draft.setFullbright(value);
                             onDirty.run();
-                            onRebuild.run();
-                        }).bounds(leftX, y, 158, 16).build());
-                layoutModeButton
-                        .setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.layout_mode")));
-                y += 20;
+                        })
+                        .build());
+                fullbrightCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_fullbright.tooltip")));
 
-                host.addSettingsWidget(
-                        new FloatSlider(leftX, y, 76, 16, Component.translatable("gui.marketblocks.visuals.rotation"),
-                                0.0f, 360.0f, draft.rotation(), value -> {
-                                    draft.setRotation(value);
-                                    onDirty.run();
-                                }));
-                host.addSettingsWidget(
-                        new FloatSlider(leftX + 82, y, 76, 16, Component.translatable("gui.marketblocks.visuals.scale"),
-                                0.5f, 1.5f, draft.scale(), value -> {
-                                    draft.setScale(value);
-                                    onDirty.run();
-                                }));
-                y += 20;
+                host.addSettingsWidget(new FloatSlider(host.settingsLeftPos() + 86, host.settingsTopPos() + 79, 78, 18,
+                        Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 1.5f, draft.scale(), value -> {
+                            draft.setScale(value);
+                            onDirty.run();
+                        }).setStringFormatter(v -> String.format(Locale.US, "%.2f", v)));
+
+                host.addSettingsWidget(new FloatSlider(leftX, host.settingsTopPos() + 98, 72, 18,
+                        Component.translatable("gui.marketblocks.visuals.rotation"), 0.0f, 360.0f, draft.rotation(), value -> {
+                            draft.setRotation(value);
+                            onDirty.run();
+                        }).setStringFormatter(v -> String.format(Locale.US, "%.0f°", v)));
+
+                host.addSettingsWidget(new FloatSlider(host.settingsLeftPos() + 86, host.settingsTopPos() + 98, 78, 18,
+                        Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.spacingY(), value -> {
+                            draft.setSpacingY(value);
+                            onDirty.run();
+                        }).setStringFormatter(v -> String.format(Locale.US, "%.2f", v)));
 
                 if (currentMode == CrateLayoutMode.STACKED) {
-                    host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16,
-                            Component.translatable("gui.marketblocks.visuals.spacing_xz"), -0.25f, 0.25f,
-                            draft.spacingXZ(), value -> {
+                    host.addSettingsWidget(new FloatSlider(leftX, host.settingsTopPos() + 117, 152, 18,
+                            Component.translatable("gui.marketblocks.visuals.spacing_xz"), -0.25f, 0.25f, draft.spacingXZ(), value -> {
                                 draft.setSpacingXZ(value);
                                 onDirty.run();
-                            }));
-                    host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16,
-                            Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.spacingY(),
-                            value -> {
-                                draft.setSpacingY(value);
-                                onDirty.run();
-                            }));
+                            }).setStringFormatter(v -> String.format(Locale.US, "%+.2f", v)));
                 } else {
-                    host.addSettingsWidget(new FloatSlider(leftX, y, 76, 16,
-                            Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f,
-                            draft.chaosRotation(), value -> {
+                    host.addSettingsWidget(new FloatSlider(leftX, host.settingsTopPos() + 117, 152, 18,
+                            Component.translatable("gui.marketblocks.visuals.chaos_rotation"), 0.0f, 1.0f, draft.chaosRotation(), value -> {
                                 draft.setChaosRotation(value);
                                 onDirty.run();
-                            }));
-                    host.addSettingsWidget(new FloatSlider(leftX + 82, y, 76, 16,
-                            Component.translatable("gui.marketblocks.visuals.spacing_y"), 0.0f, 2.0f, draft.spacingY(),
-                            value -> {
-                                draft.setSpacingY(value);
-                                onDirty.run();
-                            }));
+                            }).setStringFormatter(v -> String.format(Locale.US, "%.0f%%", v * 100.0f)));
                 }
+            }
+            case TRADE_STAND -> {
+                Checkbox fullbrightCheckbox = host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.offer_item_fullbright"),
+                        host.settingsFont())
+                        .pos(leftX, host.settingsTopPos() + 27)
+                        .selected(draft.fullbright())
+                        .onValueChange((checkbox, value) -> {
+                            draft.setFullbright(value);
+                            onDirty.run();
+                        })
+                        .build());
+                fullbrightCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.offer_item_fullbright.tooltip")));
+
+                host.addSettingsWidget(Checkbox.builder(
+                        Component.translatable("gui.marketblocks.visuals.bobbing"),
+                        host.settingsFont())
+                        .pos(host.settingsLeftPos() + 86, host.settingsTopPos() + 27)
+                        .selected(draft.bobbing())
+                        .onValueChange((checkbox, value) -> {
+                            draft.setBobbing(value);
+                            onDirty.run();
+                        })
+                        .build());
+
+                host.addSettingsWidget(new FloatSlider(leftX, host.settingsTopPos() + 47, 72, 18,
+                        Component.translatable("gui.marketblocks.visuals.scale"), 0.5f, 1.5f, draft.scale(), value -> {
+                            draft.setScale(value);
+                            onDirty.run();
+                        }).setStringFormatter(v -> String.format(Locale.US, "%.2f", v)));
+                host.addSettingsWidget(new FloatSlider(host.settingsLeftPos() + 86, host.settingsTopPos() + 47, 78, 18,
+                        Component.translatable("gui.marketblocks.visuals.speed"), 0.0f, 1.5f, draft.speed(), value -> {
+                            draft.setSpeed(value);
+                            onDirty.run();
+                        }).setStringFormatter(v -> String.format(Locale.US, "%.2f", v)));
+
+                host.addSettingsWidget(new FloatSlider(leftX, host.settingsTopPos() + 69, 152, 18,
+                        Component.translatable("gui.marketblocks.visuals.height"), -0.25f, 0.25f, draft.heightOffset(), value -> {
+                            draft.setHeightOffset(value);
+                            onDirty.run();
+                        }).setStringFormatter(v -> String.format(Locale.US, "%+.2f", v)));
             }
             case UNKNOWN -> {
             }
@@ -478,6 +543,7 @@ public final class SingleOfferSettingsSections {
         return Component.translatable("gui.marketblocks.visuals.profession").append(": ")
                 .append(Component.translatable(draft.profession().translationKey()));
     }
+
     public enum NpcSoundMode {
         ALL("all"),
         PURCHASE("purchase"),
@@ -542,7 +608,6 @@ public final class SingleOfferSettingsSections {
         NpcSoundMode current = NpcSoundMode.from(draft.purchaseSoundsEnabled(), draft.paymentSlotSoundsEnabled());
         current.next().applyTo(draft);
     }
-
 
     public static void buildNotificationSection(SingleOfferShopScreen host,
             NotificationSettings.Draft draft, Runnable onDirty) {

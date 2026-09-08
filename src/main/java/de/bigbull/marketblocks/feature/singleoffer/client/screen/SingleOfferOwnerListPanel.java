@@ -100,8 +100,7 @@ public class SingleOfferOwnerListPanel {
         this.ownerListBaseY = listBaseY;
         this.onDirty = onDirty;
         this.ownerScrolling = false;
-        this.listDisabled = this.listMode == ListMode.ACCESS_LIST
-                && accessDraft.accessMode() == AccessMode.EVERYONE;
+        this.listDisabled = false;
 
         if (!isPrimaryOwner) {
             this.noPlayers = false;

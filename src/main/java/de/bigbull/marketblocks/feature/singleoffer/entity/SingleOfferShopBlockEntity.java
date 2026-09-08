@@ -69,6 +69,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public static final int PRIMARY_OWNER_FLAG = 8;
     public static final int OPERATOR_FLAG = 16;
     public static final int GLOBAL_ADMIN_MODE_FLAG = 32;
+    public static final int CAN_BUY_FLAG = 64;
+    public static final int CLOSED_FLAG = 128;
 
     private ItemStack offerPayment1 = ItemStack.EMPTY;
     private ItemStack offerPayment2 = ItemStack.EMPTY;
@@ -568,6 +570,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void setLastOutputFullNotifyTime(long time) {
         this.lastOutputFullNotifyTime = time;
+    }
+
+    public boolean isClosed() {
+        return getGeneralSettings().isClosed();
     }
 
     public GeneralSettings getGeneralSettings() {

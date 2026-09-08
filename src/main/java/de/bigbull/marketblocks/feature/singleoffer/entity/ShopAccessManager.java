@@ -102,6 +102,9 @@ public class ShopAccessManager {
         AccessSettings acc = shop.getAccessSettings();
         AccessMode mode = acc.accessMode();
         if (mode == AccessMode.WHITELIST) {
+            if (acc.accessList().isEmpty()) {
+                return true;
+            }
             return acc.accessList().containsKey(uuid);
         } else if (mode == AccessMode.BLACKLIST) {
             return !acc.accessList().containsKey(uuid);
@@ -160,6 +163,10 @@ public class ShopAccessManager {
                         flags |= SingleOfferShopBlockEntity.OPERATOR_FLAG;
                     if (shop.isGlobalAdminModeEnabled())
                         flags |= SingleOfferShopBlockEntity.GLOBAL_ADMIN_MODE_FLAG;
+                    if (canPlayerBuy(player))
+                        flags |= SingleOfferShopBlockEntity.CAN_BUY_FLAG;
+                    if (shop.getGeneralSettings().isClosed())
+                        flags |= SingleOfferShopBlockEntity.CLOSED_FLAG;
                     return flags;
                 }
                 return 0;

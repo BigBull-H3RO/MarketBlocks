@@ -119,6 +119,10 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("gui.marketblocks.visuals.bobbing", "Bobbing");
                 add("gui.marketblocks.visuals.chaos_rotation", "Chaos Rotation");
                 add("gui.marketblocks.visuals.count", "Item Count");
+                add("gui.marketblocks.visuals.count_short", "Count:");
+                add("gui.marketblocks.visuals.display", "Display:");
+                add("gui.marketblocks.visuals.group.item_arrangement", "ITEM ARRANGEMENT");
+                add("gui.marketblocks.visuals.group.visuals_transformations", "VISUALS & TRANSFORMATIONS");
                 add("gui.marketblocks.visuals.dynamic_fill_level", "Dynamic Fill");
                 add("gui.marketblocks.visuals.error.no_surface", "No stand surface behind the shop!");
                 add("gui.marketblocks.visuals.error.space_blocked", "Space blocked!");
@@ -302,7 +306,7 @@ public class ModEnLangProvider extends LanguageProvider {
                                 "Plays a sound when a player purchases something");
                 add("gui.marketblocks.save", "Save");
                 add("gui.marketblocks.shop_closed", "Shop Paused");
-                add("gui.marketblocks.shop_closed.tooltip", "If active, only owners can buy items.");
+                add("gui.marketblocks.shop_closed.tooltip", "If active, the shop is paused and nobody can buy items.");
                 add("gui.marketblocks.shop_name", "Shop Name");
                 add("gui.marketblocks.shop_title", "Trade Stand");
                 add("gui.marketblocks.side.back", "Back");

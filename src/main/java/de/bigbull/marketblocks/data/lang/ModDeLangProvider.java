@@ -118,6 +118,10 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.visuals.bobbing", "Wippen (Bobbing)");
         add("gui.marketblocks.visuals.chaos_rotation", "Chaos-Rotation");
         add("gui.marketblocks.visuals.count", "Anzahl");
+        add("gui.marketblocks.visuals.count_short", "Anzahl:");
+        add("gui.marketblocks.visuals.display", "Anzeige:");
+        add("gui.marketblocks.visuals.group.item_arrangement", "OBJEKT-ANORDNUNG");
+        add("gui.marketblocks.visuals.group.visuals_transformations", "OPTIK & TRANSFORMATIONEN");
         add("gui.marketblocks.visuals.dynamic_fill_level", "Dyn. Füllstand");
         add("gui.marketblocks.visuals.error.no_surface", "Kein Standblock hinter dem Shop!");
         add("gui.marketblocks.visuals.error.space_blocked", "Platz blockiert!");
@@ -296,8 +300,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.purchase_xp_sound", "Kauf-Sound");
         add("gui.marketblocks.purchase_xp_sound.tooltip", "Spielt einen Sound ab, wenn ein Spieler etwas kauft");
         add("gui.marketblocks.save", "Speichern");
-        add("gui.marketblocks.shop_closed", "Shop geschlossen");
-        add("gui.marketblocks.shop_closed.tooltip", "Ist dies aktiv, können nur Besitzer einkaufen.");
+        add("gui.marketblocks.shop_closed", "Shop pausiert");
+        add("gui.marketblocks.shop_closed.tooltip", "Ist dies aktiv, ist der Shop pausiert und niemand kann einkaufen.");
         add("gui.marketblocks.shop_name", "Shopname");
         add("gui.marketblocks.shop_title", "Handelsstand");
         add("gui.marketblocks.side.back", "Hinten");

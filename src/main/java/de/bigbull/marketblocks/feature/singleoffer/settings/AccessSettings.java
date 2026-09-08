@@ -36,7 +36,7 @@ public record AccessSettings(
     private static final String KEY_ACCESS_PLAYER_ID = "Id";
     private static final String KEY_ACCESS_PLAYER_NAME = "Name";
 
-    public static final AccessSettings DEFAULT = new AccessSettings(false, null, "", Map.of(), AccessMode.EVERYONE, Map.of());
+    public static final AccessSettings DEFAULT = new AccessSettings(false, null, "", Map.of(), AccessMode.WHITELIST, Map.of());
 
     public static final StreamCodec<ByteBuf, AccessSettings> STREAM_CODEC = StreamCodec.of(
             (buf, settings) -> {
@@ -78,7 +78,7 @@ public record AccessSettings(
                 }
 
                 String modeStr = ByteBufCodecs.stringUtf8(16).decode(buf);
-                AccessMode accessMode = AccessMode.EVERYONE;
+                AccessMode accessMode = AccessMode.WHITELIST;
                 try {
                     accessMode = AccessMode.valueOf(modeStr);
                 } catch (IllegalArgumentException e) {
@@ -102,7 +102,7 @@ public record AccessSettings(
     public AccessSettings {
         ownerName = ownerName == null ? "" : ownerName;
         additionalOwners = additionalOwners == null ? Map.of() : Map.copyOf(additionalOwners);
-        accessMode = accessMode == null ? AccessMode.EVERYONE : accessMode;
+        accessMode = accessMode == null ? AccessMode.WHITELIST : accessMode;
         accessList = accessList == null ? Map.of() : Map.copyOf(accessList);
     }
 
@@ -157,7 +157,7 @@ public record AccessSettings(
             }
         }
 
-        AccessMode accessMode = AccessMode.EVERYONE;
+        AccessMode accessMode = AccessMode.WHITELIST;
         if (tag.contains(KEY_ACCESS_MODE)) {
             try {
                 accessMode = AccessMode.valueOf(tag.getString(KEY_ACCESS_MODE));
@@ -229,7 +229,7 @@ public record AccessSettings(
         }
 
         public AccessMode accessMode() { return accessMode; }
-        public Draft setAccessMode(AccessMode mode) { this.accessMode = mode == null ? AccessMode.EVERYONE : mode; return this; }
+        public Draft setAccessMode(AccessMode mode) { this.accessMode = mode == null ? AccessMode.WHITELIST : mode; return this; }
 
         public Map<UUID, String> accessList() { return Collections.unmodifiableMap(accessList); }
 

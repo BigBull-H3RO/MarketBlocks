@@ -117,6 +117,10 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("gui.marketblocks.visuals.bobbing", "Flottement");
                 add("gui.marketblocks.visuals.chaos_rotation", "Rotation chaotique");
                 add("gui.marketblocks.visuals.count", "Nombre d'objets");
+                add("gui.marketblocks.visuals.count_short", "QtÃ© :");
+                add("gui.marketblocks.visuals.display", "Affichage :");
+                add("gui.marketblocks.visuals.group.item_arrangement", "DISPOSITION DES OBJETS");
+                add("gui.marketblocks.visuals.group.visuals_transformations", "VISUELS ET TRANSFORMATIONS");
                 add("gui.marketblocks.visuals.dynamic_fill_level", "Remplissage dynamique");
                 add("gui.marketblocks.visuals.error.no_surface", "Aucune surface de stand derrière la boutique !");
                 add("gui.marketblocks.visuals.error.space_blocked", "Espace bloqué !");
@@ -292,7 +296,7 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("gui.marketblocks.purchase_xp_sound.tooltip", "Joue un son lorsqu'un joueur achète quelque chose");
                 add("gui.marketblocks.save", "Enregistrer");
                 add("gui.marketblocks.shop_closed", "Boutique en pause");
-                add("gui.marketblocks.shop_closed.tooltip", "Si actif, seuls les propriétaires peuvent acheter des objets.");
+                add("gui.marketblocks.shop_closed.tooltip", "Si actif, la boutique est en pause et personne ne peut acheter d'objets.");
                 add("gui.marketblocks.shop_name", "Nom de la boutique");
                 add("gui.marketblocks.shop_title", "Stand de commerce");
                 add("gui.marketblocks.side.back", "Arrière");

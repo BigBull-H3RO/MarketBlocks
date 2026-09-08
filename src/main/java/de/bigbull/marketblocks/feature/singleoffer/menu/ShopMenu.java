@@ -50,5 +50,18 @@ public interface ShopMenu {
     default boolean isGlobalAdminModeEnabled() {
         return hasFlag(SingleOfferShopBlockEntity.GLOBAL_ADMIN_MODE_FLAG);
     }
-}
 
+    /**
+     * @return true if the current player is allowed to buy from the shop.
+     */
+    default boolean canPlayerBuy() {
+        return hasFlag(SingleOfferShopBlockEntity.CAN_BUY_FLAG);
+    }
+
+    /**
+     * @return true if the shop is currently closed/paused.
+     */
+    default boolean isClosed() {
+        return hasFlag(SingleOfferShopBlockEntity.CLOSED_FLAG);
+    }
+}

@@ -46,6 +46,9 @@ public record AutoFillPaymentPacket(BlockPos pos) implements CustomPacketPayload
             if (player.containerMenu instanceof SingleOfferShopMenu menu) {
                 SingleOfferShopBlockEntity blockEntity = menu.getBlockEntity();
                 if (blockEntity.getBlockPos().equals(packet.pos())) {
+                    if (!blockEntity.canPlayerBuy(player)) {
+                        return;
+                    }
                     ItemStack required1 = blockEntity.getOfferPayment1();
                     ItemStack required2 = blockEntity.getOfferPayment2();
 
