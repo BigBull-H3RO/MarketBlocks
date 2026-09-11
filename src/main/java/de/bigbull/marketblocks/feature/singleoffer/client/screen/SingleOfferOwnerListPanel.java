@@ -1,17 +1,18 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.screen;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.util.Mth;
-
+import com.mojang.authlib.GameProfile;
+import de.bigbull.marketblocks.client.gui.CompactCheckbox;
 import de.bigbull.marketblocks.core.config.SingleOfferConfig;
-import de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,8 +22,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Encapsulates owner list data, rendering and scrolling for the access settings
- * section.
+ * Encapsulates owner list data, rendering and scrolling for the access settings section.
+ * Features a dark inset list frame, 8x8 player skin heads, and compact checkboxes.
  */
 public class SingleOfferOwnerListPanel {
     public enum ListMode {
@@ -45,16 +46,22 @@ public class SingleOfferOwnerListPanel {
     }
 
     private static final int OWNER_VISIBLE_ROWS = 4;
-    private static final int OWNER_ROW_HEIGHT = 20;
-    private static final int OWNER_PANEL_X_OFFSET = 7;
-    private static final int OWNER_PANEL_BORDER = 1;
-    private static final int OWNER_PANEL_WIDTH = 162;
-    private static final int OWNER_PANEL_HEIGHT = 82;
-    private static final int OWNER_SCROLLBAR_X_OFFSET = 156;
-    private static final int SCROLLER_WIDTH = 12;
-    private static final int SCROLLER_HEIGHT = 15;
+    private static final int OWNER_ROW_HEIGHT = 14;
 
-    private final Map<UUID, Checkbox> ownerCheckboxes = new HashMap<>();
+    private static final int INSET_X_OFFSET = 11;
+    private static final int INSET_WIDTH = 154;
+    private static final int INSET_HEIGHT = 58;
+
+    private static final int ROW_X_OFFSET = 12;
+    private static final int ROW_WIDTH = 143;
+    private static final int CHECKBOX_X_OFFSET = 142;
+
+    private static final int SCROLLER_TRACK_X_OFFSET = 157;
+    private static final int SCROLLER_TRACK_WIDTH = 6;
+    private static final int SCROLLER_TRACK_HEIGHT = 56;
+    private static final int SCROLLER_KNOB_HEIGHT = 16;
+
+    private final Map<UUID, CompactCheckbox> ownerCheckboxes = new HashMap<>();
     private final List<UUID> ownerOrder = new ArrayList<>();
     private final Map<UUID, Boolean> ownerSelected = new HashMap<>();
 
@@ -62,12 +69,12 @@ public class SingleOfferOwnerListPanel {
     private boolean ownerScrolling = false;
     private int ownerStartIndex = 0;
     private int ownerListBaseY = 0;
-    private boolean noPlayers;
+    private boolean noPlayers = false;
+    private boolean listDisabled = false;
 
     private SingleOfferShopScreen host;
     private Map<UUID, String> storedNames = Map.of();
-    private Runnable onDirty = () -> {
-    };
+    private Runnable onDirty = () -> {};
     private ListMode listMode = ListMode.OWNERS;
 
     public ListMode getListMode() {
@@ -85,8 +92,6 @@ public class SingleOfferOwnerListPanel {
         return storedNames;
     }
 
-    private boolean listDisabled = false;
-
     public boolean isListDisabled() {
         return listDisabled;
     }
@@ -100,7 +105,7 @@ public class SingleOfferOwnerListPanel {
         this.ownerListBaseY = listBaseY;
         this.onDirty = onDirty;
         this.ownerScrolling = false;
-        this.listDisabled = false;
+        this.listDisabled = !isPrimaryOwner;
 
         if (!isPrimaryOwner) {
             this.noPlayers = false;
@@ -119,60 +124,171 @@ public class SingleOfferOwnerListPanel {
     }
 
     public void renderBackground(GuiGraphics graphics,
+            Font font,
             int leftPos,
-            ResourceLocation panelTexture,
-            ResourceLocation panelDisabledTexture,
-            ResourceLocation scrollerSprite,
-            ResourceLocation scrollerDisabledSprite) {
-        graphics.blit(
-                listDisabled ? panelDisabledTexture : panelTexture,
-                leftPos + OWNER_PANEL_X_OFFSET,
-                ownerListBaseY - OWNER_PANEL_BORDER,
-                0,
-                0,
-                OWNER_PANEL_WIDTH,
-                OWNER_PANEL_HEIGHT,
-                OWNER_PANEL_WIDTH,
-                OWNER_PANEL_HEIGHT);
+            int topPos,
+            int mouseX,
+            int mouseY) {
+        int insetX = leftPos + INSET_X_OFFSET;
+        int insetY = topPos + 76;
+
+        // Dark inset container background & 1px border
+        graphics.fill(insetX, insetY, insetX + INSET_WIDTH, insetY + INSET_HEIGHT, 0xFF1B1B1B);
+        graphics.fill(insetX, insetY, insetX + INSET_WIDTH, insetY + 1, 0xFF373737);
+        graphics.fill(insetX, insetY + INSET_HEIGHT - 1, insetX + INSET_WIDTH, insetY + INSET_HEIGHT, 0xFF373737);
+        graphics.fill(insetX, insetY, insetX + 1, insetY + INSET_HEIGHT, 0xFF373737);
+        graphics.fill(insetX + INSET_WIDTH - 1, insetY, insetX + INSET_WIDTH, insetY + INSET_HEIGHT, 0xFF373737);
+
+        if (listDisabled) {
+            Component info = Component.translatable("gui.marketblocks.access.primary_owner_only");
+            int textW = font.width(info);
+            graphics.drawString(font, info, insetX + (INSET_WIDTH - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0x808080, false);
+            return;
+        }
+
+        if (noPlayers) {
+            Component info = Component.translatable("gui.marketblocks.no_players_available");
+            int textW = font.width(info);
+            graphics.drawString(font, info, insetX + (INSET_WIDTH - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0x808080, false);
+            return;
+        }
+
+        int maxOwners = SingleOfferConfig.MAX_CO_OWNERS_PER_SHOP.get();
+        boolean limitReached = listMode == ListMode.OWNERS && collectSelectedOwners().size() >= maxOwners;
+
+        int visible = Math.min(OWNER_VISIBLE_ROWS, ownerOrder.size());
+        for (int row = 0; row < visible; row++) {
+            int idx = ownerStartIndex + row;
+            if (idx >= ownerOrder.size()) {
+                break;
+            }
+
+            UUID id = ownerOrder.get(idx);
+            String name = resolveName(id, storedNames);
+            boolean selected = ownerSelected.getOrDefault(id, false);
+
+            int rx = leftPos + ROW_X_OFFSET;
+            int ry = ownerListBaseY + row * OWNER_ROW_HEIGHT;
+            int rw = ROW_WIDTH;
+            int rh = OWNER_ROW_HEIGHT;
+
+            boolean rowHovered = mouseX >= rx && mouseX < rx + rw && mouseY >= ry && mouseY < ry + rh;
+            int rowBg = rowHovered ? 0xFF2A2A2A : ((row % 2 == 1) ? 0xFF242424 : 0xFF1E1E1E);
+            graphics.fill(rx, ry, rx + rw, ry + rh, rowBg);
+
+            // 1. Player Head (8x8)
+            int headX = rx + 3;
+            int headY = ry + 3;
+            renderPlayerHead(graphics, id, name, headX, headY);
+
+            // 2. Player Name
+            int textX = headX + 8 + 4;
+            int textY = ry + 3;
+            int maxNameW = 100;
+            String displayName = font.width(name) > maxNameW ? font.plainSubstrByWidth(name, maxNameW - font.width("...")) + "..." : name;
+
+            int textColor;
+            if (limitReached && !selected) {
+                textColor = 0x666666;
+            } else if (selected) {
+                textColor = 0xFFFFFF;
+            } else {
+                textColor = 0xCCCCCC;
+            }
+            graphics.drawString(font, displayName, textX, textY, textColor, false);
+        }
+
+        // 3. Scrollbar
+        int trackX = leftPos + SCROLLER_TRACK_X_OFFSET;
+        int trackY = topPos + 77;
+        graphics.fill(trackX, trackY, trackX + SCROLLER_TRACK_WIDTH, trackY + SCROLLER_TRACK_HEIGHT, 0xFF202020);
 
         if (isOwnerScrollActive()) {
-            int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
-            int barX = leftPos + OWNER_SCROLLBAR_X_OFFSET;
-            int barY = ownerListBaseY;
-            int barFull = Math.max(0, listHeight - SCROLLER_HEIGHT);
-            int knobOffset = (int) (ownerScrollOffs * (float) barFull);
-            graphics.blitSprite(scrollerSprite, barX, barY + knobOffset, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            int barFull = Math.max(0, SCROLLER_TRACK_HEIGHT - SCROLLER_KNOB_HEIGHT);
+            int knobY = trackY + (int) (ownerScrollOffs * (float) barFull);
+            graphics.fill(trackX, knobY, trackX + SCROLLER_TRACK_WIDTH, knobY + SCROLLER_KNOB_HEIGHT, 0xFF8B8B8B);
+            graphics.fill(trackX, knobY, trackX + SCROLLER_TRACK_WIDTH, knobY + 1, 0xFFB0B0B0);
+            graphics.fill(trackX, knobY + SCROLLER_KNOB_HEIGHT - 1, trackX + SCROLLER_TRACK_WIDTH, knobY + SCROLLER_KNOB_HEIGHT, 0xFF373737);
         } else {
-            int barX = leftPos + OWNER_SCROLLBAR_X_OFFSET;
-            int barY = ownerListBaseY;
-            graphics.blitSprite(scrollerDisabledSprite, barX, barY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            graphics.fill(trackX, trackY, trackX + SCROLLER_TRACK_WIDTH, trackY + SCROLLER_KNOB_HEIGHT, 0xFF353535);
         }
     }
 
+    private void renderPlayerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
+        Minecraft client = Minecraft.getInstance();
+        GameProfile profile = new GameProfile(id, name);
+        ResourceLocation skinTexture = client.getSkinManager().getInsecureSkin(profile).texture();
+
+        // Base head layer (8x8 at u=8, v=8, src 8x8, tex 64x64)
+        graphics.blit(skinTexture, x, y, 8, 8, 8.0F, 8.0F, 8, 8, 64, 64);
+        // Outer hat layer (8x8 at u=40, v=8, src 8x8, tex 64x64)
+        graphics.blit(skinTexture, x, y, 8, 8, 40.0F, 8.0F, 8, 8, 64, 64);
+    }
+
     public boolean onMouseClicked(double mouseX, double mouseY, int leftPos) {
-        if (!isOwnerScrollActive() || noPlayers) {
+        if (listDisabled || noPlayers) {
             return false;
         }
 
-        int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
-        int barX = leftPos + OWNER_SCROLLBAR_X_OFFSET;
-        int barY = ownerListBaseY;
+        int trackX = leftPos + SCROLLER_TRACK_X_OFFSET;
+        int trackY = ownerListBaseY;
 
-        if (mouseX >= barX && mouseX <= barX + SCROLLER_WIDTH && mouseY >= barY && mouseY <= barY + listHeight) {
+        if (isOwnerScrollActive() && mouseX >= trackX && mouseX <= trackX + SCROLLER_TRACK_WIDTH
+                && mouseY >= trackY && mouseY <= trackY + SCROLLER_TRACK_HEIGHT) {
             ownerScrolling = true;
+            int barFull = Math.max(1, SCROLLER_TRACK_HEIGHT - SCROLLER_KNOB_HEIGHT);
+            float rel = (float) (mouseY - trackY - SCROLLER_KNOB_HEIGHT / 2.0F) / (float) barFull;
+            ownerScrollOffs = Mth.clamp(rel, 0.0F, 1.0F);
+            setOwnerScrollFromOffs();
             return true;
         }
+
+        // Clicking anywhere on a player row toggles the selection
+        int rx = leftPos + ROW_X_OFFSET;
+        int rw = ROW_WIDTH - 14; // area before checkbox
+        int visible = Math.min(OWNER_VISIBLE_ROWS, ownerOrder.size());
+
+        for (int row = 0; row < visible; row++) {
+            int ry = ownerListBaseY + row * OWNER_ROW_HEIGHT;
+            if (mouseX >= rx && mouseX < rx + rw && mouseY >= ry && mouseY < ry + OWNER_ROW_HEIGHT) {
+                int idx = ownerStartIndex + row;
+                if (idx < ownerOrder.size()) {
+                    UUID id = ownerOrder.get(idx);
+                    boolean current = ownerSelected.getOrDefault(id, false);
+                    int maxOwners = SingleOfferConfig.MAX_CO_OWNERS_PER_SHOP.get();
+                    boolean limitReached = listMode == ListMode.OWNERS && collectSelectedOwners().size() >= maxOwners;
+
+                    if (limitReached && !current) {
+                        return false;
+                    }
+
+                    boolean nextVal = !current;
+                    ownerSelected.put(id, nextVal);
+                    if (listMode == ListMode.OWNERS) {
+                        renderOwnerWindow();
+                    } else {
+                        CompactCheckbox cb = ownerCheckboxes.get(id);
+                        if (cb != null) {
+                            cb.setSelected(nextVal);
+                        }
+                    }
+                    onDirty.run();
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
     public boolean onMouseDragged(double mouseY) {
-        if (!ownerScrolling) {
+        if (!ownerScrolling || !isOwnerScrollActive()) {
             return false;
         }
 
-        int listHeight = OWNER_VISIBLE_ROWS * OWNER_ROW_HEIGHT;
-        int barFull = Math.max(1, listHeight - SCROLLER_HEIGHT);
-        float rel = (float) (mouseY - ownerListBaseY - SCROLLER_HEIGHT / 2.0F) / (float) barFull;
+        int barFull = Math.max(1, SCROLLER_TRACK_HEIGHT - SCROLLER_KNOB_HEIGHT);
+        float rel = (float) (mouseY - ownerListBaseY - SCROLLER_KNOB_HEIGHT / 2.0F) / (float) barFull;
         ownerScrollOffs = Mth.clamp(rel, 0.0F, 1.0F);
         setOwnerScrollFromOffs();
         return true;
@@ -187,14 +303,14 @@ public class SingleOfferOwnerListPanel {
     }
 
     public boolean onMouseScrolled(double mouseX, double mouseY, double scrollY, int leftPos) {
-        if (!isOwnerScrollActive() || noPlayers) {
+        if (!isOwnerScrollActive() || noPlayers || listDisabled) {
             return false;
         }
 
-        int listX = leftPos + OWNER_PANEL_X_OFFSET;
-        int listY = ownerListBaseY;
-        if (mouseX >= listX && mouseX <= listX + OWNER_PANEL_WIDTH
-                && mouseY >= listY && mouseY <= listY + OWNER_PANEL_HEIGHT) {
+        int listX = leftPos + INSET_X_OFFSET;
+        int listY = ownerListBaseY - 1;
+        if (mouseX >= listX && mouseX <= listX + INSET_WIDTH
+                && mouseY >= listY && mouseY <= listY + INSET_HEIGHT) {
             int offRows = getOwnerOffscreenRows();
             if (offRows > 0) {
                 ownerScrollOffs = Mth.clamp(ownerScrollOffs - (float) (scrollY / (double) offRows), 0.0F, 1.0F);
@@ -329,18 +445,16 @@ public class SingleOfferOwnerListPanel {
             }
 
             UUID id = ownerOrder.get(idx);
-            String name = resolveName(id, storedNames);
             boolean selected = ownerSelected.getOrDefault(id, false);
 
-            Component nameComp = Component.literal(name);
-            if (limitReached && !selected) {
-                nameComp = nameComp.copy().withStyle(ChatFormatting.DARK_GRAY);
-            }
-
-            Checkbox cb = host.addSettingsWidget(Checkbox.builder(nameComp, host.settingsFont())
-                    .pos(host.settingsLeftPos() + 8, ownerListBaseY + row * OWNER_ROW_HEIGHT)
-                    .selected(selected)
-                    .onValueChange((btn, value) -> {
+            CompactCheckbox cb = host.addSettingsWidget(new CompactCheckbox(
+                    host.settingsLeftPos() + CHECKBOX_X_OFFSET,
+                    ownerListBaseY + row * OWNER_ROW_HEIGHT + 1,
+                    Component.empty(),
+                    host.settingsFont(),
+                    selected,
+                    12,
+                    (checkbox, value) -> {
                         if (limitReached && !selected && value) {
                             return;
                         }
@@ -349,8 +463,7 @@ public class SingleOfferOwnerListPanel {
                             renderOwnerWindow();
                         }
                         onDirty.run();
-                    })
-                    .build());
+                    }));
 
             if (limitReached && !selected) {
                 cb.active = false;

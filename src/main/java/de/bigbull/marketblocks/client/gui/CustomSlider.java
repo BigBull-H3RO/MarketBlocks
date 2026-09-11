@@ -51,6 +51,7 @@ public class CustomSlider extends AbstractWidget {
     protected boolean showBadge = true;
     protected boolean showLabel = true;
     protected boolean isDragging = false;
+    protected int labelColor = LABEL_COLOR;
 
     public CustomSlider(int x, int y, int width, int height, @Nullable Component prefix,
                         float min, float max, float value, @Nullable Consumer<Float> onValueChanged) {
@@ -74,8 +75,13 @@ public class CustomSlider extends AbstractWidget {
         return this;
     }
 
-    public CustomSlider setShowLabel(boolean showLabel) {
-        this.showLabel = showLabel;
+    public CustomSlider setShowLabel(boolean show) {
+        this.showLabel = show;
+        return this;
+    }
+
+    public CustomSlider setLabelColor(int color) {
+        this.labelColor = color;
         return this;
     }
 
@@ -185,9 +191,36 @@ public class CustomSlider extends AbstractWidget {
         setRatio(d0);
     }
 
+    public int getTrackY() {
+        boolean compact = this.height < 14;
+        int trackHeight = 5;
+        return compact ? getY() + (this.height - trackHeight) / 2 : getY() + this.height - trackHeight - 2;
+    }
+
+    public int getThumbY() {
+        int trackHeight = 5;
+        int thumbHeight = 9;
+        return getTrackY() - (thumbHeight - trackHeight) / 2;
+    }
+
+    public int getThumbX() {
+        int thumbWidth = 6;
+        return getX() + (int) (this.ratio * (this.width - thumbWidth));
+    }
+
+    @Override
+    protected boolean clicked(double mouseX, double mouseY) {
+        if (!this.active || !this.visible) {
+            return false;
+        }
+        int thumbY = getThumbY();
+        return mouseX >= (double) getX() && mouseX <= (double) (getX() + this.width)
+                && mouseY >= (double) thumbY && mouseY <= (double) (getY() + this.height);
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (this.visible && this.active && this.isHovered) {
+        if (this.visible && this.active && clicked(mouseX, mouseY)) {
             float delta = (this.step > 0 ? this.step : (this.max - this.min) / 20.0f) * (float) Math.signum(scrollY);
             setValue(this.currentValue + delta);
             return true;
@@ -225,18 +258,21 @@ public class CustomSlider extends AbstractWidget {
         int thumbHeight = 9;
         int thumbWidth = 6;
 
-        int trackY = compact ? y + (h - trackHeight) / 2 : y + h - trackHeight - 2;
+        int trackY = getTrackY();
         int trackX = x;
         int trackWidth = w;
 
-        int thumbX = trackX + (int) (this.ratio * (trackWidth - thumbWidth));
-        int thumbY = trackY - (thumbHeight - trackHeight) / 2;
+        int thumbX = getThumbX();
+        int thumbY = getThumbY();
 
-        // 1. Text & Badge Header Row
+        // 1. Text & Badge Header Row (shifted 1px up to create clean gap to track/thumb)
         if (!compact && this.showLabel) {
+            int headerY = y - 2;
+
             // Label
             if (this.prefix != null && !this.prefix.getString().isEmpty()) {
-                graphics.drawString(font, this.prefix, x, y, LABEL_COLOR, false);
+                int curLabelColor = this.active ? this.labelColor : 0x808080;
+                graphics.drawString(font, GuiConstants.compact(this.prefix), x, headerY, curLabelColor, false);
             }
 
             // Value text
@@ -249,48 +285,70 @@ public class CustomSlider extends AbstractWidget {
                 int badgeW = valWidth + 6;
                 int badgeH = 9;
                 int badgeX = x + w - badgeW;
-                int badgeY = y;
+                int badgeY = headerY;
 
-                // Dark background
-                graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, BADGE_BG);
+                int badgeBg = this.active ? BADGE_BG : 0xFF222222;
+                int badgeBorder = this.active ? BADGE_BORDER : 0xFF141414;
+                int badgeText = this.active ? BADGE_TEXT : 0xFF808080;
+
+                // Background
+                graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, badgeBg);
                 // 1px Border
-                graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 1, BADGE_BORDER);
-                graphics.fill(badgeX, badgeY + badgeH - 1, badgeX + badgeW, badgeY + badgeH, BADGE_BORDER);
-                graphics.fill(badgeX, badgeY + 1, badgeX + 1, badgeY + badgeH - 1, BADGE_BORDER);
-                graphics.fill(badgeX + badgeW - 1, badgeY + 1, badgeX + badgeW, badgeY + badgeH - 1, BADGE_BORDER);
+                graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 1, badgeBorder);
+                graphics.fill(badgeX, badgeY + badgeH - 1, badgeX + badgeW, badgeY + badgeH, badgeBorder);
+                graphics.fill(badgeX, badgeY + 1, badgeX + 1, badgeY + badgeH - 1, badgeBorder);
+                graphics.fill(badgeX + badgeW - 1, badgeY + 1, badgeX + badgeW, badgeY + badgeH - 1, badgeBorder);
 
                 // Text
-                graphics.drawString(font, valText, badgeX + 3, badgeY + 1, BADGE_TEXT, false);
+                graphics.drawString(font, valText, badgeX + 3, badgeY + 1, badgeText, false);
             } else {
-                graphics.drawString(font, valText, x + w - valWidth, y, LABEL_COLOR, false);
+                int curLabelColor = this.active ? this.labelColor : 0x808080;
+                graphics.drawString(font, valText, x + w - valWidth, headerY, curLabelColor, false);
             }
         }
 
         // 2. Track
+        int trackBorder = this.active ? TRACK_BORDER : 0xFF141414;
+        int trackFilledTop = this.active ? TRACK_FILLED_TOP : 0xFF3C3C3C;
+        int trackFilledBottom = this.active ? TRACK_FILLED_BOTTOM : 0xFF303030;
+        int trackEmptyTop = this.active ? TRACK_EMPTY_TOP : 0xFF242424;
+        int trackEmptyBottom = this.active ? TRACK_EMPTY_BOTTOM : 0xFF1A1A1A;
+
         // Border
-        graphics.fill(trackX, trackY, trackX + trackWidth, trackY + 1, TRACK_BORDER);
-        graphics.fill(trackX, trackY + trackHeight - 1, trackX + trackWidth, trackY + trackHeight, TRACK_BORDER);
-        graphics.fill(trackX, trackY + 1, trackX + 1, trackY + trackHeight - 1, TRACK_BORDER);
-        graphics.fill(trackX + trackWidth - 1, trackY + 1, trackX + trackWidth, trackY + trackHeight - 1, TRACK_BORDER);
+        graphics.fill(trackX, trackY, trackX + trackWidth, trackY + 1, trackBorder);
+        graphics.fill(trackX, trackY + trackHeight - 1, trackX + trackWidth, trackY + trackHeight, trackBorder);
+        graphics.fill(trackX, trackY + 1, trackX + 1, trackY + trackHeight - 1, trackBorder);
+        graphics.fill(trackX + trackWidth - 1, trackY + 1, trackX + trackWidth, trackY + trackHeight - 1, trackBorder);
 
         int progressSplit = Math.clamp(thumbX + thumbWidth / 2, trackX + 1, trackX + trackWidth - 1);
 
         // Progress fill (left of thumb)
         if (progressSplit > trackX + 1) {
-            graphics.fill(trackX + 1, trackY + 1, progressSplit, trackY + 2, TRACK_FILLED_TOP);
-            graphics.fill(trackX + 1, trackY + 2, progressSplit, trackY + trackHeight - 1, TRACK_FILLED_BOTTOM);
+            graphics.fill(trackX + 1, trackY + 1, progressSplit, trackY + 2, trackFilledTop);
+            graphics.fill(trackX + 1, trackY + 2, progressSplit, trackY + trackHeight - 1, trackFilledBottom);
         }
         // Empty track (right of thumb)
         if (progressSplit < trackX + trackWidth - 1) {
-            graphics.fill(progressSplit, trackY + 1, trackX + trackWidth - 1, trackY + 2, TRACK_EMPTY_TOP);
-            graphics.fill(progressSplit, trackY + 2, trackX + trackWidth - 1, trackY + trackHeight - 1, TRACK_EMPTY_BOTTOM);
+            graphics.fill(progressSplit, trackY + 1, trackX + trackWidth - 1, trackY + 2, trackEmptyTop);
+            graphics.fill(progressSplit, trackY + 2, trackX + trackWidth - 1, trackY + trackHeight - 1, trackEmptyBottom);
         }
 
-        // 3. Thumb (metallic shaded button handle)
-        boolean hovered = this.isHovered || this.isDragging || this.isFocused();
-        int highlight = hovered ? THUMB_HIGHLIGHT_HOVER : THUMB_HIGHLIGHT;
-        int body = hovered ? THUMB_BODY_HOVER : THUMB_BODY;
-        int shadow = hovered ? THUMB_SHADOW_HOVER : THUMB_SHADOW;
+        // 3. Thumb (metallic shaded button handle) - highlights only when mouse is over thumb or dragging
+        int highlight;
+        int body;
+        int shadow;
+        if (!this.active) {
+            highlight = 0xFF585858;
+            body = 0xFF404040;
+            shadow = 0xFF282828;
+        } else {
+            boolean isMouseOverThumb = mouseX >= thumbX && mouseX < thumbX + thumbWidth
+                    && mouseY >= thumbY && mouseY < thumbY + thumbHeight;
+            boolean hovered = isMouseOverThumb || this.isDragging;
+            highlight = hovered ? THUMB_HIGHLIGHT_HOVER : THUMB_HIGHLIGHT;
+            body = hovered ? THUMB_BODY_HOVER : THUMB_BODY;
+            shadow = hovered ? THUMB_SHADOW_HOVER : THUMB_SHADOW;
+        }
 
         // Thumb border
         graphics.fill(thumbX, thumbY, thumbX + thumbWidth, thumbY + 1, THUMB_BORDER);

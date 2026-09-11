@@ -43,6 +43,7 @@ public final class MarketplaceManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final LevelResource SHOP_DIR = new LevelResource("marketblocks");
     private static final String FILE_NAME = "marketplace.json";
+    private static final String EDIT_MODE_FLAG_FILE = "edit_mode.flag";
     private static final String BACKUP_FILE_SUFFIX = ".bak";
     private static final String TEMP_FILE_SUFFIX = ".tmp";
     private static final int AUTO_SAVE_TICKS = 20 * 60;
@@ -62,6 +63,7 @@ public final class MarketplaceManager {
     private RegistryAccess registryAccess;
     private MinecraftServer server;
     private Path configFile;
+    private Path editModeFile;
     private boolean dirty;
     private boolean initialized;
     private volatile boolean globalEditModeEnabled = false;
@@ -86,11 +88,20 @@ public final class MarketplaceManager {
             this.registryAccess = server.registryAccess();
             Path dir = server.getWorldPath(SHOP_DIR);
             this.configFile = dir.resolve(FILE_NAME);
+            this.editModeFile = dir.resolve(EDIT_MODE_FLAG_FILE);
             if (!Files.exists(dir)) {
                 try {
                     Files.createDirectories(dir);
                 } catch (IOException e) {
                     LOGGER.error("Could not create directory {}", dir, e);
+                }
+            }
+            if (Files.exists(this.editModeFile)) {
+                try {
+                    String content = Files.readString(this.editModeFile).trim();
+                    this.globalEditModeEnabled = Boolean.parseBoolean(content);
+                } catch (IOException e) {
+                    LOGGER.error("Could not read edit mode flag file {}", this.editModeFile, e);
                 }
             }
             loadFromDisk();
@@ -120,6 +131,7 @@ public final class MarketplaceManager {
                 registryAccess = null;
                 server = null;
                 configFile = null;
+                editModeFile = null;
                 initialized = false;
                 globalEditModeEnabled = false;
                 ticksSinceRuntimeUpkeep = 0;
@@ -321,6 +333,26 @@ public final class MarketplaceManager {
         synchronized (lock) {
             boolean changed = this.globalEditModeEnabled != enabled;
             this.globalEditModeEnabled = enabled;
+
+            if (this.editModeFile != null && changed) {
+                Path flagFile = this.editModeFile;
+                if (ioExecutor != null && !ioExecutor.isShutdown()) {
+                    ioExecutor.execute(() -> {
+                        try {
+                            Files.writeString(flagFile, String.valueOf(enabled));
+                        } catch (IOException e) {
+                            LOGGER.error("Could not write edit mode flag file {}", flagFile, e);
+                        }
+                    });
+                } else {
+                    try {
+                        Files.writeString(flagFile, String.valueOf(enabled));
+                    } catch (IOException e) {
+                        LOGGER.error("Could not write edit mode flag file {}", flagFile, e);
+                    }
+                }
+            }
+
             if (!initialized || !changed) {
                 return;
             }

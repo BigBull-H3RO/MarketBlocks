@@ -87,7 +87,8 @@ public final class GroupBox {
         if (title == null || title.getString().isEmpty()) {
             graphics.fill(x + r, y, x + width - r, y + 1, borderColor);
         } else {
-            int textWidth = font.width(title);
+            Component styledTitle = GuiConstants.compact(title);
+            int textWidth = font.width(styledTitle);
             int textX = x + DEFAULT_TITLE_INDENT + DEFAULT_TITLE_PADDING;
             int textY = y - (font.lineHeight / 2);
 
@@ -107,7 +108,7 @@ public final class GroupBox {
             graphics.fill(cutStart, textY, cutEnd, textY + font.lineHeight, bgColor);
 
             // Draw title
-            graphics.drawString(font, title, textX, textY, titleColor, false);
+            graphics.drawString(font, styledTitle, textX, textY, titleColor, false);
         }
 
         // Draw rounded corner pixels
@@ -175,7 +176,8 @@ public final class GroupBox {
             return;
         }
 
-        int textWidth = font.width(title);
+        Component styledTitle = GuiConstants.compact(title);
+        int textWidth = font.width(styledTitle);
         int textX = x + DEFAULT_TITLE_INDENT + DEFAULT_TITLE_PADDING;
         int textY = y - (font.lineHeight / 2);
 
@@ -193,6 +195,6 @@ public final class GroupBox {
         graphics.fill(cutStart, textY, cutEnd, textY + font.lineHeight, bgColor);
 
         // Draw title
-        graphics.drawString(font, title, textX, textY, titleColor, false);
+        graphics.drawString(font, styledTitle, textX, textY, titleColor, false);
     }
 }

@@ -285,8 +285,9 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                 (int) Math.floor((maxOffsetX * maxOffsetZ * 4.0f) / (itemScale * itemScale * 0.8f)));
         int looseLayer = index / looseItemsPerLayer;
 
-        float hOffset = (looseLayer * layerHeight * 0.8f) + (rand.nextFloat() * layerHeight * 0.4f);
-        float yRest = hOffset + (isBlock ? itemScale * 0.2f : 0) + baselineY + (spacingY * 0.5f);
+        float verticalSpacing = layerHeight * (1.0f + spacingY);
+        float hOffset = (looseLayer * verticalSpacing * 0.8f) + (rand.nextFloat() * layerHeight * 0.4f);
+        float yRest = hOffset + (isBlock ? itemScale * 0.2f : 0) + baselineY;
 
         poseStack.translate(rx, yRest, rz);
         poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));

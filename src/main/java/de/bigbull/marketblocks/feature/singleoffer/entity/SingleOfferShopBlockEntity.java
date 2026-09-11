@@ -71,6 +71,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public static final int GLOBAL_ADMIN_MODE_FLAG = 32;
     public static final int CAN_BUY_FLAG = 64;
     public static final int CLOSED_FLAG = 128;
+    public static final int CAN_MANAGE_OFFER_FLAG = 256;
 
     private ItemStack offerPayment1 = ItemStack.EMPTY;
     private ItemStack offerPayment2 = ItemStack.EMPTY;
@@ -422,6 +423,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         return accessManager.canPlayerBuyByUUID(uuid);
     }
 
+    public boolean canManageOffer(Player player) {
+        return accessManager.canManageOffer(player);
+    }
+
     public boolean isPrimaryOwner(Player player) {
         return accessManager.isPrimaryOwner(player);
     }
@@ -483,7 +488,12 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void setAccessSettings(AccessSettings accessSettings, boolean sync) {
+        boolean oldAdminShop = isAdminShopEnabled();
         settingsManager.setAccessSettings(accessSettings, sync);
+        if (oldAdminShop != accessSettings.adminShopEnabled()) {
+            needsOfferRefresh = true;
+            updateOfferSlot(false);
+        }
     }
 
     public IoSettings getIoSettings() {

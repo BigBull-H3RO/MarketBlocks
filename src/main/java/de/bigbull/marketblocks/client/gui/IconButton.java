@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -81,6 +82,22 @@ public class IconButton extends Button {
 
     public boolean isSelected() {
         return selectedSupplier != null && selectedSupplier.getAsBoolean();
+    }
+
+    @Override
+    public void playDownSound(SoundManager handler) {
+        if (isSelected() || !this.active) {
+            return;
+        }
+        super.playDownSound(handler);
+    }
+
+    @Override
+    public void onClick(double mouseX, double mouseY) {
+        if (isSelected() || !this.active) {
+            return;
+        }
+        super.onClick(mouseX, mouseY);
     }
 
     public IconButton withIconOffset(int x, int y) {
