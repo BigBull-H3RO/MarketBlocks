@@ -11,31 +11,15 @@ out
 *.ipr
 *.iws
 *.iml
-.idea
+.idea/*
+!.idea/scopes
 
 # gradle
 build
 .gradle
-local.properties
 
 # other
 eclipse
 run
 runs
-run-data
-
-repo
-/src/generated/resources/.cache/
-/journeymap
-
-# vscode
-.vscode/
-
-# logs
-logs/
-
-# project planning
-todo.md
-
-# antigravity agent
-.agents/
+forge/
