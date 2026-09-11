@@ -1,17 +1,15 @@
 package de.bigbull.marketblocks.client.gui;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 
 /**
- * Modern compact checkbox widget with dark bezel frame and vivid green checkmark.
+ * Modern compact checkbox widget with dark bezel frame and vivid green
+ * checkmark.
  */
 public class CompactCheckbox extends AbstractButton {
     private static final int DEFAULT_BOX_SIZE = 12;

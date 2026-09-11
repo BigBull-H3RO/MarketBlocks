@@ -128,7 +128,7 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.settings.category.io", "I/O");
         add("gui.marketblocks.settings.category.io.title", "I/O-Einstellungen");
         add("gui.marketblocks.settings.category.notifications", "Benachrichtigungen");
-        add("gui.marketblocks.settings.category.notifications.title", "Benachrichtigungs-Einstellungen");
+        add("gui.marketblocks.settings.category.notifications.title", "Benachrichtigungen");
         add("gui.marketblocks.settings.category.villager", "NPC");
         add("gui.marketblocks.settings.category.villager.title", "NPC-Einstellungen");
         add("gui.marketblocks.settings.category.visual", "Visual");

@@ -20,8 +20,10 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.IoRedstoneControl;
 import de.bigbull.marketblocks.feature.visual.npc.ShopVisualPlacementValidator;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -90,6 +92,8 @@ public record UpdateSettingsPacket(
                             .result() == VisualNpcPlacementResult.OK;
                     if (!isValid) {
                         villager = villager.withNpcEnabled(false);
+                        player.sendSystemMessage(Component.translatable("gui.marketblocks.visuals.error.space_blocked")
+                                .withStyle(ChatFormatting.RED));
                     }
                 }
 

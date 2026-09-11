@@ -120,6 +120,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private static final int LOG_HAT_V = 8;
     private static final int LOG_SKIN_TEX_SIZE = 64;
 
+    private static final int OWNER_HEAD_X_OFFSET = 18;
+    private static final int OWNER_HEAD_Y_OFFSET = 5;
+
     private record IconRect(int x, int y, int width, int height) {
     }
 
@@ -604,19 +607,41 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
         } else if (menu.getActiveTab() == ShopTab.OFFERS) {
             SingleOfferShopBlockEntity be = menu.getBlockEntity();
-            if (be.hasOffer()
-                    && isHovering(STATUS_ICON_RECT.x(), STATUS_ICON_RECT.y(), STATUS_ICON_RECT.width(),
-                            STATUS_ICON_RECT.height(), mouseX, mouseY)) {
-                if (be.isClosed()) {
-                    graphics.renderTooltip(font, Component.translatable("gui.marketblocks.shop_closed"), mouseX,
-                            mouseY);
-                } else if (!be.isAdminShopEnabled()) {
-                    if (!be.hasResultItemInInput(false)) {
-                        graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX,
+            boolean showAdminBadge = be.isAdminShopEnabled();
+            boolean hasOwner = be.getOwnerId() != null && be.getOwnerName() != null && !be.getOwnerName().isBlank();
+
+            if (!showAdminBadge && !menu.isOwner() && hasOwner
+                    && isHovering(imageWidth - OWNER_HEAD_X_OFFSET - 1, OWNER_HEAD_Y_OFFSET - 1, 10, 10, mouseX, mouseY)) {
+                List<Component> tooltip = new ArrayList<>();
+                tooltip.add(Component.translatable("gui.marketblocks.owner", be.getOwnerName()));
+                if (!be.getAdditionalOwners().isEmpty()) {
+                    tooltip.add(Component.translatable("gui.marketblocks.access.edit_owners")
+                            .append(": ")
+                            .append(String.join(", ", be.getAdditionalOwners().values())));
+                }
+                graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
+            } else {
+                String name = be.getShopName();
+                Component fullTitle = (name != null && !name.isEmpty()) ? Component.literal(name) : be.getBlockState().getBlock().getName();
+                int badgeW = font.width(Component.translatable("gui.marketblocks.admin_shop.badge")) + 8;
+                int maxTitleW = showAdminBadge ? (imageWidth - badgeW - 8 - 8 - 4)
+                        : (!menu.isOwner() && hasOwner ? (imageWidth - OWNER_HEAD_X_OFFSET - 8 - 4) : (imageWidth - 16));
+                if (font.width(fullTitle) > maxTitleW && isHovering(8, 6, maxTitleW, font.lineHeight, mouseX, mouseY)) {
+                    graphics.renderTooltip(font, fullTitle, mouseX, mouseY);
+                } else if (be.hasOffer()
+                        && isHovering(STATUS_ICON_RECT.x(), STATUS_ICON_RECT.y(), STATUS_ICON_RECT.width(),
+                                STATUS_ICON_RECT.height(), mouseX, mouseY)) {
+                    if (be.isClosed()) {
+                        graphics.renderTooltip(font, Component.translatable("gui.marketblocks.shop_closed"), mouseX,
                                 mouseY);
-                    } else if (be.isOutputSpaceMissing()) {
-                        graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_full"), mouseX,
-                                mouseY);
+                    } else if (!be.isAdminShopEnabled()) {
+                        if (!be.hasResultItemInInput(false)) {
+                            graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX,
+                                    mouseY);
+                        } else if (be.isOutputSpaceMissing()) {
+                            graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_full"), mouseX,
+                                    mouseY);
+                        }
                     }
                 }
             }
@@ -738,7 +763,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
         if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VILLAGER) {
             boolean enabled = villagerDraft != null && villagerDraft.npcEnabled();
-            SingleOfferSettingsSections.renderVillagerBg(graphics, font, leftPos, topPos, enabled);
+            boolean canSpawn = visualPlacementResult == null || visualPlacementResult.canSpawn();
+            SingleOfferSettingsSections.renderVillagerBg(graphics, font, leftPos, topPos, enabled, canSpawn);
         }
 
         if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VISUALS) {
@@ -1023,8 +1049,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private void renderOffersLabels(GuiGraphics graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        boolean isOwnerOrOp = menu.isOwner() || menu.isOperator();
-        boolean showAdminBadge = be.isAdminShopEnabled() && isOwnerOrOp;
+        boolean showAdminBadge = be.isAdminShopEnabled();
 
         Component badgeText = Component.translatable("gui.marketblocks.admin_shop.badge");
         int badgeW = font.width(badgeText) + 8;
@@ -1032,28 +1057,43 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int badgeX = imageWidth - badgeW - 8;
         int badgeY = 4;
 
-        String name = be.getShopName();
-        if (name != null && !name.isEmpty()) {
-            Component title = Component.literal(name);
-            int titleWidth = font.width(title);
-            int centerX = (imageWidth - titleWidth) / 2;
-            int maxTitleX = showAdminBadge ? (badgeX - titleWidth - 4) : centerX;
-            int titleX = Math.max(8, Math.min(centerX, maxTitleX));
-            graphics.drawString(font, title, titleX, 6, 4210752, false);
-        } else {
-            Component title = be.getBlockState().getBlock().getName();
-            graphics.drawString(font, title, 8, 6, 4210752, false);
-        }
+        boolean hasOwner = be.getOwnerId() != null && be.getOwnerName() != null && !be.getOwnerName().isBlank();
+        int maxTitleWidth;
 
         if (showAdminBadge) {
             graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, 0xFF8A38D0);
             graphics.fill(badgeX + 1, badgeY + 1, badgeX + badgeW - 1, badgeY + badgeH - 1, 0xFF2E1840);
             graphics.drawString(font, badgeText, badgeX + 4, badgeY + 2, 0xFFE0A0FF, false);
+            maxTitleWidth = badgeX - 8 - 4;
+        } else if (!menu.isOwner() && hasOwner) {
+            renderOwnerHead(graphics, be.getOwnerId(), be.getOwnerName(), imageWidth - OWNER_HEAD_X_OFFSET, OWNER_HEAD_Y_OFFSET);
+            maxTitleWidth = (imageWidth - OWNER_HEAD_X_OFFSET) - 8 - 4;
         } else {
-            renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
+            maxTitleWidth = imageWidth - 16;
         }
 
+        String name = be.getShopName();
+        Component fullTitle = (name != null && !name.isEmpty()) ? Component.literal(name) : be.getBlockState().getBlock().getName();
+        Component displayTitle;
+        if (font.width(fullTitle) > maxTitleWidth) {
+            displayTitle = Component.literal(font.plainSubstrByWidth(fullTitle.getString(), Math.max(0, maxTitleWidth - font.width("..."))) + "...");
+        } else {
+            displayTitle = fullTitle;
+        }
+        graphics.drawString(font, displayTitle, 8, 6, 4210752, false);
+
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
+    }
+
+    private void renderOwnerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
+        Minecraft client = Minecraft.getInstance();
+        GameProfile profile = new GameProfile(id != null ? id : Util.NIL_UUID, name != null ? name : "");
+        ResourceLocation skinTexture = client.getSkinManager().getInsecureSkin(profile).texture();
+
+        graphics.fill(x - 1, y - 1, x + 9, y + 9, 0xFF2A2A2A);
+        graphics.fill(x, y, x + 8, y + 8, 0xFF181818);
+        graphics.blit(skinTexture, x, y, 8, 8, 8.0F, 8.0F, 8, 8, 64, 64);
+        graphics.blit(skinTexture, x, y, 8, 8, 40.0F, 8.0F, 8, 8, 64, 64);
     }
 
     private void renderInventoryLabels(GuiGraphics graphics) {
@@ -1079,12 +1119,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 : Component.translatable("gui.marketblocks.settings_title");
         graphics.drawString(font, headerTitle, 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
-        if (menu.isOwner() && activeSettingsCategory == SettingsCategory.VILLAGER) {
-            if (!visualPlacementResult.canSpawn()) {
-                graphics.drawString(font, Component.translatable(visualPlacementResult.translationKey()), 28, 147,
-                        0xCC3333, false);
-            }
-        }
         if (!menu.isOwner() && !canToggleAdminShop()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
             int w = font.width(info);
