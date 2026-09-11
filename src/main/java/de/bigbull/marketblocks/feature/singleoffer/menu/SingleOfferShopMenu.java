@@ -258,6 +258,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         return hasFlag(SingleOfferShopBlockEntity.CLOSED_FLAG);
     }
 
+    @Override
+    public boolean canManageOffer() {
+        if (blockEntity != null && blockEntity.getOwnerId() == null) {
+            return true;
+        }
+        return hasFlag(SingleOfferShopBlockEntity.CAN_MANAGE_OFFER_FLAG) || isOwner();
+    }
+
     /**
      * Fills the payment slots with the required items from the player's inventory.
      */
@@ -344,7 +352,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             Slot slot = this.slots.get(index);
 
             if (!blockEntity.hasOffer()) {
-                if (!isOwner()) {
+                if (!canManageOffer()) {
                     return ItemStack.EMPTY;
                 }
                 ItemStack stack = slot.getItem();
@@ -418,7 +426,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         } else {
             if (isTab(ShopTab.OFFERS)) {
                 if (!blockEntity.hasOffer()) {
-                    if (!isOwner()) {
+                    if (!canManageOffer()) {
                         return ItemStack.EMPTY;
                     }
                     this.moveItemStackTo(stack, 0, PAYMENT_SLOTS, false);
@@ -571,7 +579,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         @Override
         public boolean mayPlace(ItemStack stack) {
             if (!blockEntity.hasOffer()) {
-                return isOwner();
+                return canManageOffer();
             }
             return canPlayerBuy();
         }
@@ -579,7 +587,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         @Override
         public boolean mayPickup(Player player) {
             if (!blockEntity.hasOffer()) {
-                return isOwner();
+                return canManageOffer();
             }
             return true;
         }
@@ -610,13 +618,13 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         public boolean mayPlace(ItemStack stack) {
             if (blockEntity.hasOffer())
                 return false;
-            return isOwner();
+            return canManageOffer();
         }
 
         @Override
         public boolean mayPickup(Player player) {
             if (!blockEntity.hasOffer()) {
-                return isOwner();
+                return canManageOffer();
             }
 
             if (!canPlayerBuy()) {
@@ -644,7 +652,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         @Override
         public ItemStack remove(int amount) {
             if (!blockEntity.hasOffer()) {
-                return isOwner() ? super.remove(amount) : ItemStack.EMPTY;
+                return canManageOffer() ? super.remove(amount) : ItemStack.EMPTY;
             }
             if (!canPlayerBuy()) {
                 return ItemStack.EMPTY;

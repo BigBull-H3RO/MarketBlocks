@@ -21,31 +21,50 @@ public class SideModeButton extends Button {
             "sidemode/button_highlighted");
     private static final ResourceLocation SELECTED = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
             "sidemode/button_selected");
-    private static final ResourceLocation INPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+    public static final ResourceLocation INPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
             "sidemode/input_icon");
-    private static final ResourceLocation OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+    public static final ResourceLocation OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
             "sidemode/output_icon");
-    private static final ResourceLocation DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
+    public static final ResourceLocation DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
             "sidemode/disabled_icon");
 
+    private final Component sideName;
     private SideMode mode;
     private final Consumer<SideMode> callback;
     private int pressTicks;
     private boolean isPressing;
 
-    public SideModeButton(int x, int y, int width, int height, SideMode initialMode, Consumer<SideMode> callback) {
+    public SideModeButton(int x, int y, int width, int height, Component sideName, SideMode initialMode, Consumer<SideMode> callback) {
         super(x, y, width, height, Component.empty(), b -> {
         }, DEFAULT_NARRATION);
+        this.sideName = sideName;
         this.mode = initialMode;
         this.callback = callback;
         this.pressTicks = 0;
         this.isPressing = false;
+        updateTooltip();
+    }
+
+    public SideModeButton(int x, int y, int width, int height, SideMode initialMode, Consumer<SideMode> callback) {
+        this(x, y, width, height, Component.empty(), initialMode, callback);
     }
 
     public void setMode(SideMode mode) {
         this.mode = mode;
         this.pressTicks = 0;
         this.isPressing = false;
+        updateTooltip();
+    }
+
+    public void updateTooltip() {
+        if (!this.active) {
+            setTooltip(null);
+            return;
+        }
+        if (sideName != null && !sideName.getString().isEmpty()) {
+            setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                    Component.empty().append(sideName).append(": ").append(mode.getDisplayName())));
+        }
     }
 
     @Override
@@ -68,6 +87,7 @@ public class SideModeButton extends Button {
             if (this.isMouseOver(mouseX, mouseY)) {
                 this.mode = this.mode.next();
                 this.pressTicks = 10;
+                updateTooltip();
                 this.callback.accept(this.mode);
             }
             return true;

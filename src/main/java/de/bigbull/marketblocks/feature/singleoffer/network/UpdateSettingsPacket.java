@@ -99,7 +99,7 @@ public record UpdateSettingsPacket(
                 boolean isAdminMode = MarketplaceManager.get().isGlobalEditModeEnabled() && player.hasPermissions(2);
 
                 boolean newAdminShopEnabled = existingAccess.adminShopEnabled();
-                if (isAdminMode) {
+                if (isAdminMode || (existingAccess.adminShopEnabled() && !incomingAccess.adminShopEnabled() && (isPrimaryOwner || player.hasPermissions(2)))) {
                     newAdminShopEnabled = incomingAccess.adminShopEnabled();
                 }
 

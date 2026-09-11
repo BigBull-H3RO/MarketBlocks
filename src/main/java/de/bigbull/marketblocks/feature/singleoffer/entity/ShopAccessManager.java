@@ -145,6 +145,16 @@ public class ShopAccessManager {
         purchaseContextBuyerName = "";
     }
 
+    public boolean canManageOffer(Player player) {
+        if (shop.getOwnerId() == null) {
+            return true;
+        }
+        if (shop.isGlobalAdminModeEnabled() && player != null && player.hasPermissions(2)) {
+            return true;
+        }
+        return isOwner(player);
+    }
+
     public ContainerData createMenuFlags(Player player) {
         return new ContainerData() {
             @Override
@@ -167,6 +177,8 @@ public class ShopAccessManager {
                         flags |= SingleOfferShopBlockEntity.CAN_BUY_FLAG;
                     if (shop.getGeneralSettings().isClosed())
                         flags |= SingleOfferShopBlockEntity.CLOSED_FLAG;
+                    if (canManageOffer(player))
+                        flags |= SingleOfferShopBlockEntity.CAN_MANAGE_OFFER_FLAG;
                     return flags;
                 }
                 return 0;

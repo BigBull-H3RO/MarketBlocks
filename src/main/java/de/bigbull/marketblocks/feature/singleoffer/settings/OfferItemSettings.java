@@ -30,13 +30,13 @@ public record OfferItemSettings(
     private static final float MIN_HEIGHT = -0.25f;
     private static final float MAX_HEIGHT = 0.25f;
     private static final int MIN_COUNT = 1;
-    public static final int MAX_COUNT = 96;
+    public static final int MAX_COUNT = 99;
     private static final float MIN_SPACING = -0.5f;
     private static final float MAX_SPACING = 2.0f;
     private static final float MIN_CHAOS_ROTATION = 0.0f;
     private static final float MAX_CHAOS_ROTATION = 1.0f;
 
-    private static final float DEFAULT_SCALE = 0.75f;
+    private static final float DEFAULT_SCALE = 1.00f;
     private static final float DEFAULT_SPEED = 0.75f;
     private static final float DEFAULT_HEIGHT = 0.0f;
     private static final int DEFAULT_COUNT = 1;

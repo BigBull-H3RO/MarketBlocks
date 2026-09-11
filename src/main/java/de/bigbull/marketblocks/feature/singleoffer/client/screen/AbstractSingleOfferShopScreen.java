@@ -20,7 +20,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
@@ -153,6 +152,9 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
             if (tab.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
+            if (tab.visible && tab.isMouseOver(mouseX, mouseY)) {
+                return true;
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -194,7 +196,6 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
             SingleOfferShopBlockEntity blockEntity = shopMenu.getBlockEntity();
 
             NetworkHandler.sendToServer(new SwitchTabPacket(blockEntity.getBlockPos(), tab));
-            playSound(SoundEvents.UI_BUTTON_CLICK);
         }
     }
 

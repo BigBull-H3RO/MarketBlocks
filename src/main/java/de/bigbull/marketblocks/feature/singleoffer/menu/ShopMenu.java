@@ -64,4 +64,11 @@ public interface ShopMenu {
     default boolean isClosed() {
         return hasFlag(SingleOfferShopBlockEntity.CLOSED_FLAG);
     }
+
+    /**
+     * @return true if the current player is allowed to manage/configure the offer (unowned shop or owner/admin).
+     */
+    default boolean canManageOffer() {
+        return hasFlag(SingleOfferShopBlockEntity.CAN_MANAGE_OFFER_FLAG);
+    }
 }
