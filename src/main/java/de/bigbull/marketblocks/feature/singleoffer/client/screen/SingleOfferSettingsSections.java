@@ -20,6 +20,7 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -401,6 +402,9 @@ public final class SingleOfferSettingsSections {
         int topBtnY = host.settingsTopPos() + 5;
         List<Consumer<Boolean>> sectionWidgets = new ArrayList<>();
 
+        boolean canSpawn = placementResult == null || placementResult.canSpawn();
+        boolean isCurrentlyOn = draft.npcEnabled();
+
         // Master Toggle (top right, 34x14)
         Button npcToggle = host.addSettingsWidget(Button.builder(
                 toggleStateLabel(draft.npcEnabled()),
@@ -411,15 +415,26 @@ public final class SingleOfferSettingsSections {
                     for (Consumer<Boolean> updater : sectionWidgets) {
                         updater.accept(next);
                     }
+                    if (!canSpawn && !next) {
+                        b.active = false;
+                        b.setTooltip(Tooltip.create(Component.translatable(placementResult.translationKey())
+                                .withStyle(ChatFormatting.RED)));
+                    } else if (!canSpawn && next) {
+                        b.setTooltip(Tooltip.create(Component.translatable(placementResult.translationKey())
+                                .withStyle(ChatFormatting.RED)));
+                    } else {
+                        b.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.npc_enabled.tooltip")));
+                    }
                     onDirty.run();
                 })
                 .bounds(topBtnX, topBtnY, 34, 14)
                 .tooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.npc_enabled.tooltip")))
                 .build());
 
-        boolean blocked = placementResult != null && !placementResult.canSpawn() && !draft.npcEnabled();
-        if (blocked) {
-            npcToggle.setTooltip(Tooltip.create(Component.translatable(placementResult.translationKey())));
+        npcToggle.active = canSpawn || isCurrentlyOn;
+        if (!canSpawn) {
+            npcToggle.setTooltip(Tooltip.create(Component.translatable(placementResult.translationKey())
+                    .withStyle(ChatFormatting.RED)));
         }
 
         boolean enabled = draft.npcEnabled();
@@ -594,13 +609,18 @@ public final class SingleOfferSettingsSections {
         return new VillagerSectionWidgets(npcNameField, playerSkinNameField, professionButton);
     }
 
-    public static void renderVillagerBg(GuiGraphics graphics, Font font, int leftPos, int topPos, boolean enabled) {
+    public static void renderVillagerBg(GuiGraphics graphics, Font font, int leftPos, int topPos, boolean enabled,
+            boolean canSpawn) {
         int labelColor = enabled ? 0x404040 : 0x808080;
         int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0x808080;
         int groupBorderColor = enabled ? GroupBox.DEFAULT_BORDER_COLOR : 0xFF888888;
 
         Component npcLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.npc_short"));
-        graphics.drawString(font, npcLabel, leftPos + 130 - font.width(npcLabel), topPos + 8, 0x404040, false);
+        int labelX = leftPos + 130 - font.width(npcLabel);
+        if (!canSpawn) {
+            graphics.drawString(font, "!", labelX - 6, topPos + 7, 0xCC3333, false);
+        }
+        graphics.drawString(font, npcLabel, labelX, topPos + 8, !canSpawn ? 0x993333 : 0x404040, false);
 
         // GroupBox 1: Erscheinungsbild (y = 23, h = 62, ends at 85)
         GroupBox.render(graphics, font,
