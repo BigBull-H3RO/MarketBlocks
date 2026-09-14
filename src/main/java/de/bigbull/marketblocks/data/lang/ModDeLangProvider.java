@@ -97,7 +97,6 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.access.filter_blacklist", "MODUS: BLACKLIST");
         add("gui.marketblocks.access.filter_whitelist.tooltip", "Whitelist-Modus: Nur gelistete Spieler dürfen kaufen");
         add("gui.marketblocks.access.filter_blacklist.tooltip", "Blacklist-Modus: Gelistete Spieler dürfen nicht kaufen");
-        add("gui.marketblocks.access.primary_owner_only", "Nur für Hauptbesitzer verfügbar");
         add("gui.marketblocks.access.mode.blacklist", "Modus: Blacklist");
         add("gui.marketblocks.access.mode.everyone", "Modus: Alle");
         add("gui.marketblocks.access.mode.whitelist", "Modus: Whitelist");
@@ -333,6 +332,9 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.log_title", "Transaktions-Log");
         add("gui.marketblocks.log.clear", "Log leeren");
         add("gui.marketblocks.log.count", "Einträge: %s");
+        add("gui.marketblocks.log.entries_label", "Einträge:");
+        add("gui.marketblocks.log.count_tooltip", "Gesamte aufgezeichnete Transaktionen");
+        add("gui.marketblocks.log.repeat_tooltip", "%s Transaktionen zusammengefasst");
         add("gui.marketblocks.log.empty", "Keine Transaktionen vorhanden");
         add("gui.marketblocks.log.none", "Nichts");
         add("gui.marketblocks.log.time.days", "Vor %s T.");
@@ -398,7 +400,12 @@ public class ModDeLangProvider extends LanguageProvider {
         add("message.marketblocks.trade_stand.not_owner", "Nur der Besitzer kann diesen Handelsstand abbauen.");
         add("message.marketblocks.trade_stand.break_not_empty", "Du musst zuerst alle Items und Auszahlungen leeren!");
         add("message.marketblocks.shop.limit_reached", "Du kannst maximal %s Shops platzieren!");
-        
+        add("message.marketblocks.shop.admin_break_hint",
+                "Schleiche beim Abbauen, um den Shop-Schutz zu umgehen (Admin).");
+        add("message.marketblocks.shop.admin_bypassed", "Shop-Schutz umgangen (Admin).");
+        add("message.marketblocks.shop.admin_shop_break_hint",
+                "Schleiche beim Abbauen, um diesen Admin-Shop zu entfernen.");
+        add("message.marketblocks.shop.admin_shop_protected", "Admin-Shops können nicht abgebaut werden.");
         add("message.marketblocks.shop_buyer.interact.1", "\u00a7eIch bin auf der Suche nach guten Waren zum Kaufen!\u00a7r");
         add("message.marketblocks.shop_buyer.interact.2", "\u00a7eHast du etwas Interessantes im Angebot?\u00a7r");
         add("message.marketblocks.shop_buyer.interact.3", "\u00a7eIch reise umher, um Dinge zu kaufen. Vielleicht hast du, was ich suche!\u00a7r");

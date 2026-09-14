@@ -73,8 +73,7 @@ OpenPAC requires server administrators to register exceptions in the server conf
 ## ⚙️ Configuration Toggles
 
 All mod integrations can be toggled on or off in configuration files:
-- **`marketblocks-client.toml`**:
-  - `enableJourneyMapCompat` (default: `true`)
-  - `enableXaerosCompat` (default: `true`)
-- **`marketblocks-server.toml`**:
-  - `allowNonOpTeleport` (default: `false`): Allows players without OP to click **[TP]** in chat search results.
+- **`config/marketblocks/main.toml`**:
+  - `enableJourneyMapCompat` (default: `true`): Toggles JourneyMap map icons and chat waypoints.
+  - `enableXaerosCompat` (default: `true`): Toggles Xaero's Minimap chat waypoints.
+  - `allowNonOpTeleport` (default: `false`): Allows non-OP players to click **[TP]** in chat search results.

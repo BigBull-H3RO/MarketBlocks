@@ -112,6 +112,11 @@ public class TradeStandTopBlock extends Block {
         BlockState baseState = level.getBlockState(basePos);
 
         if (baseState.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
+            if (!BaseShopBlock.canPlayerDestroy(level, basePos, player, false)) {
+                level.sendBlockUpdated(pos, state, state, 3);
+                level.sendBlockUpdated(basePos, baseState, baseState, 3);
+                return false;
+            }
             return baseState.onDestroyedByPlayer(level, basePos, player, willHarvest, fluid);
         }
 
@@ -124,6 +129,9 @@ public class TradeStandTopBlock extends Block {
         BlockState baseState = level.getBlockState(basePos);
 
         if (baseState.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
+            if (!BaseShopBlock.canPlayerDestroy(level, basePos, player, true)) {
+                return state;
+            }
             baseState.getBlock().playerWillDestroy(level, basePos, baseState, player);
 
             level.levelEvent(player, 2001, basePos, Block.getId(baseState));

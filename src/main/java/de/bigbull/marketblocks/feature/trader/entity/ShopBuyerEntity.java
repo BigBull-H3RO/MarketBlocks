@@ -190,8 +190,8 @@ public class ShopBuyerEntity extends PathfinderMob {
         });
 
         this.goalSelector.addGoal(2, new LeaveAndDespawnGoal(this, 0.65D));
-        this.goalSelector.addGoal(3, new TradeWithShopGoal(this, 2.5f));
-        this.goalSelector.addGoal(4, new MoveToShopGoal(this, 0.85D, 1.25f));
+        this.goalSelector.addGoal(3, new TradeWithShopGoal(this, 3.5f));
+        this.goalSelector.addGoal(4, new MoveToShopGoal(this, 0.65D, 1.25f));
         this.goalSelector.addGoal(5, new FindShopGoal(this, 48));
         this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.5D));
         this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -350,6 +350,12 @@ public class ShopBuyerEntity extends PathfinderMob {
     @Override
     protected SoundEvent getAmbientSound() {
         return SoundEvents.WANDERING_TRADER_AMBIENT;
+    }
+
+    @Override
+    public int getAmbientSoundInterval() {
+        // ~15 seconds instead of vanilla 4-6 seconds to eliminate repetitive audio spam
+        return 300;
     }
 
     @Override
@@ -661,6 +667,23 @@ public class ShopBuyerEntity extends PathfinderMob {
             default:
                 return true;
         }
+    }
+
+    /**
+     * Determines whether this trader's social rank is interested in an item based on its category and value.
+     * NOBLE: Only buys valuable items or equipment/potions (ignores cheap junk < 5 coins).
+     * CITIZEN: Focuses on everyday basics (food, blocks, misc, tools) with lower budgets.
+     */
+    public boolean isRankInterested(ShopCategory category, double totalResultValue) {
+        if (this.getTraderRank() == TraderRank.NOBLE) {
+            // Nobles have high standards: ignore cheap junk items
+            if (totalResultValue < 5.0) {
+                return false;
+            }
+            return category == ShopCategory.VALUABLES || category == ShopCategory.WEAPONS_ARMOR
+                    || category == ShopCategory.FOOD_POTIONS || category == ShopCategory.MISC;
+        }
+        return true;
     }
 
     @Nullable

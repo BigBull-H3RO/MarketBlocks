@@ -97,7 +97,6 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("gui.marketblocks.access.filter_blacklist", "MODE: BLACKLIST");
                 add("gui.marketblocks.access.filter_whitelist.tooltip", "Whitelist Mode: Only listed players may purchase");
                 add("gui.marketblocks.access.filter_blacklist.tooltip", "Blacklist Mode: Listed players cannot purchase");
-                add("gui.marketblocks.access.primary_owner_only", "Available to primary owner only");
                 add("gui.marketblocks.access.mode.blacklist", "Mode: Blacklist");
                 add("gui.marketblocks.access.mode.everyone", "Mode: Everyone");
                 add("gui.marketblocks.access.mode.whitelist", "Mode: Whitelist");
@@ -333,6 +332,9 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("gui.marketblocks.log_title", "Transaction Log");
                 add("gui.marketblocks.log.clear", "Clear log");
                 add("gui.marketblocks.log.count", "Entries: %s");
+                add("gui.marketblocks.log.entries_label", "Entries:");
+                add("gui.marketblocks.log.count_tooltip", "Total recorded transactions");
+                add("gui.marketblocks.log.repeat_tooltip", "%s trades aggregated");
                 add("gui.marketblocks.log.empty", "No transactions yet");
                 add("gui.marketblocks.log.none", "None");
                 add("gui.marketblocks.log.time.days", "%s d ago");
@@ -397,7 +399,12 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("message.marketblocks.trade_stand.not_owner", "Only the owner can break this trade stand.");
                 add("message.marketblocks.trade_stand.break_not_empty", "You must first empty all items and payouts!");
                 add("message.marketblocks.shop.limit_reached", "You can place a maximum of %s shops!");
-                
+                add("message.marketblocks.shop.admin_break_hint",
+                                "Sneak while breaking to bypass shop protection (Admin).");
+                add("message.marketblocks.shop.admin_bypassed", "Shop protection bypassed (Admin).");
+                add("message.marketblocks.shop.admin_shop_break_hint",
+                                "Sneak while breaking to remove this Admin Shop.");
+                add("message.marketblocks.shop.admin_shop_protected", "Admin shops cannot be broken.");
                 add("message.marketblocks.shop_buyer.interact.1", "\u00a7eI'm looking for some good items to buy!\u00a7r");
                 add("message.marketblocks.shop_buyer.interact.2", "\u00a7eDo you have anything interesting for sale?\u00a7r");
                 add("message.marketblocks.shop_buyer.interact.3", "\u00a7eI travel around to buy things. Maybe you have what I need!\u00a7r");

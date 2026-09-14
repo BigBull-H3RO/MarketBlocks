@@ -69,13 +69,18 @@ public final class SingleOfferSettingsSections {
 
         int totalTabs = 0;
         for (SettingsCategory category : SettingsCategory.values()) {
-            if (category.isEnabled())
-                totalTabs++;
+            if (!category.isEnabled())
+                continue;
+            if (category == SettingsCategory.ACCESS && !host.getMenu().isPrimaryOwner())
+                continue;
+            totalTabs++;
         }
 
         int index = 0;
         for (SettingsCategory category : SettingsCategory.values()) {
             if (!category.isEnabled())
+                continue;
+            if (category == SettingsCategory.ACCESS && !host.getMenu().isPrimaryOwner())
                 continue;
 
             boolean isSelected = category == activeCategory;

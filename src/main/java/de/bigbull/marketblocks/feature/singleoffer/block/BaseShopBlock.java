@@ -223,15 +223,88 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         return null;
     }
 
+    public static boolean canPlayerDestroy(Level level, BlockPos pos, Player player, boolean notifyPlayer) {
+        BlockPos shopPos = pos;
+        if (level.getBlockState(pos).is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+            shopPos = pos.below();
+        }
+
+        if (!(level.getBlockEntity(shopPos) instanceof SingleOfferShopBlockEntity shop)) {
+            return true;
+        }
+        if (shop.getOwnerId() == null) {
+            return true;
+        }
+
+        boolean isOwner = shop.isOwner(player);
+        boolean isAdminShop = shop.isAdminShopEnabled();
+        boolean hasAdminBypass = player.hasPermissions(2) && player.isCreative();
+
+        // Admin Shop: require OP + Creative + Sneaking so admins don't accidentally delete server shops
+        if (isAdminShop) {
+            if (!hasAdminBypass) {
+                if (notifyPlayer && player instanceof ServerPlayer sp) {
+                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_shop_protected"), true);
+                }
+                return false;
+            }
+            if (!player.isShiftKeyDown()) {
+                if (notifyPlayer && player instanceof ServerPlayer sp) {
+                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_shop_break_hint"), true);
+                }
+                return false;
+            }
+            if (notifyPlayer && player instanceof ServerPlayer sp) {
+                sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_bypassed"), true);
+            }
+            return true;
+        }
+
+        // Regular player shop: owner can always break
+        if (isOwner) {
+            return true;
+        }
+
+        // Foreign shop: only OP + Creative with Sneaking can bypass
+        if (!hasAdminBypass) {
+            if (notifyPlayer && player instanceof ServerPlayer sp) {
+                sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+            }
+            return false;
+        }
+
+        if (!player.isShiftKeyDown()) {
+            if (notifyPlayer && player instanceof ServerPlayer sp) {
+                sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_break_hint"), true);
+            }
+            return false;
+        }
+
+        if (notifyPlayer && player instanceof ServerPlayer sp) {
+            sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_bypassed"), true);
+        }
+        return true;
+    }
+
+    @Override
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        if (!level.isClientSide && !canPlayerDestroy(level, pos, player, false)) {
+            return state;
+        }
+        return super.playerWillDestroy(level, pos, state, player);
+    }
+
     @Override
     public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest,
             FluidState fluid) {
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
-            if (shop.getOwnerId() != null && !shop.isOwner(player)) {
-                if (player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
-                }
+        if (!level.isClientSide) {
+            if (!canPlayerDestroy(level, pos, player, true)) {
                 level.sendBlockUpdated(pos, state, state, 3);
+                BlockPos topPos = pos.above();
+                BlockState topState = level.getBlockState(topPos);
+                if (topState.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+                    level.sendBlockUpdated(topPos, topState, topState, 3);
+                }
                 return false;
             }
         }

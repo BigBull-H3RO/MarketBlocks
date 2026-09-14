@@ -647,6 +647,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         settingsManager.setOfferItemSettings(settings, sync);
     }
 
+    public int getSettingsVersion() {
+        return settingsManager.getSettingsVersion();
+    }
+
     @ApiStatus.Internal
     public void triggerNpcAnimationEvent(byte event) {
         visualManager.triggerNpcAnimationEvent(event);

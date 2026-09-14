@@ -85,7 +85,7 @@ configurations {
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
     compileOnly "maven.modrinth:jade:15.10.5+neoforge"
-    runtimeOnly "maven.modrinth:jade:15.10.5+neoforge"
+    // runtimeOnly "maven.modrinth:jade:15.10.5+neoforge" // Auskommentiert, damit der Test-Server ohne Jade startet und Clients ohne Jade nicht kickt
     compileOnly "info.journeymap:journeymap-api-neoforge:2.0.0-1.21.1-SNAPSHOT"
     compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
     compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${jei_version}"

@@ -229,6 +229,9 @@ public class TradeStandBlock extends BaseShopBlock {
 
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        if (!canPlayerDestroy(level, pos, player, false)) {
+            return state;
+        }
         if (!level.isClientSide() && state.getValue(HAS_SHOWCASE)) {
             var registry = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
             var silkTouchHolder = registry.getHolder(Enchantments.SILK_TOUCH);

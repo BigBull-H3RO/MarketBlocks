@@ -151,8 +151,9 @@ public class FindShopGoal extends Goal {
             
             if (isGoodDeal) {
                 boolean interested = entity.isInterestedIn(shop.shopCategory());
+                boolean rankInterested = entity.isRankInterested(shop.shopCategory(), totalResultValue);
                 double allowedBudget = interested ? entity.getBudget() : entity.getBudget() * 0.20;
-                canAfford = allowedBudget >= totalPaymentValue;
+                canAfford = allowedBudget >= totalPaymentValue && rankInterested;
             }
 
             if (isGoodDeal && canAfford) {

@@ -289,7 +289,11 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
     }
 
     public int processNpcPurchase() {
-        if (shopEntity.getGeneralSettings().isClosed() || !shopEntity.hasOffer())
+        return processNpcPurchase(1, "Shop Buyer");
+    }
+
+    public int processNpcPurchase(int maxQuantity, String buyerName) {
+        if (shopEntity.getGeneralSettings().isClosed() || !shopEntity.hasOffer() || maxQuantity <= 0)
             return 0;
 
         boolean adminShop = shopEntity.isAdminShopEnabled();
@@ -304,41 +308,46 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         if (result.isEmpty())
             return 0;
 
-        int inStock = adminShop ? Integer.MAX_VALUE : inv.countMatchingInput(result, true) / result.getCount();
-        if (inStock <= 0)
+        int inStock = adminShop ? maxQuantity : inv.countMatchingInput(result, true) / result.getCount();
+        int desiredAmount = Math.min(maxQuantity, inStock);
+        if (desiredAmount <= 0)
             return 0;
 
-        int validAmount = adminShop ? 1 : (inv.hasOutputSpace(p1, p2) ? 1 : 0);
-        if (validAmount <= 0) {
+        int actualAmount = adminShop ? desiredAmount
+                : (desiredAmount == 1 ? (inv.hasOutputSpace(p1, p2) ? 1 : 0)
+                        : inv.simulateOutputSpace(p1, p2, desiredAmount));
+        if (actualAmount <= 0) {
             if (!adminShop)
                 inv.updateOutputFullness();
             return 0;
         }
 
         if (!adminShop) {
-            inv.removeFromInput(result.copy());
-            inv.addToOutputBatched(p1, 1);
-            inv.addToOutputBatched(p2, 1);
+            ItemStack totalResult = multiplyStackForTrades(result, actualAmount);
+            inv.removeFromInput(totalResult);
+            inv.addToOutputBatched(p1, actualAmount);
+            inv.addToOutputBatched(p2, actualAmount);
         }
 
-        shopEntity.incrementTotalSales(1);
-        shopEntity.incrementVisualPurchaseCounter(1);
-        shopEntity.playPurchaseXpSound(1);
+        shopEntity.incrementTotalSales(actualAmount);
+        shopEntity.incrementVisualPurchaseCounter(actualAmount);
+        shopEntity.playPurchaseXpSound(actualAmount);
 
-        BuyerIdentity buyerIdentity = new BuyerIdentity(new UUID(0L, 0L), "Shop Buyer");
-        appendTransactionEntry(buyerIdentity, p1, p2, result, 1, false);
+        String finalBuyerName = (buyerName != null && !buyerName.isBlank()) ? buyerName : "Shop Buyer";
+        BuyerIdentity buyerIdentity = new BuyerIdentity(new UUID(0L, 0L), finalBuyerName);
+        appendTransactionEntry(buyerIdentity, p1, p2, result, actualAmount, false);
 
         shopEntity.sync();
         shopEntity.triggerRedstonePulse();
         shopEntity.updateOfferSlot();
 
-        triggerNotifications(buyerIdentity, result, 1, adminShop, inv, p1, p2);
+        triggerNotifications(buyerIdentity, result, actualAmount, adminShop, inv, p1, p2);
 
         if (shopEntity.getLevel() instanceof ServerLevel serverLevel) {
-            NpcEconomySavedData.get(serverLevel).registerSale(result.getItem(), 1, serverLevel);
+            NpcEconomySavedData.get(serverLevel).registerSale(result.getItem(), actualAmount, serverLevel);
         }
 
-        return 1;
+        return actualAmount;
     }
 
     private void triggerNotifications(@Nullable BuyerIdentity buyer, ItemStack result, int tradeCount,

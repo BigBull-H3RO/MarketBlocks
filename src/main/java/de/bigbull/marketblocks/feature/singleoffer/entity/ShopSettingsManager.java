@@ -40,6 +40,11 @@ public class ShopSettingsManager {
 
     private boolean outputAlmostFull = false;
     private boolean outputFull = false;
+    private int settingsVersion = 0;
+
+    public int getSettingsVersion() {
+        return settingsVersion;
+    }
 
     public ShopSettingsManager(SingleOfferShopBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
@@ -52,7 +57,7 @@ public class ShopSettingsManager {
         this.notificationSettings = createDefaultNotificationSettings(isMarketCrate);
     }
 
-    private static IoSettings createDefaultIoSettings(boolean isMarketCrate) {
+    public static IoSettings createDefaultIoSettings(boolean isMarketCrate) {
         return new IoSettings(
                 IoSettings.DEFAULT.left(),
                 IoSettings.DEFAULT.right(),
@@ -66,7 +71,7 @@ public class ShopSettingsManager {
                         : TradeStandConfig.TRADESTAND_DEFAULT_AUTO_IO.get());
     }
 
-    private static GeneralSettings createDefaultGeneralSettings(boolean isMarketCrate) {
+    public static GeneralSettings createDefaultGeneralSettings(boolean isMarketCrate) {
         return new GeneralSettings(
                 "",
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_EMIT_REDSTONE.get()
@@ -78,7 +83,7 @@ public class ShopSettingsManager {
                 ShopCategory.NONE);
     }
 
-    private static VillagerSettings createDefaultVillagerSettings(boolean isMarketCrate) {
+    public static VillagerSettings createDefaultVillagerSettings(boolean isMarketCrate) {
         return new VillagerSettings(
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_VILLAGER_NPC_ENABLED.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_VILLAGER_NPC_ENABLED.get(),
@@ -96,7 +101,7 @@ public class ShopSettingsManager {
                 "");
     }
 
-    private static OfferItemSettings createDefaultOfferItemSettings(boolean isMarketCrate) {
+    public static OfferItemSettings createDefaultOfferItemSettings(boolean isMarketCrate) {
         return new OfferItemSettings(
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_VISIBLE.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_ITEM_VISIBLE.get(),
@@ -116,7 +121,7 @@ public class ShopSettingsManager {
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_ITEM_DYNAMIC_FILL.get() : false);
     }
 
-    private static NotificationSettings createDefaultNotificationSettings(boolean isMarketCrate) {
+    public static NotificationSettings createDefaultNotificationSettings(boolean isMarketCrate) {
         return new NotificationSettings(
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_NOTIFY_PURCHASE.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_PURCHASE.get(),
@@ -126,6 +131,26 @@ public class ShopSettingsManager {
                         : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_OUTPUT_FULL.get(),
                 isMarketCrate ? MarketCrateConfig.MARKETCRATE_DEFAULT_NOTIFY_CO_OWNERS.get()
                         : TradeStandConfig.TRADESTAND_DEFAULT_NOTIFY_CO_OWNERS.get());
+    }
+
+    public GeneralSettings createDefaultGeneralSettings() {
+        return createDefaultGeneralSettings(isMarketCrate);
+    }
+
+    public VillagerSettings createDefaultVillagerSettings() {
+        return createDefaultVillagerSettings(isMarketCrate);
+    }
+
+    public OfferItemSettings createDefaultOfferItemSettings() {
+        return createDefaultOfferItemSettings(isMarketCrate);
+    }
+
+    public IoSettings createDefaultIoSettings() {
+        return createDefaultIoSettings(isMarketCrate);
+    }
+
+    public NotificationSettings createDefaultNotificationSettings() {
+        return createDefaultNotificationSettings(isMarketCrate);
     }
 
     public boolean isMarketCrate() {
@@ -138,6 +163,7 @@ public class ShopSettingsManager {
 
     public void setGeneralSettings(GeneralSettings settings, boolean sync) {
         this.generalSettings = settings == null ? GeneralSettings.DEFAULT : settings;
+        this.settingsVersion++;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
         blockEntity.setChanged();
@@ -168,6 +194,7 @@ public class ShopSettingsManager {
     public void setVillagerSettings(VillagerSettings settings, boolean sync) {
         VillagerSettings previous = this.villagerSettings;
         this.villagerSettings = settings == null ? VillagerSettings.DEFAULT : settings;
+        this.settingsVersion++;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
         if (previous.npcEnabled() != this.villagerSettings.npcEnabled()) {
@@ -185,6 +212,7 @@ public class ShopSettingsManager {
 
     public void setOfferItemSettings(OfferItemSettings settings, boolean sync) {
         this.offerItemSettings = settings == null ? OfferItemSettings.DEFAULT : settings;
+        this.settingsVersion++;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
         blockEntity.setChanged();
@@ -198,6 +226,7 @@ public class ShopSettingsManager {
 
     public void setIoSettings(IoSettings settings, boolean sync) {
         this.ioSettings = settings == null ? createDefaultIoSettings(isMarketCrate) : settings;
+        this.settingsVersion++;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
 
@@ -219,6 +248,7 @@ public class ShopSettingsManager {
 
     public void setAccessSettings(AccessSettings settings, boolean sync) {
         this.accessSettings = settings == null ? AccessSettings.DEFAULT : settings;
+        this.settingsVersion++;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
         blockEntity.setChanged();
@@ -236,6 +266,7 @@ public class ShopSettingsManager {
 
     public void setNotificationSettings(NotificationSettings settings, boolean sync) {
         this.notificationSettings = settings == null ? NotificationSettings.DEFAULT : settings;
+        this.settingsVersion++;
         if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
             return;
         blockEntity.setChanged();
@@ -304,5 +335,6 @@ public class ShopSettingsManager {
 
         outputAlmostFull = tag.getBoolean("OutputWarning");
         outputFull = tag.getBoolean("OutputFull");
+        this.settingsVersion++;
     }
 }

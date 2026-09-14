@@ -14,7 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 
 public class ShopBuyerRenderer extends MobRenderer<ShopBuyerEntity, VillagerModel<ShopBuyerEntity>> {
     private static final ResourceLocation CITIZEN_TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/wandering_trader.png");
-    private static final ResourceLocation BASE_VILLAGER_TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/villager/villager.png");
     private static final ResourceLocation WEALTHY_OVERLAY = ResourceLocation.withDefaultNamespace("textures/entity/villager/profession/cartographer.png");
     private static final ResourceLocation NOBLE_OVERLAY = ResourceLocation.withDefaultNamespace("textures/entity/villager/profession/librarian.png");
 
@@ -47,14 +46,8 @@ public class ShopBuyerRenderer extends MobRenderer<ShopBuyerEntity, VillagerMode
 
     @Override
     public ResourceLocation getTextureLocation(ShopBuyerEntity entity) {
-        switch (entity.getTraderRank()) {
-            case WEALTHY:
-            case NOBLE:
-                return BASE_VILLAGER_TEXTURE;
-            case CITIZEN:
-            default:
-                return CITIZEN_TEXTURE;
-        }
+        // Base texture is always the full Wandering Trader robe for all ranks
+        return CITIZEN_TEXTURE;
     }
 
     @Override

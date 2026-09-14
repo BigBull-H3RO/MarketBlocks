@@ -53,13 +53,18 @@ public class SingleOfferOwnerListPanel {
     private static final int INSET_HEIGHT = 58;
 
     private static final int ROW_X_OFFSET = 12;
-    private static final int ROW_WIDTH = 143;
-    private static final int CHECKBOX_X_OFFSET = 142;
+    private static final int ROW_WIDTH = 145;
+    private static final int CHECKBOX_X_OFFSET = 143;
 
-    private static final int SCROLLER_TRACK_X_OFFSET = 157;
+    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation
+            .withDefaultNamespace("container/villager/scroller");
+    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation
+            .withDefaultNamespace("container/villager/scroller_disabled");
+
+    private static final int SCROLLER_TRACK_X_OFFSET = 158;
     private static final int SCROLLER_TRACK_WIDTH = 6;
     private static final int SCROLLER_TRACK_HEIGHT = 56;
-    private static final int SCROLLER_KNOB_HEIGHT = 16;
+    private static final int SCROLLER_HEIGHT = 27;
 
     private final Map<UUID, CompactCheckbox> ownerCheckboxes = new HashMap<>();
     private final List<UUID> ownerOrder = new ArrayList<>();
@@ -139,20 +144,30 @@ public class SingleOfferOwnerListPanel {
         graphics.fill(insetX, insetY, insetX + 1, insetY + INSET_HEIGHT, 0xFF373737);
         graphics.fill(insetX + INSET_WIDTH - 1, insetY, insetX + INSET_WIDTH, insetY + INSET_HEIGHT, 0xFF373737);
 
-        if (listDisabled) {
-            Component info = Component.translatable("gui.marketblocks.access.primary_owner_only");
-            int textW = font.width(info);
-            graphics.drawString(font, info, insetX + (INSET_WIDTH - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0x808080, false);
-            return;
+        // 2. Scrollbar track & divider line (always visible)
+        int trackX = leftPos + SCROLLER_TRACK_X_OFFSET;
+        int trackY = topPos + 77;
+        graphics.fill(trackX - 1, trackY, trackX, trackY + SCROLLER_TRACK_HEIGHT, 0xFF373737);
+        graphics.fill(trackX, trackY, trackX + SCROLLER_TRACK_WIDTH, trackY + SCROLLER_TRACK_HEIGHT, 0xFF141414);
+
+        if (isOwnerScrollActive()) {
+            int barFull = Math.max(0, SCROLLER_TRACK_HEIGHT - SCROLLER_HEIGHT);
+            int knobY = trackY + (int) (ownerScrollOffs * (float) barFull);
+            graphics.blitSprite(SCROLLER_SPRITE, trackX, knobY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
+        } else {
+            graphics.blitSprite(SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
         }
 
+        // 3. Empty State (centered in content area to the left of the scrollbar)
+        int contentW = (trackX - 1) - (insetX + 1);
         if (noPlayers) {
             Component info = Component.translatable("gui.marketblocks.no_players_available");
             int textW = font.width(info);
-            graphics.drawString(font, info, insetX + (INSET_WIDTH - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0x808080, false);
+            graphics.drawString(font, info, insetX + 1 + (contentW - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0x808080, false);
             return;
         }
 
+        // 4. Rows
         int maxOwners = SingleOfferConfig.MAX_CO_OWNERS_PER_SHOP.get();
         boolean limitReached = listMode == ListMode.OWNERS && collectSelectedOwners().size() >= maxOwners;
 
@@ -197,21 +212,6 @@ public class SingleOfferOwnerListPanel {
             }
             graphics.drawString(font, displayName, textX, textY, textColor, false);
         }
-
-        // 3. Scrollbar
-        int trackX = leftPos + SCROLLER_TRACK_X_OFFSET;
-        int trackY = topPos + 77;
-        graphics.fill(trackX, trackY, trackX + SCROLLER_TRACK_WIDTH, trackY + SCROLLER_TRACK_HEIGHT, 0xFF202020);
-
-        if (isOwnerScrollActive()) {
-            int barFull = Math.max(0, SCROLLER_TRACK_HEIGHT - SCROLLER_KNOB_HEIGHT);
-            int knobY = trackY + (int) (ownerScrollOffs * (float) barFull);
-            graphics.fill(trackX, knobY, trackX + SCROLLER_TRACK_WIDTH, knobY + SCROLLER_KNOB_HEIGHT, 0xFF8B8B8B);
-            graphics.fill(trackX, knobY, trackX + SCROLLER_TRACK_WIDTH, knobY + 1, 0xFFB0B0B0);
-            graphics.fill(trackX, knobY + SCROLLER_KNOB_HEIGHT - 1, trackX + SCROLLER_TRACK_WIDTH, knobY + SCROLLER_KNOB_HEIGHT, 0xFF373737);
-        } else {
-            graphics.fill(trackX, trackY, trackX + SCROLLER_TRACK_WIDTH, trackY + SCROLLER_KNOB_HEIGHT, 0xFF353535);
-        }
     }
 
     private void renderPlayerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
@@ -236,8 +236,8 @@ public class SingleOfferOwnerListPanel {
         if (isOwnerScrollActive() && mouseX >= trackX && mouseX <= trackX + SCROLLER_TRACK_WIDTH
                 && mouseY >= trackY && mouseY <= trackY + SCROLLER_TRACK_HEIGHT) {
             ownerScrolling = true;
-            int barFull = Math.max(1, SCROLLER_TRACK_HEIGHT - SCROLLER_KNOB_HEIGHT);
-            float rel = (float) (mouseY - trackY - SCROLLER_KNOB_HEIGHT / 2.0F) / (float) barFull;
+            int barFull = Math.max(1, SCROLLER_TRACK_HEIGHT - SCROLLER_HEIGHT);
+            float rel = (float) (mouseY - trackY - SCROLLER_HEIGHT / 2.0F) / (float) barFull;
             ownerScrollOffs = Mth.clamp(rel, 0.0F, 1.0F);
             setOwnerScrollFromOffs();
             return true;
@@ -287,8 +287,8 @@ public class SingleOfferOwnerListPanel {
             return false;
         }
 
-        int barFull = Math.max(1, SCROLLER_TRACK_HEIGHT - SCROLLER_KNOB_HEIGHT);
-        float rel = (float) (mouseY - ownerListBaseY - SCROLLER_KNOB_HEIGHT / 2.0F) / (float) barFull;
+        int barFull = Math.max(1, SCROLLER_TRACK_HEIGHT - SCROLLER_HEIGHT);
+        float rel = (float) (mouseY - ownerListBaseY - SCROLLER_HEIGHT / 2.0F) / (float) barFull;
         ownerScrollOffs = Mth.clamp(rel, 0.0F, 1.0F);
         setOwnerScrollFromOffs();
         return true;

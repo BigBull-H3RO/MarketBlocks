@@ -8,10 +8,11 @@ public class TraderConfig {
 
     // --- Spawning ---
     public static final ModConfigSpec.BooleanValue SPAWN_ENABLED;
-    public static final ModConfigSpec.IntValue SPAWN_CHANCE;
+    public static final ModConfigSpec.IntValue SPAWN_COOLDOWN_TICKS;
+    public static final ModConfigSpec.IntValue SPAWN_CHANCE_PERCENT;
     public static final ModConfigSpec.BooleanValue PREFER_DAYTIME_SPAWN;
-    public static final ModConfigSpec.IntValue SPAWN_NEAR_PLAYER_CHANCE_PERCENT;
     public static final ModConfigSpec.IntValue MAX_PER_DIMENSION;
+    public static final ModConfigSpec.IntValue SHOP_DETECTION_RADIUS;
 
     // --- Behavior ---
     public static final ModConfigSpec.IntValue DESPAWN_TICKS;
@@ -37,18 +38,21 @@ public class TraderConfig {
         SPAWN_ENABLED = BUILDER
                 .comment("Enable spawning of Wandering Trader NPCs that buy items from SingleOfferShops")
                 .define("enabled", true);
-        SPAWN_CHANCE = BUILDER
-                .comment("Chance to spawn a trader per tick (1 in X). Default: 24000 (roughly once per Minecraft day)")
-                .defineInRange("spawnChance", 24000, 100, Integer.MAX_VALUE);
+        SPAWN_COOLDOWN_TICKS = BUILDER
+                .comment("Cooldown in ticks per player before another trader can visit their shops (24000 = 1 full Minecraft day). Default: 24000")
+                .defineInRange("spawnCooldownTicks", 24000, 1200, 240000);
+        SPAWN_CHANCE_PERCENT = BUILDER
+                .comment("Chance in percent every minute (1200 ticks) to spawn a trader for an eligible player after cooldown. Default: 25")
+                .defineInRange("spawnChancePercent", 25, 1, 100);
         PREFER_DAYTIME_SPAWN = BUILDER
                 .comment("If true, traders will only spawn during daytime (like the vanilla Wandering Trader)")
                 .define("preferDaytime", true);
-        SPAWN_NEAR_PLAYER_CHANCE_PERCENT = BUILDER
-                .comment("Chance in percent that a spawning trader spawns near a random player instead of a shop. Default: 10")
-                .defineInRange("spawnNearPlayerChancePercent", 10, 0, 100);
         MAX_PER_DIMENSION = BUILDER
-                .comment("Maximum number of Shop Buyer NPCs that can exist simultaneously per dimension. Default: 3")
-                .defineInRange("maxPerDimension", 3, 1, 20);
+                .comment("Maximum number of Shop Buyer NPCs that can exist simultaneously per dimension. Default: 4")
+                .defineInRange("maxPerDimension", 4, 1, 20);
+        SHOP_DETECTION_RADIUS = BUILDER
+                .comment("Radius in blocks around a player to search for active shops with offers before spawning. Default: 64")
+                .defineInRange("shopDetectionRadius", 64, 16, 256);
         BUILDER.pop();
 
         BUILDER.push("Behavior");

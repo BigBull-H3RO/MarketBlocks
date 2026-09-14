@@ -96,7 +96,6 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("gui.marketblocks.access.filter_blacklist", "MODO: BLACKLIST");
                 add("gui.marketblocks.access.filter_whitelist.tooltip", "Modo Whitelist: Solo los jugadores listados pueden comprar");
                 add("gui.marketblocks.access.filter_blacklist.tooltip", "Modo Blacklist: Los jugadores listados no pueden comprar");
-                add("gui.marketblocks.access.primary_owner_only", "Disponible solo para el propietario principal");
                 add("gui.marketblocks.access.mode.blacklist", "Modo: Lista negra");
                 add("gui.marketblocks.access.mode.everyone", "Modo: Todos");
                 add("gui.marketblocks.access.mode.whitelist", "Modo: Lista blanca");
@@ -332,6 +331,9 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("gui.marketblocks.log_title", "Registro de transacciones");
                 add("gui.marketblocks.log.clear", "Limpiar registro");
                 add("gui.marketblocks.log.count", "Entradas: %s");
+                add("gui.marketblocks.log.entries_label", "Entradas:");
+                add("gui.marketblocks.log.count_tooltip", "Total de transacciones registradas");
+                add("gui.marketblocks.log.repeat_tooltip", "%s transacciones agrupadas");
                 add("gui.marketblocks.log.empty", "Sin transacciones a\u00fan");
                 add("gui.marketblocks.log.none", "Ninguno");
                 add("gui.marketblocks.log.time.days", "hace %s d");
@@ -389,7 +391,12 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("message.marketblocks.trade_stand.not_owner", "Solo el propietario puede romper este puesto de comercio.");
                 add("message.marketblocks.trade_stand.break_not_empty", "\u00a1Debes vaciar primero todos los objetos y pagos!");
                 add("message.marketblocks.shop.limit_reached", "\u00a1Puedes colocar un m\u00e1ximo de %s tiendas!");
-                
+                add("message.marketblocks.shop.admin_break_hint",
+                                "Ag\u00e1chate al romper para omitir la protecci\u00f3n de la tienda (Admin).");
+                add("message.marketblocks.shop.admin_bypassed", "Protecci\u00f3n de la tienda omitida (Admin).");
+                add("message.marketblocks.shop.admin_shop_break_hint",
+                                "Ag\u00e1chate al romper para eliminar esta Tienda de Admin.");
+                add("message.marketblocks.shop.admin_shop_protected", "Las tiendas de administrador no se pueden romper.");
                 add("message.marketblocks.shop_buyer.interact.1", "\u00a7e\u00a1Estoy buscando buenos art\u00edculos para comprar!\u00a7r");
                 add("message.marketblocks.shop_buyer.interact.2", "\u00a7e\u00bfTienes algo interesante a la venta?\u00a7r");
                 add("message.marketblocks.shop_buyer.interact.3", "\u00a7eViajo para hacer negocios. \u00a1Quiz\u00e1s tengas lo que necesito!\u00a7r");

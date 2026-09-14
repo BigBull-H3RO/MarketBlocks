@@ -96,7 +96,6 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("gui.marketblocks.access.filter_blacklist", "MODE : BLACKLIST");
                 add("gui.marketblocks.access.filter_whitelist.tooltip", "Mode Whitelist : Seuls les joueurs listés peuvent acheter");
                 add("gui.marketblocks.access.filter_blacklist.tooltip", "Mode Blacklist : Les joueurs listés ne peuvent pas acheter");
-                add("gui.marketblocks.access.primary_owner_only", "Disponible uniquement pour le propriétaire principal");
                 add("gui.marketblocks.access.mode.blacklist", "Mode : Liste noire");
                 add("gui.marketblocks.access.mode.everyone", "Mode : Tout le monde");
                 add("gui.marketblocks.access.mode.whitelist", "Mode : Liste blanche");
@@ -332,6 +331,9 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("gui.marketblocks.log_title", "Journal des transactions");
                 add("gui.marketblocks.log.clear", "Effacer le journal");
                 add("gui.marketblocks.log.count", "Entrées : %s");
+                add("gui.marketblocks.log.entries_label", "Entrées :");
+                add("gui.marketblocks.log.count_tooltip", "Total des transactions enregistrées");
+                add("gui.marketblocks.log.repeat_tooltip", "%s transactions regroupées");
                 add("gui.marketblocks.log.empty", "Aucune transaction pour le moment");
                 add("gui.marketblocks.log.none", "Aucun");
                 add("gui.marketblocks.log.time.days", "il y a %s j");
@@ -389,7 +391,12 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("message.marketblocks.trade_stand.not_owner", "Seul le propriétaire peut détruire ce stand de commerce.");
                 add("message.marketblocks.trade_stand.break_not_empty", "Vous devez d'abord vider tous les objets et les paiements !");
                 add("message.marketblocks.shop.limit_reached", "Vous pouvez placer au maximum %s boutiques !");
-                
+                add("message.marketblocks.shop.admin_break_hint",
+                                "Accroupissez-vous en cassant pour contourner la protection de la boutique (Admin).");
+                add("message.marketblocks.shop.admin_bypassed", "Protection de la boutique contourn\u00e9e (Admin).");
+                add("message.marketblocks.shop.admin_shop_break_hint",
+                                "Accroupissez-vous en cassant pour retirer cette boutique d'administrateur.");
+                add("message.marketblocks.shop.admin_shop_protected", "Les boutiques d'administrateur ne peuvent pas \u00eatre d\u00e9truites.");
                 add("message.marketblocks.shop_buyer.interact.1", "\u00a7eJe cherche de bons articles à acheter !\u00a7r");
                 add("message.marketblocks.shop_buyer.interact.2", "\u00a7eAvez-vous quelque chose d'intéressant à vendre ?\u00a7r");
                 add("message.marketblocks.shop_buyer.interact.3", "\u00a7eJe voyage pour faire des affaires. Vous avez peut-être ce qu'il me faut !\u00a7r");

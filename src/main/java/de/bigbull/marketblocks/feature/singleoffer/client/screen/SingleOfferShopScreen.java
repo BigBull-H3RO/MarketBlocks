@@ -13,6 +13,7 @@ import de.bigbull.marketblocks.feature.singleoffer.network.*;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
+import de.bigbull.marketblocks.feature.singleoffer.entity.ShopSettingsManager;
 import de.bigbull.marketblocks.feature.singleoffer.block.ShopVisualType;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
@@ -73,52 +74,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             "textures/gui/icon/reset.png");
     private static final ResourceLocation INPUT_OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
             "textures/gui/icon/singleoffer/input_output.png");
-    private static final ResourceLocation TRADE_ARROW_ICON = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID,
-            "textures/gui/icon/trade_arrow.png");
-    private static final ResourceLocation MOVE_RIGHT_MINI_ICON = ResourceLocation
-            .fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_right_mini.png");
-    private static final ResourceLocation MOVE_DOWN_MINI_ICON = ResourceLocation
-            .fromNamespaceAndPath(MarketBlocks.MODID, "textures/gui/icon/move_down_mini.png");
-
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation
-            .withDefaultNamespace("container/villager/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation
-            .withDefaultNamespace("container/villager/scroller_disabled");
     private static final WidgetSprites BUTTON_SPRITES_18 = new WidgetSprites(
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button_disabled"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button_highlighted"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button_selected"));
-
-    private static final int LOG_LIST_X_OFFSET = 7;
-    private static final int LOG_LIST_Y_OFFSET = 19;
-    private static final int LOG_LIST_WIDTH = 155;
-    private static final int LOG_LIST_HEIGHT = 121;
-
-    private static final int ROW_HEIGHT_COLLAPSED = 20;
-    private static final int ROW_HEIGHT_EXPANDED = 44;
-
-    private static final int LOG_PREVIEW_WIDTH = 88;
-    private static final int LOG_PREVIEW_HEIGHT = 20;
-    private static final int LOG_PREVIEW_RIGHT_PADDING = 6;
-    private static final int LOG_EXPAND_ICON_SIZE = 18;
-    private static final int LOG_PREVIEW_BORDER_COLOR = 0xFF111111;
-    private static final int LOG_PREVIEW_BG_COLOR = 0xFF1B1B1B;
-    private static final int LOG_ROW_BG_COLOR_A = 0xFF353535;
-    private static final int LOG_ROW_BG_COLOR_B = 0xFF303030;
-    private static final int LOG_ROW_HOVER_BG_COLOR = 0xFF414141;
-    private static final int LOG_ROW_BORDER_COLOR = 0xFF1E1E1E;
-
-    private static final int LOG_SCROLLER_X_OFFSET = 163;
-    private static final int LOG_SCROLLER_WIDTH = 6;
-    private static final int LOG_SCROLLER_HEIGHT = 27;
-    private static final int LOG_HEAD_SIZE = 10;
-    private static final int LOG_HEAD_SRC_SIZE = 8;
-    private static final int LOG_HEAD_U = 8;
-    private static final int LOG_HEAD_V = 8;
-    private static final int LOG_HAT_U = 40;
-    private static final int LOG_HAT_V = 8;
-    private static final int LOG_SKIN_TEX_SIZE = 64;
 
     private static final int OWNER_HEAD_X_OFFSET = 18;
     private static final int OWNER_HEAD_Y_OFFSET = 5;
@@ -167,11 +127,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private VisualNpcPlacementResult visualPlacementResult = VisualNpcPlacementResult.OK;
 
-    private int logScrollPixelOffset = 0;
-    private int expandedLogIndex = -1;
-    private boolean logDragging;
-
     private final SingleOfferOwnerListPanel ownerListPanel = new SingleOfferOwnerListPanel();
+    private final SingleOfferTransactionLogPanel logPanel = new SingleOfferTransactionLogPanel();
+    private int lastSettingsVersion = -1;
 
     public SingleOfferShopScreen(SingleOfferShopMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -183,6 +141,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     @Override
     protected void init() {
         super.init();
+        discardUnsavedSettings();
         lastTab = menu.getActiveTab();
         if (!menu.canUseTab(lastTab)) {
             menu.setActiveTabClient(ShopTab.OFFERS);
@@ -191,6 +150,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         lastHasOffer = menu.getBlockEntity().hasOffer();
         lastMenuFlags = menu.getFlags();
         lastAdminShop = menu.getBlockEntity().isAdminShopEnabled();
+        lastSettingsVersion = menu.getBlockEntity().getSettingsVersion();
         sideTabs.clear();
         if (canUseManagementTabs()) {
             createTabButtons(leftPos + imageWidth + 4, topPos + 8, lastTab,
@@ -212,6 +172,24 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         boolean offerChanged = menu.getBlockEntity().hasOffer() != lastHasOffer;
         boolean flagsChanged = menu.getFlags() != lastMenuFlags;
         boolean adminShopChanged = menu.getBlockEntity().isAdminShopEnabled() != lastAdminShop;
+        int currentSettingsVersion = menu.getBlockEntity().getSettingsVersion();
+        boolean settingsVersionChanged = currentSettingsVersion != lastSettingsVersion;
+
+        if (settingsVersionChanged) {
+            lastSettingsVersion = currentSettingsVersion;
+            lastAdminShop = menu.getBlockEntity().isAdminShopEnabled();
+            if (current == ShopTab.SETTINGS) {
+                if (!hasUnsavedChanges()) {
+                    discardUnsavedSettings();
+                    rebuildUI();
+                }
+            } else if (current == ShopTab.OFFERS) {
+                rebuildUI();
+            } else {
+                discardUnsavedSettings();
+            }
+            return;
+        }
 
         if (flagsChanged || adminShopChanged) {
             lastMenuFlags = menu.getFlags();
@@ -230,6 +208,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
 
         if (current != lastTab) {
+            if (lastTab == ShopTab.SETTINGS && current != ShopTab.SETTINGS) {
+                discardUnsavedSettings();
+            }
             lastTab = current;
             lastHasOffer = menu.getBlockEntity().hasOffer();
             rebuildUI();
@@ -248,6 +229,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     protected void switchTab(ShopTab tab) {
         if (!menu.canUseTab(tab)) {
             return;
+        }
+        if (lastTab == ShopTab.SETTINGS && tab != ShopTab.SETTINGS) {
+            discardUnsavedSettings();
         }
         menu.setActiveTabClient(tab);
         lastTab = tab;
@@ -300,10 +284,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private void buildLogUI() {
-        clampLogScroll();
         if (menu.isPrimaryOwner()) {
             addRenderableWidget(new IconButton(
-                    leftPos + LOG_LIST_X_OFFSET - 2,
+                    leftPos + 7,
                     topPos + imageHeight - 23,
                     18,
                     18,
@@ -327,6 +310,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         boolean canToggleAdminShop = canToggleAdminShop();
 
         if (isOwner) {
+            if (activeSettingsCategory == SettingsCategory.ACCESS && !menu.isPrimaryOwner()) {
+                activeSettingsCategory = SettingsCategory.GENERAL;
+            }
             categoryTabs = SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory,
                     this::switchSettingsCategory);
             buildSaveButton(be);
@@ -368,7 +354,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 }
             }
             case ACCESS -> {
-                if (menu.isPrimaryOwner() || activeSettingsCategory == SettingsCategory.ACCESS) {
+                if (menu.isPrimaryOwner()) {
                     SingleOfferSettingsSections.buildAccessSection(this, accessDraft, ownerListPanel,
                             menu.isPrimaryOwner(), this::saveListPanelToDraft, this::rebuildUI, this::markDirty);
                 }
@@ -391,24 +377,40 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private void resetCurrentCategorySettings() {
+        SingleOfferShopBlockEntity be = menu.getBlockEntity();
+        ShopSettingsManager sm = be != null ? be.getSettingsManager() : null;
+        boolean isMarketCrate = sm != null ? sm.isMarketCrate() : (be != null && ShopVisualType.from(be.getBlockState().getBlock()) == ShopVisualType.MARKET_CRATE);
+
         switch (activeSettingsCategory) {
             case GENERAL -> {
-                generalDraft = new GeneralSettings.Draft(GeneralSettings.DEFAULT);
+                GeneralSettings def = sm != null ? sm.createDefaultGeneralSettings()
+                        : ShopSettingsManager.createDefaultGeneralSettings(isMarketCrate);
+                generalDraft = new GeneralSettings.Draft(def);
                 if (nameField != null) {
-                    nameField.setValue("");
+                    nameField.setValue(def.shopName());
                 }
                 if (accessDraft != null && originalAccess != null) {
                     accessDraft.setAdminShopEnabled(originalAccess.adminShopEnabled());
                 }
             }
-            case IO -> ioDraft = new IoSettings.Draft(IoSettings.DEFAULT);
+            case IO -> {
+                IoSettings def = sm != null ? sm.createDefaultIoSettings()
+                        : ShopSettingsManager.createDefaultIoSettings(isMarketCrate);
+                ioDraft = new IoSettings.Draft(def);
+            }
             case VILLAGER -> {
-                villagerDraft = new VillagerSettings.Draft(VillagerSettings.DEFAULT);
+                VillagerSettings def = sm != null ? sm.createDefaultVillagerSettings()
+                        : ShopSettingsManager.createDefaultVillagerSettings(isMarketCrate);
+                villagerDraft = new VillagerSettings.Draft(def);
                 if (npcNameField != null) {
-                    npcNameField.setValue("");
+                    npcNameField.setValue(def.npcName());
                 }
             }
-            case VISUALS -> offerItemDraft = new OfferItemSettings.Draft(OfferItemSettings.DEFAULT);
+            case VISUALS -> {
+                OfferItemSettings def = sm != null ? sm.createDefaultOfferItemSettings()
+                        : ShopSettingsManager.createDefaultOfferItemSettings(isMarketCrate);
+                offerItemDraft = new OfferItemSettings.Draft(def);
+            }
             case ACCESS -> {
                 if (!menu.isPrimaryOwner()) {
                     return;
@@ -420,7 +422,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                         adminEnabled, ownerId, ownerName, Map.of(), AccessMode.WHITELIST, Map.of()));
                 ownerListPanel.clearData();
             }
-            case NOTIFICATIONS -> notificationDraft = new NotificationSettings.Draft(NotificationSettings.DEFAULT);
+            case NOTIFICATIONS -> {
+                NotificationSettings def = sm != null ? sm.createDefaultNotificationSettings()
+                        : ShopSettingsManager.createDefaultNotificationSettings(isMarketCrate);
+                notificationDraft = new NotificationSettings.Draft(def);
+            }
         }
         markDirty();
         rebuildUI();
@@ -483,6 +489,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private void switchSettingsCategory(SettingsCategory category) {
+        if (!menu.isPrimaryOwner() && category == SettingsCategory.ACCESS) {
+            return;
+        }
         if (activeSettingsCategory == category)
             return;
         if (activeSettingsCategory == SettingsCategory.ACCESS) {
@@ -556,6 +565,25 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private void markDirty() {
+        saved = false;
+        updateSaveButtonState();
+    }
+
+    public void discardUnsavedSettings() {
+        generalDraft = null;
+        villagerDraft = null;
+        offerItemDraft = null;
+        ioDraft = null;
+        accessDraft = null;
+        notificationDraft = null;
+        originalGeneral = null;
+        originalVillager = null;
+        originalOfferItem = null;
+        originalIo = null;
+        originalAccess = null;
+        originalNotification = null;
+        originalName = null;
+        ownerListPanel.clearData();
         saved = false;
         updateSaveButtonState();
     }
@@ -646,7 +674,20 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 }
             }
         } else if (menu.getActiveTab() == ShopTab.LOG) {
-            renderLogHoverTooltip(graphics, mouseX, mouseY);
+            logPanel.renderHoverTooltip(graphics, font, leftPos, topPos, mouseX, mouseY, menu.getTransactionLogEntries());
+
+            int count = menu.getTransactionLogEntries().size();
+            int numW = font.width(String.valueOf(count));
+            int badgeW = Math.max(18, numW + 8);
+            int badgeH = 14;
+            int badgeX = imageWidth - 7 - badgeW;
+            int badgeY = imageHeight - 21;
+            int labelW = font.width(Component.translatable("gui.marketblocks.log.entries_label"));
+            int labelX = badgeX - 4 - labelW;
+
+            if (isHovering(labelX, badgeY, labelW + 4 + badgeW, badgeH, mouseX, mouseY)) {
+                graphics.renderTooltip(font, Component.translatable("gui.marketblocks.log.count_tooltip"), mouseX, mouseY);
+            }
         }
     }
 
@@ -686,7 +727,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             case OFFERS -> renderOffersBg(graphics);
             case INVENTORY -> renderInventoryBg(graphics);
             case SETTINGS -> renderSettingsBg(graphics, mouseX, mouseY, partialTick);
-            case LOG -> renderLogBg(graphics);
+            case LOG -> renderLogBg(graphics, mouseX, mouseY);
         }
 
         for (IconButton tab : sideTabs) {
@@ -748,7 +789,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
         }
 
-        if (activeSettingsCategory == SettingsCategory.ACCESS && (menu.isOwner() || menu.isPrimaryOwner())) {
+        if (activeSettingsCategory == SettingsCategory.ACCESS && menu.isPrimaryOwner()) {
             SingleOfferSettingsSections.renderAccessBg(graphics, font, leftPos, topPos,
                     ownerListPanel.getListMode(),
                     accessDraft != null ? accessDraft.accessMode() : AccessMode.WHITELIST,
@@ -783,258 +824,16 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
     }
 
-    private void renderLogBg(GuiGraphics graphics) {
+    private void renderLogBg(GuiGraphics graphics, int mouseX, int mouseY) {
         graphics.blit(SETTINGS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
-
-        List<TransactionLogEntry> entries = menu.getTransactionLogEntries();
-        int listX = leftPos + LOG_LIST_X_OFFSET;
-        int listY = topPos + LOG_LIST_Y_OFFSET;
-
-        graphics.fill(listX - 1, listY - 1, listX + LOG_LIST_WIDTH + 1, listY + LOG_LIST_HEIGHT + 1, 0xFFA6A6A6);
-        graphics.fill(listX, listY, listX + LOG_LIST_WIDTH, listY + LOG_LIST_HEIGHT, 0xFF2A2A2A);
-
-        clampLogScroll();
-
-        if (entries.isEmpty()) {
-            Component empty = Component.translatable("gui.marketblocks.log.empty");
-            int textX = listX + (LOG_LIST_WIDTH - font.width(empty)) / 2;
-            int textY = listY + (LOG_LIST_HEIGHT - font.lineHeight) / 2;
-            graphics.drawString(font, empty, textX, textY, 0x777777, false);
-        } else {
-            graphics.enableScissor(listX, listY, listX + LOG_LIST_WIDTH, listY + LOG_LIST_HEIGHT);
-
-            int currentY = listY - logScrollPixelOffset;
-            for (int i = 0; i < entries.size(); i++) {
-                boolean isExpanded = (i == expandedLogIndex);
-                int rowHeight = isExpanded ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
-
-                if (currentY + rowHeight > listY && currentY < listY + LOG_LIST_HEIGHT) {
-                    renderLogRow(graphics, entries.get(i), listX, currentY, i, isExpanded);
-                }
-                currentY += rowHeight;
-            }
-            graphics.disableScissor();
-        }
-
-        renderLogScroller(graphics);
-    }
-
-    private void renderLogRow(GuiGraphics graphics, TransactionLogEntry entry, int x, int y, int index,
-            boolean isExpanded) {
-        int rowHeight = isExpanded ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
-
-        boolean isHovered = isHoveringLog(x, y, rowHeight);
-        int rowColor = (index & 1) == 0 ? LOG_ROW_BG_COLOR_A : LOG_ROW_BG_COLOR_B;
-        if (isHovered)
-            rowColor = LOG_ROW_HOVER_BG_COLOR;
-        graphics.fill(x, y, x + LOG_LIST_WIDTH, y + rowHeight - 1, rowColor);
-        graphics.fill(x, y + rowHeight - 1, x + LOG_LIST_WIDTH, y + rowHeight, LOG_ROW_BORDER_COLOR);
-
-        int textY = y + (ROW_HEIGHT_COLLAPSED - font.lineHeight) / 2;
-        int rowCenterY = y + ROW_HEIGHT_COLLAPSED / 2;
-
-        int headX = x + 4;
-        int headY = rowCenterY - LOG_HEAD_SIZE / 2;
-        ResourceLocation skinTexture = resolveLogSkinTexture(entry);
-        graphics.blit(skinTexture, headX, headY, LOG_HEAD_SIZE, LOG_HEAD_SIZE, LOG_HEAD_U, LOG_HEAD_V,
-                LOG_HEAD_SRC_SIZE, LOG_HEAD_SRC_SIZE, LOG_SKIN_TEX_SIZE, LOG_SKIN_TEX_SIZE);
-        graphics.blit(skinTexture, headX, headY, LOG_HEAD_SIZE, LOG_HEAD_SIZE, LOG_HAT_U, LOG_HAT_V, LOG_HEAD_SRC_SIZE,
-                LOG_HEAD_SRC_SIZE, LOG_SKIN_TEX_SIZE, LOG_SKIN_TEX_SIZE);
-
-        ResourceLocation expandIcon = isExpanded ? MOVE_DOWN_MINI_ICON : MOVE_RIGHT_MINI_ICON;
-        int expandX = x + LOG_LIST_WIDTH - LOG_EXPAND_ICON_SIZE - 4;
-        int expandY = y + (ROW_HEIGHT_COLLAPSED - LOG_EXPAND_ICON_SIZE) / 2;
-        graphics.blit(expandIcon, expandX, expandY, 0, 0, LOG_EXPAND_ICON_SIZE, LOG_EXPAND_ICON_SIZE,
-                LOG_EXPAND_ICON_SIZE, LOG_EXPAND_ICON_SIZE);
-
-        Component timeText = formatRelativeTime(entry.epochSecond());
-        int timeX = expandX - 6 - font.width(timeText);
-        graphics.drawString(font, timeText, timeX, textY, 0xC8C8C8, false);
-
-        int detailsX = headX + LOG_HEAD_SIZE + 6;
-        String buyerName = entry.buyerName().isBlank() ? "Unknown" : entry.buyerName();
-        int maxNameWidth = timeX - detailsX - 4;
-        if (maxNameWidth > 0 && font.width(buyerName) > maxNameWidth) {
-            buyerName = font.plainSubstrByWidth(buyerName, maxNameWidth - font.width("...")) + "...";
-        }
-        graphics.drawString(font, buyerName, detailsX, textY, 0xF2F2F2, false);
-
-        if (isExpanded) {
-            int previewX = getLogPreviewX(x);
-            int previewY = y + ROW_HEIGHT_COLLAPSED;
-            graphics.fill(previewX - 1, previewY - 1, previewX + LOG_PREVIEW_WIDTH + 1,
-                    previewY + LOG_PREVIEW_HEIGHT + 1, LOG_PREVIEW_BORDER_COLOR);
-            graphics.fill(previewX, previewY, previewX + LOG_PREVIEW_WIDTH, previewY + LOG_PREVIEW_HEIGHT,
-                    LOG_PREVIEW_BG_COLOR);
-
-            int itemY = previewY + 1;
-            if (entry.aggregationCount() > 1) {
-                String repeatLabel = "x" + entry.aggregationCount();
-                graphics.drawString(font, repeatLabel, previewX - 4 - font.width(repeatLabel), itemY + 4, 0xC8C8C8,
-                        false);
-            }
-
-            ItemStack paid1 = entry.paidStacks().size() > 0 ? entry.paidStacks().get(0) : ItemStack.EMPTY;
-            ItemStack paid2 = entry.paidStacks().size() > 1 ? entry.paidStacks().get(1) : ItemStack.EMPTY;
-            ItemStack bought = entry.boughtStacks().isEmpty() ? ItemStack.EMPTY : entry.boughtStacks().get(0);
-
-            if (!paid1.isEmpty()) {
-                graphics.renderItem(paid1, previewX + 4, itemY);
-                graphics.renderItemDecorations(font, paid1, previewX + 4, itemY);
-            }
-            if (!paid2.isEmpty()) {
-                graphics.renderItem(paid2, previewX + 28, itemY);
-                graphics.renderItemDecorations(font, paid2, previewX + 28, itemY);
-            }
-            if (paid1.isEmpty() && paid2.isEmpty()) {
-                Component none = Component.translatable("gui.marketblocks.log.none");
-                graphics.drawString(font, none, previewX + 5, itemY + 4, 0x777777, false);
-            }
-
-            graphics.blit(TRADE_ARROW_ICON, previewX + 52, previewY + 5, 0, 0, 10, 9, 10, 9);
-
-            if (!bought.isEmpty()) {
-                graphics.renderItem(bought, previewX + 70, itemY);
-                graphics.renderItemDecorations(font, bought, previewX + 70, itemY);
-            }
-        }
-    }
-
-    private int getLogPreviewX(int rowX) {
-        return rowX + LOG_LIST_WIDTH - LOG_PREVIEW_WIDTH - LOG_PREVIEW_RIGHT_PADDING;
-    }
-
-    private boolean isHoveringLog(int x, int y, int height) {
-        double mx = minecraft.mouseHandler.xpos() * (double) this.width
-                / (double) this.minecraft.getWindow().getScreenWidth();
-        double my = minecraft.mouseHandler.ypos() * (double) this.height
-                / (double) this.minecraft.getWindow().getScreenHeight();
-        return mx >= x && mx < x + LOG_LIST_WIDTH && my >= y && my < y + height;
-    }
-
-    private void renderLogScroller(GuiGraphics graphics) {
-        int maxScroll = getMaxLogScroll();
-        int scrollerX = leftPos + LOG_SCROLLER_X_OFFSET;
-        int scrollerY = topPos + LOG_LIST_Y_OFFSET;
-
-        if (maxScroll <= 0) {
-            graphics.blitSprite(SCROLLER_DISABLED_SPRITE, scrollerX, scrollerY, LOG_SCROLLER_WIDTH,
-                    LOG_SCROLLER_HEIGHT);
-            return;
-        }
-
-        int travel = Math.max(0, LOG_LIST_HEIGHT - LOG_SCROLLER_HEIGHT);
-        float progress = (float) logScrollPixelOffset / maxScroll;
-        int handleY = scrollerY + Mth.floor(progress * travel);
-        graphics.blitSprite(SCROLLER_SPRITE, scrollerX, handleY, LOG_SCROLLER_WIDTH, LOG_SCROLLER_HEIGHT);
+        logPanel.renderBackground(graphics, font, leftPos, topPos, mouseX, mouseY, menu.getTransactionLogEntries());
     }
 
     private void clearTransactionLog() {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         NetworkHandler.sendToServer(new ClearTransactionLogPacket(be.getBlockPos()));
         menu.setTransactionLogEntries(List.of());
-        logScrollPixelOffset = 0;
-        expandedLogIndex = -1;
-    }
-
-    private Component formatRelativeTime(long epochSecond) {
-        long deltaSeconds = Math.max(0L, Instant.now().getEpochSecond() - Math.max(0L, epochSecond));
-        if (deltaSeconds < 5L)
-            return Component.translatable("gui.marketblocks.log.time.just_now");
-        if (deltaSeconds < 60L)
-            return Component.translatable("gui.marketblocks.log.time.seconds", deltaSeconds);
-        if (deltaSeconds < 3600L)
-            return Component.translatable("gui.marketblocks.log.time.minutes", deltaSeconds / 60L);
-        if (deltaSeconds < 86400L)
-            return Component.translatable("gui.marketblocks.log.time.hours", deltaSeconds / 3600L);
-        return Component.translatable("gui.marketblocks.log.time.days", deltaSeconds / 86400L);
-    }
-
-    /**
-     * Native skin loading path without reflection or asynchronous threads!
-     */
-    private ResourceLocation resolveLogSkinTexture(TransactionLogEntry entry) {
-        UUID buyerId = entry.buyerUuid();
-        String name = entry.buyerName();
-        if (buyerId == null || (buyerId.getLeastSignificantBits() == 0L && buyerId.getMostSignificantBits() == 0L)) {
-            buyerId = Util.NIL_UUID;
-        }
-
-        Minecraft client = Minecraft.getInstance();
-        GameProfile profile = new GameProfile(buyerId, name);
-        return client.getSkinManager().getInsecureSkin(profile).texture();
-    }
-
-    private int getTotalLogHeight() {
-        int count = menu.getTransactionLogEntries().size();
-        if (count == 0)
-            return 0;
-        int height = count * ROW_HEIGHT_COLLAPSED;
-        if (expandedLogIndex >= 0 && expandedLogIndex < count) {
-            height += (ROW_HEIGHT_EXPANDED - ROW_HEIGHT_COLLAPSED);
-        }
-        return height;
-    }
-
-    private int getMaxLogScroll() {
-        return Math.max(0, getTotalLogHeight() - LOG_LIST_HEIGHT);
-    }
-
-    private void clampLogScroll() {
-        logScrollPixelOffset = Mth.clamp(logScrollPixelOffset, 0, getMaxLogScroll());
-    }
-
-    /**
-     * Shows the actual ItemStack tooltips for the rendered items instead of boring
-     * text.
-     */
-    private void renderLogHoverTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
-        if (expandedLogIndex == -1)
-            return;
-
-        List<TransactionLogEntry> entries = menu.getTransactionLogEntries();
-        if (expandedLogIndex >= entries.size())
-            return;
-
-        int listX = leftPos + LOG_LIST_X_OFFSET;
-        int listY = topPos + LOG_LIST_Y_OFFSET;
-
-        int currentY = listY - logScrollPixelOffset;
-        for (int i = 0; i < expandedLogIndex; i++) {
-            currentY += ROW_HEIGHT_COLLAPSED;
-        }
-
-        int previewY = currentY + ROW_HEIGHT_COLLAPSED;
-        int itemY = previewY + 1;
-        int previewX = getLogPreviewX(listX);
-
-        if (mouseY >= itemY && mouseY < itemY + 16 && currentY > listY - ROW_HEIGHT_EXPANDED
-                && currentY < listY + LOG_LIST_HEIGHT) {
-            TransactionLogEntry entry = entries.get(expandedLogIndex);
-
-            if (entry.paidStacks().size() > 0) {
-                ItemStack paid1 = entry.paidStacks().get(0);
-                if (mouseX >= previewX + 4 && mouseX < previewX + 20) {
-                    graphics.renderTooltip(font, paid1, mouseX, mouseY);
-                    return;
-                }
-            }
-
-            if (entry.paidStacks().size() > 1) {
-                ItemStack paid2 = entry.paidStacks().get(1);
-                if (mouseX >= previewX + 28 && mouseX < previewX + 44) {
-                    graphics.renderTooltip(font, paid2, mouseX, mouseY);
-                    return;
-                }
-            }
-
-            if (!entry.boughtStacks().isEmpty()) {
-                ItemStack bought = entry.boughtStacks().get(0);
-                if (mouseX >= previewX + 70 && mouseX < previewX + 86) {
-                    graphics.renderTooltip(font, bought, mouseX, mouseY);
-                }
-            }
-        }
+        logPanel.reset();
     }
 
     @Override
@@ -1131,9 +930,34 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         graphics.drawString(font, Component.translatable("gui.marketblocks.log_title"), 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
 
-        Component count = Component.translatable("gui.marketblocks.log.count", menu.getTransactionLogEntries().size());
-        int countX = imageWidth - 8 - font.width(count);
-        graphics.drawString(font, count, countX, imageHeight - 14, 0x6F6F6F, false);
+        int count = menu.getTransactionLogEntries().size();
+        Component label = Component.translatable("gui.marketblocks.log.entries_label");
+        Component countComp = Component.literal(String.valueOf(count));
+
+        int numW = font.width(countComp);
+        int badgeW = Math.max(18, numW + 8);
+        int badgeH = 14;
+        int badgeX = imageWidth - 7 - badgeW;
+        int badgeY = imageHeight - 21;
+
+        // Label
+        int labelW = font.width(label);
+        int labelX = badgeX - 4 - labelW;
+        int labelY = badgeY + (badgeH - font.lineHeight) / 2 + 1;
+        graphics.drawString(font, label, labelX, labelY, 4210752, false);
+
+        // Badge Inset & Border (Access Settings / Slider style)
+        graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, 0xFF222222);
+        graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 1, 0xFF373737);
+        graphics.fill(badgeX, badgeY + badgeH - 1, badgeX + badgeW, badgeY + badgeH, 0xFF373737);
+        graphics.fill(badgeX, badgeY + 1, badgeX + 1, badgeY + badgeH - 1, 0xFF373737);
+        graphics.fill(badgeX + badgeW - 1, badgeY + 1, badgeX + badgeW, badgeY + badgeH - 1, 0xFF373737);
+
+        // Value
+        int textX = badgeX + (badgeW - numW) / 2;
+        int textY = badgeY + (badgeH - font.lineHeight) / 2 + 1;
+        int textColor = count > 0 ? 0x55FF55 : 0x808080;
+        graphics.drawString(font, countComp, textX, textY, textColor, false);
     }
 
     @Override
@@ -1147,28 +971,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
 
         if (menu.getActiveTab() == ShopTab.LOG && button == 0) {
-            int scrollerX = leftPos + LOG_SCROLLER_X_OFFSET;
-            int listY = topPos + LOG_LIST_Y_OFFSET;
-            if (mouseX >= scrollerX && mouseX < scrollerX + LOG_SCROLLER_WIDTH && mouseY >= listY
-                    && mouseY < listY + LOG_LIST_HEIGHT) {
-                logDragging = true;
+            if (logPanel.onMouseClicked(mouseX, mouseY, leftPos, topPos, menu.getTransactionLogEntries())) {
                 return true;
-            }
-
-            int listX = leftPos + LOG_LIST_X_OFFSET;
-            if (mouseX >= listX && mouseX < listX + LOG_LIST_WIDTH && mouseY >= listY
-                    && mouseY < listY + LOG_LIST_HEIGHT) {
-                int currentY = listY - logScrollPixelOffset;
-                List<TransactionLogEntry> entries = menu.getTransactionLogEntries();
-                for (int i = 0; i < entries.size(); i++) {
-                    int rowHeight = (i == expandedLogIndex) ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
-                    if (mouseY >= currentY && mouseY < currentY + rowHeight) {
-                        expandedLogIndex = (expandedLogIndex == i) ? -1 : i;
-                        playSound(SoundEvents.UI_BUTTON_CLICK);
-                        return true;
-                    }
-                    currentY += rowHeight;
-                }
             }
         }
         if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS
@@ -1181,13 +985,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (menu.getActiveTab() == ShopTab.LOG && logDragging) {
-            int maxScroll = getMaxLogScroll();
-            int travel = Math.max(1, LOG_LIST_HEIGHT - LOG_SCROLLER_HEIGHT);
-            double relative = (mouseY - (topPos + LOG_LIST_Y_OFFSET) - (LOG_SCROLLER_HEIGHT / 2.0D)) / travel;
-            relative = Mth.clamp(relative, 0.0D, 1.0D);
-            logScrollPixelOffset = Mth.clamp((int) Math.floor(relative * maxScroll + 0.5D), 0, maxScroll);
-            return true;
+        if (menu.getActiveTab() == ShopTab.LOG) {
+            if (logPanel.onMouseDragged(mouseY, topPos, menu.getTransactionLogEntries())) {
+                return true;
+            }
         }
         if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS
                 && menu.isPrimaryOwner()) {
@@ -1211,8 +1012,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0)
-            logDragging = false;
+        if (button == 0) {
+            logPanel.onMouseReleased();
+        }
         ownerListPanel.onMouseReleased();
         return super.mouseReleased(mouseX, mouseY, button);
     }
@@ -1220,9 +1022,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (menu.getActiveTab() == ShopTab.LOG) {
-            if (getMaxLogScroll() > 0) {
-                logScrollPixelOffset -= (int) (scrollY * 16);
-                clampLogScroll();
+            if (logPanel.onMouseScrolled(mouseX, mouseY, scrollY, leftPos, topPos, menu.getTransactionLogEntries())) {
                 return true;
             }
         }
@@ -1293,16 +1093,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public void onClose() {
-        if (!saved && menu.getActiveTab() == ShopTab.SETTINGS) {
-            if (ioDraft != null) {
-                SingleOfferShopBlockEntity be = menu.getBlockEntity();
-                ioDraft = new IoSettings.Draft(be.getIoSettings());
-            }
-        }
-        String shopNameDraft = nameField != null ? nameField.getValue()
-                : (generalDraft != null ? generalDraft.shopName() : "");
-        if (menu.getActiveTab() == ShopTab.SETTINGS && shopNameDraft.trim().isEmpty()) {
-            menu.getBlockEntity().setShopName(originalName, false);
+        if (!saved) {
+            discardUnsavedSettings();
         }
         super.onClose();
     }
