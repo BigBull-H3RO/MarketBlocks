@@ -203,11 +203,15 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
         if (player instanceof ServerPlayer serverPlayer) {
             if (shopEntity.getOwnerId() == null || shopEntity.hasOffer() || shopEntity.isOwner(player)) {
+                shopEntity.updateShopDirectory();
                 serverPlayer.openMenu(
                         new SimpleMenuProvider(
                                 (id, inv, p) -> new SingleOfferShopMenu(id, inv, shopEntity),
                                 shopEntity.getDisplayName()),
-                        pos);
+                        buf -> {
+                            buf.writeBlockPos(pos);
+                            buf.writeUtf(shopEntity.getShopId());
+                        });
             } else {
                 serverPlayer.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.no_offer"),
                         true);
@@ -345,12 +349,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         return SingleOfferConfig.SHOP_BLAST_RESISTANCE.get().floatValue();
     }
 
-    @Deprecated
-    @Override
-    @SuppressWarnings("deprecation")
-    public float getExplosionResistance() {
-        return SingleOfferConfig.SHOP_BLAST_RESISTANCE.get().floatValue();
-    }
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {

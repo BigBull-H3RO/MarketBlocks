@@ -5,14 +5,14 @@
     "#": {
       "tag": "minecraft:planks"
     },
+    "B": {
+      "item": "minecraft:stone_bricks"
+    },
     "D": {
       "item": "minecraft:smooth_stone_slab"
     },
     "E": {
       "item": "minecraft:emerald"
-    },
-    "I": {
-      "item": "minecraft:iron_ingot"
     },
     "S": {
       "tag": "minecraft:signs"
@@ -20,7 +20,7 @@
   },
   "pattern": [
     "#D#",
-    "IEI",
+    "BEB",
     "#S#"
   ],
   "result": {

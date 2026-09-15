@@ -76,7 +76,7 @@ public class TradeWithShopGoal extends Goal {
         // Celebrating phase after a successful purchase: hold item proudly for ~2.5s
         if (celebratingTimer > 0) {
             celebratingTimer--;
-            if (celebratingTimer % 15 == 0 && entity.level() instanceof ServerLevel sl) {
+            if (celebratingTimer % 15 == 0 && !entity.level().isClientSide()) {
                 // Subtle nodding
                 entity.getLookControl().setLookAt(
                         entity.getX() + entity.getLookAngle().x,

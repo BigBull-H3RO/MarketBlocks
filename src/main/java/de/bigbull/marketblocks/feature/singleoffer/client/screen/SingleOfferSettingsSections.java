@@ -21,6 +21,7 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.IoSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -127,9 +128,9 @@ public final class SingleOfferSettingsSections {
                 }));
 
         // --- GroupBox 1: SHOP-PROFIL (y = 23, h = 46, ends at 69) ---
-        // Row 1: Name field
+        // Row 1: Name field & Shop ID badge
         EditBox nameField = host.addSettingsWidget(
-                new EditBox(host.settingsFont(), host.settingsLeftPos() + 42, host.settingsTopPos() + 30, 122, 14,
+                new EditBox(host.settingsFont(), host.settingsLeftPos() + 40, host.settingsTopPos() + 30, 81, 14,
                         Component.translatable("gui.marketblocks.shop_name")));
         nameField.setMaxLength(32);
         nameField.setValue(draft.shopName());
@@ -138,6 +139,10 @@ public final class SingleOfferSettingsSections {
             onDirty.run();
         });
         nameField.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.shop_name.tooltip")));
+
+        String shopId = host.getMenu().getShopId();
+        host.addSettingsWidget(new ShopIdButton(
+                host.settingsLeftPos() + 124, host.settingsTopPos() + 30, 40, 14, shopId));
 
         // Row 2: Category button
         Button categoryBtn = host.addSettingsWidget(Button.builder(
@@ -209,7 +214,7 @@ public final class SingleOfferSettingsSections {
         List<Consumer<Boolean>> sectionWidgets = new ArrayList<>();
 
         // Master Toggle Button (top right, 34x14)
-        Button ioToggle = host.addSettingsWidget(Button.builder(
+        host.addSettingsWidget(Button.builder(
                 toggleStateLabel(draft.allowIo()),
                 b -> {
                     boolean next = !draft.allowIo();
@@ -1184,5 +1189,43 @@ public final class SingleOfferSettingsSections {
             box2Title = Component.translatable("gui.marketblocks.access.group.blacklist");
         }
         GroupBox.render(graphics, font, box2Title, leftPos + 7, topPos + 69, 162, 69);
+    }
+
+    public static class ShopIdButton extends Button {
+        private final String rawId;
+
+        public ShopIdButton(int x, int y, int width, int height, String shopId) {
+            super(x, y, width, height, Component.literal("#" + (shopId == null || shopId.isEmpty() ? "----" : shopId)), b -> {
+                if (shopId != null && !shopId.isEmpty()) {
+                    Minecraft.getInstance().keyboardHandler.setClipboard("#" + shopId);
+                    if (Minecraft.getInstance().player != null) {
+                        Minecraft.getInstance().player.displayClientMessage(
+                                Component.translatable("gui.marketblocks.general.shop_id.copied", "#" + shopId), true);
+                    }
+                }
+            }, DEFAULT_NARRATION);
+            this.rawId = (shopId == null || shopId.isEmpty()) ? "----" : shopId;
+            setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.general.shop_id.tooltip", "#" + this.rawId)));
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            int bg = isHoveredOrFocused() ? 0xFF2F2F2F : 0xFF222222;
+            int border = isHoveredOrFocused() ? 0xFF555555 : 0xFF373737;
+
+            graphics.fill(getX(), getY(), getX() + width, getY() + height, bg);
+            graphics.fill(getX(), getY(), getX() + width, getY() + 1, border);
+            graphics.fill(getX(), getY() + height - 1, getX() + width, getY() + height, border);
+            graphics.fill(getX(), getY(), getX() + 1, getY() + height, border);
+            graphics.fill(getX() + width - 1, getY(), getX() + width, getY() + height, border);
+
+            Font font = Minecraft.getInstance().font;
+            Component text = Component.literal("#" + rawId);
+            int tw = font.width(text);
+            int textX = getX() + (width - tw) / 2;
+            int textY = getY() + (height - font.lineHeight) / 2 + 1;
+            int textColor = isHoveredOrFocused() ? 0xFFFFAA00 : 0xFFAAAAAA;
+            graphics.drawString(font, text, textX, textY, textColor, false);
+        }
     }
 }

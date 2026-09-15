@@ -16,15 +16,12 @@ public class StatusToggleButton extends AbstractButton {
     private static final int COLOR_ACTIVE_BORDER = 0xFF388038;
     private static final int COLOR_ACTIVE_BORDER_HOVER = 0xFF60E060;
     private static final int COLOR_ACTIVE_ICON = 0xFF40E040;
-    private static final int COLOR_ACTIVE_TEXT = 0xFF50FF50;
 
     private static final int COLOR_PAUSED_BG = 0xFF442816;
     private static final int COLOR_PAUSED_BORDER = 0xFFD07020;
     private static final int COLOR_PAUSED_BORDER_HOVER = 0xFFFFB030;
     private static final int COLOR_PAUSED_ICON = 0xFFFFA030;
-    private static final int COLOR_PAUSED_TEXT = 0xFFFFB840;
 
-    private final Font font;
     private final OnStatusChange onStatusChange;
     private boolean paused;
 
@@ -32,13 +29,17 @@ public class StatusToggleButton extends AbstractButton {
         void onStatusChange(StatusToggleButton button, boolean paused);
     }
 
-    public StatusToggleButton(int x, int y, int width, int height, Font font, boolean initialPaused,
+    public StatusToggleButton(int x, int y, int width, int height, boolean initialPaused,
             OnStatusChange onStatusChange) {
         super(x, y, width, height, Component.empty());
-        this.font = font;
         this.paused = initialPaused;
         this.onStatusChange = onStatusChange;
         updateTooltip();
+    }
+
+    public StatusToggleButton(int x, int y, int width, int height, Font font, boolean initialPaused,
+            OnStatusChange onStatusChange) {
+        this(x, y, width, height, initialPaused, onStatusChange);
     }
 
     public boolean isPaused() {

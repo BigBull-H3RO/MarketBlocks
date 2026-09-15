@@ -264,7 +264,6 @@ public class SingleOfferTransactionLogPanel {
         }
 
         int offerFrameW = 88;
-        int offerFrameH = 20;
         int offerFrameX = leftPos + ROW_X_OFFSET + ROW_WIDTH - 4 - offerFrameW;
         int offerFrameY = currentY + 20;
         int itemY = offerFrameY + 2;

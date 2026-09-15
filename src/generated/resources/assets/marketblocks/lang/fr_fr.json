@@ -146,6 +146,8 @@
   "gui.marketblocks.error.no_result_item": "Veuillez placer un objet dans l'emplacement de résultat",
   "gui.marketblocks.general.group.features": "FONCTIONS & SIGNAUX",
   "gui.marketblocks.general.group.shop_profile": "PROFIL DE BOUTIQUE",
+  "gui.marketblocks.general.shop_id.copied": "ID boutique %s copié dans le presse-papiers !",
+  "gui.marketblocks.general.shop_id.tooltip": "ID boutique : %s (Cliquer pour copier)",
   "gui.marketblocks.general.shop_name_label": "NOM :",
   "gui.marketblocks.general.status.active": "ACTIF",
   "gui.marketblocks.general.status.active.tooltip": "Boutique ouverte (Cliquer pour mettre en pause)",

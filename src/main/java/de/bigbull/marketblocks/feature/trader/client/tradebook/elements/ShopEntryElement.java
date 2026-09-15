@@ -27,11 +27,7 @@ public class ShopEntryElement implements ITradeBookElement {
 
     @Override
     public int getExtraHeight(String insertion) {
-        String[] parts = insertion.split("\\|\\|");
-        if (parts.length > 1 && parts[1].equals("my_shop")) {
-            return 48;
-        }
-        return 54;
+        return 45;
     }
 
     @Override
@@ -81,41 +77,25 @@ public class ShopEntryElement implements ITradeBookElement {
         TradeBookLayoutUtils.drawRightAlignedString(graphics, context, salesText, startX, startY,
                 (int) (TradeBookLayoutUtils.TEXT_WIDTH / scale), 0x555555, false);
 
-        int currentY;
+        int currentY = startY + 18;
 
-        // Render Owner Name (Centered) for dir_shop
+        // Render Head (Left) with 1px border and tooltip for player shops
         if (!prefix.equals("my_shop")) {
-            currentY = startY + 10; // Spacing between shop name and player name
+            TradeBookLayoutUtils.renderPlayerHead(graphics, ownerFull, startX + 5, currentY + 3, scale, 10, true);
 
-            String owner = TradeBookLayoutUtils.truncate(ownerFull, 10);
-            int ownerWidth = context.getFont().width(owner);
-            int ownerX = startX + ((int) (TradeBookLayoutUtils.TEXT_WIDTH / scale) - ownerWidth) / 2;
-            graphics.drawString(context.getFont(), owner, ownerX, currentY, 0x555555, false);
-
-            if (ownerFull.length() > 10) {
-                int scaledX = (int) (ownerX * scale);
-                int scaledY = (int) (currentY * scale);
-                int scaledW = (int) (ownerWidth * scale);
-                int scaledH = (int) (9 * scale);
-                context.addActiveZone(new InteractiveZone(scaledX, scaledY, scaledW, scaledH, () -> {
-                    context.setNextHoveredObject("owner_name_" + ownerFull);
-                    context.addTooltip(() -> graphics.renderTooltip(context.getFont(), Component.literal(ownerFull),
-                            mouseX, mouseY));
-                }, null));
-            }
-            currentY += 14; // Spacing between player name and offer
-        } else {
-            currentY = startY + 18; // Spacing between shop name and offer for "My Shops"
+            int headScreenX = (int) ((startX + 5) * scale);
+            int headScreenY = (int) ((currentY + 2) * scale);
+            context.addActiveZone(new InteractiveZone(headScreenX - 1, headScreenY - 1, 12, 12, () -> {
+                context.setNextHoveredObject("owner_head_" + ownerFull + "_" + shopId);
+                context.addTooltip(() -> graphics.renderTooltip(context.getFont(),
+                        Component.translatable("gui.marketblocks.owner", ownerFull), mouseX, mouseY));
+            }, null));
         }
 
-        // Render Head (Left), Offer (Center), Compass (Right)
+        // Render Offer (Center), Compass (Right)
         if (!offerId.equals("NO_OFFER")) {
             var offer = context.getOffers().get(offerId);
             if (offer != null) {
-                if (!prefix.equals("my_shop")) {
-                    TradeBookLayoutUtils.renderPlayerHead(graphics, ownerFull, startX + 5, currentY + 3, scale, 10);
-                }
-
                 int offerX = startX + 30; // Centered roughly
                 TradeBookLayoutUtils.renderInlineOffer(graphics, offer, offerX, currentY + 6, finalStatus, mouseX,
                         mouseY, scale, context);
@@ -136,9 +116,6 @@ public class ShopEntryElement implements ITradeBookElement {
             int noOfferWidth = context.getFont().width(noOfferStr);
             int noOfferX = frameX + (96 - noOfferWidth) / 2; // Centered inside the frame
 
-            if (!prefix.equals("my_shop")) {
-                TradeBookLayoutUtils.renderPlayerHead(graphics, ownerFull, startX + 5, currentY + 3, scale, 10);
-            }
             graphics.drawString(context.getFont(), noOfferStr, noOfferX, currentY + 6, 0xAAAAAA, false);
 
             if (canTeleport) {

@@ -319,6 +319,8 @@ public class ModEsLangProvider extends LanguageProvider {
                 add("gui.marketblocks.general.group.shop_profile", "PERFIL DE TIENDA");
                 add("gui.marketblocks.general.group.features", "FUNCIONES Y SEÑALES");
                 add("gui.marketblocks.general.shop_name_label", "NOMBRE:");
+                add("gui.marketblocks.general.shop_id.tooltip", "ID de tienda: %s (Clic para copiar)");
+                add("gui.marketblocks.general.shop_id.copied", "¡ID de tienda %s copiado al portapapeles!");
                 add("gui.marketblocks.error.invalid_offer", "Configuraci\u00f3n de oferta no v\u00e1lida");
                 add("gui.marketblocks.error.no_payment_items", "Por favor, coloca al menos un objeto de pago");
                 add("gui.marketblocks.error.no_result_item", "Por favor, coloca un objeto en la ranura de resultado");

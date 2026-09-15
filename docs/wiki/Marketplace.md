@@ -9,7 +9,7 @@ The **Marketplace** is the centralized, server-wide trading hub of MarketBlocks.
 Players can access the Marketplace through three different methods depending on server style:
 
 1. **Keybind (`O`)**: Press **O** (default, rebindable in Options -> Controls) to open the Marketplace instantly from anywhere.
-2. **Chat Command**: Type **`/marketblocks marketplace open`** (or the convenient shorthand **`/mb marketplace open`**).
+2. **Chat Command**: Type **`/marketblocks marketplace`** (or the convenient shorthand **`/mb marketplace`**).
 3. **Linked World Blocks**: Right-click decorative market stalls, NPC counters, or custom blocks in spawn hubs that have been linked by server administrators.
 
 ---
@@ -86,7 +86,7 @@ Admins can start timed sales with percentage discounts on any Marketplace offer:
 - **"Why won't an offer let me buy?"**  
   Check if you have the exact payment items in your inventory, or if the offer has reached its daily limit or run out of stock.
 - **"The O key doesn't open the menu."**  
-  Check **Options -> Controls -> Key Binds** to verify that the `O` key is not conflicting with another mod. You can always use `/mb marketplace open`.
+  Check **Options -> Controls -> Key Binds** to verify that the `O` key is not conflicting with another mod. You can always use `/mb marketplace`.
 - **"Where are marketplace offers saved?"**  
   Offers are stored server-side at `<world>/marketblocks/marketplace.json`. MarketBlocks creates an automatic `.bak` backup file on every save!
 

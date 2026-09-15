@@ -23,6 +23,10 @@ public class TradeBookLayoutUtils {
     public static final float TEXT_SCALE = 0.75f;
 
     public static void renderPlayerHead(GuiGraphics graphics, String username, int x, int y, float scale, int size) {
+        renderPlayerHead(graphics, username, x, y, scale, size, false);
+    }
+
+    public static void renderPlayerHead(GuiGraphics graphics, String username, int x, int y, float scale, int size, boolean withBorder) {
         GameProfile profile = new GameProfile(Util.NIL_UUID, username);
         PlayerSkin skin = Minecraft.getInstance().getSkinManager().getInsecureSkin(profile);
 
@@ -30,6 +34,11 @@ public class TradeBookLayoutUtils {
         float inverseScale = 1.0f / scale;
         graphics.pose().translate(x, y - 1, 0);
         graphics.pose().scale(inverseScale, inverseScale, 1.0f);
+
+        if (withBorder) {
+            graphics.fill(-1, -1, size + 1, size + 1, 0xFF2A2A2A);
+            graphics.fill(0, 0, size, size, 0xFF181818);
+        }
 
         PlayerFaceRenderer.draw(graphics, skin.texture(), 0, 0, size);
 

@@ -67,12 +67,29 @@ public class ShopDirectorySavedData extends SavedData {
         return id;
     }
 
-    public void registerOrUpdateShop(GlobalPos pos, UUID ownerUUID, String ownerName, String shopName, boolean isClosed, ShopCategory shopCategory, ItemStack payment1, ItemStack payment2, ItemStack result, int totalSales, boolean isAdminShop, boolean isMarketCrate, boolean hasShowcase, boolean isOutOfStock, boolean isOutputFull) {
+    public String registerOrUpdateShop(GlobalPos pos, UUID ownerUUID, String ownerName, String shopName, boolean isClosed, ShopCategory shopCategory, ItemStack payment1, ItemStack payment2, ItemStack result, int totalSales, boolean isAdminShop, boolean isMarketCrate, boolean hasShowcase, boolean isOutOfStock, boolean isOutputFull, String preferredShopId) {
         ShopEntry existing = shopsByPos.get(pos);
-        String shopId = existing != null ? existing.shopId() : generateUniqueShopId();
+        String shopId;
+        if (existing != null && existing.shopId() != null && !existing.shopId().isEmpty()) {
+            shopId = existing.shopId();
+        } else if (preferredShopId != null && !preferredShopId.isEmpty() && isShopIdAvailable(pos, preferredShopId)) {
+            shopId = preferredShopId;
+        } else {
+            shopId = generateUniqueShopId();
+        }
 
         shopsByPos.put(pos, new ShopEntry(pos, ownerUUID, ownerName, shopName, shopId, isClosed, shopCategory, payment1, payment2, result, totalSales, isAdminShop, isMarketCrate, hasShowcase, isOutOfStock, isOutputFull));
         setDirty();
+        return shopId;
+    }
+
+    public String registerOrUpdateShop(GlobalPos pos, UUID ownerUUID, String ownerName, String shopName, boolean isClosed, ShopCategory shopCategory, ItemStack payment1, ItemStack payment2, ItemStack result, int totalSales, boolean isAdminShop, boolean isMarketCrate, boolean hasShowcase, boolean isOutOfStock, boolean isOutputFull) {
+        return registerOrUpdateShop(pos, ownerUUID, ownerName, shopName, isClosed, shopCategory, payment1, payment2, result, totalSales, isAdminShop, isMarketCrate, hasShowcase, isOutOfStock, isOutputFull, null);
+    }
+
+    private boolean isShopIdAvailable(GlobalPos pos, String id) {
+        ShopEntry match = getShopById(id);
+        return match == null || match.pos().equals(pos);
     }
 
     public void unregisterShop(GlobalPos pos) {

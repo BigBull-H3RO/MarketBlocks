@@ -125,6 +125,10 @@ public class IconButton extends Button {
         int offX = selected ? customSelectedBgOffsetX : customBgOffsetX;
         int offY = customBgOffsetY;
 
+        if (!this.active) {
+            graphics.setColor(0.45F, 0.45F, 0.45F, 0.8F);
+        }
+
         if (this.flipBackgroundHorizontal) {
             graphics.pose().pushPose();
             graphics.pose().translate(getX() + getWidth() / 2.0F, 0, 0);
@@ -149,5 +153,9 @@ public class IconButton extends Button {
         int iconY = getY() + (getHeight() - iconSize) / 2 + currentIconOffsetY;
 
         graphics.blit(iconToRender, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
+
+        if (!this.active) {
+            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        }
     }
 }

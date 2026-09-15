@@ -106,6 +106,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private OfferTemplateButton offerButton;
     private EditBox nameField;
     private EditBox npcNameField;
+    private EditBox playerSkinNameField;
 
     private List<IconButton> categoryTabs = new ArrayList<>();
 
@@ -159,7 +160,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     () -> switchTab(ShopTab.INVENTORY),
                     () -> switchTab(ShopTab.SETTINGS),
                     () -> switchTab(ShopTab.LOG),
-                    menu.canUseTab(ShopTab.INVENTORY),
+                    isInventoryTabEnabled(),
                     menu.canUseTab(ShopTab.SETTINGS),
                     menu.canUseTab(ShopTab.LOG));
         }
@@ -180,10 +181,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             lastSettingsVersion = currentSettingsVersion;
             lastAdminShop = menu.getBlockEntity().isAdminShopEnabled();
             if (current == ShopTab.SETTINGS) {
-                if (!hasUnsavedChanges()) {
-                    reloadSettingsDrafts(menu.getBlockEntity());
-                    rebuildUI();
-                }
+                syncServerSettings(menu.getBlockEntity());
             } else if (current == ShopTab.OFFERS) {
                 rebuildUI();
             } else {
@@ -249,7 +247,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     () -> switchTab(ShopTab.INVENTORY),
                     () -> switchTab(ShopTab.SETTINGS),
                     () -> switchTab(ShopTab.LOG),
-                    menu.canUseTab(ShopTab.INVENTORY),
+                    isInventoryTabEnabled(),
                     menu.canUseTab(ShopTab.SETTINGS),
                     menu.canUseTab(ShopTab.LOG));
         }
@@ -323,28 +321,38 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
         switch (activeSettingsCategory) {
             case GENERAL -> {
-                if (isOwner) {
-                    nameField = SingleOfferSettingsSections.buildGeneralSection(this, generalDraft, this::markDirty);
-                }
+                nameField = isOwner ? SingleOfferSettingsSections.buildGeneralSection(this, generalDraft, this::markDirty) : null;
+                npcNameField = null;
+                playerSkinNameField = null;
                 if (canToggleAdminShop) {
                     buildAdminShopToggleButton(be);
                 }
             }
             case IO -> {
+                nameField = null;
+                npcNameField = null;
+                playerSkinNameField = null;
                 if (isOwner) {
                     SingleOfferSettingsSections.buildIoSection(this, ioDraft, this::markDirty);
                 }
             }
             case VILLAGER -> {
+                nameField = null;
                 if (isOwner) {
                     SingleOfferSettingsSections.VillagerSectionWidgets widgets = SingleOfferSettingsSections
                             .buildVillagerSection(this, villagerDraft, visualPlacementResult, this::markDirty,
                                     this::rebuildUI);
                     npcNameField = widgets.npcNameField();
+                    playerSkinNameField = widgets.playerSkinNameField();
+                } else {
+                    npcNameField = null;
+                    playerSkinNameField = null;
                 }
             }
             case VISUALS -> {
+                nameField = null;
                 npcNameField = null;
+                playerSkinNameField = null;
                 if (isOwner) {
                     ShopVisualType visualType = ShopVisualType.from(be.getBlockState().getBlock());
                     if (visualType != ShopVisualType.UNKNOWN) {
@@ -354,12 +362,20 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 }
             }
             case ACCESS -> {
+                nameField = null;
+                npcNameField = null;
+                playerSkinNameField = null;
                 if (menu.isPrimaryOwner()) {
                     SingleOfferSettingsSections.buildAccessSection(this, accessDraft, ownerListPanel,
                             menu.isPrimaryOwner(), this::saveListPanelToDraft, this::rebuildUI, this::markDirty);
                 }
             }
-            case NOTIFICATIONS -> buildSettingsNotificationSection(be);
+            case NOTIFICATIONS -> {
+                nameField = null;
+                npcNameField = null;
+                playerSkinNameField = null;
+                buildSettingsNotificationSection(be);
+            }
         }
 
         if (isOwner) {
@@ -445,6 +461,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 generalDraft.setShopName(nameField.getValue());
             if (npcNameField != null)
                 villagerDraft.setNpcName(npcNameField.getValue());
+            if (playerSkinNameField != null)
+                villagerDraft.setPlayerSkinName(playerSkinNameField.getValue());
 
             GeneralSettings general = generalDraft.toSettings();
             VillagerSettings villager = villagerDraft.toSettings();
@@ -508,6 +526,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             generalDraft.setShopName(nameField.getValue());
         if (villagerDraft != null && npcNameField != null)
             villagerDraft.setNpcName(npcNameField.getValue());
+        if (villagerDraft != null && playerSkinNameField != null)
+            villagerDraft.setPlayerSkinName(playerSkinNameField.getValue());
         activeSettingsCategory = category;
         rebuildUI();
     }
@@ -539,58 +559,141 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
     }
 
-    private void reloadSettingsDrafts(SingleOfferShopBlockEntity be) {
-        if (be == null)
-            return;
-        originalGeneral = be.getGeneralSettings();
-        originalName = originalGeneral.shopName();
-        generalDraft = new GeneralSettings.Draft(originalGeneral);
-
-        originalVillager = be.getVillagerSettings();
-        villagerDraft = new VillagerSettings.Draft(originalVillager);
-
-        originalOfferItem = be.getOfferItemSettings();
-        offerItemDraft = new OfferItemSettings.Draft(originalOfferItem);
-
-        originalIo = be.getIoSettings();
-        ioDraft = new IoSettings.Draft(originalIo);
-
-        originalAccess = be.getAccessSettings();
-        accessDraft = new AccessSettings.Draft(originalAccess);
-
-        originalNotification = be.getNotificationSettings();
-        notificationDraft = new NotificationSettings.Draft(originalNotification);
-
-        ownerListPanel.syncWithDraft(accessDraft);
-        updateSaveButtonState();
+    public boolean hasUnsavedChanges() {
+        return hasUnsavedChangesInGeneral()
+                || hasUnsavedChangesInVillager()
+                || hasUnsavedChangesInOfferItem()
+                || hasUnsavedChangesInIo()
+                || hasUnsavedChangesInAccess()
+                || hasUnsavedChangesInNotification();
     }
 
-    public boolean hasUnsavedChanges() {
-        if (generalDraft == null || originalGeneral == null) {
-            return false;
-        }
+    private boolean hasUnsavedChangesInGeneral() {
+        return generalDraft != null && originalGeneral != null && !Objects.equals(generalDraft.toSettings(), originalGeneral);
+    }
+
+    private boolean hasUnsavedChangesInVillager() {
+        return villagerDraft != null && originalVillager != null && !Objects.equals(villagerDraft.toSettings(), originalVillager);
+    }
+
+    private boolean hasUnsavedChangesInOfferItem() {
+        return offerItemDraft != null && originalOfferItem != null && !Objects.equals(offerItemDraft.toSettings(), originalOfferItem);
+    }
+
+    private boolean hasUnsavedChangesInIo() {
+        return ioDraft != null && originalIo != null && !Objects.equals(ioDraft.toSettings(), originalIo);
+    }
+
+    private boolean hasUnsavedChangesInAccess() {
         if (activeSettingsCategory == SettingsCategory.ACCESS) {
             saveListPanelToDraft();
         }
-        if (nameField != null) {
-            generalDraft.setShopName(nameField.getValue());
+        return accessDraft != null && originalAccess != null && !Objects.equals(accessDraft.toSettings(), originalAccess);
+    }
+
+    private boolean hasUnsavedChangesInNotification() {
+        return notificationDraft != null && originalNotification != null && !Objects.equals(notificationDraft.toSettings(), originalNotification);
+    }
+
+    private void syncServerSettings(SingleOfferShopBlockEntity be) {
+        if (be == null)
+            return;
+
+        boolean nameFocused = nameField != null && nameField.isFocused();
+        boolean npcNameFocused = npcNameField != null && npcNameField.isFocused();
+        boolean playerSkinFocused = playerSkinNameField != null && playerSkinNameField.isFocused();
+
+        boolean hadGeneralChanges = hasUnsavedChangesInGeneral();
+        boolean hadVillagerChanges = hasUnsavedChangesInVillager();
+        boolean hadOfferItemChanges = hasUnsavedChangesInOfferItem();
+        boolean hadIoChanges = hasUnsavedChangesInIo();
+        boolean hadAccessChanges = hasUnsavedChangesInAccess();
+        boolean hadNotificationChanges = hasUnsavedChangesInNotification();
+
+        // 1. General Settings
+        GeneralSettings serverGeneral = be.getGeneralSettings();
+        if (generalDraft == null || !hadGeneralChanges) {
+            String typedName = nameFocused && generalDraft != null ? generalDraft.shopName() : null;
+            generalDraft = new GeneralSettings.Draft(serverGeneral);
+            if (typedName != null) {
+                generalDraft.setShopName(typedName);
+            } else if (nameField != null) {
+                nameField.setValue(serverGeneral.shopName());
+            }
+        } else {
+            if (!nameFocused) {
+                generalDraft.setShopName(serverGeneral.shopName());
+                if (nameField != null) {
+                    nameField.setValue(serverGeneral.shopName());
+                }
+            }
         }
-        if (npcNameField != null) {
-            villagerDraft.setNpcName(npcNameField.getValue());
+        originalGeneral = serverGeneral;
+        originalName = serverGeneral.shopName();
+
+        // 2. Villager Settings
+        VillagerSettings serverVillager = be.getVillagerSettings();
+        if (villagerDraft == null || !hadVillagerChanges) {
+            String typedNpc = npcNameFocused && villagerDraft != null ? villagerDraft.npcName() : null;
+            String typedSkin = playerSkinFocused && villagerDraft != null ? villagerDraft.playerSkinName() : null;
+            villagerDraft = new VillagerSettings.Draft(serverVillager);
+            if (typedNpc != null) {
+                villagerDraft.setNpcName(typedNpc);
+            } else if (npcNameField != null) {
+                npcNameField.setValue(serverVillager.npcName());
+            }
+            if (typedSkin != null) {
+                villagerDraft.setPlayerSkinName(typedSkin);
+            } else if (playerSkinNameField != null) {
+                playerSkinNameField.setValue(serverVillager.playerSkinName());
+            }
+        } else {
+            if (!npcNameFocused) {
+                villagerDraft.setNpcName(serverVillager.npcName());
+                if (npcNameField != null) {
+                    npcNameField.setValue(serverVillager.npcName());
+                }
+            }
+            if (!playerSkinFocused) {
+                villagerDraft.setPlayerSkinName(serverVillager.playerSkinName());
+                if (playerSkinNameField != null) {
+                    playerSkinNameField.setValue(serverVillager.playerSkinName());
+                }
+            }
         }
-        if (!Objects.equals(generalDraft.toSettings(), originalGeneral))
-            return true;
-        if (!Objects.equals(villagerDraft.toSettings(), originalVillager))
-            return true;
-        if (!Objects.equals(offerItemDraft.toSettings(), originalOfferItem))
-            return true;
-        if (!Objects.equals(ioDraft.toSettings(), originalIo))
-            return true;
-        if (!Objects.equals(accessDraft.toSettings(), originalAccess))
-            return true;
-        if (!Objects.equals(notificationDraft.toSettings(), originalNotification))
-            return true;
-        return false;
+        originalVillager = serverVillager;
+
+        // 3. OfferItem Settings
+        originalOfferItem = be.getOfferItemSettings();
+        if (offerItemDraft == null || !hadOfferItemChanges) {
+            offerItemDraft = new OfferItemSettings.Draft(originalOfferItem);
+        }
+
+        // 4. Io Settings
+        originalIo = be.getIoSettings();
+        if (ioDraft == null || !hadIoChanges) {
+            ioDraft = new IoSettings.Draft(originalIo);
+        }
+
+        // 5. Access Settings
+        originalAccess = be.getAccessSettings();
+        if (accessDraft == null || !hadAccessChanges) {
+            accessDraft = new AccessSettings.Draft(originalAccess);
+            ownerListPanel.syncWithDraft(accessDraft);
+        }
+
+        // 6. Notification Settings
+        originalNotification = be.getNotificationSettings();
+        if (notificationDraft == null || !hadNotificationChanges) {
+            notificationDraft = new NotificationSettings.Draft(originalNotification);
+        }
+
+        visualPlacementResult = resolveVisualPlacementResult(be);
+        updateSaveButtonState();
+
+        if (!nameFocused && !npcNameFocused && !playerSkinFocused) {
+            rebuildUI();
+        }
     }
 
     public void updateSaveButtonState() {
@@ -622,6 +725,9 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         originalAccess = null;
         originalNotification = null;
         originalName = null;
+        nameField = null;
+        npcNameField = null;
+        playerSkinNameField = null;
         ownerListPanel.clearData();
         saved = false;
         updateSaveButtonState();
@@ -642,6 +748,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         return menu.isOperator() && (menu.isGlobalAdminModeEnabled() || hasAdminShop);
     }
 
+    private boolean isInventoryTabEnabled() {
+        boolean adminActive = accessDraft != null ? accessDraft.adminShopEnabled()
+                : menu.getBlockEntity().isAdminShopEnabled();
+        return menu.canUseTab(ShopTab.INVENTORY) && !adminActive;
+    }
+
     private void buildAdminShopToggleButton(SingleOfferShopBlockEntity be) {
         int x = leftPos + 12;
         int y = topPos + 120;
@@ -653,6 +765,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 accessDraft.setAdminShopEnabled(next);
             }
             markDirty();
+            rebuildUI();
         }));
     }
 
@@ -756,8 +869,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if (nameField != null && nameField.isFocused() && nameField.charTyped(codePoint, modifiers))
-            return true;
+        if (this.getFocused() instanceof EditBox editBox && editBox.canConsumeInput()) {
+            if (editBox.charTyped(codePoint, modifiers)) {
+                return true;
+            }
+        }
         return super.charTyped(codePoint, modifiers);
     }
 

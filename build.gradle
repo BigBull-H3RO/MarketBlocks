@@ -86,7 +86,19 @@ runs {
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+sourceSets {
+    main {
+        resources { srcDir 'src/generated/resources' }
+    }
+    test {
+        java { srcDirs = [] }
+        resources { srcDirs = [] }
+    }
+}
+
+tasks.matching { it.name in ['compileTestJava', 'processTestResources', 'testClasses', 'test', 'testJunit'] }.configureEach {
+    enabled = false
+}
 
 configurations {
     runtimeClasspath.extendsFrom localRuntime

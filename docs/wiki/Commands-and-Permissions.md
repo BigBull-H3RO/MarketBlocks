@@ -12,7 +12,7 @@ These commands can be executed by any player without special permissions:
 
 | Command | Alias | Description |
 |---|---|---|
-| `/marketblocks marketplace open` | `/mb marketplace open` | Opens the central Marketplace GUI (equivalent to the default keybind **O**). |
+| `/marketblocks marketplace` | `/mb marketplace` | Opens the central Marketplace GUI (equivalent to the default keybind **O**). |
 | `/marketblocks search <item> [page]` | `/mb search <item> [page]` | Searches for SingleOfferShops and Marketplace offers selling or buying the specified item. |
 | `/marketblocks stats` | `/mb stats` | Displays the Top 10 SingleOfferShops and Top 10 Marketplace offers by total sales. |
 | `/marketblocks stats shops` | `/mb stats shops` | Displays the Top 10 player and admin shops by total sales volume. |

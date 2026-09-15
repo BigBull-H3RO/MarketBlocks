@@ -53,7 +53,7 @@
 4. **Customize via Tabs**: Use the top tabs to add Co-Owners, change the visual clerk (Villager profession or custom Player Skin), toggle notifications, or connect hoppers.
 
 ### 3. Accessing the Central Marketplace
-- Press **`O`** (default keybind) or type **`/mb marketplace open`** to browse server offers.
+- Press **`O`** (default keybind) or type **`/mb marketplace`** to browse server offers.
 - Visit designated market stalls in your server's spawn hub — operators can link any decorative block or NPC counter directly to the Marketplace!
 
 ---
@@ -81,7 +81,7 @@
 - **Rage Mode Easter Egg**: Annoying or attacking a customer trader will provoke immediate, humorous consequences!
 
 ### 🌐 **Marketplace (Central Economy Hub)**
-- **Universal & Physical Access**: Open via keybind (**`O`**), command (`/mb marketplace open`), or right-clicking linked decorative blocks.
+- **Universal & Physical Access**: Open via keybind (**`O`**), command (`/mb marketplace`), or right-clicking linked decorative blocks.
 - **Live In-Game Editor**: Operators can enable Edit Mode (`/mb admin editmode true`) to create categories, add offers, adjust prices, and reorder items directly in the GUI without touching JSON files.
 - **Dynamic Demand Curves**: Real-time price scaling automatically raises item prices under heavy buying pressure and cools down over time.
 - **Scarcity & Daily Limits**: Set global stock caps or personal daily purchase limits per player with configurable restock timers.
@@ -120,7 +120,7 @@ MarketBlocks integrates smoothly with popular modpack staples out of the box:
 ### Player Commands
 | Command | Shorthand | Description |
 |---|---|---|
-| `/marketblocks marketplace open` | `/mb marketplace open` | Opens the central Marketplace GUI (Default Keybind: **`O`**). |
+| `/marketblocks marketplace` | `/mb marketplace` | Opens the central Marketplace GUI (Default Keybind: **`O`**). |
 | `/marketblocks search <item> [page]` | `/mb search <item>` | Finds player shops and market offers with **[Waypoint]** and **[TP]** buttons. |
 | `/marketblocks stats` | `/mb stats` | Displays top 10 SingleOfferShops and top 10 Marketplace offers. |
 | `/marketblocks stats shops` | `/mb stats shops` | Displays top player and admin shops by total sales volume. |

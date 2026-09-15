@@ -33,10 +33,60 @@ import java.util.UUID;
  * Handles offer creation, validation, affordability checks, and bulk purchase
  * execution.
  */
-public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
+public class OfferManager {
+    private final SingleOfferShopBlockEntity shopEntity;
+
+    public OfferManager(SingleOfferShopBlockEntity shopEntity) {
+        this.shopEntity = shopEntity;
+    }
+
+    public SingleOfferShopBlockEntity shopEntity() {
+        return shopEntity;
+    }
+
     private static final int PAYMENT_SLOT_COUNT = 2;
     private static final int RESULT_SLOT_INDEX = 2;
     private static final int TOTAL_OFFER_SLOTS = 3;
+
+    private static final int BATCH_WINDOW_TICKS = 40; // 2 seconds delay
+    private static final int MAX_BATCH_TICKS = 100;   // 5 seconds max window
+
+    private static class PendingPurchaseNotification {
+        private final UUID buyerId;
+        private final String buyerName;
+        private final ItemStack resultItem;
+        private int totalCount;
+        private int remainingTicks;
+        private int totalElapsedTicks;
+        private final boolean notifyCoOwners;
+
+        public PendingPurchaseNotification(UUID buyerId, String buyerName, ItemStack resultItem, int count, boolean notifyCoOwners) {
+            this.buyerId = buyerId;
+            this.buyerName = buyerName;
+            this.resultItem = resultItem.copy();
+            this.totalCount = count;
+            this.remainingTicks = BATCH_WINDOW_TICKS;
+            this.totalElapsedTicks = 0;
+            this.notifyCoOwners = notifyCoOwners;
+        }
+
+        public boolean canMerge(UUID otherBuyerId, String otherBuyerName, ItemStack otherItem, boolean otherNotifyCoOwners) {
+            if (this.notifyCoOwners != otherNotifyCoOwners) return false;
+            if (this.buyerId != null && otherBuyerId != null) {
+                if (!this.buyerId.equals(otherBuyerId)) return false;
+            } else if (!java.util.Objects.equals(this.buyerName, otherBuyerName)) {
+                return false;
+            }
+            return ItemStack.isSameItemSameComponents(this.resultItem, otherItem);
+        }
+
+        public void merge(int additionalCount) {
+            this.totalCount += additionalCount;
+            this.remainingTicks = BATCH_WINDOW_TICKS;
+        }
+    }
+
+    private PendingPurchaseNotification pendingPurchase;
 
     public record OfferValidation(boolean valid, String errorKey) {
         public static final OfferValidation VALID = new OfferValidation(true, null);
@@ -362,10 +412,7 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
         Component shopPrefix = Component.literal("[" + shopName + "] ");
 
         if (notifSettings.notifyOnPurchase() && tradeCount > 0) {
-            String buyerName = buyer != null ? buyer.name() : "Unbekannt";
-            Component msg = shopPrefix.copy().append(Component.translatable(
-                    "message.marketblocks.notifications.purchase", buyerName, tradeCount, result.getHoverName()));
-            sendToOwners(serverLevel, notifSettings.notifyCoOwners(), msg);
+            queuePurchaseNotification(serverLevel, buyer, result, tradeCount, notifSettings.notifyCoOwners());
         }
 
         if (adminShop)
@@ -388,6 +435,52 @@ public record OfferManager(SingleOfferShopBlockEntity shopEntity) {
                     shopEntity::setLastOutputFullNotifyTime,
                     (data, owner, pos) -> data.addOutputFull(owner, pos));
         }
+    }
+
+    private void queuePurchaseNotification(ServerLevel serverLevel, @Nullable BuyerIdentity buyer, ItemStack result,
+            int tradeCount, boolean notifyCoOwners) {
+        UUID buyerId = buyer != null ? buyer.uuid() : null;
+        String buyerName = buyer != null ? buyer.name() : "Unbekannt";
+
+        if (pendingPurchase != null) {
+            if (pendingPurchase.canMerge(buyerId, buyerName, result, notifyCoOwners)) {
+                pendingPurchase.merge(tradeCount);
+                return;
+            }
+            flushPendingPurchaseNotification();
+        }
+
+        pendingPurchase = new PendingPurchaseNotification(buyerId, buyerName, result, tradeCount, notifyCoOwners);
+    }
+
+    public void tick() {
+        if (pendingPurchase != null) {
+            pendingPurchase.remainingTicks--;
+            pendingPurchase.totalElapsedTicks++;
+            if (pendingPurchase.remainingTicks <= 0 || pendingPurchase.totalElapsedTicks >= MAX_BATCH_TICKS) {
+                flushPendingPurchaseNotification();
+            }
+        }
+    }
+
+    public void flushPendingPurchaseNotification() {
+        if (pendingPurchase == null)
+            return;
+        if (!(shopEntity.getLevel() instanceof ServerLevel serverLevel)) {
+            pendingPurchase = null;
+            return;
+        }
+
+        String shopName = shopEntity.getGeneralSettings().shopName();
+        if (shopName == null || shopName.isEmpty())
+            shopName = "MarketBlocks";
+        Component shopPrefix = Component.literal("[" + shopName + "] ");
+
+        Component msg = shopPrefix.copy().append(Component.translatable(
+                "message.marketblocks.notifications.purchase", pendingPurchase.buyerName, pendingPurchase.totalCount,
+                pendingPurchase.resultItem.getHoverName()));
+        sendToOwners(serverLevel, pendingPurchase.notifyCoOwners, msg);
+        pendingPurchase = null;
     }
 
     @FunctionalInterface

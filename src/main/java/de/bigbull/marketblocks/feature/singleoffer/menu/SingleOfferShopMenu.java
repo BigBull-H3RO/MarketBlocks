@@ -64,6 +64,12 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     public SingleOfferShopMenu(int containerId, Inventory inv, RegistryFriendlyByteBuf buf) {
         this(containerId, inv, getBlockEntity(inv, buf), false);
+        if (buf.isReadable()) {
+            String syncedShopId = buf.readUtf();
+            if (this.blockEntity != null && syncedShopId != null && !syncedShopId.isEmpty()) {
+                this.blockEntity.setShopId(syncedShopId);
+            }
+        }
     }
 
     private static SingleOfferShopBlockEntity getBlockEntity(Inventory inv, RegistryFriendlyByteBuf buf) {
@@ -236,6 +242,10 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     public List<TransactionLogEntry> getTransactionLogEntries() {
         return transactionLogEntries;
+    }
+
+    public String getShopId() {
+        return blockEntity != null ? blockEntity.getShopId() : "";
     }
 
     public void setTransactionLogEntries(List<TransactionLogEntry> entries) {

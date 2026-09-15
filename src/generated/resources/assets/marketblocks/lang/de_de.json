@@ -146,6 +146,8 @@
   "gui.marketblocks.error.no_result_item": "Bitte platziere ein Item im Ergebnis-Slot",
   "gui.marketblocks.general.group.features": "FUNKTIONEN & SIGNALE",
   "gui.marketblocks.general.group.shop_profile": "SHOP-PROFIL",
+  "gui.marketblocks.general.shop_id.copied": "Shop-ID %s in die Zwischenablage kopiert!",
+  "gui.marketblocks.general.shop_id.tooltip": "Shop-ID: %s (Klicken zum Kopieren)",
   "gui.marketblocks.general.shop_name_label": "NAME:",
   "gui.marketblocks.general.status.active": "AKTIV",
   "gui.marketblocks.general.status.active.tooltip": "Shop geöffnet (Klicken zum Pausieren)",

@@ -320,6 +320,8 @@ public class ModDeLangProvider extends LanguageProvider {
         add("gui.marketblocks.general.group.shop_profile", "SHOP-PROFIL");
         add("gui.marketblocks.general.group.features", "FUNKTIONEN & SIGNALE");
         add("gui.marketblocks.general.shop_name_label", "NAME:");
+        add("gui.marketblocks.general.shop_id.tooltip", "Shop-ID: %s (Klicken zum Kopieren)");
+        add("gui.marketblocks.general.shop_id.copied", "Shop-ID %s in die Zwischenablage kopiert!");
         add("gui.marketblocks.error.invalid_offer", "Ungültige Angebotskonfiguration");
         add("gui.marketblocks.error.no_payment_items", "Bitte platziere mindestens ein Zahlungsitem");
         add("gui.marketblocks.error.no_result_item", "Bitte platziere ein Item im Ergebnis-Slot");

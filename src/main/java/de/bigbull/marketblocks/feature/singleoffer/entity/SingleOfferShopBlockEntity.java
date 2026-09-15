@@ -85,6 +85,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private boolean saleActiveClient = false;
     private static final String NBT_SALE_PERCENT = "SalePercent";
     private static final String NBT_SALE_END_TIMESTAMP = "SaleEndTimestamp";
+    private static final String NBT_SHOP_ID = "ShopId";
+    private String shopId = "";
     public static final int MAX_TRANSACTION_LOG_ENTRIES = 100;
 
     private transient boolean lastDirectoryOutOfStock = false;
@@ -307,11 +309,27 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             boolean currentOutputFull = !isAdminShopEnabled() && settingsManager.isOutputFull();
             this.lastDirectoryOutOfStock = currentOutOfStock;
 
-            data.registerOrUpdateShop(globalPos, getOwnerId(), getOwnerName(), getShopName(),
+            String oldId = this.shopId;
+            this.shopId = data.registerOrUpdateShop(globalPos, getOwnerId(), getOwnerName(), getShopName(),
                     getGeneralSettings().isClosed(), settingsManager.getShopCategory(), getOfferPayment1(),
                     getOfferPayment2(), getOfferResult(), totalSales, isAdminShopEnabled(), isMarketCrate, hasShowcase,
-                    currentOutOfStock, currentOutputFull);
+                    currentOutOfStock, currentOutputFull, this.shopId);
+            if (!Objects.equals(oldId, this.shopId)) {
+                setChanged();
+                sync();
+            }
         }
+    }
+
+    public String getShopId() {
+        if ((shopId == null || shopId.isEmpty()) && level instanceof ServerLevel) {
+            updateShopDirectory();
+        }
+        return shopId != null ? shopId : "";
+    }
+
+    public void setShopId(String shopId) {
+        this.shopId = shopId != null ? shopId : "";
     }
 
     @Override
@@ -958,10 +976,13 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                 }
             }
         }
+
+        be.offerManager.tick();
     }
 
     @Override
     public void onChunkUnloaded() {
+        offerManager.flushPendingPurchaseNotification();
         super.onChunkUnloaded();
         unlockAdjacentChests();
         if (level != null) {
@@ -971,6 +992,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public void setRemoved() {
+        offerManager.flushPendingPurchaseNotification();
         if (level != null && level.isClientSide()) {
             de.bigbull.marketblocks.compat.journeymap.JourneyMapCompat.removeShopMarker(worldPosition);
         }
@@ -997,6 +1019,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             level.invalidateCapabilities(worldPosition);
             if (!level.isClientSide) {
                 updateShopDirectory();
+                sync();
             }
         }
     }
@@ -1011,6 +1034,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         if (tag.contains(NBT_TOTAL_SALES)) {
             totalSales = tag.getInt(NBT_TOTAL_SALES);
+        }
+
+        if (tag.contains(NBT_SHOP_ID)) {
+            shopId = tag.getString(NBT_SHOP_ID);
         }
 
         if (tag.contains(NBT_SALE_PERCENT)) {
@@ -1033,6 +1060,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         visualManager.save(tag);
 
         tag.putInt(NBT_TOTAL_SALES, totalSales);
+
+        if (shopId != null && !shopId.isEmpty()) {
+            tag.putString(NBT_SHOP_ID, shopId);
+        }
 
         if (salePercent != null) {
             tag.putDouble(NBT_SALE_PERCENT, salePercent);
@@ -1105,6 +1136,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             tag.putBoolean("SaleActive", isSaleActive());
         }
 
+        if (shopId != null && !shopId.isEmpty()) {
+            tag.putString(NBT_SHOP_ID, shopId);
+        }
+
         return tag;
     }
 
@@ -1128,6 +1163,10 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
         settingsManager.load(tag);
         visualManager.load(tag);
+
+        if (tag.contains(NBT_SHOP_ID)) {
+            shopId = tag.getString(NBT_SHOP_ID);
+        }
 
         updateOfferSlot();
         visualManager.refreshPaymentFeedbackSnapshot(paymentHandler);

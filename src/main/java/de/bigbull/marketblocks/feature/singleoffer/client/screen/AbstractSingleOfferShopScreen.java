@@ -107,6 +107,8 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         sideTabs.add(offersButton);
 
         int inventoryWidth = SIDE_TAB_WIDTH + (selectedTab == ShopTab.INVENTORY ? SIDE_TAB_SELECTED_WIDTH_OFFSET : 0);
+        Component inventoryTooltip = inventoryEnabled ? Component.translatable("gui.marketblocks.inventory_tab")
+                : Component.translatable("gui.marketblocks.inventory_admin_disabled");
         IconButton inventoryButton = new IconButton(
                 tabX, y + SIDE_TAB_INVENTORY_Y, inventoryWidth, SIDE_TAB_HEIGHT,
                 TAB_BUTTON_SPRITES, INVENTORY_ICON,
@@ -114,7 +116,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
                     if (selectedTab != ShopTab.INVENTORY)
                         onInventory.run();
                 },
-                Component.translatable("gui.marketblocks.inventory_tab"),
+                inventoryTooltip,
                 () -> selectedTab == ShopTab.INVENTORY).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
         sideTabs.add(inventoryButton);
         inventoryButton.active = inventoryEnabled;

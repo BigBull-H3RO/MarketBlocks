@@ -44,74 +44,70 @@ public class RecipeElement implements ITradeBookElement {
         double localMouseX = ((mouseX / scale) - (x - 3)) / inverseScale;
         double localMouseY = ((mouseY / scale) - baseY) / inverseScale;
 
-        java.util.function.BiConsumer<ItemStack, int[]> checkTooltip = (stack, pos) -> {
-            if (!stack.isEmpty() && localMouseX >= pos[0] && localMouseX < pos[0] + 16 && localMouseY >= pos[1] && localMouseY < pos[1] + 16) {
-                context.setNextHoveredObject("recipe_" + stack.getItem().toString());
-                context.addTooltip(() -> graphics.renderTooltip(context.getFont(), stack, mouseX, mouseY));
-            }
-        };
-
         if (recipeId.equals("TRADESTAND")) {
-            ItemStack slab = new ItemStack(Items.OAK_SLAB);
-            ItemStack stick = new ItemStack(Items.STICK);
+            ItemStack planks = new ItemStack(Items.OAK_PLANKS);
+            ItemStack slab = new ItemStack(Items.SMOOTH_STONE_SLAB);
+            ItemStack stoneBricks = new ItemStack(Items.STONE_BRICKS);
             ItemStack emerald = new ItemStack(Items.EMERALD);
-            ItemStack log = new ItemStack(Items.OAK_LOG);
+            ItemStack sign = new ItemStack(Items.OAK_SIGN);
             ItemStack result = new ItemStack(RegistriesInit.TRADE_STAND_BLOCK.get());
 
-            graphics.renderItem(slab, 5, 5);
-            graphics.renderItem(slab, 24, 5);
-            graphics.renderItem(slab, 43, 5);
-            graphics.renderItem(stick, 5, 24);
-            graphics.renderItem(emerald, 24, 24);
-            graphics.renderItem(stick, 43, 24);
-            graphics.renderItem(log, 5, 43);
-            graphics.renderItem(log, 24, 43);
-            graphics.renderItem(log, 43, 43);
+            // Row 1: # D #
+            renderSlot(graphics, planks, 5, 5, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, slab, 24, 5, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, planks, 43, 5, localMouseX, localMouseY, mouseX, mouseY, context);
 
-            graphics.renderItem(result, 96, 24);
+            // Row 2: B E B
+            renderSlot(graphics, stoneBricks, 5, 24, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, emerald, 24, 24, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, stoneBricks, 43, 24, localMouseX, localMouseY, mouseX, mouseY, context);
 
-            checkTooltip.accept(slab, new int[] { 5, 5 });
-            checkTooltip.accept(slab, new int[] { 24, 5 });
-            checkTooltip.accept(slab, new int[] { 43, 5 });
-            checkTooltip.accept(stick, new int[] { 5, 24 });
-            checkTooltip.accept(emerald, new int[] { 24, 24 });
-            checkTooltip.accept(stick, new int[] { 43, 24 });
-            checkTooltip.accept(log, new int[] { 5, 43 });
-            checkTooltip.accept(log, new int[] { 24, 43 });
-            checkTooltip.accept(log, new int[] { 43, 43 });
-            checkTooltip.accept(result, new int[] { 96, 24 });
+            // Row 3: # S #
+            renderSlot(graphics, planks, 5, 43, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, sign, 24, 43, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, planks, 43, 43, localMouseX, localMouseY, mouseX, mouseY, context);
+
+            // Result
+            renderSlot(graphics, result, 96, 24, localMouseX, localMouseY, mouseX, mouseY, context);
 
         } else if (recipeId.equals("MARKETCRATE")) {
-            ItemStack slab = new ItemStack(Items.OAK_SLAB);
-            ItemStack stick = new ItemStack(Items.STICK);
+            ItemStack planks = new ItemStack(Items.OAK_PLANKS);
             ItemStack emerald = new ItemStack(Items.EMERALD);
             ItemStack chest = new ItemStack(Items.CHEST);
+            ItemStack barrel = new ItemStack(Items.BARREL);
+            ItemStack sign = new ItemStack(Items.OAK_SIGN);
             ItemStack result = new ItemStack(RegistriesInit.MARKETCRATE_BLOCK.get());
 
-            graphics.renderItem(slab, 5, 5);
-            graphics.renderItem(slab, 24, 5);
-            graphics.renderItem(slab, 43, 5);
-            graphics.renderItem(stick, 5, 24);
-            graphics.renderItem(emerald, 24, 24);
-            graphics.renderItem(stick, 43, 24);
-            graphics.renderItem(chest, 5, 43);
-            graphics.renderItem(chest, 24, 43);
-            graphics.renderItem(chest, 43, 43);
+            // Row 1: # E #
+            renderSlot(graphics, planks, 5, 5, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, emerald, 24, 5, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, planks, 43, 5, localMouseX, localMouseY, mouseX, mouseY, context);
 
-            graphics.renderItem(result, 96, 24);
+            // Row 2: # C #
+            renderSlot(graphics, planks, 5, 24, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, chest, 24, 24, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, planks, 43, 24, localMouseX, localMouseY, mouseX, mouseY, context);
 
-            checkTooltip.accept(slab, new int[] { 5, 5 });
-            checkTooltip.accept(slab, new int[] { 24, 5 });
-            checkTooltip.accept(slab, new int[] { 43, 5 });
-            checkTooltip.accept(stick, new int[] { 5, 24 });
-            checkTooltip.accept(emerald, new int[] { 24, 24 });
-            checkTooltip.accept(stick, new int[] { 43, 24 });
-            checkTooltip.accept(chest, new int[] { 5, 43 });
-            checkTooltip.accept(chest, new int[] { 24, 43 });
-            checkTooltip.accept(chest, new int[] { 43, 43 });
-            checkTooltip.accept(result, new int[] { 96, 24 });
+            // Row 3: B S B
+            renderSlot(graphics, barrel, 5, 43, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, sign, 24, 43, localMouseX, localMouseY, mouseX, mouseY, context);
+            renderSlot(graphics, barrel, 43, 43, localMouseX, localMouseY, mouseX, mouseY, context);
+
+            // Result
+            renderSlot(graphics, result, 96, 24, localMouseX, localMouseY, mouseX, mouseY, context);
         }
 
         graphics.pose().popPose();
+    }
+
+    private void renderSlot(GuiGraphics graphics, ItemStack stack, int x, int y,
+            double localMouseX, double localMouseY, int mouseX, int mouseY,
+            TradeBookRenderContext context) {
+        if (stack.isEmpty()) return;
+        graphics.renderItem(stack, x, y);
+        if (localMouseX >= x && localMouseX < x + 16 && localMouseY >= y && localMouseY < y + 16) {
+            context.setNextHoveredObject("recipe_" + stack.getItem().toString());
+            context.addTooltip(() -> graphics.renderTooltip(context.getFont(), stack, mouseX, mouseY));
+        }
     }
 }

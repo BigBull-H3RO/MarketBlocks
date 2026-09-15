@@ -319,6 +319,8 @@ public class ModFrLangProvider extends LanguageProvider {
                 add("gui.marketblocks.general.group.shop_profile", "PROFIL DE BOUTIQUE");
                 add("gui.marketblocks.general.group.features", "FONCTIONS & SIGNAUX");
                 add("gui.marketblocks.general.shop_name_label", "NOM :");
+                add("gui.marketblocks.general.shop_id.tooltip", "ID boutique : %s (Cliquer pour copier)");
+                add("gui.marketblocks.general.shop_id.copied", "ID boutique %s copié dans le presse-papiers !");
                 add("gui.marketblocks.error.invalid_offer", "Configuration d'offre invalide");
                 add("gui.marketblocks.error.no_payment_items", "Veuillez placer au moins un objet de paiement");
                 add("gui.marketblocks.error.no_result_item", "Veuillez placer un objet dans l'emplacement de résultat");

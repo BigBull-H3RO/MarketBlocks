@@ -81,13 +81,12 @@ public final class MarketBlocksCommandEvents {
                         .then(ShopSearchCommand.build(buildContext))
                         .then(ShopStatsCommand.build())
                         .then(Commands.literal("marketplace")
-                                .then(Commands.literal("open")
-                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
-                                        .executes(context -> {
-                                            ServerPlayer player = context.getSource().getPlayerOrException();
-                                            MarketplaceManager.get().openShop(player);
-                                            return 1;
-                                        })))
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> {
+                                    ServerPlayer player = context.getSource().getPlayerOrException();
+                                    MarketplaceManager.get().openShop(player);
+                                    return 1;
+                                }))
                         .then(MarketplaceAdminCommand.build(LINK_SUGGESTIONS))
                         .then(Commands.literal("internal")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)

@@ -76,6 +76,8 @@ public class ShopAccessManager {
     public boolean isOwner(Player player) {
         if (shop.isAdminShopEnabled() && player.hasPermissions(2))
             return true;
+        if (shop.isGlobalAdminModeEnabled() && player.hasPermissions(2))
+            return true;
         return isOwnerByUUID(player.getUUID());
     }
 
@@ -114,6 +116,8 @@ public class ShopAccessManager {
 
     public boolean isPrimaryOwner(Player player) {
         if (shop.isAdminShopEnabled() && player.hasPermissions(2))
+            return true;
+        if (shop.isGlobalAdminModeEnabled() && player.hasPermissions(2))
             return true;
         return player.getUUID().equals(shop.getSettingsManager().getAccessSettings().ownerId());
     }
@@ -157,9 +161,14 @@ public class ShopAccessManager {
 
     public ContainerData createMenuFlags(Player player) {
         return new ContainerData() {
+            private int clientSyncedFlags = 0;
+
             @Override
             public int get(int index) {
                 if (index == 0) {
+                    if (shop.getLevel() != null && shop.getLevel().isClientSide()) {
+                        return clientSyncedFlags;
+                    }
                     int flags = 0;
                     if (shop.hasOffer())
                         flags |= SingleOfferShopBlockEntity.HAS_OFFER_FLAG;
@@ -186,6 +195,9 @@ public class ShopAccessManager {
 
             @Override
             public void set(int index, int value) {
+                if (index == 0) {
+                    this.clientSyncedFlags = value;
+                }
             }
 
             @Override

@@ -146,6 +146,8 @@
   "gui.marketblocks.error.no_result_item": "Please place an item in the result slot",
   "gui.marketblocks.general.group.features": "FEATURES & SIGNALS",
   "gui.marketblocks.general.group.shop_profile": "SHOP PROFILE",
+  "gui.marketblocks.general.shop_id.copied": "Shop ID %s copied to clipboard!",
+  "gui.marketblocks.general.shop_id.tooltip": "Shop ID: %s (Click to copy)",
   "gui.marketblocks.general.shop_name_label": "NAME:",
   "gui.marketblocks.general.status.active": "ACTIVE",
   "gui.marketblocks.general.status.active.tooltip": "Shop open (Click to pause)",

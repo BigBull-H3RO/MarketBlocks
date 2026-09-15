@@ -146,6 +146,8 @@
   "gui.marketblocks.error.no_result_item": "Por favor, coloca un objeto en la ranura de resultado",
   "gui.marketblocks.general.group.features": "FUNCIONES Y SEÑALES",
   "gui.marketblocks.general.group.shop_profile": "PERFIL DE TIENDA",
+  "gui.marketblocks.general.shop_id.copied": "¡ID de tienda %s copiado al portapapeles!",
+  "gui.marketblocks.general.shop_id.tooltip": "ID de tienda: %s (Clic para copiar)",
   "gui.marketblocks.general.shop_name_label": "NOMBRE:",
   "gui.marketblocks.general.status.active": "ACTIVO",
   "gui.marketblocks.general.status.active.tooltip": "Tienda abierta (Clic para pausar)",

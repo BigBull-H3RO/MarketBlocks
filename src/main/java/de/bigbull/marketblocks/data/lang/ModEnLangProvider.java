@@ -320,6 +320,8 @@ public class ModEnLangProvider extends LanguageProvider {
                 add("gui.marketblocks.general.group.shop_profile", "SHOP PROFILE");
                 add("gui.marketblocks.general.group.features", "FEATURES & SIGNALS");
                 add("gui.marketblocks.general.shop_name_label", "NAME:");
+                add("gui.marketblocks.general.shop_id.tooltip", "Shop ID: %s (Click to copy)");
+                add("gui.marketblocks.general.shop_id.copied", "Shop ID %s copied to clipboard!");
                 add("gui.marketblocks.error.invalid_offer", "Invalid offer configuration");
                 add("gui.marketblocks.error.no_payment_items", "Please place at least one payment item");
                 add("gui.marketblocks.error.no_result_item", "Please place an item in the result slot");
