@@ -5,13 +5,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 
 /**
- * Pixel-precise miniature arrow stepper button using vanilla Minecraft button sprites.
+ * Pixel-precise miniature arrow stepper button using vanilla Minecraft button
+ * sprites.
  * Supports dual stepper mode (up and down in a single widget with 1px divider)
  * or legacy single button mode.
  */
@@ -55,23 +54,27 @@ public class MiniArrowButton extends AbstractWidget {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
-        if (this.active && this.visible) {
-            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-            if (this.stepperMode) {
-                if (mouseY < getY() + (getHeight() / 2.0)) {
-                    if (this.onUp != null) {
-                        this.onUp.run();
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.active && this.visible && this.isValidClickButton(button)) {
+            if (this.clicked(mouseX, mouseY)) {
+                this.playDownSound(Minecraft.getInstance().getSoundManager());
+                if (this.stepperMode) {
+                    if (mouseY < getY() + (getHeight() / 2.0)) {
+                        if (this.onUp != null) {
+                            this.onUp.run();
+                        }
+                    } else {
+                        if (this.onDown != null) {
+                            this.onDown.run();
+                        }
                     }
-                } else {
-                    if (this.onDown != null) {
-                        this.onDown.run();
-                    }
+                } else if (this.onPress != null) {
+                    this.onPress.run();
                 }
-            } else if (this.onPress != null) {
-                this.onPress.run();
+                return true;
             }
         }
+        return false;
     }
 
     @Override
@@ -96,14 +99,16 @@ public class MiniArrowButton extends AbstractWidget {
 
         int arrow = !this.active ? ARROW_COLOR_DISABLED : ARROW_COLOR;
 
-        // Each button is 8px tall and they overlap by 1px at the shared black border (no gap)
+        // Each button is 8px tall and they overlap by 1px at the shared black border
+        // (no gap)
         int btnH = (h + 1) / 2;
         int btn2Y = y + h - btnH;
 
         ResourceLocation upSprite = BUTTON_SPRITES.get(this.active, upHovered);
         ResourceLocation downSprite = BUTTON_SPRITES.get(this.active, downHovered);
 
-        // Draw non-hovered button first so the hovered button's highlight renders cleanly on top
+        // Draw non-hovered button first so the hovered button's highlight renders
+        // cleanly on top
         if (downHovered) {
             graphics.blitSprite(upSprite, x, y, w, btnH);
             graphics.blitSprite(downSprite, x, btn2Y, w, btnH);
@@ -152,6 +157,7 @@ public class MiniArrowButton extends AbstractWidget {
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(net.minecraft.client.gui.narration.NarratedElementType.TITLE, createNarrationMessage());
+        narrationElementOutput.add(net.minecraft.client.gui.narration.NarratedElementType.TITLE,
+                createNarrationMessage());
     }
 }

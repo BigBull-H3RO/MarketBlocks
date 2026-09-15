@@ -82,7 +82,7 @@ public class MoveToShopGoal extends Goal {
 
         boolean feetPassable = feet.isPathfindable(PathComputationType.LAND);
         boolean headPassable = head.isPathfindable(PathComputationType.LAND);
-        boolean floorSolid = !floor.isAir() && !floor.liquid();
+        boolean floorSolid = !floor.isAir() && floor.getFluidState().isEmpty();
 
         return feetPassable && headPassable && floorSolid;
     }

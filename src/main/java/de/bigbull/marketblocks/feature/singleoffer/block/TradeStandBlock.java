@@ -100,6 +100,7 @@ public class TradeStandBlock extends BaseShopBlock {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
         return createCloneStack(state);
     }

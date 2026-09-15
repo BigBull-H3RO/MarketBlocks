@@ -8,11 +8,21 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-def isRelease = (project.hasProperty('release') && project.property('release').toString().toBoolean()) ||
-                System.getenv('IS_RELEASE') == 'true'
+// Optional local config (targets configured in local.properties, kept private from git)
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+
+def isDev = (project.hasProperty('dev') && project.property('dev').toString().toBoolean()) ||
+            (project.hasProperty('devBuild') && project.property('devBuild').toString().toBoolean()) ||
+            localProperties.getProperty('devBuild') == 'true' ||
+            System.getenv('IS_DEV') == 'true' ||
+            gradle.startParameter.taskNames.any { it.toLowerCase().contains('deployserver') }
 
 def effectiveVersion = mod_version
-if (!isRelease && !mod_version.contains('-dev') && !mod_version.contains('-test')) {
+if (isDev && !mod_version.contains('-dev') && !mod_version.contains('-test')) {
     if (mod_version.contains("-${minecraft_version}")) {
         effectiveVersion = mod_version.replace("-${minecraft_version}", "-dev-${minecraft_version}")
     } else {
@@ -85,7 +95,7 @@ configurations {
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
     compileOnly "maven.modrinth:jade:15.10.5+neoforge"
-    // runtimeOnly "maven.modrinth:jade:15.10.5+neoforge" // Auskommentiert, damit der Test-Server ohne Jade startet und Clients ohne Jade nicht kickt
+    // runtimeOnly "maven.modrinth:jade:15.10.5+neoforge" // Commented out so the test server starts without Jade and clients without Jade aren't kicked
     compileOnly "info.journeymap:journeymap-api-neoforge:2.0.0-1.21.1-SNAPSHOT"
     compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
     compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${jei_version}"
@@ -120,13 +130,14 @@ publishing {
     }
     repositories {
         maven {
-            url "file://${project.projectDir}/repo"
+            url = "file://${project.projectDir}/repo"
         }
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs.addAll(['-Xlint:deprecation', '-Xlint:unchecked'])
 }
 
 idea {
@@ -136,12 +147,7 @@ idea {
     }
 }
 
-// Optional local deploy task (targets configured in local.properties, kept private from git)
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withInputStream { localProperties.load(it) }
-}
+// Optional local deploy task
 
 tasks.register('deployServer') {
     group = 'deployment'
@@ -151,13 +157,13 @@ tasks.register('deployServer') {
     doLast {
         def targetDirStr = localProperties.getProperty('serverModsDir')
         if (targetDirStr == null || targetDirStr.trim().isEmpty()) {
-            logger.lifecycle('deployServer übersprungen: serverModsDir ist in local.properties nicht gesetzt.')
+            logger.lifecycle('deployServer skipped: serverModsDir is not set in local.properties.')
             return
         }
 
         def targetDir = file(targetDirStr.trim())
         if (!targetDir.exists()) {
-            logger.warn("deployServer Warnung: Zielverzeichnis existiert nicht: ${targetDir}")
+            logger.warn("deployServer warning: target directory does not exist: ${targetDir}")
             return
         }
 
@@ -171,6 +177,6 @@ tasks.register('deployServer') {
             into targetDir
         }
 
-        logger.lifecycle("Erfolgreich '${jarFile.name}' nach '${targetDir.absolutePath}' kopiert!")
+        logger.lifecycle("Successfully copied '${jarFile.name}' to '${targetDir.absolutePath}'!")
     }
 }

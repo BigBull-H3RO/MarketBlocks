@@ -21,7 +21,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ComparatorBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -240,17 +245,20 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         boolean isAdminShop = shop.isAdminShopEnabled();
         boolean hasAdminBypass = player.hasPermissions(2) && player.isCreative();
 
-        // Admin Shop: require OP + Creative + Sneaking so admins don't accidentally delete server shops
+        // Admin Shop: require OP + Creative + Sneaking so admins don't accidentally
+        // delete server shops
         if (isAdminShop) {
             if (!hasAdminBypass) {
                 if (notifyPlayer && player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_shop_protected"), true);
+                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_shop_protected"),
+                            true);
                 }
                 return false;
             }
             if (!player.isShiftKeyDown()) {
                 if (notifyPlayer && player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_shop_break_hint"), true);
+                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_shop_break_hint"),
+                            true);
                 }
                 return false;
             }
@@ -333,6 +341,13 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     }
 
     @Override
+    public float getExplosionResistance(BlockState state, BlockGetter level, BlockPos pos, Explosion explosion) {
+        return SingleOfferConfig.SHOP_BLAST_RESISTANCE.get().floatValue();
+    }
+
+    @Deprecated
+    @Override
+    @SuppressWarnings("deprecation")
     public float getExplosionResistance() {
         return SingleOfferConfig.SHOP_BLAST_RESISTANCE.get().floatValue();
     }

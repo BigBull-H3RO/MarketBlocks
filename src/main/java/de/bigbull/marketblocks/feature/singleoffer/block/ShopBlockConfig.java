@@ -16,8 +16,6 @@ public record ShopBlockConfig(VoxelShape shape) {
         return shape;
     }
 
-    /** TradeStandBlock (1 block tall, classic design). */
-    public static final ShopBlockConfig TRADE_STAND_DEFAULT_SHAPE = new ShopBlockConfig(Block.box(0, 0, 0, 16, 13, 16));
 
     /**
      * TradeStandBlock – shared shape config for the base pedestal.

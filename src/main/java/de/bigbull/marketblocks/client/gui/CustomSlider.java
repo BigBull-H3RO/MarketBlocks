@@ -148,11 +148,6 @@ public class CustomSlider extends AbstractWidget {
         return false;
     }
 
-    @Override
-    public void onClick(double mouseX, double mouseY) {
-        this.isDragging = true;
-        updateFromMouse(mouseX);
-    }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {

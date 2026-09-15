@@ -85,7 +85,7 @@ public class ShopEntryElement implements ITradeBookElement {
 
         // Render Owner Name (Centered) for dir_shop
         if (!prefix.equals("my_shop")) {
-            currentY = startY + 10; // Abstand zwischen Shopnamen und Spielernamen (hier verändern!)
+            currentY = startY + 10; // Spacing between shop name and player name
 
             String owner = TradeBookLayoutUtils.truncate(ownerFull, 10);
             int ownerWidth = context.getFont().width(owner);
@@ -103,9 +103,9 @@ public class ShopEntryElement implements ITradeBookElement {
                             mouseX, mouseY));
                 }, null));
             }
-            currentY += 14; // Abstand zwischen Spielernamen und Angebot
+            currentY += 14; // Spacing between player name and offer
         } else {
-            currentY = startY + 18; // Abstand zwischen Shopnamen und Angebot bei "My Shops"
+            currentY = startY + 18; // Spacing between shop name and offer for "My Shops"
         }
 
         // Render Head (Left), Offer (Center), Compass (Right)

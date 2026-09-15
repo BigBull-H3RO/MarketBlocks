@@ -9,8 +9,11 @@ import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import de.bigbull.marketblocks.feature.singleoffer.network.*;
-import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
+import de.bigbull.marketblocks.feature.singleoffer.network.AutoFillPaymentPacket;
+import de.bigbull.marketblocks.feature.singleoffer.network.ClearTransactionLogPacket;
+import de.bigbull.marketblocks.feature.singleoffer.network.CreateOfferPacket;
+import de.bigbull.marketblocks.feature.singleoffer.network.DeleteOfferPacket;
+import de.bigbull.marketblocks.feature.singleoffer.network.UpdateSettingsPacket;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.entity.ShopSettingsManager;
@@ -40,11 +43,9 @@ import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
-import java.time.Instant;
 import java.util.*;
 
 /**
@@ -80,7 +81,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button_highlighted"),
             ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "18x18/button_selected"));
 
-    private static final int OWNER_HEAD_X_OFFSET = 18;
+    private static final int OWNER_HEAD_X_OFFSET = 13;
     private static final int OWNER_HEAD_Y_OFFSET = 5;
 
     private record IconRect(int x, int y, int width, int height) {
@@ -180,7 +181,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             lastAdminShop = menu.getBlockEntity().isAdminShopEnabled();
             if (current == ShopTab.SETTINGS) {
                 if (!hasUnsavedChanges()) {
-                    discardUnsavedSettings();
+                    reloadSettingsDrafts(menu.getBlockEntity());
                     rebuildUI();
                 }
             } else if (current == ShopTab.OFFERS) {
@@ -315,8 +316,6 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
             categoryTabs = SingleOfferSettingsSections.buildCategoryButtons(this, activeSettingsCategory,
                     this::switchSettingsCategory);
-            buildSaveButton(be);
-            buildResetButton();
         } else {
             categoryTabs.clear();
             activeSettingsCategory = getFirstEnabledCategory();
@@ -339,7 +338,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             case VILLAGER -> {
                 if (isOwner) {
                     SingleOfferSettingsSections.VillagerSectionWidgets widgets = SingleOfferSettingsSections
-                            .buildVillagerSection(this, villagerDraft, visualPlacementResult, this::markDirty, this::rebuildUI);
+                            .buildVillagerSection(this, villagerDraft, visualPlacementResult, this::markDirty,
+                                    this::rebuildUI);
                     npcNameField = widgets.npcNameField();
                 }
             }
@@ -361,6 +361,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
             case NOTIFICATIONS -> buildSettingsNotificationSection(be);
         }
+
+        if (isOwner) {
+            buildSaveButton(be);
+            buildResetButton();
+        }
     }
 
     private void buildResetButton() {
@@ -379,7 +384,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private void resetCurrentCategorySettings() {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         ShopSettingsManager sm = be != null ? be.getSettingsManager() : null;
-        boolean isMarketCrate = sm != null ? sm.isMarketCrate() : (be != null && ShopVisualType.from(be.getBlockState().getBlock()) == ShopVisualType.MARKET_CRATE);
+        boolean isMarketCrate = sm != null ? sm.isMarketCrate()
+                : (be != null && ShopVisualType.from(be.getBlockState().getBlock()) == ShopVisualType.MARKET_CRATE);
 
         switch (activeSettingsCategory) {
             case GENERAL -> {
@@ -445,7 +451,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             OfferItemSettings offerItem = offerItemDraft.toSettings();
             IoSettings io = ioDraft.toSettings();
 
-            if (menu.isPrimaryOwner()) {
+            if (menu.isPrimaryOwner() && activeSettingsCategory == SettingsCategory.ACCESS) {
                 saveListPanelToDraft();
             }
 
@@ -472,6 +478,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             originalNotification = notifications;
             saved = true;
             lastAdminShop = be.isAdminShopEnabled();
+            lastSettingsVersion = be.getSettingsVersion();
             updateSaveButtonState();
             rebuildUI();
         }).bounds(leftPos + imageWidth - 76, topPos + imageHeight - 24, 70, 18).build());
@@ -532,6 +539,32 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
     }
 
+    private void reloadSettingsDrafts(SingleOfferShopBlockEntity be) {
+        if (be == null)
+            return;
+        originalGeneral = be.getGeneralSettings();
+        originalName = originalGeneral.shopName();
+        generalDraft = new GeneralSettings.Draft(originalGeneral);
+
+        originalVillager = be.getVillagerSettings();
+        villagerDraft = new VillagerSettings.Draft(originalVillager);
+
+        originalOfferItem = be.getOfferItemSettings();
+        offerItemDraft = new OfferItemSettings.Draft(originalOfferItem);
+
+        originalIo = be.getIoSettings();
+        ioDraft = new IoSettings.Draft(originalIo);
+
+        originalAccess = be.getAccessSettings();
+        accessDraft = new AccessSettings.Draft(originalAccess);
+
+        originalNotification = be.getNotificationSettings();
+        notificationDraft = new NotificationSettings.Draft(originalNotification);
+
+        ownerListPanel.syncWithDraft(accessDraft);
+        updateSaveButtonState();
+    }
+
     public boolean hasUnsavedChanges() {
         if (generalDraft == null || originalGeneral == null) {
             return false;
@@ -545,12 +578,18 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (npcNameField != null) {
             villagerDraft.setNpcName(npcNameField.getValue());
         }
-        if (!Objects.equals(generalDraft.toSettings(), originalGeneral)) return true;
-        if (!Objects.equals(villagerDraft.toSettings(), originalVillager)) return true;
-        if (!Objects.equals(offerItemDraft.toSettings(), originalOfferItem)) return true;
-        if (!Objects.equals(ioDraft.toSettings(), originalIo)) return true;
-        if (!Objects.equals(accessDraft.toSettings(), originalAccess)) return true;
-        if (!Objects.equals(notificationDraft.toSettings(), originalNotification)) return true;
+        if (!Objects.equals(generalDraft.toSettings(), originalGeneral))
+            return true;
+        if (!Objects.equals(villagerDraft.toSettings(), originalVillager))
+            return true;
+        if (!Objects.equals(offerItemDraft.toSettings(), originalOfferItem))
+            return true;
+        if (!Objects.equals(ioDraft.toSettings(), originalIo))
+            return true;
+        if (!Objects.equals(accessDraft.toSettings(), originalAccess))
+            return true;
+        if (!Objects.equals(notificationDraft.toSettings(), originalNotification))
+            return true;
         return false;
     }
 
@@ -598,7 +637,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     private boolean canToggleAdminShop() {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        boolean hasAdminShop = (accessDraft != null ? accessDraft.adminShopEnabled() : (be != null && be.isAdminShopEnabled()));
+        boolean hasAdminShop = (accessDraft != null ? accessDraft.adminShopEnabled()
+                : (be != null && be.isAdminShopEnabled()));
         return menu.isOperator() && (menu.isGlobalAdminModeEnabled() || hasAdminShop);
     }
 
@@ -639,7 +679,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             boolean hasOwner = be.getOwnerId() != null && be.getOwnerName() != null && !be.getOwnerName().isBlank();
 
             if (!showAdminBadge && !menu.isOwner() && hasOwner
-                    && isHovering(imageWidth - OWNER_HEAD_X_OFFSET - 1, OWNER_HEAD_Y_OFFSET - 1, 10, 10, mouseX, mouseY)) {
+                    && isHovering(imageWidth - OWNER_HEAD_X_OFFSET - 1, OWNER_HEAD_Y_OFFSET - 1, 10, 10, mouseX,
+                            mouseY)) {
                 List<Component> tooltip = new ArrayList<>();
                 tooltip.add(Component.translatable("gui.marketblocks.owner", be.getOwnerName()));
                 if (!be.getAdditionalOwners().isEmpty()) {
@@ -650,10 +691,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
             } else {
                 String name = be.getShopName();
-                Component fullTitle = (name != null && !name.isEmpty()) ? Component.literal(name) : be.getBlockState().getBlock().getName();
+                Component fullTitle = (name != null && !name.isEmpty()) ? Component.literal(name)
+                        : be.getBlockState().getBlock().getName();
                 int badgeW = font.width(Component.translatable("gui.marketblocks.admin_shop.badge")) + 8;
                 int maxTitleW = showAdminBadge ? (imageWidth - badgeW - 8 - 8 - 4)
-                        : (!menu.isOwner() && hasOwner ? (imageWidth - OWNER_HEAD_X_OFFSET - 8 - 4) : (imageWidth - 16));
+                        : (!menu.isOwner() && hasOwner ? (imageWidth - OWNER_HEAD_X_OFFSET - 8 - 4)
+                                : (imageWidth - 16));
                 if (font.width(fullTitle) > maxTitleW && isHovering(8, 6, maxTitleW, font.lineHeight, mouseX, mouseY)) {
                     graphics.renderTooltip(font, fullTitle, mouseX, mouseY);
                 } else if (be.hasOffer()
@@ -664,7 +707,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                                 mouseY);
                     } else if (!be.isAdminShopEnabled()) {
                         if (!be.hasResultItemInInput(false)) {
-                            graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"), mouseX,
+                            graphics.renderTooltip(font, Component.translatable("gui.marketblocks.out_of_stock"),
+                                    mouseX,
                                     mouseY);
                         } else if (be.isOutputSpaceMissing()) {
                             graphics.renderTooltip(font, Component.translatable("gui.marketblocks.output_full"), mouseX,
@@ -674,7 +718,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                 }
             }
         } else if (menu.getActiveTab() == ShopTab.LOG) {
-            logPanel.renderHoverTooltip(graphics, font, leftPos, topPos, mouseX, mouseY, menu.getTransactionLogEntries());
+            logPanel.renderHoverTooltip(graphics, font, leftPos, topPos, mouseX, mouseY,
+                    menu.getTransactionLogEntries());
 
             int count = menu.getTransactionLogEntries().size();
             int numW = font.width(String.valueOf(count));
@@ -686,7 +731,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             int labelX = badgeX - 4 - labelW;
 
             if (isHovering(labelX, badgeY, labelW + 4 + badgeW, badgeH, mouseX, mouseY)) {
-                graphics.renderTooltip(font, Component.translatable("gui.marketblocks.log.count_tooltip"), mouseX, mouseY);
+                graphics.renderTooltip(font, Component.translatable("gui.marketblocks.log.count_tooltip"), mouseX,
+                        mouseY);
             }
         }
     }
@@ -865,17 +911,21 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             graphics.drawString(font, badgeText, badgeX + 4, badgeY + 2, 0xFFE0A0FF, false);
             maxTitleWidth = badgeX - 8 - 4;
         } else if (!menu.isOwner() && hasOwner) {
-            renderOwnerHead(graphics, be.getOwnerId(), be.getOwnerName(), imageWidth - OWNER_HEAD_X_OFFSET, OWNER_HEAD_Y_OFFSET);
+            renderOwnerHead(graphics, be.getOwnerId(), be.getOwnerName(), imageWidth - OWNER_HEAD_X_OFFSET,
+                    OWNER_HEAD_Y_OFFSET);
             maxTitleWidth = (imageWidth - OWNER_HEAD_X_OFFSET) - 8 - 4;
         } else {
             maxTitleWidth = imageWidth - 16;
         }
 
         String name = be.getShopName();
-        Component fullTitle = (name != null && !name.isEmpty()) ? Component.literal(name) : be.getBlockState().getBlock().getName();
+        Component fullTitle = (name != null && !name.isEmpty()) ? Component.literal(name)
+                : be.getBlockState().getBlock().getName();
         Component displayTitle;
         if (font.width(fullTitle) > maxTitleWidth) {
-            displayTitle = Component.literal(font.plainSubstrByWidth(fullTitle.getString(), Math.max(0, maxTitleWidth - font.width("..."))) + "...");
+            displayTitle = Component.literal(
+                    font.plainSubstrByWidth(fullTitle.getString(), Math.max(0, maxTitleWidth - font.width("...")))
+                            + "...");
         } else {
             displayTitle = fullTitle;
         }

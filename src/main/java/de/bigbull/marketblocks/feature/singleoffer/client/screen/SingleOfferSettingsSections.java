@@ -1009,8 +1009,8 @@ public final class SingleOfferSettingsSections {
             NotificationSettings.Draft draft, Runnable onDirty) {
         int leftX = host.settingsLeftPos() + 12;
 
-        // --- GroupBox 1: HANDELSAKTIVITÄT (y = 23, h = 40, ends at 63) ---
-        // Row 1: Kaufbenachrichtigung (7px top offset: 23 + 7 = 30)
+        // --- GroupBox 1: TRADE ACTIVITY (y = 23, h = 40, ends at 63) ---
+        // Row 1: Purchase notification (7px top offset: 23 + 7 = 30)
         CompactCheckbox purchaseCheckbox = host.addSettingsWidget(new CompactCheckbox(
                 leftX, host.settingsTopPos() + 30,
                 Component.translatable("gui.marketblocks.notifications.purchase"),
@@ -1024,7 +1024,7 @@ public final class SingleOfferSettingsSections {
         purchaseCheckbox
                 .setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.notifications.purchase.tooltip")));
 
-        // Row 2: Mitbesitzer informieren (y = 45, ends at 57, 6px bottom gap to 63)
+        // Row 2: Notify co-owners (y = 45, ends at 57, 6px bottom gap to 63)
         CompactCheckbox coOwnersCheckbox = host.addSettingsWidget(new CompactCheckbox(
                 leftX, host.settingsTopPos() + 45,
                 Component.translatable("gui.marketblocks.notifications.co_owners"),
@@ -1038,8 +1038,8 @@ public final class SingleOfferSettingsSections {
         coOwnersCheckbox
                 .setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.notifications.co_owners.tooltip")));
 
-        // --- GroupBox 2: STATUS-WARNUNGEN (starts at 69, exact 6px gap to Box 1, h = 40, ends at 109) ---
-        // Row 1: Leer-Warnung (7px top offset: 69 + 7 = 76)
+        // --- GroupBox 2: STATUS WARNINGS (starts at 69, exact 6px gap to Box 1, h = 40, ends at 109) ---
+        // Row 1: Out-of-stock warning (7px top offset: 69 + 7 = 76)
         CompactCheckbox outOfStockCheckbox = host.addSettingsWidget(new CompactCheckbox(
                 leftX, host.settingsTopPos() + 76,
                 Component.translatable("gui.marketblocks.notifications.out_of_stock"),
@@ -1053,7 +1053,7 @@ public final class SingleOfferSettingsSections {
         outOfStockCheckbox.setTooltip(
                 Tooltip.create(Component.translatable("gui.marketblocks.notifications.out_of_stock.tooltip")));
 
-        // Row 2: Ausgabe-Voll-Warnung (y = 91, ends at 103, 6px bottom gap to 109)
+        // Row 2: Output-full warning (y = 91, ends at 103, 6px bottom gap to 109)
         CompactCheckbox outputFullCheckbox = host.addSettingsWidget(new CompactCheckbox(
                 leftX, host.settingsTopPos() + 91,
                 Component.translatable("gui.marketblocks.notifications.output_full"),
@@ -1072,12 +1072,12 @@ public final class SingleOfferSettingsSections {
      * Renders background group boxes for the Notifications tab.
      */
     public static void renderNotificationsBg(GuiGraphics graphics, Font font, int leftPos, int topPos) {
-        // GroupBox 1: Handelsaktivität (y = 23, h = 40, ends at 63)
+        // GroupBox 1: Trade activity (y = 23, h = 40, ends at 63)
         GroupBox.render(graphics, font,
                 Component.translatable("gui.marketblocks.notifications.group.trade_activity"),
                 leftPos + 7, topPos + 23, 162, 40);
 
-        // GroupBox 2: Status-Warnungen (starts at 69, exact 6px gap, h = 40, ends at 109)
+        // GroupBox 2: Status warnings (starts at 69, exact 6px gap, h = 40, ends at 109)
         GroupBox.render(graphics, font,
                 Component.translatable("gui.marketblocks.notifications.group.status_warnings"),
                 leftPos + 7, topPos + 69, 162, 40);

@@ -94,6 +94,7 @@ public class TradeStandTopBlock extends Block {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
         BlockPos basePos = pos.below();
         BlockState baseState = level.getBlockState(basePos);

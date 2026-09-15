@@ -118,7 +118,7 @@ public class SingleOfferOwnerListPanel {
             return;
         }
 
-        if (ownerOrder.isEmpty() && ownerSelected.isEmpty()) {
+        if (ownerOrder.isEmpty() || ownerSelected.isEmpty()) {
             populateOwnerData(accessDraft);
         }
 
@@ -322,7 +322,7 @@ public class SingleOfferOwnerListPanel {
     }
 
     public void flushToDraft(AccessSettings.Draft accessDraft) {
-        if (listDisabled) {
+        if (listDisabled || accessDraft == null || (ownerOrder.isEmpty() && ownerSelected.isEmpty())) {
             return;
         }
 
@@ -376,6 +376,14 @@ public class SingleOfferOwnerListPanel {
         ownerSelected.clear();
         ownerStartIndex = 0;
         ownerScrollOffs = 0.0F;
+    }
+
+    public void syncWithDraft(AccessSettings.Draft accessDraft) {
+        if (accessDraft == null) {
+            return;
+        }
+        clearData();
+        populateOwnerData(accessDraft);
     }
 
     private void populateOwnerData(AccessSettings.Draft accessDraft) {
