@@ -1,0 +1,26 @@
+{
+  "parent": "marketblocks:marketblocks/wall_street",
+  "criteria": {
+    "bought_from_marketplace": {
+      "trigger": "marketblocks:marketplace_buy"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.marketplace_buy.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:bundle"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.marketplace_buy.title"
+    }
+  },
+  "requirements": [
+    [
+      "bought_from_marketplace"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -1,0 +1,46 @@
+{
+  "criteria": {
+    "has_marketcrate": {
+      "conditions": {
+        "items": [
+          {
+            "items": "marketblocks:marketcrate"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_trade_stand": {
+      "conditions": {
+        "items": [
+          {
+            "items": "marketblocks:trade_stand"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "background": "minecraft:textures/gui/advancements/backgrounds/stone.png",
+    "description": {
+      "translate": "advancements.marketblocks.root.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "marketblocks:marketcrate"
+    },
+    "show_toast": false,
+    "title": {
+      "translate": "advancements.marketblocks.root.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_trade_stand",
+      "has_marketcrate"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "marketblocks:block/trade_stand_block_top"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "parent": "marketblocks:marketblocks/first_shop",
+  "criteria": {
+    "added_co_owner": {
+      "trigger": "marketblocks:shop_co_owner"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.joint_venture.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:writable_book"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.joint_venture.title"
+    }
+  },
+  "requirements": [
+    [
+      "added_co_owner"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

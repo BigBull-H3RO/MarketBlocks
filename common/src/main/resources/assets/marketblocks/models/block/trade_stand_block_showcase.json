@@ -1,0 +1,7 @@
+{
+  "parent": "marketblocks:block/trade_stand_block_base",
+  "textures": {
+    "particle": "marketblocks:block/trade_stand_particle"
+  }
+}
+
