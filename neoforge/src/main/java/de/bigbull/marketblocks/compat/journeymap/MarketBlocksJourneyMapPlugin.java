@@ -5,7 +5,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.GlobalPos;
 
-import de.bigbull.marketblocks.MarketBlocks;
+import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import journeymap.api.v2.client.IClientAPI;
 import journeymap.api.v2.client.IClientPlugin;
@@ -36,12 +36,12 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
     @Override
     public void initialize(IClientAPI jmClientApi) {
         this.jmApi = jmClientApi;
-        MarketBlocks.LOGGER.info("MarketBlocks: JourneyMap API initialized.");
+        Constants.LOG.info("MarketBlocks: JourneyMap API initialized.");
     }
 
     @Override
     public String getModId() {
-        return MarketBlocks.MODID;
+        return Constants.MOD_ID;
     }
 
     public void addShopMarker(SingleOfferShopBlockEntity shop) {
@@ -51,20 +51,20 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
         if (activeMarkers.containsKey(pos)) return;
 
         try {
-            ResourceLocation iconLoc = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/journeymap/singleoffershop.png");
+            ResourceLocation iconLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/singleoffershop.png");
             MapImage icon = new MapImage(iconLoc, 16, 16).setDisplayWidth(16).setDisplayHeight(16).centerAnchors();
             
             String shopName = shop.getSettingsManager().getGeneralSettings().shopName();
             if (shopName == null || shopName.isEmpty()) shopName = "Shop";
 
-            MarkerOverlay marker = new MarkerOverlay(MarketBlocks.MODID, pos, icon);
+            MarkerOverlay marker = new MarkerOverlay(Constants.MOD_ID, pos, icon);
             marker.setDimension(shop.getLevel().dimension());
             marker.setTitle(shopName);
             
             jmApi.show(marker);
             activeMarkers.put(pos, marker);
         } catch (Exception e) {
-            MarketBlocks.LOGGER.error("Failed to add JourneyMap marker for shop at " + pos, e);
+            Constants.LOG.error("Failed to add JourneyMap marker for shop at " + pos, e);
         }
     }
 
@@ -91,17 +91,17 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
             if (Minecraft.getInstance().level != null && 
                 globalPos.dimension().equals(Minecraft.getInstance().level.dimension())) {
                 try {
-                    ResourceLocation iconLoc = ResourceLocation.fromNamespaceAndPath(MarketBlocks.MODID, "textures/journeymap/marketplace.png");
+                    ResourceLocation iconLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/marketplace.png");
                     MapImage icon = new MapImage(iconLoc, 16, 16).setDisplayWidth(16).setDisplayHeight(16).centerAnchors();
 
-                    MarkerOverlay marker = new MarkerOverlay(MarketBlocks.MODID, globalPos.pos(), icon);
+                    MarkerOverlay marker = new MarkerOverlay(Constants.MOD_ID, globalPos.pos(), icon);
                     marker.setDimension(globalPos.dimension());
                     marker.setTitle("Marketplace");
                     
                     jmApi.show(marker);
                     marketplaceMarkers.add(marker);
                 } catch (Exception e) {
-                    MarketBlocks.LOGGER.error("Failed to add JourneyMap marker for marketplace at " + globalPos.pos(), e);
+                    Constants.LOG.error("Failed to add JourneyMap marker for marketplace at " + globalPos.pos(), e);
                 }
             }
         }
