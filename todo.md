@@ -13,6 +13,7 @@
 ## Portierung & Multi-Loader (Fabric / Versionen)
 - [ ] **Multi-Loader Architektur evaluieren (NeoForge + Fabric)**
   - [x] Projektstruktur auf Multi-Loader vorbereiten (Template von Jaredlll08 auf Branch `feature/multiloader` eingerichtet und verifiziert)
+  - [x] Git-Worktree (`MarketBlocks-Multiloader`) eingerichtet & mit aktuellem `main`-Stand synchronisiert (inkl. `legacy-src/`)
   - [ ] Loader-spezifische APIs (Networking, Capabilities/Item-Storage, Registries) sauber abstrahieren
 - [ ] **Versions-Fahrplan & Port-Strategie festlegen**
   - [ ] Basisversion: 1.21.1 stabil fertigstellen und fehlerfrei testen
