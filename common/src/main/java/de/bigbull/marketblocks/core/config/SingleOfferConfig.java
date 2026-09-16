@@ -5,7 +5,7 @@ import de.bigbull.marketblocks.core.config.toml.TomlConfigSpec;
 import de.bigbull.marketblocks.core.config.toml.TomlConfigValue;
 
 /**
- * Configuration settings specific to SingleOffer shops (Trade Stand & Market Crate).
+ * Configuration settings specific to SingleOffer shops (Trade Stand and Market Crate).
  * Saved in config/marketblocks/singleoffer/general.toml.
  */
 public class SingleOfferConfig {

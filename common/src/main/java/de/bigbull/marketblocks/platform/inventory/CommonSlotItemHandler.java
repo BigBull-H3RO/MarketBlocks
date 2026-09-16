@@ -58,6 +58,10 @@ public class CommonSlotItemHandler extends Slot {
         return itemHandler.extractItem(index, amount, false);
     }
 
+        public int getSlotIndex() {
+        return index;
+    }
+
     public ICommonItemHandler getItemHandler() {
         return itemHandler;
     }
