@@ -37,7 +37,7 @@ Welcome to the official 1.0 release of **MarketBlocks**! This mod delivers a rob
 
 ### 🚀 Key Features
 - **SingleOfferShops**: Placeable **Trade Stands** and **Market Crates** with powerful access control (whitelist/blacklist), up to 10 co-owners, and admin shop modes.
-- **Server Marketplace**: Blockless, centralized trading hub accessible via keybind (`O`), command (`/marketblocks marketplace open`), or linked physical blocks.
+- **Server Marketplace**: Blockless, centralized trading hub accessible via keybind (`O`), command (`/marketblocks marketplace`), or linked physical blocks.
 - **Visual NPCs & Items**: Interactive Villager/Player NPCs and floating/spinning items with dynamic fill level indicators.
 - **Advanced Economics**: Built-in demand pricing multipliers, daily purchase limits (global or per-player), stock limits, and automated restocking intervals.
 - **Redstone & Automation**: Fully controllable Auto-I/O via hoppers/pipes with redstone pulse emission and comparator fill-level reading.

@@ -288,11 +288,11 @@
       "projectName": "neoforge",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\build\\moddev\\clientRunProgramArgs.txt"
+        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\build\\moddev\\clientRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\build\\moddev\\clientRunVmArgs.txt",
-        "-Dfml.modFolders\u003dmarketblocks%%E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\bin\\main"
+        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\build\\moddev\\clientRunVmArgs.txt",
+        "-Dfml.modFolders\u003dmarketblocks%%E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\neoforge\\run",
       "console": "internalConsole",
@@ -309,11 +309,11 @@
       "projectName": "neoforge",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\build\\moddev\\dataRunProgramArgs.txt"
+        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\build\\moddev\\dataRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\build\\moddev\\dataRunVmArgs.txt",
-        "-Dfml.modFolders\u003dmarketblocks%%E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\bin\\main"
+        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\build\\moddev\\dataRunVmArgs.txt",
+        "-Dfml.modFolders\u003dmarketblocks%%E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\neoforge\\run",
       "console": "internalConsole",
@@ -330,11 +330,11 @@
       "projectName": "neoforge",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\build\\moddev\\serverRunProgramArgs.txt"
+        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\build\\moddev\\serverRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\build\\moddev\\serverRunVmArgs.txt",
-        "-Dfml.modFolders\u003dmarketblocks%%E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks\\neoforge\\bin\\main"
+        "@E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\build\\moddev\\serverRunVmArgs.txt",
+        "-Dfml.modFolders\u003dmarketblocks%%E:\\Projekte\\Minecraft\\Modding\\Modding-Data\\MarketBlocks\\Antigravity\\MarketBlocks-Multiloader\\neoforge\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\neoforge\\run",
       "console": "internalConsole",

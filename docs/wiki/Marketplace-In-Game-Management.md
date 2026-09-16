@@ -9,7 +9,7 @@ MarketBlocks provides real-time in-game management tools that allow server admin
 Players and administrators can open the Marketplace through three methods:
 
 - **Keybind**: Press **O** (default, customizable in standard Minecraft Key Binds).
-- **Command**: Run `/marketblocks marketplace open` (or `/mb marketplace open`).
+- **Command**: Run `/marketblocks marketplace` (or `/mb marketplace`).
 - **Linked Block**: Right-click any block in the world linked to the Marketplace.
 
 ---

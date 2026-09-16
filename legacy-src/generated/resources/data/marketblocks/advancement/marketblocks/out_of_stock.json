@@ -1,0 +1,27 @@
+{
+  "parent": "marketblocks:marketblocks/sold_item",
+  "criteria": {
+    "went_out_of_stock": {
+      "trigger": "marketblocks:shop_out_of_stock"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.out_of_stock.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "minecraft:barrier"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.out_of_stock.title"
+    }
+  },
+  "requirements": [
+    [
+      "went_out_of_stock"
+    ]
+  ],
+  "sends_telemetry_event": true
+}
