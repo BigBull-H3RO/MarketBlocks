@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.platform.services;
 
+import java.nio.file.Path;
+
 public interface IPlatformHelper {
 
     /**
@@ -30,7 +32,13 @@ public interface IPlatformHelper {
      * @return The name of the environment type.
      */
     default String getEnvironmentName() {
-
         return isDevelopmentEnvironment() ? "development" : "production";
     }
+
+    /**
+     * Gets the root game configuration directory (.minecraft/config).
+     *
+     * @return Path to the config directory.
+     */
+    Path getConfigDirectory();
 }
