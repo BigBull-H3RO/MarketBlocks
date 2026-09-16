@@ -1,0 +1,44 @@
+{
+  "parent": "marketblocks:marketblocks/first_shop",
+  "criteria": {
+    "activated_showcase": {
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "block": {
+                "blocks": "marketblocks:trade_stand"
+              }
+            }
+          },
+          {
+            "condition": "minecraft:match_tool",
+            "predicate": {
+              "items": "minecraft:glass"
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:item_used_on_block"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.showcase.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:glass"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.showcase.title"
+    }
+  },
+  "requirements": [
+    [
+      "activated_showcase"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

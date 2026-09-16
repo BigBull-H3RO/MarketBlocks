@@ -1,0 +1,26 @@
+{
+  "parent": "marketblocks:marketblocks/hiring",
+  "criteria": {
+    "customized_npc": {
+      "trigger": "marketblocks:shop_npc_customize"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.custom_npc.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:name_tag"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.custom_npc.title"
+    }
+  },
+  "requirements": [
+    [
+      "customized_npc"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -12,7 +12,7 @@ These commands can be executed by any player without special permissions:
 
 | Command | Alias | Description |
 |---|---|---|
-| `/marketblocks marketplace open` | `/mb marketplace open` | Opens the central Marketplace GUI (equivalent to the default keybind **O**). |
+| `/marketblocks marketplace` | `/mb marketplace` | Opens the central Marketplace GUI (equivalent to the default keybind **O**). |
 | `/marketblocks search <item> [page]` | `/mb search <item> [page]` | Searches for SingleOfferShops and Marketplace offers selling or buying the specified item. |
 | `/marketblocks stats` | `/mb stats` | Displays the Top 10 SingleOfferShops and Top 10 Marketplace offers by total sales. |
 | `/marketblocks stats shops` | `/mb stats shops` | Displays the Top 10 player and admin shops by total sales volume. |
@@ -60,9 +60,25 @@ Global Admin Mode (`/marketblocks admin editmode true`) is a central administrat
 
 ---
 
+## SingleOfferShop Ownership & Breaking Rules
+
+Shop block security in MarketBlocks is enforced automatically by the server:
+
+| Condition | Survival Player | Operator (Survival) | Operator (Creative Mode) |
+|---|:---:|:---:|:---:|
+| **Shop Owner** | ✅ Normal Break | ✅ Normal Break | ✅ Normal Break |
+| **Non-Owner** | ❌ Blocked (Owner only) | ❌ Blocked (Owner only) | ❌ Blocked (Click without Shift) |
+| **Shift + Break** | ❌ Blocked | ❌ Blocked | 🛡️ **Admin Bypass Authorized** |
+
+- **Automatic Ownership**: The first player to place and open a fresh shop block is registered as the permanent **Primary Owner**.
+- **Explosion Immunity**: All shop blocks have bedrock-level blast resistance by default (`3600000.0`), protecting them from Creepers, TNT cannons, and Withers.
+- **Accidental Break Protection**: In Creative mode, blocks are broken instantly in one click. To protect player bases from accidental griefing, operators in Creative mode **must hold Shift while breaking** to dismantle a player's shop. Without Shift, the action is blocked and a helpful hint is displayed.
+
+---
+
 ## SingleOfferShop Permissions & Roles
 
-Permissions on individual shop blocks (Trade Stands & Market Crates) are governed by the shop's internal ownership system, rather than permission nodes:
+Permissions on individual shop blocks (Trade Stands & Market Crates) are governed by the shop's internal ownership system:
 
 | Role | Offers Tab | Inventory Tab | Settings Tab | Log Tab |
 |---|:---:|:---:|:---:|:---:|
@@ -78,7 +94,7 @@ Shop owners can control who is allowed to purchase from their shop via the **Acc
 - **Everyone** (default): All players on the server can purchase.
 - **Whitelist**: Only players explicitly added to the access list can purchase.
 - **Blacklist**: All players can purchase except those added to the access list.
-- **Closed Shop**: Owners can temporarily close their shop in the General tab. When closed, nobody can buy (except operators in edit mode).
+- **Paused / Closed Shop**: Owners can pause their shop at any time with the dedicated status toggle button. When paused, nobody can buy (except operators in edit mode).
 
 ---
 

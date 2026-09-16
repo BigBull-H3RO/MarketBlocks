@@ -1,0 +1,26 @@
+{
+  "parent": "marketblocks:marketblocks/showcase",
+  "criteria": {
+    "hired_npc": {
+      "trigger": "marketblocks:shop_npc"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.marketblocks.hiring.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:villager_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.marketblocks.hiring.title"
+    }
+  },
+  "requirements": [
+    [
+      "hired_npc"
+    ]
+  ],
+  "sends_telemetry_event": true
+}
