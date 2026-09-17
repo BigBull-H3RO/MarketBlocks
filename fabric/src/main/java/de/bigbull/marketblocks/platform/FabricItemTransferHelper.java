@@ -7,7 +7,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 public class FabricItemTransferHelper implements IItemTransferHelper {
@@ -15,85 +18,94 @@ public class FabricItemTransferHelper implements IItemTransferHelper {
     @Nullable
     @Override
     public ICommonItemHandler getNeighborItemHandler(Level level, BlockPos pos, Direction side) {
-        BlockPos targetPos = pos.relative(side);
-        BlockEntity be = level.getBlockEntity(targetPos);
-        if (be instanceof Container container) {
-            return new ICommonItemHandler() {
-                @Override
-                public int getSlots() {
-                    return container.getContainerSize();
-                }
+        Container container = null;
+        BlockState state = level.getBlockState(pos);
+        if (state.getBlock() instanceof ChestBlock chestBlock) {
+            container = ChestBlock.getContainer(chestBlock, state, level, pos, true);
+        } else {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof Container c) {
+                container = c;
+            }
+        }
 
-                @Override
-                public ItemStack getStackInSlot(int slot) {
-                    return container.getItem(slot);
-                }
+        if (container == null) return null;
 
-                @Override
-                public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-                    if (stack.isEmpty() || slot >= container.getContainerSize()) return stack;
-                    if (!container.canPlaceItem(slot, stack)) return stack;
+        final Container finalContainer = container;
+        return new ICommonItemHandler() {
+            @Override
+            public int getSlots() {
+                return finalContainer.getContainerSize();
+            }
 
-                    ItemStack existing = container.getItem(slot);
-                    int limit = Math.min(container.getMaxStackSize(), stack.getMaxStackSize());
+            @Override
+            public ItemStack getStackInSlot(int slot) {
+                return finalContainer.getItem(slot);
+            }
 
-                    if (existing.isEmpty()) {
-                        int toInsert = Math.min(stack.getCount(), limit);
-                        if (!simulate) {
-                            container.setItem(slot, stack.copyWithCount(toInsert));
-                            container.setChanged();
-                        }
-                        return stack.getCount() > toInsert ? stack.copyWithCount(stack.getCount() - toInsert) : ItemStack.EMPTY;
-                    }
+            @Override
+            public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+                if (stack.isEmpty() || slot >= finalContainer.getContainerSize()) return stack;
+                if (!finalContainer.canPlaceItem(slot, stack)) return stack;
 
-                    if (!ItemStack.isSameItemSameComponents(existing, stack)) return stack;
+                ItemStack existing = finalContainer.getItem(slot);
+                int limit = Math.min(finalContainer.getMaxStackSize(), stack.getMaxStackSize());
 
-                    int space = limit - existing.getCount();
-                    if (space <= 0) return stack;
-
-                    int toInsert = Math.min(stack.getCount(), space);
+                if (existing.isEmpty()) {
+                    int toInsert = Math.min(stack.getCount(), limit);
                     if (!simulate) {
-                        existing.grow(toInsert);
-                        container.setChanged();
+                        finalContainer.setItem(slot, stack.copyWithCount(toInsert));
+                        finalContainer.setChanged();
                     }
                     return stack.getCount() > toInsert ? stack.copyWithCount(stack.getCount() - toInsert) : ItemStack.EMPTY;
                 }
 
-                @Override
-                public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                    if (amount <= 0 || slot >= container.getContainerSize()) return ItemStack.EMPTY;
-                    ItemStack existing = container.getItem(slot);
-                    if (existing.isEmpty()) return ItemStack.EMPTY;
+                if (!ItemStack.isSameItemSameComponents(existing, stack)) return stack;
 
-                    int toExtract = Math.min(amount, existing.getCount());
-                    ItemStack extracted = existing.copyWithCount(toExtract);
-                    if (!simulate) {
-                        existing.shrink(toExtract);
-                        if (existing.isEmpty()) {
-                            container.setItem(slot, ItemStack.EMPTY);
-                        }
-                        container.setChanged();
+                int space = limit - existing.getCount();
+                if (space <= 0) return stack;
+
+                int toInsert = Math.min(stack.getCount(), space);
+                if (!simulate) {
+                    existing.grow(toInsert);
+                    finalContainer.setChanged();
+                }
+                return stack.getCount() > toInsert ? stack.copyWithCount(stack.getCount() - toInsert) : ItemStack.EMPTY;
+            }
+
+            @Override
+            public ItemStack extractItem(int slot, int amount, boolean simulate) {
+                if (amount <= 0 || slot >= finalContainer.getContainerSize()) return ItemStack.EMPTY;
+                ItemStack existing = finalContainer.getItem(slot);
+                if (existing.isEmpty()) return ItemStack.EMPTY;
+
+                int toExtract = Math.min(amount, existing.getCount());
+                ItemStack extracted = existing.copyWithCount(toExtract);
+                if (!simulate) {
+                    existing.shrink(toExtract);
+                    if (existing.isEmpty()) {
+                        finalContainer.setItem(slot, ItemStack.EMPTY);
                     }
-                    return extracted;
+                    finalContainer.setChanged();
                 }
+                return extracted;
+            }
 
-                @Override
-                public int getSlotLimit(int slot) {
-                    return container.getMaxStackSize();
-                }
+            @Override
+            public int getSlotLimit(int slot) {
+                return finalContainer.getMaxStackSize();
+            }
 
-                @Override
-                public boolean isItemValid(int slot, ItemStack stack) {
-                    return container.canPlaceItem(slot, stack);
-                }
+            @Override
+            public boolean isItemValid(int slot, ItemStack stack) {
+                return finalContainer.canPlaceItem(slot, stack);
+            }
 
-                @Override
-                public void setStackInSlot(int slot, ItemStack stack) {
-                    container.setItem(slot, stack);
-                    container.setChanged();
-                }
-            };
-        }
-        return null;
+            @Override
+            public void setStackInSlot(int slot, ItemStack stack) {
+                finalContainer.setItem(slot, stack);
+                finalContainer.setChanged();
+            }
+        };
     }
 }
