@@ -397,7 +397,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
             setEditMode(!isLocalEditMode);
         }, Component.translatable(isLocalEditMode
                 ? "gui.marketblocks.marketplace.mode.view"
-                : "gui.marketblocks.marketplace.mode.edit"), () -> isLocalEditMode);
+                : "gui.marketblocks.marketplace.mode.edit"), () -> isLocalEditMode)
+                .allowClickWhenSelected();
         addDynamic(toggleBtn);
     }
 
