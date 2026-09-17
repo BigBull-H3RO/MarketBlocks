@@ -37,3 +37,6 @@ forge/
 
 # personal notes
 todo.md
+
+# assistant and internal tools
+.agents/

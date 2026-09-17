@@ -168,11 +168,11 @@ Looking for detailed guides, permission breakdowns, or automation tutorials? Vis
 
 ---
 
-## **⚖️ License & Credits**
+## **⚖️ License**
 
 MarketBlocks utilizes a dual licensing model:
 - **Code**: The mod source code is licensed under the **MIT License**. See [`LICENSE`](LICENSE).
-- **Assets**: All textures, 3D models, audio, and branding assets are **All Rights Reserved** and may not be redistributed without permission. See [`LICENSE_ASSETS.txt`](LICENSE_ASSETS.txt).
+- **Assets**: All textures, 3D models, and branding assets are **All Rights Reserved** by BigBull-H3RO. See [`LICENSE_ASSETS`](LICENSE_ASSETS).
 
 ---
 
