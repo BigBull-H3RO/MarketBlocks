@@ -28,7 +28,7 @@ public record MarketplaceToggleEditModePacket(boolean enable) implements CustomP
     public static void handle(MarketplaceToggleEditModePacket packet, PacketContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof MarketplaceMenu menu) {
-                if (menu.canUseEditMode()) {
+                if (!packet.enable() || menu.canUseEditMode()) {
                     menu.setEditMode(packet.enable());
                 }
             }

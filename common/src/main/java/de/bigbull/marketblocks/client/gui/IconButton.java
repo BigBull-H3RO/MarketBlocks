@@ -23,6 +23,7 @@ public class IconButton extends Button {
     private final BooleanSupplier selectedSupplier;
     private final Component tooltipMessage;
     private boolean flipBackgroundHorizontal = false;
+    private boolean allowClickWhenSelected = false;
 
     private int customBgWidth = -1;
     private int customBgHeight = -1;
@@ -59,6 +60,16 @@ public class IconButton extends Button {
         return tooltipMessage;
     }
 
+    public IconButton allowClickWhenSelected() {
+        this.allowClickWhenSelected = true;
+        return this;
+    }
+
+    public IconButton withClickableWhenSelected(boolean clickable) {
+        this.allowClickWhenSelected = clickable;
+        return this;
+    }
+
     public IconButton withFlippedBackground() {
         this.flipBackgroundHorizontal = true;
         return this;
@@ -86,7 +97,7 @@ public class IconButton extends Button {
 
     @Override
     public void playDownSound(SoundManager handler) {
-        if (isSelected() || !this.active) {
+        if ((isSelected() && !allowClickWhenSelected) || !this.active) {
             return;
         }
         super.playDownSound(handler);
@@ -94,7 +105,7 @@ public class IconButton extends Button {
 
     @Override
     public void onClick(double mouseX, double mouseY) {
-        if (isSelected() || !this.active) {
+        if ((isSelected() && !allowClickWhenSelected) || !this.active) {
             return;
         }
         super.onClick(mouseX, mouseY);
@@ -112,7 +123,7 @@ public class IconButton extends Button {
         ResourceLocation background;
         if (!this.active) {
             background = sprites.get(false, false);
-        } else if (selected) {
+        } else if (selected && (!allowClickWhenSelected || !isHoveredOrFocused())) {
             background = sprites.get(false, true);
         } else if (isHoveredOrFocused()) {
             background = sprites.get(true, true);
