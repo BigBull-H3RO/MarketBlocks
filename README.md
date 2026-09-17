@@ -11,7 +11,7 @@
 [![Minecraft 1.21.1](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen.svg?style=flat&logo=minecraft)](https://www.curseforge.com/minecraft/mc-mods/marketblocks)
 [![NeoForge](https://img.shields.io/badge/Modloader-NeoForge-orange.svg?style=flat)](https://neoforged.net/)
 [![Wiki](https://img.shields.io/badge/Documentation-GitHub_Wiki-blue.svg?style=flat&logo=github)](https://github.com/BigBull-H3RO/MarketBlocks/wiki)
-[![License: MIT & ARR](https://img.shields.io/badge/License-MIT_%26_ARR-0280ff.svg?style=flat)](https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE.txt)
+[![License: MIT & ARR](https://img.shields.io/badge/License-MIT_%26_ARR-0280ff.svg?style=flat)](https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE)
 [![CurseForge](https://cf.way2muchnoise.eu/1214103.svg)](https://www.curseforge.com/minecraft/mc-mods/marketblocks)
 [![Modrinth](https://img.shields.io/modrinth/dt/u43pMIKj?logo=modrinth&label=&suffix=%20&style=flat&color=242629&labelColor=5ca424&logoColor=1c1c1c)](https://modrinth.com/mod/marketblocks)
 
@@ -171,7 +171,7 @@ Looking for detailed guides, permission breakdowns, or automation tutorials? Vis
 ## **⚖️ License & Credits**
 
 MarketBlocks utilizes a dual licensing model:
-- **Code**: The mod source code is licensed under the **MIT License**. See [`LICENSE.txt`](LICENSE.txt).
+- **Code**: The mod source code is licensed under the **MIT License**. See [`LICENSE`](LICENSE).
 - **Assets**: All textures, 3D models, audio, and branding assets are **All Rights Reserved** and may not be redistributed without permission. See [`LICENSE_ASSETS.txt`](LICENSE_ASSETS.txt).
 
 ---
