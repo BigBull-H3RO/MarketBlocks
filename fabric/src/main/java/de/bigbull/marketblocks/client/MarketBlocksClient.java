@@ -43,6 +43,9 @@ public class MarketBlocksClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        // Block Outlines
+        FabricBlockOutlineHandler.init();
+
         // Screens
         MenuScreens.register(RegistriesInit.SINGLE_OFFER_SHOP_MENU.get(), SingleOfferShopScreen::new);
         MenuScreens.register(RegistriesInit.MARKETPLACE_MENU.get(), MarketplaceScreen::new);
