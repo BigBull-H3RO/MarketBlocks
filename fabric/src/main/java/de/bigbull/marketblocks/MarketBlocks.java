@@ -1,10 +1,12 @@
 package de.bigbull.marketblocks;
 
 import de.bigbull.marketblocks.command.FabricMarketBlocksCommands;
+import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.data.MarketplaceLinkSavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.notification.PendingNotificationsSavedData;
+import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.trader.ShopBuyerSpawner;
 import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
@@ -25,9 +27,13 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Set;
 
@@ -88,6 +94,16 @@ public class MarketBlocks implements ModInitializer {
                     player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate", pos.getX(), pos.getY(), pos.getZ()));
                 }
             }
+
+            if (Config.GIVE_TRADE_BOOK_ON_FIRST_JOIN.get()) {
+                if (!player.getTags().contains("marketblocks.received_trade_book")) {
+                    player.addTag("marketblocks.received_trade_book");
+                    ItemStack book = new ItemStack(RegistriesInit.TRADE_BOOK.get());
+                    if (!player.getInventory().add(book)) {
+                        player.drop(book, false);
+                    }
+                }
+            }
         });
 
         // Commands
@@ -95,7 +111,7 @@ public class MarketBlocks implements ModInitializer {
             FabricMarketBlocksCommands.register(dispatcher, registryAccess);
         });
 
-        // Block interaction & chest security
+        // Block interaction & chest security & showcase toggling
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
             if (world.isClientSide) return InteractionResult.PASS;
             if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
@@ -106,6 +122,36 @@ public class MarketBlocks implements ModInitializer {
             if (MarketplaceLinkSavedData.get(serverPlayer.serverLevel()).isLinked(globalPos)) {
                 MarketplaceManager.get().openShop(serverPlayer);
                 return InteractionResult.SUCCESS;
+            }
+
+            // Showcase toggling with Axe/Glass while crouching
+            if (player.isShiftKeyDown()) {
+                BlockState state = world.getBlockState(pos);
+                BlockPos basePos = pos;
+                BlockState baseState = state;
+                if (state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+                    basePos = pos.below();
+                    baseState = world.getBlockState(basePos);
+                }
+
+                ItemStack held = player.getItemInHand(hand);
+                if (held.getItem() instanceof AxeItem) {
+                    InteractionResult res = TradeStandBlock.tryDisableShowcase(world, basePos, baseState, player);
+                    if (res != InteractionResult.PASS) {
+                        if (res == InteractionResult.FAIL) {
+                            player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+                        }
+                        return res;
+                    }
+                } else if (held.is(Items.GLASS)) {
+                    InteractionResult res = TradeStandBlock.tryEnableShowcase(world, basePos, baseState, player, held);
+                    if (res != InteractionResult.PASS) {
+                        if (res == InteractionResult.FAIL) {
+                            player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+                        }
+                        return res;
+                    }
+                }
             }
 
             BlockEntity be = world.getBlockEntity(pos);
