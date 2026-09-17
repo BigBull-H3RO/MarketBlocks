@@ -61,7 +61,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class ShopBuyerEntity extends PathfinderMob {
 
