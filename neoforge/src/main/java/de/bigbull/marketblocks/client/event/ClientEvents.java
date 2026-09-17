@@ -3,9 +3,7 @@ package de.bigbull.marketblocks.client.event;
 import de.bigbull.marketblocks.Constants;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import de.bigbull.marketblocks.feature.singleoffer.client.render.SingleOfferShopBlockEntityRenderer;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.marketplace.client.screen.MarketplaceScreen;
 import de.bigbull.marketblocks.feature.singleoffer.client.screen.SingleOfferShopScreen;
@@ -27,8 +25,10 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * Main client-side event handler for MarketBlocks.
- * Responsible for registering screens, block entity renderers, keybindings, and setting up
- * client-specific block properties like render layers during the FML client setup phase.
+ * Responsible for registering screens, block entity renderers, keybindings, and
+ * setting up
+ * client-specific block properties like render layers during the FML client
+ * setup phase.
  */
 @EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class ClientEvents {
@@ -46,8 +46,10 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerBlockEntityRenderer(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), de.bigbull.marketblocks.client.render.NeoForgeSingleOfferShopBlockEntityRenderer::new);
-        event.registerEntityRenderer(RegistriesInit.SHOP_BUYER.get(), de.bigbull.marketblocks.feature.trader.client.ShopBuyerRenderer::new);
+        event.registerBlockEntityRenderer(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(),
+                de.bigbull.marketblocks.client.render.NeoForgeSingleOfferShopBlockEntityRenderer::new);
+        event.registerEntityRenderer(RegistriesInit.SHOP_BUYER.get(),
+                de.bigbull.marketblocks.feature.trader.client.ShopBuyerRenderer::new);
     }
 
     @SubscribeEvent
@@ -78,4 +80,3 @@ public class ClientEvents {
         return OPEN_MARKETPLACE;
     }
 }
-

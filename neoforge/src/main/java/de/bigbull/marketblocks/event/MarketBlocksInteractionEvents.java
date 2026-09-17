@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.Constants;
 
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.data.MarketplaceLinkSavedData;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import net.minecraft.core.BlockPos;
@@ -16,7 +15,8 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
 /**
- * Handles block interactions for linking physical blocks to the virtual Marketplace.
+ * Handles block interactions for linking physical blocks to the virtual
+ * Marketplace.
  */
 @EventBusSubscriber(modid = Constants.MOD_ID)
 public final class MarketBlocksInteractionEvents {

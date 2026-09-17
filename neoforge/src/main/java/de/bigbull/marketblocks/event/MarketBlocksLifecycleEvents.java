@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.Constants;
 
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.data.MarketplaceLinkSavedData;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.notification.PendingNotificationsSavedData;
@@ -22,7 +21,8 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import java.util.Set;
 
 /**
- * Handles server lifecycle events like start, stop, tick, player login, and data reloads.
+ * Handles server lifecycle events like start, stop, tick, player login, and
+ * data reloads.
  */
 @EventBusSubscriber(modid = Constants.MOD_ID)
 public final class MarketBlocksLifecycleEvents {
@@ -44,12 +44,11 @@ public final class MarketBlocksLifecycleEvents {
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
-        event.addListener((barrier, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
-            barrier.wait(null).thenRunAsync(() -> {
-                MarketplaceManager.get().reload();
-                TraderEconomyManager.get().load();
-            }, gameExecutor)
-        );
+        event.addListener((barrier, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor,
+                gameExecutor) -> barrier.wait(null).thenRunAsync(() -> {
+                    MarketplaceManager.get().reload();
+                    TraderEconomyManager.get().load();
+                }, gameExecutor));
     }
 
     @SubscribeEvent
@@ -76,14 +75,16 @@ public final class MarketBlocksLifecycleEvents {
                 player.sendSystemMessage(
                         Component.translatable("gui.marketblocks.notifications.login.out_of_stock", emptyShops.size()));
                 for (BlockPos pos : emptyShops) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate", pos.getX(), pos.getY(), pos.getZ()));
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate",
+                            pos.getX(), pos.getY(), pos.getZ()));
                 }
             }
             if (!fullShops.isEmpty()) {
                 player.sendSystemMessage(
                         Component.translatable("gui.marketblocks.notifications.login.output_full", fullShops.size()));
                 for (BlockPos pos : fullShops) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate", pos.getX(), pos.getY(), pos.getZ()));
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate",
+                            pos.getX(), pos.getY(), pos.getZ()));
                 }
             }
         }

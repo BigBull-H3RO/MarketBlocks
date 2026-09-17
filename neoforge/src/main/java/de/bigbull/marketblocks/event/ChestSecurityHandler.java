@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.Constants;
 
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
@@ -22,18 +21,23 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 /**
  * Handles security for vanilla chests placed next to shop blocks.
  * If I/O extensions are enabled, this handler prevents players who are not
- * owners or co-owners of a shop from opening chests connected as input/output buffers.
+ * owners or co-owners of a shop from opening chests connected as input/output
+ * buffers.
  */
 @EventBusSubscriber(modid = Constants.MOD_ID)
 public class ChestSecurityHandler {
     @SubscribeEvent
     public static void onChestPlaced(BlockEvent.EntityPlaceEvent event) {
-        if (!(event.getLevel() instanceof Level level)) return;
-        if (level.isClientSide()) return;
-        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) return;
+        if (!(event.getLevel() instanceof Level level))
+            return;
+        if (level.isClientSide())
+            return;
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get())
+            return;
 
         BlockState state = event.getPlacedBlock();
-        if (!(state.getBlock() instanceof ChestBlock)) return;
+        if (!(state.getBlock() instanceof ChestBlock))
+            return;
 
         if (state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
             Direction dir = ChestBlock.getConnectedDirection(state);
@@ -47,7 +51,8 @@ public class ChestSecurityHandler {
 
     @SubscribeEvent
     public static void onRightClick(PlayerInteractEvent.RightClickBlock event) {
-        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) return;
+        if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get())
+            return;
         Level level = event.getLevel();
         BlockPos pos = event.getPos();
         BlockEntity be = level.getBlockEntity(pos);
