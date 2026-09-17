@@ -28,7 +28,6 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -101,6 +100,7 @@ public class TradeStandBlock extends BaseShopBlock {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
         return createCloneStack(state);
     }
@@ -238,7 +238,8 @@ public class TradeStandBlock extends BaseShopBlock {
             var silkTouchHolder = registry.getHolder(Enchantments.SILK_TOUCH);
 
             boolean hasSilkTouch = silkTouchHolder.isPresent()
-                    && net.minecraft.world.item.enchantment.EnchantmentHelper.getItemEnchantmentLevel(silkTouchHolder.get(), player.getMainHandItem()) > 0;
+                    && net.minecraft.world.item.enchantment.EnchantmentHelper
+                            .getEnchantmentLevel(silkTouchHolder.get(), player) > 0;
 
             if (!hasSilkTouch && !player.isCreative()) {
                 level.playSound(null, pos, SoundEvents.GLASS_BREAK,
@@ -253,4 +254,3 @@ public class TradeStandBlock extends BaseShopBlock {
         return CODEC;
     }
 }
-
