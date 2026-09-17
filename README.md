@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".idea/icon.png" alt="MarketBlocks Logo" width="220">
+  <img src="docs/assets/icon.png" alt="MarketBlocks Logo" width="220">
 </p>
 
 <div align="center">
