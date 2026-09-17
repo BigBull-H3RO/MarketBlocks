@@ -1,16 +1,12 @@
 {
   "required": true,
-  "minVersion": "0.8",
-  "package": "de.bigbull.marketblocks.mixin",
-  "refmap": "${mod_id}.refmap.json",
-  "compatibilityLevel": "JAVA_18",
-  "mixins": [],
+  "package": "de.bigbull.marketblocks.client.mixin",
+  "compatibilityLevel": "JAVA_21",
   "client": [
-    "MixinMinecraft"
+    "ClientLevelMixin",
+    "MultiPlayerGameModeMixin"
   ],
-  "server": [],
   "injectors": {
     "defaultRequire": 1
   }
 }
-
