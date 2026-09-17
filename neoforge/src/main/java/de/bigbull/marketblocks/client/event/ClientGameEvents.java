@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.client.event;
 
 import de.bigbull.marketblocks.Constants;
 
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceOpenRequestPacket;
 import net.neoforged.api.distmarker.Dist;
@@ -12,7 +11,8 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 /**
  * Handles gameplay-related client events.
- * Currently listens for the custom "Open Marketplace" keybind and sends a packet
+ * Currently listens for the custom "Open Marketplace" keybind and sends a
+ * packet
  * to the server to open the UI when pressed.
  */
 @EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)

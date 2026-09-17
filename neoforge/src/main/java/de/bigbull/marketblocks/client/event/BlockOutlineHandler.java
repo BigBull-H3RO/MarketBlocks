@@ -4,7 +4,6 @@ import de.bigbull.marketblocks.Constants;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import de.bigbull.marketblocks.MarketBlocks;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import net.minecraft.client.Camera;
@@ -30,7 +29,8 @@ import org.joml.AxisAngle4f;
 
 /**
  * Custom hover outline for the tall shop and market crate.
- * Base shape is always shown. Showcase shape is shown only if the top block exists.
+ * Base shape is always shown. Showcase shape is shown only if the top block
+ * exists.
  */
 @EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class BlockOutlineHandler {
@@ -63,7 +63,8 @@ public class BlockOutlineHandler {
         }
     }
 
-    private static void renderTradeStandOutline(RenderHighlightEvent.Block event, Level level, BlockPos pos, BlockState state) {
+    private static void renderTradeStandOutline(RenderHighlightEvent.Block event, Level level, BlockPos pos,
+            BlockState state) {
         BlockPos outlineOrigin;
         if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             outlineOrigin = pos;
@@ -92,8 +93,7 @@ public class BlockOutlineHandler {
         poseStack.translate(
                 outlineOrigin.getX() - camPos.x,
                 outlineOrigin.getY() - camPos.y,
-                outlineOrigin.getZ() - camPos.z
-        );
+                outlineOrigin.getZ() - camPos.z);
 
         LevelRenderer.renderVoxelShape(
                 poseStack,
@@ -106,8 +106,7 @@ public class BlockOutlineHandler {
                 0.0f,
                 0.0f,
                 0.4f,
-                true
-        );
+                true);
 
         poseStack.popPose();
     }
@@ -120,26 +119,33 @@ public class BlockOutlineHandler {
         PoseStack poseStack = event.getPoseStack();
         VertexConsumer consumer = event.getMultiBufferSource().getBuffer(RenderType.lines());
 
-        Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING) 
-                ? state.getValue(BlockStateProperties.HORIZONTAL_FACING) 
+        Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
+                ? state.getValue(BlockStateProperties.HORIZONTAL_FACING)
                 : Direction.NORTH;
 
         poseStack.pushPose();
         poseStack.translate(
                 pos.getX() - camPos.x,
                 pos.getY() - camPos.y,
-                pos.getZ() - camPos.z
-        );
+                pos.getZ() - camPos.z);
 
         poseStack.pushPose();
         poseStack.translate(0.5, 0.5, 0.5);
 
         float yRot = 0;
         switch (facing) {
-            case EAST:  yRot = -90; break;
-            case SOUTH: yRot = 180; break;
-            case WEST:  yRot = 90; break;
-            default:    yRot = 0; break;
+            case EAST:
+                yRot = -90;
+                break;
+            case SOUTH:
+                yRot = 180;
+                break;
+            case WEST:
+                yRot = 90;
+                break;
+            default:
+                yRot = 0;
+                break;
         }
 
         if (yRot != 0) {
@@ -150,8 +156,7 @@ public class BlockOutlineHandler {
 
         LevelRenderer.renderVoxelShape(
                 poseStack, consumer, CRATE_BASE_OUTLINE,
-                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true
-        );
+                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true);
 
         renderSlantedBasket(poseStack, consumer);
 
@@ -163,12 +168,10 @@ public class BlockOutlineHandler {
 
         LevelRenderer.renderVoxelShape(
                 poseStack, consumer, CRATE_LID_OUTLINE,
-                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true
-        );
+                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true);
         LevelRenderer.renderVoxelShape(
                 poseStack, consumer, CRATE_LID_INNER_OUTLINE,
-                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true
-        );
+                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true);
 
         poseStack.popPose();
         poseStack.popPose();
@@ -176,11 +179,11 @@ public class BlockOutlineHandler {
     }
 
     private static void renderSlantedBasket(PoseStack poseStack, VertexConsumer consumer) {
-        float minX = 1/16f, maxX = 15/16f;
-        float minZ = 1/16f, maxZ = 15/16f;
-        float yBottom = 8/16f;
-        float yFrontTop = 10/16f;
-        float yBackTop = 15/16f;
+        float minX = 1 / 16f, maxX = 15 / 16f;
+        float minZ = 1 / 16f, maxZ = 15 / 16f;
+        float yBottom = 8 / 16f;
+        float yFrontTop = 10 / 16f;
+        float yBackTop = 15 / 16f;
 
         drawLine(poseStack, consumer, minX, yBottom, minZ, maxX, yBottom, minZ);
         drawLine(poseStack, consumer, maxX, yBottom, minZ, maxX, yBottom, maxZ);
@@ -198,7 +201,8 @@ public class BlockOutlineHandler {
         drawLine(poseStack, consumer, maxX, yFrontTop, minZ, maxX, yBackTop, maxZ);
     }
 
-    private static void drawLine(PoseStack poseStack, VertexConsumer consumer, float x1, float y1, float z1, float x2, float y2, float z2) {
+    private static void drawLine(PoseStack poseStack, VertexConsumer consumer, float x1, float y1, float z1, float x2,
+            float y2, float z2) {
         PoseStack.Pose pose = poseStack.last();
         org.joml.Matrix4f matrix4f = pose.pose();
 
@@ -207,7 +211,9 @@ public class BlockOutlineHandler {
         float dz = z2 - z1;
         float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (len > 0) {
-            dx /= len; dy /= len; dz /= len;
+            dx /= len;
+            dy /= len;
+            dz /= len;
         }
 
         consumer.addVertex(matrix4f, x1, y1, z1).setColor(0.0f, 0.0f, 0.0f, 0.4f).setNormal(pose, dx, dy, dz);

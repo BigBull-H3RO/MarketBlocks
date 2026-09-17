@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import de.bigbull.marketblocks.platform.Services;
 
-import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
@@ -23,7 +22,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ComparatorBlock;
@@ -39,8 +37,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -206,7 +202,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         if (player instanceof ServerPlayer serverPlayer) {
             if (shopEntity.getOwnerId() == null || shopEntity.hasOffer() || shopEntity.isOwner(player)) {
                 shopEntity.updateShopDirectory();
-                Services.PLATFORM.openMenu(serverPlayer, 
+                Services.PLATFORM.openMenu(serverPlayer,
                         new SimpleMenuProvider(
                                 (id, inv, p) -> new SingleOfferShopMenu(id, inv, shopEntity),
                                 shopEntity.getDisplayName()),
@@ -308,8 +304,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         return super.playerWillDestroy(level, pos, state, player);
     }
 
-
-
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
@@ -325,9 +319,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
     }
-
-
-
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
