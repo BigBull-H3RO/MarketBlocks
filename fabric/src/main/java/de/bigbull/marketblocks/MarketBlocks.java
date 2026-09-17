@@ -113,18 +113,9 @@ public class MarketBlocks implements ModInitializer {
 
         // Block interaction & chest security & showcase toggling
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
-            if (world.isClientSide) return InteractionResult.PASS;
-            if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
-
             BlockPos pos = hitResult.getBlockPos();
-            GlobalPos globalPos = GlobalPos.of(serverPlayer.serverLevel().dimension(), pos);
 
-            if (MarketplaceLinkSavedData.get(serverPlayer.serverLevel()).isLinked(globalPos)) {
-                MarketplaceManager.get().openShop(serverPlayer);
-                return InteractionResult.SUCCESS;
-            }
-
-            // Showcase toggling with Axe/Glass while crouching
+            // Showcase toggling with Axe/Glass while crouching (must run on both client and server to prevent client ghost block placement)
             if (player.isShiftKeyDown()) {
                 BlockState state = world.getBlockState(pos);
                 BlockPos basePos = pos;
@@ -138,7 +129,7 @@ public class MarketBlocks implements ModInitializer {
                 if (held.getItem() instanceof AxeItem) {
                     InteractionResult res = TradeStandBlock.tryDisableShowcase(world, basePos, baseState, player);
                     if (res != InteractionResult.PASS) {
-                        if (res == InteractionResult.FAIL) {
+                        if (res == InteractionResult.FAIL && !world.isClientSide) {
                             player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
                         }
                         return res;
@@ -146,12 +137,22 @@ public class MarketBlocks implements ModInitializer {
                 } else if (held.is(Items.GLASS)) {
                     InteractionResult res = TradeStandBlock.tryEnableShowcase(world, basePos, baseState, player, held);
                     if (res != InteractionResult.PASS) {
-                        if (res == InteractionResult.FAIL) {
+                        if (res == InteractionResult.FAIL && !world.isClientSide) {
                             player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
                         }
                         return res;
                     }
                 }
+            }
+
+            if (world.isClientSide) return InteractionResult.PASS;
+            if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
+
+            GlobalPos globalPos = GlobalPos.of(serverPlayer.serverLevel().dimension(), pos);
+
+            if (MarketplaceLinkSavedData.get(serverPlayer.serverLevel()).isLinked(globalPos)) {
+                MarketplaceManager.get().openShop(serverPlayer);
+                return InteractionResult.SUCCESS;
             }
 
             BlockEntity be = world.getBlockEntity(pos);
