@@ -91,12 +91,13 @@ public final class FabricRegistries {
         RegistriesInit.TRADE_BOOK = () -> tradeBook;
 
         // Entity Types
+        ResourceLocation shopBuyerId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer");
         EntityType<ShopBuyerEntity> shopBuyer = Registry.register(BuiltInRegistries.ENTITY_TYPE,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer"),
+                shopBuyerId,
                 EntityType.Builder.of(ShopBuyerEntity::new, MobCategory.CREATURE)
                         .sized(0.6F, 1.95F)
                         .clientTrackingRange(10)
-                        .build("shop_buyer"));
+                        .build(Constants.MOD_ID + ":shop_buyer"));
         RegistriesInit.SHOP_BUYER = () -> shopBuyer;
 
         // Spawn Egg

@@ -90,14 +90,16 @@ public class ShopRedstoneManager {
 
     private void invalidateNeighbor(Direction dir) {
         BlockPos neighbour = shop.getBlockPos().relative(dir);
-        if (shop.getLevel() != null) {
+        if (shop.getLevel() != null && shop.getLevel().hasChunkAt(neighbour)) {
             Services.PLATFORM.invalidateCapabilities(shop.getLevel(), neighbour);
             BlockState state = shop.getLevel().getBlockState(neighbour);
             if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
                     state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
                 Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
                 BlockPos otherPos = neighbour.relative(connectedDir);
-                Services.PLATFORM.invalidateCapabilities(shop.getLevel(), otherPos);
+                if (shop.getLevel().hasChunkAt(otherPos)) {
+                    Services.PLATFORM.invalidateCapabilities(shop.getLevel(), otherPos);
+                }
             }
         }
     }

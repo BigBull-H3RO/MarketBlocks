@@ -246,6 +246,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private final OfferManager offerManager = new OfferManager(this);
 
     private int tickCounter = 0;
+    private boolean needsPostLoadInit = true;
     private boolean needsOfferRefresh = false;
 
     private long lastOutOfStockNotifyTime = -1;
@@ -958,6 +959,23 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     private static final int OFFER_UPDATE_INTERVAL = 5;
 
     public static void tick(Level level, BlockPos pos, BlockState state, SingleOfferShopBlockEntity be) {
+        if (be.needsPostLoadInit) {
+            be.needsPostLoadInit = false;
+            if (level.isClientSide) {
+                de.bigbull.marketblocks.compat.journeymap.JourneyMapCompat.addShopMarker(be);
+                return;
+            } else {
+                if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
+                    TradeStandBlock.ensureTopBlock(level, pos);
+                }
+                be.updateNeighborCache();
+                be.lockAdjacentChests();
+                Services.PLATFORM.invalidateCapabilities(level, pos);
+                be.updateShopDirectory();
+                be.sync();
+            }
+        }
+
         if (level.isClientSide) {
             return;
         }
@@ -1007,22 +1025,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     @Override
     public void clearRemoved() {
         super.clearRemoved();
-        if (level != null && level.isClientSide()) {
-            de.bigbull.marketblocks.compat.journeymap.JourneyMapCompat.addShopMarker(this);
-        }
-        if (level != null && !level.isClientSide && getBlockState().is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
-            TradeStandBlock.ensureTopBlock(level, worldPosition);
-        }
-        updateNeighborCache();
-
-        lockAdjacentChests();
-        if (level != null) {
-            Services.PLATFORM.invalidateCapabilities(level, worldPosition);
-            if (!level.isClientSide) {
-                updateShopDirectory();
-                sync();
-            }
-        }
+        this.needsPostLoadInit = true;
     }
 
     @Override

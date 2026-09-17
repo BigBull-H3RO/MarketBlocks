@@ -9,7 +9,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,6 +17,9 @@ public class FabricItemTransferHelper implements IItemTransferHelper {
     @Nullable
     @Override
     public ICommonItemHandler getNeighborItemHandler(Level level, BlockPos pos, Direction side) {
+        if (level == null || !level.hasChunkAt(pos)) {
+            return null;
+        }
         Container container = null;
         BlockState state = level.getBlockState(pos);
         if (state.getBlock() instanceof ChestBlock chestBlock) {
@@ -29,7 +31,8 @@ public class FabricItemTransferHelper implements IItemTransferHelper {
             }
         }
 
-        if (container == null) return null;
+        if (container == null)
+            return null;
 
         final Container finalContainer = container;
         return new ICommonItemHandler() {
@@ -45,8 +48,10 @@ public class FabricItemTransferHelper implements IItemTransferHelper {
 
             @Override
             public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-                if (stack.isEmpty() || slot >= finalContainer.getContainerSize()) return stack;
-                if (!finalContainer.canPlaceItem(slot, stack)) return stack;
+                if (stack.isEmpty() || slot >= finalContainer.getContainerSize())
+                    return stack;
+                if (!finalContainer.canPlaceItem(slot, stack))
+                    return stack;
 
                 ItemStack existing = finalContainer.getItem(slot);
                 int limit = Math.min(finalContainer.getMaxStackSize(), stack.getMaxStackSize());
@@ -57,13 +62,16 @@ public class FabricItemTransferHelper implements IItemTransferHelper {
                         finalContainer.setItem(slot, stack.copyWithCount(toInsert));
                         finalContainer.setChanged();
                     }
-                    return stack.getCount() > toInsert ? stack.copyWithCount(stack.getCount() - toInsert) : ItemStack.EMPTY;
+                    return stack.getCount() > toInsert ? stack.copyWithCount(stack.getCount() - toInsert)
+                            : ItemStack.EMPTY;
                 }
 
-                if (!ItemStack.isSameItemSameComponents(existing, stack)) return stack;
+                if (!ItemStack.isSameItemSameComponents(existing, stack))
+                    return stack;
 
                 int space = limit - existing.getCount();
-                if (space <= 0) return stack;
+                if (space <= 0)
+                    return stack;
 
                 int toInsert = Math.min(stack.getCount(), space);
                 if (!simulate) {
@@ -75,9 +83,11 @@ public class FabricItemTransferHelper implements IItemTransferHelper {
 
             @Override
             public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                if (amount <= 0 || slot >= finalContainer.getContainerSize()) return ItemStack.EMPTY;
+                if (amount <= 0 || slot >= finalContainer.getContainerSize())
+                    return ItemStack.EMPTY;
                 ItemStack existing = finalContainer.getItem(slot);
-                if (existing.isEmpty()) return ItemStack.EMPTY;
+                if (existing.isEmpty())
+                    return ItemStack.EMPTY;
 
                 int toExtract = Math.min(amount, existing.getCount());
                 ItemStack extracted = existing.copyWithCount(toExtract);
