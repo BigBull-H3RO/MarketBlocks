@@ -59,7 +59,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
     @Override
     public boolean shouldRenderOffScreen(SingleOfferShopBlockEntity blockEntity) {
-        return false;
+        return true;
     }
 
     @Override
