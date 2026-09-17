@@ -16,10 +16,7 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -95,6 +92,7 @@ public class TradeStandTopBlock extends Block {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
         BlockPos basePos = pos.below();
         BlockState baseState = level.getBlockState(basePos);
@@ -105,8 +103,6 @@ public class TradeStandTopBlock extends Block {
 
         return ItemStack.EMPTY;
     }
-
-
 
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
@@ -134,6 +130,5 @@ public class TradeStandTopBlock extends Block {
         }
         return super.playerWillDestroy(level, pos, state, player);
     }
-
 
 }

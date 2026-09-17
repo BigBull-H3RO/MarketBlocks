@@ -17,7 +17,7 @@ public class FabricItemTransferHelper implements IItemTransferHelper {
     @Nullable
     @Override
     public ICommonItemHandler getNeighborItemHandler(Level level, BlockPos pos, Direction side) {
-        if (level == null || !level.hasChunkAt(pos)) {
+        if (level == null || !level.isLoaded(pos)) {
             return null;
         }
         Container container = null;

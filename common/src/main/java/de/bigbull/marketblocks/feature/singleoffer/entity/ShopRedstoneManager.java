@@ -90,14 +90,14 @@ public class ShopRedstoneManager {
 
     private void invalidateNeighbor(Direction dir) {
         BlockPos neighbour = shop.getBlockPos().relative(dir);
-        if (shop.getLevel() != null && shop.getLevel().hasChunkAt(neighbour)) {
+        if (shop.getLevel() != null && shop.getLevel().isLoaded(neighbour)) {
             Services.PLATFORM.invalidateCapabilities(shop.getLevel(), neighbour);
             BlockState state = shop.getLevel().getBlockState(neighbour);
             if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
                     state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
                 Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
                 BlockPos otherPos = neighbour.relative(connectedDir);
-                if (shop.getLevel().hasChunkAt(otherPos)) {
+                if (shop.getLevel().isLoaded(otherPos)) {
                     Services.PLATFORM.invalidateCapabilities(shop.getLevel(), otherPos);
                 }
             }
@@ -118,13 +118,17 @@ public class ShopRedstoneManager {
         if (shop.getLevel() != null) {
             Services.PLATFORM.invalidateCapabilities(shop.getLevel(), shop.getBlockPos());
             BlockPos neighbour = shop.getBlockPos().relative(dir);
-            Services.PLATFORM.invalidateCapabilities(shop.getLevel(), neighbour);
-            BlockState state = shop.getLevel().getBlockState(neighbour);
-            if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
-                    state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
-                Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
-                BlockPos otherPos = neighbour.relative(connectedDir);
-                Services.PLATFORM.invalidateCapabilities(shop.getLevel(), otherPos);
+            if (shop.getLevel().isLoaded(neighbour)) {
+                Services.PLATFORM.invalidateCapabilities(shop.getLevel(), neighbour);
+                BlockState state = shop.getLevel().getBlockState(neighbour);
+                if (state.getBlock() instanceof net.minecraft.world.level.block.ChestBlock &&
+                        state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE) != net.minecraft.world.level.block.state.properties.ChestType.SINGLE) {
+                    Direction connectedDir = net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state);
+                    BlockPos otherPos = neighbour.relative(connectedDir);
+                    if (shop.getLevel().isLoaded(otherPos)) {
+                        Services.PLATFORM.invalidateCapabilities(shop.getLevel(), otherPos);
+                    }
+                }
             }
         }
     }
