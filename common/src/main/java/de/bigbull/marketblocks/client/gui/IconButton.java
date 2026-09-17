@@ -123,7 +123,7 @@ public class IconButton extends Button {
         ResourceLocation background;
         if (!this.active) {
             background = sprites.get(false, false);
-        } else if (selected && (!allowClickWhenSelected || !isHoveredOrFocused())) {
+        } else if (selected) {
             background = sprites.get(false, true);
         } else if (isHoveredOrFocused()) {
             background = sprites.get(true, true);
