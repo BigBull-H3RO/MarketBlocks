@@ -68,6 +68,7 @@ public final class MarketplaceManager {
     private boolean dirty;
     private boolean initialized;
     private volatile boolean globalEditModeEnabled = false;
+    private final java.util.Set<UUID> activeEditModePlayers = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
     private int ticksSinceSave;
     private int ticksSinceRuntimeUpkeep;
     private long lastRuntimeUpkeepGameTime = Long.MIN_VALUE;
@@ -326,7 +327,57 @@ public final class MarketplaceManager {
     }
 
     public boolean isGlobalEditModeEnabled() {
-        return globalEditModeEnabled;
+        return !activeEditModePlayers.isEmpty() || globalEditModeEnabled;
+    }
+
+    public boolean isEditModeEnabled(UUID playerId) {
+        if (playerId == null) return false;
+        if (server != null && server.getPlayerList().getPlayer(playerId) == null) {
+            activeEditModePlayers.remove(playerId);
+            return false;
+        }
+        return activeEditModePlayers.contains(playerId);
+    }
+
+    public boolean isEditModeEnabled(net.minecraft.world.entity.player.Player player) {
+        if (player == null || !player.hasPermissions(2)) {
+            return false;
+        }
+        return isEditModeEnabled(player.getUUID());
+    }
+
+    public boolean toggleEditMode(ServerPlayer player) {
+        boolean next = !isEditModeEnabled(player);
+        setEditMode(player, next);
+        return next;
+    }
+
+    public void setEditMode(ServerPlayer player, boolean enabled) {
+        if (player == null) return;
+        if (enabled) {
+            activeEditModePlayers.add(player.getUUID());
+        } else {
+            activeEditModePlayers.remove(player.getUUID());
+        }
+        onPlayerEditModeChanged(player, enabled);
+    }
+
+    public void clearPlayerEditMode(UUID playerId) {
+        if (playerId != null) {
+            activeEditModePlayers.remove(playerId);
+        }
+    }
+
+    private void onPlayerEditModeChanged(ServerPlayer player, boolean enabled) {
+        if (player.containerMenu instanceof de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu singleOfferMenu) {
+            singleOfferMenu.broadcastChanges();
+        }
+        if (player.containerMenu instanceof MarketplaceMenu marketplaceMenu) {
+            if (!enabled && marketplaceMenu.isEditor()) {
+                marketplaceMenu.setEditMode(false);
+            }
+            marketplaceMenu.broadcastChanges();
+        }
     }
 
     public void setGlobalEditModeEnabled(boolean enabled) {
@@ -598,7 +649,7 @@ public final class MarketplaceManager {
             offerViewStates = isGlobalDailyLimit()
                     ? buildOfferViewStates(null, gameTime)
                     : buildOfferViewStates(player, gameTime);
-            globalEditModeEnabled = isGlobalEditModeEnabled();
+            globalEditModeEnabled = isEditModeEnabled(player);
             playerCanEdit = canEdit(player);
         }
         MarketplaceMenuProvider provider = new MarketplaceMenuProvider(playerCanEdit, globalEditModeEnabled);
@@ -756,7 +807,7 @@ public final class MarketplaceManager {
                 menu.clampSelectedPage(batch.pageCount());
                 menu.slotsChanged(menu.templateContainer());
             }
-            sendSnapshot(player, batch.encodedSnapshot(), target.encodedOfferViewStates(), target.canEdit(), batch.globalEditModeEnabled());
+            sendSnapshot(player, batch.encodedSnapshot(), target.encodedOfferViewStates(), target.canEdit(), isEditModeEnabled(player));
         }
     }
 

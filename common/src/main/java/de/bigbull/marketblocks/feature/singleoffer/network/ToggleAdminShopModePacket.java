@@ -45,7 +45,7 @@ public record ToggleAdminShopModePacket(BlockPos pos, boolean enabled) implement
             if (!player.hasPermissions(2)) {
                 return;
             }
-            if (!MarketplaceManager.get().isGlobalEditModeEnabled()) {
+            if (!MarketplaceManager.get().isEditModeEnabled(player)) {
                 return;
             }
 

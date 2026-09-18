@@ -472,8 +472,8 @@
   "marketblocks.jade.trader.budget": "Budget: %s",
   "menu.marketblocks.marketplace": "Marktplatz",
   "message.marketblocks.marketplace.daily_limit_reached": "Das Tageslimit für dieses Angebot wurde erreicht.",
-  "message.marketblocks.marketplace.edit_mode_disabled": "Marktplatz-Bearbeitungsmodus deaktiviert.",
-  "message.marketblocks.marketplace.edit_mode_enabled": "Marktplatz-Bearbeitungsmodus aktiviert.",
+  "message.marketblocks.marketplace.edit_mode_disabled": "Bearbeitungsmodus deaktiviert.",
+  "message.marketblocks.marketplace.edit_mode_enabled": "Bearbeitungsmodus aktiviert.",
   "message.marketblocks.marketplace.limits.invalid_data": "Limits konnten nicht gespeichert werden: ungültige Daten.",
   "message.marketblocks.marketplace.limits.invalid_positive_int": "Bitte nur positive ganze Zahlen für Limits eingeben.",
   "message.marketblocks.marketplace.limits.no_connection": "Limits konnten nicht gespeichert werden: keine Serververbindung.",
@@ -515,5 +515,8 @@
   "message.marketblocks.trade_stand.break_not_empty": "Du musst zuerst alle Items und Auszahlungen leeren!",
   "message.marketblocks.trade_stand.no_offer": "Dieser Handelsstand hat aktuell kein aktives Angebot.",
   "message.marketblocks.trade_stand.not_owner": "Nur der Besitzer kann diesen Handelsstand abbauen.",
-  "subtitles.marketblocks.visual_npc_fall": "Dorfbewohner landet"
+  "subtitles.marketblocks.visual_npc_fall": "Dorfbewohner landet",
+  "command.marketblocks.editmode.player_only": "Dieser Befehl kann von der Konsole nur mit Spieler-Angabe ausgeführt werden: /marketblocks admin editmode <true|false> <Spieler>",
+  "command.marketblocks.editmode.target_enabled": "Bearbeitungsmodus für %s aktiviert.",
+  "command.marketblocks.editmode.target_disabled": "Bearbeitungsmodus für %s deaktiviert."
 }
