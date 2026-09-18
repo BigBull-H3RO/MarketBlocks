@@ -64,6 +64,8 @@ jobs:
             Dieser Release wird immer mit der neuesten Entwicklungsversion überschrieben.
             
             **Commit:** `${{ github.sha }}`
-          files: build/libs/*.jar
+          files: |
+            fabric/build/libs/*.jar
+            neoforge/build/libs/*.jar
           prerelease: true
           make_latest: false

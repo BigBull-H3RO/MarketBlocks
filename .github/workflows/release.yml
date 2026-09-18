@@ -86,5 +86,7 @@ jobs:
         with:
           tag_name: ${{ steps.release_tag.outputs.tag }}
           name: MarketBlocks ${{ steps.release_tag.outputs.mod_version }}
-          files: build/libs/*.jar
+          files: |
+            fabric/build/libs/*.jar
+            neoforge/build/libs/*.jar
           generate_release_notes: true
