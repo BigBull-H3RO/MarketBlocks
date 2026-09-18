@@ -270,30 +270,52 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             return true;
         }
 
-        // Regular player shop: owner can always break
+        // Creative Mode Protection:
+        // In Creative mode, blocks break instantly on left click. Require Sneak (Shift)
+        // so owners don't accidentally one-shot their own shop, and admins don't accidentally delete foreign shops.
+        if (player.isCreative()) {
+            if (isOwner) {
+                if (!player.isShiftKeyDown()) {
+                    if (notifyPlayer && player instanceof ServerPlayer sp) {
+                        sp.displayClientMessage(Component.translatable("message.marketblocks.shop.owner_creative_break_hint"), true);
+                    }
+                    return false;
+                }
+                return true;
+            }
+
+            // Foreign creative player: must have OP + Sneak
+            if (!hasAdminBypass) {
+                if (notifyPlayer && player instanceof ServerPlayer sp) {
+                    sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+                }
+                return false;
+            }
+
+            if (!player.isShiftKeyDown()) {
+                if (notifyPlayer && player instanceof ServerPlayer sp) {
+                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_break_hint"), true);
+                }
+                return false;
+            }
+
+            if (notifyPlayer && player instanceof ServerPlayer sp) {
+                sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_bypassed"), true);
+            }
+            return true;
+        }
+
+        // Survival / Adventure mode:
+        // Owner can always break (mines normally)
         if (isOwner) {
             return true;
         }
 
-        // Foreign shop: only OP + Creative with Sneaking can bypass
-        if (!hasAdminBypass) {
-            if (notifyPlayer && player instanceof ServerPlayer sp) {
-                sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
-            }
-            return false;
-        }
-
-        if (!player.isShiftKeyDown()) {
-            if (notifyPlayer && player instanceof ServerPlayer sp) {
-                sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_break_hint"), true);
-            }
-            return false;
-        }
-
+        // Foreign survival player: cannot break
         if (notifyPlayer && player instanceof ServerPlayer sp) {
-            sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_bypassed"), true);
+            sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
         }
-        return true;
+        return false;
     }
 
     @Override

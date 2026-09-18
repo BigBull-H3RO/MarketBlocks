@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
+import java.util.UUID;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -30,6 +32,12 @@ public class TopSellerElement implements ITradeBookElement {
         String playerNameFull = parts[2];
         String shops = parts[3];
         String sales = parts[4];
+        UUID playerUuid = null;
+        if (parts.length > 5 && !parts[5].isEmpty()) {
+            try {
+                playerUuid = UUID.fromString(parts[5]);
+            } catch (Exception ignored) {}
+        }
 
         boolean isTopThree = rankIndex < 3;
         String rankPrefix = switch (rankIndex) {
@@ -49,7 +57,7 @@ public class TopSellerElement implements ITradeBookElement {
 
         int rankWidth = (int) (context.getFont().width(rankPrefix) * rankScale);
 
-        TradeBookLayoutUtils.renderPlayerHead(graphics, playerNameFull, startX + rankWidth + 2, startY - 1, scale, 8);
+        TradeBookLayoutUtils.renderPlayerHead(graphics, playerUuid, playerNameFull, startX + rankWidth + 2, startY - 1, scale, 8, false);
 
         String displayName = TradeBookLayoutUtils.truncate(playerNameFull, 12);
         graphics.drawString(context.getFont(), displayName, startX + rankWidth + 14, startY, isTopThree ? 0xFFAA00 : 0x0000AA, false);
