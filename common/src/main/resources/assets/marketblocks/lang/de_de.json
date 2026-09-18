@@ -491,6 +491,7 @@
   "message.marketblocks.notifications.purchase": "§a%s kaufte %sx %s aus deinem Shop.§r",
   "message.marketblocks.purchase_success": "Du hast erfolgreich %s x %s gekauft.",
   "message.marketblocks.purchase_success.global": "%s hat %s x %s gekauft.",
+  "message.marketblocks.shop.owner_creative_break_hint": "Schleiche beim Abbauen, um deinen Shop im Kreativmodus abzubauen.",
   "message.marketblocks.shop.admin_break_hint": "Schleiche beim Abbauen, um den Shop-Schutz zu umgehen (Admin).",
   "message.marketblocks.shop.admin_bypassed": "Shop-Schutz umgangen (Admin).",
   "message.marketblocks.shop.admin_shop_break_hint": "Schleiche beim Abbauen, um diesen Admin-Shop zu entfernen.",

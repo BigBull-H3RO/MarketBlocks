@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook;
 
+import java.util.UUID;
 import com.mojang.authlib.GameProfile;
 import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
@@ -23,11 +24,15 @@ public class TradeBookLayoutUtils {
     public static final float TEXT_SCALE = 0.75f;
 
     public static void renderPlayerHead(GuiGraphics graphics, String username, int x, int y, float scale, int size) {
-        renderPlayerHead(graphics, username, x, y, scale, size, false);
+        renderPlayerHead(graphics, null, username, x, y, scale, size, false);
     }
 
     public static void renderPlayerHead(GuiGraphics graphics, String username, int x, int y, float scale, int size, boolean withBorder) {
-        GameProfile profile = new GameProfile(Util.NIL_UUID, username);
+        renderPlayerHead(graphics, null, username, x, y, scale, size, withBorder);
+    }
+
+    public static void renderPlayerHead(GuiGraphics graphics, UUID id, String username, int x, int y, float scale, int size, boolean withBorder) {
+        GameProfile profile = new GameProfile(id != null ? id : Util.NIL_UUID, username != null ? username : "");
         PlayerSkin skin = Minecraft.getInstance().getSkinManager().getInsecureSkin(profile);
 
         graphics.pose().pushPose();

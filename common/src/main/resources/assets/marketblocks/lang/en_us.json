@@ -491,6 +491,7 @@
   "message.marketblocks.notifications.purchase": "§a%s bought %sx %s from your shop.§r",
   "message.marketblocks.purchase_success": "You have successfully purchased %s x %s.",
   "message.marketblocks.purchase_success.global": "%s has purchased %s x %s.",
+  "message.marketblocks.shop.owner_creative_break_hint": "Sneak while breaking to destroy your shop in Creative mode.",
   "message.marketblocks.shop.admin_break_hint": "Sneak while breaking to bypass shop protection (Admin).",
   "message.marketblocks.shop.admin_bypassed": "Shop protection bypassed (Admin).",
   "message.marketblocks.shop.admin_shop_break_hint": "Sneak while breaking to remove this Admin Shop.",

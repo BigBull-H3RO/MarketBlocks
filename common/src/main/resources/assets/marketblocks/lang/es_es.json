@@ -491,6 +491,7 @@
   "message.marketblocks.notifications.purchase": "§a%s compró %sx %s en tu tienda.§r",
   "message.marketblocks.purchase_success": "Has comprado con éxito %s x %s.",
   "message.marketblocks.purchase_success.global": "%s ha comprado %s x %s.",
+  "message.marketblocks.shop.owner_creative_break_hint": "Agáchate al romper para destruir tu tienda en modo Creativo.",
   "message.marketblocks.shop.admin_break_hint": "Agáchate al romper para omitir la protección de la tienda (Admin).",
   "message.marketblocks.shop.admin_bypassed": "Protección de la tienda omitida (Admin).",
   "message.marketblocks.shop.admin_shop_break_hint": "Agáchate al romper para eliminar esta Tienda de Admin.",

@@ -336,6 +336,11 @@ public class SingleOfferOwnerListPanel {
 
         if (listMode == ListMode.OWNERS) {
             accessDraft.setAdditionalOwners(updated);
+            Map<UUID, String> cleanAccessList = new HashMap<>(accessDraft.accessList());
+            for (UUID coOwnerId : updated.keySet()) {
+                cleanAccessList.remove(coOwnerId);
+            }
+            accessDraft.setAccessList(cleanAccessList);
         } else {
             accessDraft.setAccessList(updated);
         }
@@ -400,6 +405,9 @@ public class SingleOfferOwnerListPanel {
                 if (id.equals(accessDraft.ownerId())) {
                     continue;
                 }
+                if (listMode == ListMode.ACCESS_LIST && accessDraft.additionalOwners().containsKey(id)) {
+                    continue;
+                }
                 ownerOrder.add(id);
                 ownerSelected.put(id, current.containsKey(id));
                 current.remove(id);
@@ -408,6 +416,9 @@ public class SingleOfferOwnerListPanel {
 
         for (Map.Entry<UUID, String> entry : current.entrySet()) {
             UUID id = entry.getKey();
+            if (listMode == ListMode.ACCESS_LIST && accessDraft.additionalOwners().containsKey(id)) {
+                continue;
+            }
             ownerOrder.add(id);
             ownerSelected.put(id, true);
         }

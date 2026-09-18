@@ -4,6 +4,7 @@ import de.bigbull.marketblocks.command.FabricMarketBlocksCommands;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.data.MarketplaceLinkSavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
+import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.notification.PendingNotificationsSavedData;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
@@ -173,6 +174,12 @@ public class MarketBlocks implements ModInitializer {
         PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
             if (world.isClientSide) return true;
             if (!(player instanceof ServerPlayer serverPlayer)) return true;
+
+            if (state.getBlock() instanceof BaseShopBlock || state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+                if (!BaseShopBlock.canPlayerDestroy(world, pos, player, true)) {
+                    return false;
+                }
+            }
 
             GlobalPos globalPos = GlobalPos.of(serverPlayer.serverLevel().dimension(), pos);
             MarketplaceLinkSavedData linkData = MarketplaceLinkSavedData.get(serverPlayer.serverLevel());

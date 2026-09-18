@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
+import java.util.UUID;
+
 import de.bigbull.marketblocks.feature.trader.network.TeleportRequestPacket;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import net.minecraft.client.gui.GuiGraphics;
@@ -50,6 +52,12 @@ public class ShopEntryElement implements ITradeBookElement {
         String dim = parts[11];
         boolean canTeleport = Boolean.parseBoolean(parts[12]);
         String shopId = parts[13];
+        UUID ownerUuid = null;
+        if (parts.length > 14 && !parts[14].isEmpty()) {
+            try {
+                ownerUuid = UUID.fromString(parts[14]);
+            } catch (Exception ignored) {}
+        }
 
         // Render Icon / Status
         String statusIcon = isClosed ? "§c✖" : "§a✔";
@@ -81,7 +89,7 @@ public class ShopEntryElement implements ITradeBookElement {
 
         // Render Head (Left) with 1px border and tooltip for player shops
         if (!prefix.equals("my_shop")) {
-            TradeBookLayoutUtils.renderPlayerHead(graphics, ownerFull, startX + 5, currentY + 3, scale, 10, true);
+            TradeBookLayoutUtils.renderPlayerHead(graphics, ownerUuid, ownerFull, startX + 5, currentY + 3, scale, 10, true);
 
             int headScreenX = (int) ((startX + 5) * scale);
             int headScreenY = (int) ((currentY + 2) * scale);

@@ -3,6 +3,10 @@ package de.bigbull.marketblocks.event;
 import de.bigbull.marketblocks.Constants;
 
 import de.bigbull.marketblocks.core.data.MarketplaceLinkSavedData;
+import de.bigbull.marketblocks.core.init.RegistriesInit;
+import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -51,6 +55,15 @@ public final class MarketBlocksInteractionEvents {
             return;
 
         BlockPos pos = event.getPos();
+        BlockState state = event.getState();
+        if (event.getLevel() instanceof Level level) {
+            if (state.getBlock() instanceof BaseShopBlock || state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+                if (!BaseShopBlock.canPlayerDestroy(level, pos, player, true)) {
+                    event.setCanceled(true);
+                    return;
+                }
+            }
+        }
         GlobalPos globalPos = GlobalPos.of(player.serverLevel().dimension(), pos);
 
         boolean isLinked = MarketplaceLinkSavedData.get(player.serverLevel()).isLinked(globalPos);

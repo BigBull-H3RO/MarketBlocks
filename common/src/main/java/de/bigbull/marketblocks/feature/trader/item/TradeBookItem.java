@@ -257,7 +257,7 @@ public class TradeBookItem extends Item {
                 String dim = shop.pos().dimension().location().toString();
 
                 // Format:
-                // SHOP_ENTRY||prefix||shopNameFull||ownerFull||compactSales||isClosed||offerId||finalStatus||x||y||z||dim||canTeleport||shopId
+                // SHOP_ENTRY||prefix||shopNameFull||ownerFull||compactSales||isClosed||offerId||finalStatus||x||y||z||dim||canTeleport||shopId||ownerUUID
                 String marker = String.join("||",
                                 "SHOP_ENTRY",
                                 prefix,
@@ -272,7 +272,8 @@ public class TradeBookItem extends Item {
                                 String.valueOf(pos.getZ()),
                                 dim,
                                 String.valueOf(canTeleport),
-                                shop.shopId());
+                                shop.shopId(),
+                                shop.ownerUUID() != null ? shop.ownerUUID().toString() : "");
 
                 page.append(Component.literal("\u00A0") // Non-breaking space
                                 .withStyle(style -> style.withInsertion("BLOCK_START")));
@@ -287,11 +288,13 @@ public class TradeBookItem extends Item {
         // ==========================================
 
         private static class PlayerSales {
+                UUID uuid;
                 String name;
                 int sales;
                 int shopCount;
 
-                public PlayerSales(String name, int sales) {
+                public PlayerSales(UUID uuid, String name, int sales) {
+                        this.uuid = uuid;
                         this.name = name;
                         this.sales = sales;
                         this.shopCount = 0;
@@ -316,7 +319,7 @@ public class TradeBookItem extends Item {
                                 continue;
                         String ownerName = shop.ownerName() != null && !shop.ownerName().isEmpty() ? shop.ownerName()
                                         : "Unknown";
-                        salesMap.computeIfAbsent(ownerId, id -> new PlayerSales(ownerName, 0))
+                        salesMap.computeIfAbsent(ownerId, id -> new PlayerSales(ownerId, ownerName, 0))
                                         .addSales(shop.totalSales());
                         salesMap.get(ownerId).name = ownerName; // Update to most recent name
                         salesMap.get(ownerId).incrementShopCount();
@@ -347,8 +350,8 @@ public class TradeBookItem extends Item {
                                 displayName = displayName.substring(0, 10) + "..";
                         String compactShops = formatCompactNumber(player.shopCount);
                         String compactSales = formatCompactNumber(player.sales);
-                        String payload = String.format("TOP_SELLER_ENTRY||%d||%s||%s||%s",
-                                        j, displayNameFull, compactShops, compactSales);
+                        String payload = String.format("TOP_SELLER_ENTRY||%d||%s||%s||%s||%s",
+                                        j, displayNameFull, compactShops, compactSales, player.uuid != null ? player.uuid.toString() : "");
                         page.append(Component.literal("\u00A0\n")
                                         .withStyle(style -> style.withInsertion(payload)));
                 }
