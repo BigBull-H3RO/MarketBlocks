@@ -472,8 +472,8 @@
   "marketblocks.jade.trader.budget": "Budget : %s",
   "menu.marketblocks.marketplace": "Place du marché",
   "message.marketblocks.marketplace.daily_limit_reached": "La limite journalière pour cette offre a été atteinte.",
-  "message.marketblocks.marketplace.edit_mode_disabled": "Mode édition de la place du marché désactivé.",
-  "message.marketblocks.marketplace.edit_mode_enabled": "Mode édition de la place du marché activé.",
+  "message.marketblocks.marketplace.edit_mode_disabled": "Mode d'édition désactivé.",
+  "message.marketblocks.marketplace.edit_mode_enabled": "Mode d'édition activé.",
   "message.marketblocks.marketplace.limits.invalid_data": "Impossible d'enregistrer les limites : données invalides.",
   "message.marketblocks.marketplace.limits.invalid_positive_int": "Veuillez entrer uniquement des nombres entiers positifs pour les limites.",
   "message.marketblocks.marketplace.limits.no_connection": "Impossible d'enregistrer les limites : aucune connexion au serveur.",
@@ -511,5 +511,8 @@
   "message.marketblocks.trade_stand.break_not_empty": "Vous devez d'abord vider tous les objets et les paiements !",
   "message.marketblocks.trade_stand.no_offer": "Ce stand de commerce n'a actuellement aucune offre active.",
   "message.marketblocks.trade_stand.not_owner": "Seul le propriétaire peut détruire ce stand de commerce.",
-  "subtitles.marketblocks.visual_npc_fall": "Le villageois atterrit"
+  "subtitles.marketblocks.visual_npc_fall": "Le villageois atterrit",
+  "command.marketblocks.editmode.player_only": "Cette commande ne peut être exécutée depuis la console qu'en spécifiant un joueur : /marketblocks admin editmode <true|false> <joueur>",
+  "command.marketblocks.editmode.target_enabled": "Mode d'édition activé pour %s.",
+  "command.marketblocks.editmode.target_disabled": "Mode d'édition désactivé pour %s."
 }

@@ -472,8 +472,8 @@
   "marketblocks.jade.trader.budget": "Presupuesto: %s",
   "menu.marketblocks.marketplace": "Mercado",
   "message.marketblocks.marketplace.daily_limit_reached": "Se ha alcanzado el límite diario para esta oferta.",
-  "message.marketblocks.marketplace.edit_mode_disabled": "Modo edición del mercado desactivado.",
-  "message.marketblocks.marketplace.edit_mode_enabled": "Modo edición del mercado activado.",
+  "message.marketblocks.marketplace.edit_mode_disabled": "Modo de edición desactivado.",
+  "message.marketblocks.marketplace.edit_mode_enabled": "Modo de edición activado.",
   "message.marketblocks.marketplace.limits.invalid_data": "No se pudieron guardar los límites: datos no válidos.",
   "message.marketblocks.marketplace.limits.invalid_positive_int": "Por favor, introduce solo números enteros positivos para los límites.",
   "message.marketblocks.marketplace.limits.no_connection": "No se pudieron guardar los límites: sin conexión con el servidor.",
@@ -511,5 +511,8 @@
   "message.marketblocks.trade_stand.break_not_empty": "¡Debes vaciar primero todos los objetos y pagos!",
   "message.marketblocks.trade_stand.no_offer": "Este puesto de comercio actualmente no tiene ninguna oferta activa.",
   "message.marketblocks.trade_stand.not_owner": "Solo el propietario puede romper este puesto de comercio.",
-  "subtitles.marketblocks.visual_npc_fall": "Aldeano aterriza"
+  "subtitles.marketblocks.visual_npc_fall": "Aldeano aterriza",
+  "command.marketblocks.editmode.player_only": "Este comando solo se puede ejecutar desde la consola especificando un jugador: /marketblocks admin editmode <true|false> <jugador>",
+  "command.marketblocks.editmode.target_enabled": "Modo de edición activado para %s.",
+  "command.marketblocks.editmode.target_disabled": "Modo de edición desactivado para %s."
 }

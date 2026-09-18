@@ -100,10 +100,10 @@ public record UpdateSettingsPacket(
                 AccessSettings incomingAccess = packet.accessSettings();
                 AccessSettings existingAccess = blockEntity.getSettingsManager().getAccessSettings();
                 boolean isPrimaryOwner = blockEntity.getAccessManager().isPrimaryOwner(player);
-                boolean isAdminMode = MarketplaceManager.get().isGlobalEditModeEnabled() && player.hasPermissions(2);
+                boolean isAdminMode = player.hasPermissions(2) && MarketplaceManager.get().isEditModeEnabled(player);
 
                 boolean newAdminShopEnabled = existingAccess.adminShopEnabled();
-                if (isAdminMode || (existingAccess.adminShopEnabled() && !incomingAccess.adminShopEnabled() && (isPrimaryOwner || player.hasPermissions(2)))) {
+                if (isAdminMode) {
                     newAdminShopEnabled = incomingAccess.adminShopEnabled();
                 }
 

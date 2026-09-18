@@ -183,6 +183,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         return getActiveTab() == tab;
     }
 
+    @Override
+    public void broadcastChanges() {
+        if (!canUseTab(getActiveTab())) {
+            setActiveTabServer(ShopTab.OFFERS);
+        }
+        super.broadcastChanges();
+    }
+
     /** Sets the active tab on the server side and broadcasts changes. */
     public void setActiveTabServer(ShopTab tab) {
         tabData.set(0, sanitizeRequestedTab(tab).ordinal());

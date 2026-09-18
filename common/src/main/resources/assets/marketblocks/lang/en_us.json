@@ -472,8 +472,8 @@
   "marketblocks.jade.trader.budget": "Budget: %s",
   "menu.marketblocks.marketplace": "Marketplace",
   "message.marketblocks.marketplace.daily_limit_reached": "The daily limit for this offer has been reached.",
-  "message.marketblocks.marketplace.edit_mode_disabled": "Marketplace edit mode disabled.",
-  "message.marketblocks.marketplace.edit_mode_enabled": "Marketplace edit mode enabled.",
+  "message.marketblocks.marketplace.edit_mode_disabled": "Edit mode disabled.",
+  "message.marketblocks.marketplace.edit_mode_enabled": "Edit mode enabled.",
   "message.marketblocks.marketplace.limits.invalid_data": "Could not save limits: invalid data.",
   "message.marketblocks.marketplace.limits.invalid_positive_int": "Please enter only positive whole numbers for limits.",
   "message.marketblocks.marketplace.limits.no_connection": "Could not save limits: no server connection.",
@@ -515,5 +515,8 @@
   "message.marketblocks.trade_stand.break_not_empty": "You must first empty all items and payouts!",
   "message.marketblocks.trade_stand.no_offer": "This trade stand currently has no active offer.",
   "message.marketblocks.trade_stand.not_owner": "Only the owner can break this trade stand.",
-  "subtitles.marketblocks.visual_npc_fall": "Villager lands"
+  "subtitles.marketblocks.visual_npc_fall": "Villager lands",
+  "command.marketblocks.editmode.player_only": "This command can only be executed from console with a player specified: /marketblocks admin editmode <true|false> <player>",
+  "command.marketblocks.editmode.target_enabled": "Edit mode enabled for %s.",
+  "command.marketblocks.editmode.target_disabled": "Edit mode disabled for %s."
 }

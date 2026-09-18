@@ -742,10 +742,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private boolean canToggleAdminShop() {
-        SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        boolean hasAdminShop = (accessDraft != null ? accessDraft.adminShopEnabled()
-                : (be != null && be.isAdminShopEnabled()));
-        return menu.isOperator() && (menu.isGlobalAdminModeEnabled() || hasAdminShop);
+        return menu.isOperator() && menu.isGlobalAdminModeEnabled();
     }
 
     private boolean isInventoryTabEnabled() {

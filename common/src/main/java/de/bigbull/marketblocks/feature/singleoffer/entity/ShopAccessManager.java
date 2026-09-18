@@ -74,10 +74,22 @@ public class ShopAccessManager {
     }
 
     public boolean isOwner(Player player) {
-        if (shop.isAdminShopEnabled() && player.hasPermissions(2))
+        if (player == null) return false;
+        boolean adminEditMode = player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player);
+
+        // If it's an Admin Shop:
+        // ONLY an OP player with active Edit Mode can manage/edit it!
+        if (shop.isAdminShopEnabled()) {
+            return adminEditMode;
+        }
+
+        // If it's a normal Player Shop:
+        // Admin with active Edit Mode can bypass ownership
+        if (adminEditMode) {
             return true;
-        if (shop.isGlobalAdminModeEnabled() && player.hasPermissions(2))
-            return true;
+        }
+
+        // Normal owner / co-owner
         return isOwnerByUUID(player.getUUID());
     }
 
@@ -89,7 +101,7 @@ public class ShopAccessManager {
     public boolean canPlayerBuy(Player player) {
         if (player == null)
             return !shop.getGeneralSettings().isClosed();
-        if (shop.isAdminShopEnabled() && player.hasPermissions(2))
+        if (player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))
             return true;
         return canPlayerBuyByUUID(player.getUUID());
     }
@@ -115,10 +127,17 @@ public class ShopAccessManager {
     }
 
     public boolean isPrimaryOwner(Player player) {
-        if (shop.isAdminShopEnabled() && player.hasPermissions(2))
+        if (player == null) return false;
+        boolean adminEditMode = player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player);
+
+        if (shop.isAdminShopEnabled()) {
+            return adminEditMode;
+        }
+
+        if (adminEditMode) {
             return true;
-        if (shop.isGlobalAdminModeEnabled() && player.hasPermissions(2))
-            return true;
+        }
+
         return player.getUUID().equals(shop.getSettingsManager().getAccessSettings().ownerId());
     }
 
@@ -153,9 +172,6 @@ public class ShopAccessManager {
         if (shop.getOwnerId() == null) {
             return true;
         }
-        if (shop.isGlobalAdminModeEnabled() && player != null && player.hasPermissions(2)) {
-            return true;
-        }
         return isOwner(player);
     }
 
@@ -180,7 +196,7 @@ public class ShopAccessManager {
                         flags |= SingleOfferShopBlockEntity.PRIMARY_OWNER_FLAG;
                     if (player != null && player.hasPermissions(2))
                         flags |= SingleOfferShopBlockEntity.OPERATOR_FLAG;
-                    if (shop.isGlobalAdminModeEnabled())
+                    if (player != null && player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))
                         flags |= SingleOfferShopBlockEntity.GLOBAL_ADMIN_MODE_FLAG;
                     if (canPlayerBuy(player))
                         flags |= SingleOfferShopBlockEntity.CAN_BUY_FLAG;

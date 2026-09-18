@@ -28,7 +28,8 @@ public record MarketplaceToggleEditModePacket(boolean enable) implements CustomP
     public static void handle(MarketplaceToggleEditModePacket packet, PacketContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof MarketplaceMenu menu) {
-                if (!packet.enable() || menu.canUseEditMode()) {
+                if (player.hasPermissions(2)) {
+                    de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().setEditMode(player, packet.enable());
                     menu.setEditMode(packet.enable());
                 }
             }
