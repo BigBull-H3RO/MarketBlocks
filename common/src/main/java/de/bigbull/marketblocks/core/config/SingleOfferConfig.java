@@ -14,6 +14,7 @@ public class SingleOfferConfig {
 
     // --- Shop Mechanics ---
     public static final TomlConfigValue.DoubleValue SHOP_BLAST_RESISTANCE;
+    public static final TomlConfigValue.IntValue MAX_SHOPS_PER_PLAYER;
     public static final TomlConfigValue.IntValue MAX_SHOPS_PER_PLAYER_SURVIVAL;
     public static final TomlConfigValue.IntValue MAX_CO_OWNERS_PER_SHOP;
     public static final TomlConfigValue.BooleanValue ENABLE_CHEST_EXTENSION;
@@ -38,9 +39,10 @@ public class SingleOfferConfig {
                         "Default: 3600000.0 (bedrock level, prevents explosion griefing).",
                         "Set to 6.0 for obsidian-level resistance, or 3.0 for wood-like resistance.")
                 .defineInRange("shopBlastResistance", 3600000.0, 3.0, 3600000.0);
-        MAX_SHOPS_PER_PLAYER_SURVIVAL = BUILDER
-                .comment("Maximum number of shops a player can place in Survival mode (-1 for unlimited)")
-                .defineInRange("maxShopsPerPlayerSurvival", 10, -1, Integer.MAX_VALUE);
+        MAX_SHOPS_PER_PLAYER = BUILDER
+                .comment("Maximum number of active shops a player can own in Survival mode (-1 for unlimited)")
+                .defineInRange("maxShopsPerPlayer", 10, -1, Integer.MAX_VALUE);
+        MAX_SHOPS_PER_PLAYER_SURVIVAL = MAX_SHOPS_PER_PLAYER;
         MAX_CO_OWNERS_PER_SHOP = BUILDER
                 .comment("Maximum number of co-owners allowed per SingleOffer shop")
                 .defineInRange("maxCoOwnersPerShop", 10, 0, 100);

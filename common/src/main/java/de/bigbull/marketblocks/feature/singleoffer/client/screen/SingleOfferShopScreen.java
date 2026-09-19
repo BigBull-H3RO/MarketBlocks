@@ -270,8 +270,13 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         offerButton.active = be.hasOffer();
         if (!be.hasOffer()) {
             if (menu.canManageOffer()) {
-                addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, CREATE_ICON,
+                IconButton createBtn = addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, CREATE_ICON,
                         b -> createOffer(), Component.translatable("gui.marketblocks.create_offer"), () -> false));
+                if (menu.isShopLimitReached()) {
+                    createBtn.active = false;
+                    int maxShops = SingleOfferConfig.MAX_SHOPS_PER_PLAYER.get();
+                    createBtn.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.error.shop_limit_reached", maxShops)));
+                }
             }
         } else if (isOwner) {
             addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, DELETE_ICON,

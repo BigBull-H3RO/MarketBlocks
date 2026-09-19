@@ -204,6 +204,18 @@ public class ShopAccessManager {
                         flags |= SingleOfferShopBlockEntity.CLOSED_FLAG;
                     if (canManageOffer(player))
                         flags |= SingleOfferShopBlockEntity.CAN_MANAGE_OFFER_FLAG;
+                    if (!shop.hasOffer() && player != null && !player.isCreative()
+                            && !(player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))) {
+                        int maxShops = de.bigbull.marketblocks.core.config.SingleOfferConfig.MAX_SHOPS_PER_PLAYER.get();
+                        if (maxShops >= 0 && shop.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                            long activeShops = de.bigbull.marketblocks.core.data.ShopDirectorySavedData.get(serverLevel).getShops().stream()
+                                    .filter(s -> player.getUUID().equals(s.ownerUUID()) && !s.result().isEmpty())
+                                    .count();
+                            if (activeShops >= maxShops) {
+                                flags |= SingleOfferShopBlockEntity.SHOP_LIMIT_REACHED_FLAG;
+                            }
+                        }
+                    }
                     return flags;
                 }
                 return 0;

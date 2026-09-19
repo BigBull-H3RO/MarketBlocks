@@ -2,10 +2,7 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.Config;
-import de.bigbull.marketblocks.core.config.SingleOfferConfig;
-import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -22,12 +19,11 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.event.level.BlockEvent;
 
 /**
  * Handles gameplay-related events on the NeoForge GAME event bus.
  * Gives the Trade Book to players on first join, handles Trade Stand showcase
- * toggling (Axe/Glass while crouching), and enforces survival shop placement limits.
+ * toggling (Axe/Glass while crouching).
  */
 @EventBusSubscriber(modid = Constants.MOD_ID)
 public class ModGameEvents {
@@ -69,39 +65,6 @@ public class ModGameEvents {
         if (result != InteractionResult.PASS) {
             event.setCanceled(true);
             event.setCancellationResult(result);
-        }
-    }
-
-    @SubscribeEvent
-    public static void onShopPlace(BlockEvent.EntityPlaceEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) {
-            return;
-        }
-
-        if (player.isCreative() || player.hasPermissions(2)) {
-            return;
-        }
-
-        if (!(event.getState().getBlock() instanceof BaseShopBlock)) {
-            return;
-        }
-
-        int maxShops = SingleOfferConfig.MAX_SHOPS_PER_PLAYER_SURVIVAL.get();
-        if (maxShops < 0) {
-            return;
-        }
-
-        if (event.getLevel() instanceof ServerLevel serverLevel) {
-            ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
-            long ownedShops = data.getShops().stream()
-                    .filter(shop -> player.getUUID().equals(shop.ownerUUID()))
-                    .count();
-
-            if (ownedShops >= maxShops) {
-                event.setCanceled(true);
-                player.displayClientMessage(Component.translatable("message.marketblocks.shop.limit_reached", maxShops),
-                        true);
-            }
         }
     }
 

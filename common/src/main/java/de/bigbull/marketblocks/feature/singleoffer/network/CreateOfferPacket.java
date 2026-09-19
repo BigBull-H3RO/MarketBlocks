@@ -1,8 +1,13 @@
 package de.bigbull.marketblocks.feature.singleoffer.network;
 
 import de.bigbull.marketblocks.Constants;
+import de.bigbull.marketblocks.core.config.SingleOfferConfig;
+import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
+import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.singleoffer.entity.OfferManager;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -61,6 +66,22 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                         && menu.stillValid(player)
                         && menu.getBlockEntity() instanceof SingleOfferShopBlockEntity shopEntity
                         && (shopEntity.getOwnerId() == null || shopEntity.isOwner(player))) {
+                    // Validate shop limit on server before creating offer
+                    if (!shopEntity.hasOffer() && !player.isCreative()
+                            && !(player.hasPermissions(2) && MarketplaceManager.get().isEditModeEnabled(player))) {
+                        int maxShops = SingleOfferConfig.MAX_SHOPS_PER_PLAYER.get();
+                        if (maxShops >= 0 && level instanceof ServerLevel serverLevel) {
+                            long activeShops = ShopDirectorySavedData.get(serverLevel).getShops().stream()
+                                    .filter(s -> player.getUUID().equals(s.ownerUUID()) && !s.result().isEmpty())
+                                    .count();
+                            if (activeShops >= maxShops) {
+                                player.displayClientMessage(
+                                        Component.translatable("gui.marketblocks.error.shop_limit_reached", maxShops),
+                                        true);
+                                return;
+                            }
+                        }
+                    }
                     OfferManager manager = shopEntity.getOfferManager();
                     if (!manager.applyOffer(player, packet.payment1(), packet.payment2(), packet.result())) {
                         Constants.LOG.warn("Invalid offer creation attempt by player {}", player.getName().getString());

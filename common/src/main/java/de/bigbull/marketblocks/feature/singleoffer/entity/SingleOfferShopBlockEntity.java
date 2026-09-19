@@ -75,6 +75,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public static final int CAN_BUY_FLAG = 64;
     public static final int CLOSED_FLAG = 128;
     public static final int CAN_MANAGE_OFFER_FLAG = 256;
+    public static final int SHOP_LIMIT_REACHED_FLAG = 512;
 
     private ItemStack offerPayment1 = ItemStack.EMPTY;
     private ItemStack offerPayment2 = ItemStack.EMPTY;

@@ -71,4 +71,10 @@ public interface ShopMenu {
     default boolean canManageOffer() {
         return hasFlag(SingleOfferShopBlockEntity.CAN_MANAGE_OFFER_FLAG);
     }
+    /**
+     * @return true if the player has reached their maximum allowed active shops in survival.
+     */
+    default boolean isShopLimitReached() {
+        return hasFlag(SingleOfferShopBlockEntity.SHOP_LIMIT_REACHED_FLAG);
+    }
 }

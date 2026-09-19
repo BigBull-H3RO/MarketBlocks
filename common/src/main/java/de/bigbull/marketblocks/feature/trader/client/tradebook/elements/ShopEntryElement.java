@@ -108,9 +108,7 @@ public class ShopEntryElement implements ITradeBookElement {
                 TradeBookLayoutUtils.renderInlineOffer(graphics, offer, offerX, currentY + 6, finalStatus, mouseX,
                         mouseY, scale, context);
 
-                if (canTeleport) {
-                    renderCompass(graphics, startX, currentY, px, py, pz, dim, scale);
-                }
+                renderCompass(graphics, startX, currentY, px, py, pz, dim, scale);
             }
             currentY += 21;
         } else {
@@ -126,9 +124,7 @@ public class ShopEntryElement implements ITradeBookElement {
 
             graphics.drawString(context.getFont(), noOfferStr, noOfferX, currentY + 6, 0xAAAAAA, false);
 
-            if (canTeleport) {
-                renderCompass(graphics, startX, currentY, px, py, pz, dim, scale);
-            }
+            renderCompass(graphics, startX, currentY, px, py, pz, dim, scale);
             currentY += 21;
         }
 
