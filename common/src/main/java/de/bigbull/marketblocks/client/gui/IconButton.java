@@ -20,6 +20,7 @@ public class IconButton extends Button {
     private final WidgetSprites sprites;
     private final ResourceLocation icon;
     private final ResourceLocation activeIcon;
+    private ResourceLocation disabledIcon;
     private final BooleanSupplier selectedSupplier;
     private final Component tooltipMessage;
     private boolean flipBackgroundHorizontal = false;
@@ -45,15 +46,27 @@ public class IconButton extends Button {
     public IconButton(int x, int y, int width, int height, WidgetSprites sprites, ResourceLocation icon,
             ResourceLocation activeIcon,
             Button.OnPress onPress, Component tooltip, BooleanSupplier selectedSupplier) {
+        this(x, y, width, height, sprites, icon, activeIcon, null, onPress, tooltip, selectedSupplier);
+    }
+
+    public IconButton(int x, int y, int width, int height, WidgetSprites sprites, ResourceLocation icon,
+            ResourceLocation activeIcon, ResourceLocation disabledIcon,
+            Button.OnPress onPress, Component tooltip, BooleanSupplier selectedSupplier) {
         super(x, y, width, height, Component.empty(), onPress, DEFAULT_NARRATION);
         this.sprites = sprites;
         this.icon = icon;
         this.activeIcon = activeIcon;
+        this.disabledIcon = disabledIcon;
         this.selectedSupplier = selectedSupplier;
         this.tooltipMessage = tooltip;
         if (tooltip != null) {
             this.setTooltip(Tooltip.create(tooltip));
         }
+    }
+
+    public IconButton withDisabledIcon(ResourceLocation disabledIcon) {
+        this.disabledIcon = disabledIcon;
+        return this;
     }
 
     public Component getTooltipMessage() {
@@ -136,10 +149,6 @@ public class IconButton extends Button {
         int offX = selected ? customSelectedBgOffsetX : customBgOffsetX;
         int offY = customBgOffsetY;
 
-        if (!this.active) {
-            graphics.setColor(0.45F, 0.45F, 0.45F, 0.8F);
-        }
-
         if (this.flipBackgroundHorizontal) {
             graphics.pose().pushPose();
             graphics.pose().translate(getX() + getWidth() / 2.0F, 0, 0);
@@ -155,7 +164,21 @@ public class IconButton extends Button {
             graphics.blitSprite(background, getX() + offX, getY() + offY, renderWidth, renderHeight);
         }
 
-        ResourceLocation iconToRender = (selected && activeIcon != null) ? activeIcon : icon;
+        ResourceLocation iconToRender;
+        boolean tintIcon = false;
+        if (!this.active) {
+            if (this.disabledIcon != null) {
+                iconToRender = this.disabledIcon;
+            } else {
+                iconToRender = this.icon;
+                tintIcon = true;
+            }
+        } else if (selected && activeIcon != null) {
+            iconToRender = activeIcon;
+        } else {
+            iconToRender = icon;
+        }
+
         RenderSystem.setShaderTexture(0, iconToRender);
         int iconSize = Math.min(18, Math.min(getWidth(), getHeight()));
         int currentIconOffsetX = selected ? selectedIconOffsetX : iconOffsetX;
@@ -163,9 +186,13 @@ public class IconButton extends Button {
         int iconX = getX() + (getWidth() - iconSize) / 2 + currentIconOffsetX;
         int iconY = getY() + (getHeight() - iconSize) / 2 + currentIconOffsetY;
 
+        if (tintIcon) {
+            graphics.setColor(0.55F, 0.55F, 0.55F, 0.7F);
+        }
+
         graphics.blit(iconToRender, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
 
-        if (!this.active) {
+        if (tintIcon) {
             graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         }
     }

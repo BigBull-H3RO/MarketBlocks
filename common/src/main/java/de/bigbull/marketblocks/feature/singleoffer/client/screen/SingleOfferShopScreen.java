@@ -69,6 +69,10 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             "textures/gui/icon/create.png");
     private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/delete.png");
+    private static final ResourceLocation CREATE_DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+            "textures/gui/icon/create_disabled.png");
+    private static final ResourceLocation DELETE_DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+            "textures/gui/icon/delete_disabled.png");
     private static final ResourceLocation CLEAR_LOG = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/clear_log.png");
     private static final ResourceLocation RESET_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
@@ -271,7 +275,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (!be.hasOffer()) {
             if (menu.canManageOffer()) {
                 IconButton createBtn = addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, CREATE_ICON,
-                        b -> createOffer(), Component.translatable("gui.marketblocks.create_offer"), () -> false));
+                        b -> createOffer(), Component.translatable("gui.marketblocks.create_offer"), () -> false)
+                        .withDisabledIcon(CREATE_DISABLED_ICON));
                 if (menu.isShopLimitReached()) {
                     createBtn.active = false;
                     int maxShops = SingleOfferConfig.MAX_SHOPS_PER_PLAYER.get();
@@ -280,7 +285,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
         } else if (isOwner) {
             addRenderableWidget(new IconButton(leftPos + 143, topPos + 17, 20, 20, BUTTON_SPRITES, DELETE_ICON,
-                    b -> deleteOffer(), Component.translatable("gui.marketblocks.delete_offer"), () -> false));
+                    b -> deleteOffer(), Component.translatable("gui.marketblocks.delete_offer"), () -> false)
+                    .withDisabledIcon(DELETE_DISABLED_ICON));
         }
     }
 
