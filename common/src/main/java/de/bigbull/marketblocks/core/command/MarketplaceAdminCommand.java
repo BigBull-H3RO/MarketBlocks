@@ -157,7 +157,8 @@ public final class MarketplaceAdminCommand {
                                                                                 }))))
                                 .then(Commands.literal("reload")
                                                 .executes(context -> {
-                                                        MarketplaceManager.get().reload();
+                                                        de.bigbull.marketblocks.core.config.toml.TomlConfigManager.loadAll();
+							MarketplaceManager.get().reload();
                                                         de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager.get().load();
                                                         context.getSource()
                                                                         .sendSuccess(() -> Component.translatable(
