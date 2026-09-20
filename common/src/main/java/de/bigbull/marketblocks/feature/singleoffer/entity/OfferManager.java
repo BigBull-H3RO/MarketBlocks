@@ -58,15 +58,22 @@ public class OfferManager {
         private int totalCount;
         private int remainingTicks;
         private int totalElapsedTicks;
+        private final boolean isPlayerBuyer;
+        private boolean notifyOwner;
+        private boolean notifyBuyer;
         private final boolean notifyCoOwners;
 
-        public PendingPurchaseNotification(UUID buyerId, String buyerName, ItemStack resultItem, int count, boolean notifyCoOwners) {
+        public PendingPurchaseNotification(UUID buyerId, String buyerName, ItemStack resultItem, int count,
+                boolean isPlayerBuyer, boolean notifyOwner, boolean notifyBuyer, boolean notifyCoOwners) {
             this.buyerId = buyerId;
             this.buyerName = buyerName;
             this.resultItem = resultItem.copy();
             this.totalCount = count;
             this.remainingTicks = BATCH_WINDOW_TICKS;
             this.totalElapsedTicks = 0;
+            this.isPlayerBuyer = isPlayerBuyer;
+            this.notifyOwner = notifyOwner;
+            this.notifyBuyer = notifyBuyer;
             this.notifyCoOwners = notifyCoOwners;
         }
 
@@ -80,8 +87,10 @@ public class OfferManager {
             return ItemStack.isSameItemSameComponents(this.resultItem, otherItem);
         }
 
-        public void merge(int additionalCount) {
+        public void merge(int additionalCount, boolean additionalNotifyOwner, boolean additionalNotifyBuyer) {
             this.totalCount += additionalCount;
+            this.notifyOwner |= additionalNotifyOwner;
+            this.notifyBuyer |= additionalNotifyBuyer;
             this.remainingTicks = BATCH_WINDOW_TICKS;
         }
     }
@@ -327,20 +336,6 @@ public class OfferManager {
             RegistriesInit.SHOP_WHOLESALER_TRIGGER.get().trigger(serverBuyer);
         }
 
-        if (serverBuyer != null && SingleOfferConfig.BUYER_CHAT_MESSAGE.get()) {
-            if (SingleOfferConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
-                Component msg = Component.translatable("message.marketblocks.purchase_success.global",
-                        serverBuyer.getDisplayName(), totalItemsBought, result.getHoverName())
-                        .withStyle(ChatFormatting.GREEN);
-                serverBuyer.server.getPlayerList().broadcastSystemMessage(msg, false);
-            } else {
-                Component msg = Component
-                        .translatable("message.marketblocks.purchase_success", totalItemsBought, result.getHoverName())
-                        .withStyle(ChatFormatting.GREEN);
-                serverBuyer.sendSystemMessage(msg);
-            }
-        }
-
         return actualAmount;
     }
 
@@ -417,9 +412,14 @@ public class OfferManager {
             shopName = "MarketBlocks";
         Component shopPrefix = Component.literal("[" + shopName + "] ");
 
-        if (notifSettings.notifyOnPurchase() && tradeCount > 0) {
-            int totalItems = tradeCount * result.getCount();
-            queuePurchaseNotification(serverLevel, buyer, result, totalItems, notifSettings.notifyCoOwners());
+        int totalItems = tradeCount * result.getCount();
+        boolean notifyOwner = notifSettings.notifyOnPurchase() && tradeCount > 0;
+        boolean isPlayer = buyer != null && buyer.uuid() != null && !new UUID(0L, 0L).equals(buyer.uuid());
+        boolean notifyBuyer = isPlayer && SingleOfferConfig.BUYER_CHAT_MESSAGE.get() && tradeCount > 0;
+
+        if (notifyOwner || notifyBuyer) {
+            queuePurchaseNotification(serverLevel, buyer, result, totalItems, isPlayer, notifyOwner, notifyBuyer,
+                    notifSettings.notifyCoOwners());
         }
 
         if (adminShop)
@@ -445,19 +445,20 @@ public class OfferManager {
     }
 
     private void queuePurchaseNotification(ServerLevel serverLevel, @Nullable BuyerIdentity buyer, ItemStack result,
-            int tradeCount, boolean notifyCoOwners) {
+            int totalItems, boolean isPlayer, boolean notifyOwner, boolean notifyBuyer, boolean notifyCoOwners) {
         UUID buyerId = buyer != null ? buyer.uuid() : null;
         String buyerName = buyer != null ? buyer.name() : "Unbekannt";
 
         if (pendingPurchase != null) {
             if (pendingPurchase.canMerge(buyerId, buyerName, result, notifyCoOwners)) {
-                pendingPurchase.merge(tradeCount);
+                pendingPurchase.merge(totalItems, notifyOwner, notifyBuyer);
                 return;
             }
             flushPendingPurchaseNotification();
         }
 
-        pendingPurchase = new PendingPurchaseNotification(buyerId, buyerName, result, tradeCount, notifyCoOwners);
+        pendingPurchase = new PendingPurchaseNotification(buyerId, buyerName, result, totalItems, isPlayer,
+                notifyOwner, notifyBuyer, notifyCoOwners);
     }
 
     public void tick() {
@@ -478,16 +479,54 @@ public class OfferManager {
             return;
         }
 
-        String shopName = shopEntity.getGeneralSettings().shopName();
-        if (shopName == null || shopName.isEmpty())
-            shopName = "MarketBlocks";
-        Component shopPrefix = Component.literal("[" + shopName + "] ");
-
-        Component msg = shopPrefix.copy().append(Component.translatable(
-                "message.marketblocks.notifications.purchase", pendingPurchase.buyerName, pendingPurchase.totalCount,
-                pendingPurchase.resultItem.getHoverName()));
-        sendToOwners(serverLevel, pendingPurchase.notifyCoOwners, msg);
+        PendingPurchaseNotification notification = pendingPurchase;
         pendingPurchase = null;
+
+        if (notification.totalCount <= 0) {
+            return;
+        }
+
+        // 1. Owner notification
+        if (notification.notifyOwner) {
+            String shopName = shopEntity.getGeneralSettings().shopName();
+            if (shopName == null || shopName.isEmpty())
+                shopName = "MarketBlocks";
+            Component shopPrefix = Component.literal("[" + shopName + "] ");
+
+            Component msg = shopPrefix.copy().append(Component.translatable(
+                    "message.marketblocks.notifications.purchase", notification.buyerName, notification.totalCount,
+                    notification.resultItem.getHoverName()));
+            sendToOwners(serverLevel, notification.notifyCoOwners, msg);
+        }
+
+        // 2. Wholesaler advancement check for accumulated items
+        if (notification.isPlayerBuyer && notification.buyerId != null && notification.totalCount >= 64) {
+            ServerPlayer serverBuyer = serverLevel.getServer().getPlayerList().getPlayer(notification.buyerId);
+            if (serverBuyer != null) {
+                RegistriesInit.SHOP_WHOLESALER_TRIGGER.get().trigger(serverBuyer);
+            }
+        }
+
+        // 3. Buyer chat message & server broadcast
+        if (notification.isPlayerBuyer && notification.notifyBuyer && SingleOfferConfig.BUYER_CHAT_MESSAGE.get()) {
+            ServerPlayer serverBuyer = notification.buyerId != null
+                    ? serverLevel.getServer().getPlayerList().getPlayer(notification.buyerId)
+                    : null;
+            Component buyerDisplayName = serverBuyer != null ? serverBuyer.getDisplayName()
+                    : Component.literal(notification.buyerName);
+
+            if (SingleOfferConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
+                Component msg = Component.translatable("message.marketblocks.purchase_success.global",
+                        buyerDisplayName, notification.totalCount, notification.resultItem.getHoverName())
+                        .withStyle(ChatFormatting.GREEN);
+                serverLevel.getServer().getPlayerList().broadcastSystemMessage(msg, false);
+            } else if (serverBuyer != null) {
+                Component msg = Component.translatable("message.marketblocks.purchase_success",
+                        notification.totalCount, notification.resultItem.getHoverName())
+                        .withStyle(ChatFormatting.GREEN);
+                serverBuyer.sendSystemMessage(msg);
+            }
+        }
     }
 
     @FunctionalInterface

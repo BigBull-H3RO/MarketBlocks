@@ -22,6 +22,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 
@@ -74,6 +75,39 @@ public final class MarketplaceManager {
     private long lastRuntimeUpkeepGameTime = Long.MIN_VALUE;
     private long lastRuntimeUpkeepDay = Long.MIN_VALUE;
 
+    private static final int BUYER_BATCH_WINDOW_TICKS = 40; // 2 seconds delay
+    private static final int BUYER_MAX_BATCH_TICKS = 100;   // 5 seconds max window
+
+    private static class PendingMarketplacePurchase {
+        private final UUID playerId;
+        private final Component playerDisplayName;
+        private final ItemStack resultItem;
+        private int totalCount;
+        private int remainingTicks;
+        private int totalElapsedTicks;
+
+        public PendingMarketplacePurchase(UUID playerId, Component playerDisplayName, ItemStack resultItem, int totalCount) {
+            this.playerId = playerId;
+            this.playerDisplayName = playerDisplayName;
+            this.resultItem = resultItem.copy();
+            this.totalCount = totalCount;
+            this.remainingTicks = BUYER_BATCH_WINDOW_TICKS;
+            this.totalElapsedTicks = 0;
+        }
+
+        public boolean canMerge(UUID otherPlayerId, ItemStack otherItem) {
+            if (!this.playerId.equals(otherPlayerId)) return false;
+            return ItemStack.isSameItemSameComponents(this.resultItem, otherItem);
+        }
+
+        public void merge(int additionalCount) {
+            this.totalCount += additionalCount;
+            this.remainingTicks = BUYER_BATCH_WINDOW_TICKS;
+        }
+    }
+
+    private final Map<UUID, PendingMarketplacePurchase> pendingBuyerPurchases = new HashMap<>();
+
     private MarketplaceManager() {
     }
 
@@ -115,8 +149,13 @@ public final class MarketplaceManager {
     }
 
     public void shutdown() {
+        List<PendingMarketplacePurchase> pendingToFlush = null;
         synchronized (lock) {
             if (initialized) {
+                if (!pendingBuyerPurchases.isEmpty()) {
+                    pendingToFlush = new ArrayList<>(pendingBuyerPurchases.values());
+                    pendingBuyerPurchases.clear();
+                }
                 saveNow();
                 if (ioExecutor != null) {
                     ioExecutor.shutdown();
@@ -140,10 +179,16 @@ public final class MarketplaceManager {
                 resetRuntimeUpkeepMarkers();
             }
         }
+        if (pendingToFlush != null) {
+            for (PendingMarketplacePurchase p : pendingToFlush) {
+                flushPendingBuyerPurchase(p);
+            }
+        }
     }
 
     public void tick() {
         ViewerSyncBatch viewerSyncBatch = ViewerSyncBatch.empty();
+        List<PendingMarketplacePurchase> toFlush = null;
         synchronized (lock) {
             if (!initialized) {
                 return;
@@ -166,8 +211,27 @@ public final class MarketplaceManager {
                     saveNow();
                 }
             }
+
+            if (!pendingBuyerPurchases.isEmpty()) {
+                Iterator<Map.Entry<UUID, PendingMarketplacePurchase>> it = pendingBuyerPurchases.entrySet().iterator();
+                while (it.hasNext()) {
+                    PendingMarketplacePurchase p = it.next().getValue();
+                    p.remainingTicks--;
+                    p.totalElapsedTicks++;
+                    if (p.remainingTicks <= 0 || p.totalElapsedTicks >= BUYER_MAX_BATCH_TICKS) {
+                        if (toFlush == null) toFlush = new ArrayList<>();
+                        toFlush.add(p);
+                        it.remove();
+                    }
+                }
+            }
         }
         dispatchViewerSyncBatch(viewerSyncBatch);
+        if (toFlush != null) {
+            for (PendingMarketplacePurchase p : toFlush) {
+                flushPendingBuyerPurchase(p);
+            }
+        }
     }
 
     public MarketplaceData snapshot() {
@@ -250,13 +314,7 @@ public final class MarketplaceManager {
                 MarketplaceOffer offer = findOffer(offerId);
                 if (offer != null) {
                     int totalItemsBought = amount * offer.result().getCount();
-                    if (MarketplaceConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
-                        Component msg = Component.translatable("message.marketblocks.purchase_success.global", player.getDisplayName(), totalItemsBought, offer.result().getHoverName()).withStyle(ChatFormatting.GREEN);
-                        player.server.getPlayerList().broadcastSystemMessage(msg, false);
-                    } else {
-                        Component msg = Component.translatable("message.marketblocks.purchase_success", totalItemsBought, offer.result().getHoverName()).withStyle(ChatFormatting.GREEN);
-                        player.sendSystemMessage(msg);
-                    }
+                    queuePendingBuyerPurchase(player, offer.result(), totalItemsBought);
                 }
             }
             syncOpenViewers(player);
@@ -659,6 +717,46 @@ public final class MarketplaceManager {
             buf.writeBoolean(globalEditModeEnabled);
         });
         sendSnapshot(player, encodedSnapshot, offerViewStates, playerCanEdit, globalEditModeEnabled);
+    }
+
+    private void queuePendingBuyerPurchase(ServerPlayer player, ItemStack result, int totalItems) {
+        PendingMarketplacePurchase flushed = null;
+        synchronized (lock) {
+            UUID uuid = player.getUUID();
+            PendingMarketplacePurchase pending = pendingBuyerPurchases.get(uuid);
+            if (pending != null) {
+                if (pending.canMerge(uuid, result)) {
+                    pending.merge(totalItems);
+                    return;
+                }
+                flushed = pending;
+                pendingBuyerPurchases.remove(uuid);
+            }
+            pendingBuyerPurchases.put(uuid, new PendingMarketplacePurchase(uuid, player.getDisplayName(), result, totalItems));
+        }
+        if (flushed != null) {
+            flushPendingBuyerPurchase(flushed);
+        }
+    }
+
+    private void flushPendingBuyerPurchase(PendingMarketplacePurchase pending) {
+        if (server == null || pending.totalCount <= 0 || !MarketplaceConfig.BUYER_CHAT_MESSAGE.get()) {
+            return;
+        }
+        if (MarketplaceConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
+            Component msg = Component.translatable("message.marketblocks.purchase_success.global",
+                    pending.playerDisplayName, pending.totalCount, pending.resultItem.getHoverName())
+                    .withStyle(ChatFormatting.GREEN);
+            server.getPlayerList().broadcastSystemMessage(msg, false);
+        } else {
+            ServerPlayer target = server.getPlayerList().getPlayer(pending.playerId);
+            if (target != null) {
+                Component msg = Component.translatable("message.marketblocks.purchase_success",
+                        pending.totalCount, pending.resultItem.getHoverName())
+                        .withStyle(ChatFormatting.GREEN);
+                target.sendSystemMessage(msg);
+            }
+        }
     }
 
     public void syncOpenViewers(ServerPlayer source) {
