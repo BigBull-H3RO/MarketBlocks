@@ -306,12 +306,14 @@ public class OfferManager {
 
         triggerNotifications(buyerIdentity, result, actualAmount, adminShop, inv, p1, p2);
 
+        int totalItemsBought = actualAmount * result.getCount();
+
         if (shopEntity.getLevel() instanceof ServerLevel serverLevel) {
             ServerPlayer owner = serverLevel.getServer().getPlayerList()
                     .getPlayer(shopEntity.getAccessSettings().ownerId());
             if (owner != null) {
                 int totalSellCount = ShopSellCountSavedData
-                        .get(serverLevel).incrementAndGet(owner.getUUID(), actualAmount);
+                        .get(serverLevel).incrementAndGet(owner.getUUID(), totalItemsBought);
                 RegistriesInit.SHOP_SELL_TRIGGER.get().trigger(owner, totalSellCount);
                 if (!adminShop && inv.countMatchingInput(result, true) < result.getCount()) {
                     RegistriesInit.SHOP_OUT_OF_STOCK_TRIGGER.get().trigger(owner);
@@ -321,19 +323,19 @@ public class OfferManager {
 
         ServerPlayer serverBuyer = resolveServerBuyer(buyer);
 
-        if (serverBuyer != null && actualAmount >= 64) {
+        if (serverBuyer != null && totalItemsBought >= 64) {
             RegistriesInit.SHOP_WHOLESALER_TRIGGER.get().trigger(serverBuyer);
         }
 
         if (serverBuyer != null && SingleOfferConfig.BUYER_CHAT_MESSAGE.get()) {
             if (SingleOfferConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
                 Component msg = Component.translatable("message.marketblocks.purchase_success.global",
-                        serverBuyer.getDisplayName(), actualAmount, result.getHoverName())
+                        serverBuyer.getDisplayName(), totalItemsBought, result.getHoverName())
                         .withStyle(ChatFormatting.GREEN);
                 serverBuyer.server.getPlayerList().broadcastSystemMessage(msg, false);
             } else {
                 Component msg = Component
-                        .translatable("message.marketblocks.purchase_success", actualAmount, result.getHoverName())
+                        .translatable("message.marketblocks.purchase_success", totalItemsBought, result.getHoverName())
                         .withStyle(ChatFormatting.GREEN);
                 serverBuyer.sendSystemMessage(msg);
             }
@@ -416,7 +418,8 @@ public class OfferManager {
         Component shopPrefix = Component.literal("[" + shopName + "] ");
 
         if (notifSettings.notifyOnPurchase() && tradeCount > 0) {
-            queuePurchaseNotification(serverLevel, buyer, result, tradeCount, notifSettings.notifyCoOwners());
+            int totalItems = tradeCount * result.getCount();
+            queuePurchaseNotification(serverLevel, buyer, result, totalItems, notifSettings.notifyCoOwners());
         }
 
         if (adminShop)

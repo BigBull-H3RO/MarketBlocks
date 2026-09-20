@@ -249,11 +249,12 @@ public final class MarketplaceManager {
             if (MarketplaceConfig.BUYER_CHAT_MESSAGE.get()) {
                 MarketplaceOffer offer = findOffer(offerId);
                 if (offer != null) {
+                    int totalItemsBought = amount * offer.result().getCount();
                     if (MarketplaceConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
-                        Component msg = Component.translatable("message.marketblocks.purchase_success.global", player.getDisplayName(), amount, offer.result().getHoverName()).withStyle(ChatFormatting.GREEN);
+                        Component msg = Component.translatable("message.marketblocks.purchase_success.global", player.getDisplayName(), totalItemsBought, offer.result().getHoverName()).withStyle(ChatFormatting.GREEN);
                         player.server.getPlayerList().broadcastSystemMessage(msg, false);
                     } else {
-                        Component msg = Component.translatable("message.marketblocks.purchase_success", amount, offer.result().getHoverName()).withStyle(ChatFormatting.GREEN);
+                        Component msg = Component.translatable("message.marketblocks.purchase_success", totalItemsBought, offer.result().getHoverName()).withStyle(ChatFormatting.GREEN);
                         player.sendSystemMessage(msg);
                     }
                 }
