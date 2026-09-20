@@ -319,11 +319,13 @@ public class OfferManager {
             }
         }
 
-        if (buyer instanceof ServerPlayer serverBuyer && actualAmount >= 64) {
+        ServerPlayer serverBuyer = resolveServerBuyer(buyer);
+
+        if (serverBuyer != null && actualAmount >= 64) {
             RegistriesInit.SHOP_WHOLESALER_TRIGGER.get().trigger(serverBuyer);
         }
 
-        if (buyer instanceof ServerPlayer serverBuyer && SingleOfferConfig.BUYER_CHAT_MESSAGE.get()) {
+        if (serverBuyer != null && SingleOfferConfig.BUYER_CHAT_MESSAGE.get()) {
             if (SingleOfferConfig.BROADCAST_PURCHASE_TO_ALL.get()) {
                 Component msg = Component.translatable("message.marketblocks.purchase_success.global",
                         serverBuyer.getDisplayName(), actualAmount, result.getHoverName())
@@ -600,7 +602,21 @@ public class OfferManager {
     private record BuyerIdentity(UUID uuid, String name) {
     }
 
-    private @Nullable BuyerIdentity resolveBuyerIdentity(@Nullable Player directBuyer) {
+        private @Nullable ServerPlayer resolveServerBuyer(@Nullable Player directBuyer) {
+        if (directBuyer instanceof ServerPlayer serverBuyer) {
+            return serverBuyer;
+        }
+        if (shopEntity.getAccessManager().purchaseContextPlayer instanceof ServerPlayer contextPlayer) {
+            return contextPlayer;
+        }
+        UUID contextId = shopEntity.getAccessManager().purchaseContextBuyerId;
+        if (contextId != null && shopEntity.getLevel() instanceof ServerLevel serverLevel) {
+            return serverLevel.getServer().getPlayerList().getPlayer(contextId);
+        }
+        return null;
+    }
+
+private @Nullable BuyerIdentity resolveBuyerIdentity(@Nullable Player directBuyer) {
         if (directBuyer != null) {
             return new BuyerIdentity(directBuyer.getUUID(), directBuyer.getGameProfile().getName());
         }

@@ -16,6 +16,7 @@ import java.util.UUID;
 public class ShopAccessManager {
     private final SingleOfferShopBlockEntity shop;
     @Nullable
+    public Player purchaseContextPlayer;
     public UUID purchaseContextBuyerId;
     public String purchaseContextBuyerName = "";
 
@@ -159,11 +160,13 @@ public class ShopAccessManager {
         if (player == null || player.level().isClientSide) {
             return;
         }
+        purchaseContextPlayer = player;
         purchaseContextBuyerId = player.getUUID();
         purchaseContextBuyerName = player.getGameProfile().getName();
     }
 
     public void clearPurchaseContext() {
+        purchaseContextPlayer = null;
         purchaseContextBuyerId = null;
         purchaseContextBuyerName = "";
     }

@@ -876,7 +876,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void processPurchase() {
-        offerManager.processBulkPurchase(1, null, false);
+        offerManager.processBulkPurchase(1, accessManager.purchaseContextPlayer, false);
     }
 
     public void processPurchase(@Nullable Player buyer) {

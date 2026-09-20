@@ -508,7 +508,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
     public void clicked(int slotId, int button, ClickType type, Player player) {
         boolean trackBuyerContext = !player.level().isClientSide
                 && slotId == OFFER_SLOT_INDEX
-                && type == ClickType.PICKUP
+                && (type == ClickType.PICKUP || type == ClickType.SWAP)
                 && blockEntity.hasOffer();
         if (trackBuyerContext) {
             blockEntity.beginPurchaseContext(player);
@@ -517,7 +517,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         try {
             if (!player.level().isClientSide
                     && slotId == OFFER_SLOT_INDEX
-                    && type == ClickType.PICKUP
+                    && (type == ClickType.PICKUP || type == ClickType.SWAP)
                     && blockEntity.hasOffer()) {
                 if (!canPlayerBuy()) {
                     return;
