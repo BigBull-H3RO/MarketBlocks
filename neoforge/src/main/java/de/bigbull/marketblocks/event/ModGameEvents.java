@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.event;
 
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.toml.TomlConfigManager;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import net.minecraft.core.BlockPos;
@@ -73,6 +74,9 @@ public class ModGameEvents {
         if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
+
+        // Synchronize server configurations to the connected player
+        TomlConfigManager.syncToPlayer(player);
 
         if (Config.GIVE_TRADE_BOOK_ON_FIRST_JOIN.get()) {
             CompoundTag persistentData = player.getPersistentData();

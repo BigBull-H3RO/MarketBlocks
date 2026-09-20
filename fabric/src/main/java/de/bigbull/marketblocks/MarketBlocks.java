@@ -2,6 +2,7 @@ package de.bigbull.marketblocks;
 
 import de.bigbull.marketblocks.command.FabricMarketBlocksCommands;
 import de.bigbull.marketblocks.core.config.Config;
+import de.bigbull.marketblocks.core.config.toml.TomlConfigManager;
 import de.bigbull.marketblocks.core.data.MarketplaceLinkSavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.block.BaseShopBlock;
@@ -76,6 +77,9 @@ public class MarketBlocks implements ModInitializer {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayer player = handler.player;
+
+            // Synchronize server configurations to the connected player
+            TomlConfigManager.syncToPlayer(player);
             MarketplaceLinkSavedData.get(player.serverLevel()).syncToPlayer(player);
             PendingNotificationsSavedData data = PendingNotificationsSavedData.get(player.serverLevel());
             Set<BlockPos> emptyShops = data.getAndClearOutOfStock(player.getUUID());

@@ -8,6 +8,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import de.bigbull.marketblocks.core.config.toml.TomlConfigManager;
 
 /**
  * Handles gameplay-related client events.
@@ -25,5 +27,10 @@ public final class ClientGameEvents {
         while (ClientEvents.getOpenMarketplaceKey().consumeClick()) {
             NetworkHandler.sendToServer(new MarketplaceOpenRequestPacket());
         }
+    }
+
+    @SubscribeEvent
+    public static void onClientLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
+        TomlConfigManager.onClientDisconnect();
     }
 }

@@ -14,6 +14,9 @@ import de.bigbull.marketblocks.feature.singleoffer.network.OfferStatusPacket;
 import de.bigbull.marketblocks.feature.singleoffer.network.TransactionLogSyncPacket;
 import de.bigbull.marketblocks.feature.trader.client.ShopBuyerRenderer;
 import de.bigbull.marketblocks.feature.trader.network.TradeBookOpenPacket;
+import de.bigbull.marketblocks.core.config.network.ConfigSyncPacket;
+import de.bigbull.marketblocks.core.config.toml.TomlConfigManager;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import de.bigbull.marketblocks.platform.Services;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 import net.fabricmc.api.ClientModInitializer;
@@ -93,6 +96,13 @@ public class MarketBlocksClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(TradeBookOpenPacket.TYPE, (payload, context) -> {
             TradeBookOpenPacket.handle(payload, makeContext(context));
+        });
+        ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPacket.TYPE, (payload, context) -> {
+            ConfigSyncPacket.handle(payload, makeContext(context));
+        });
+
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            TomlConfigManager.onClientDisconnect();
         });
     }
 

@@ -153,4 +153,40 @@ public class TomlConfigSpec {
         }
         return value.trim();
     }
+
+    /**
+     * Exports all current configuration values in serialized TOML string format.
+     * Used by the server to construct synchronization packets.
+     */
+    public synchronized Map<String, String> exportValues() {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (TomlConfigValue<?> val : values) {
+            String fullKey = val.getCategory().isEmpty() ? val.getKey() : val.getCategory() + "." + val.getKey();
+            map.put(fullKey, val.serialize());
+        }
+        return map;
+    }
+
+    /**
+     * Applies values received from a server synchronization packet.
+     * 
+     * NOTE: This operates strictly in-memory and does NOT call save().
+     * The client disk file remains unmodified.
+     */
+    public synchronized void applyValues(Map<String, String> valuesMap) {
+        if (valuesMap == null || valuesMap.isEmpty()) {
+            return;
+        }
+        for (TomlConfigValue<?> val : values) {
+            String fullKey = val.getCategory().isEmpty() ? val.getKey() : val.getCategory() + "." + val.getKey();
+            if (valuesMap.containsKey(fullKey)) {
+                val.deserialize(valuesMap.get(fullKey));
+            } else if ("maxShopsPerPlayer".equals(val.getKey())) {
+                String legacyKey = (val.getCategory().isEmpty() ? "" : val.getCategory() + ".") + "maxShopsPerPlayerSurvival";
+                if (valuesMap.containsKey(legacyKey)) {
+                    val.deserialize(valuesMap.get(legacyKey));
+                }
+            }
+        }
+    }
 }
