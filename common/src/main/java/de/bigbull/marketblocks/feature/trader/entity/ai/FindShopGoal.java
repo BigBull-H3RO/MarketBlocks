@@ -45,11 +45,11 @@ public class FindShopGoal extends Goal {
     }
 
     /**
-     * Returns true with a 20% chance, allowing the trader to window-shop
-     * at a shop even if it has no offer or the deal isn't attractive.
+     * Returns true with a 35% chance, allowing the trader to window-shop
+     * at a shop even if it has no offer, contains unvalued items, or the deal isn't attractive.
      */
     private boolean rollWindowShopping() {
-        return entity.getRandom().nextInt(5) == 0;
+        return entity.getRandom().nextInt(100) < 35;
     }
 
     private boolean findValidShop() {
@@ -109,58 +109,57 @@ public class FindShopGoal extends Goal {
             ItemStack payment1 = shop.payment1();
             ItemStack payment2 = shop.payment2();
 
-            if (result.isEmpty() || (payment1.isEmpty() && payment2.isEmpty()))
-                continue;
-
-            TraderEconomyManager eco = TraderEconomyManager.get();
-            Double resultVal = eco.evaluateItem(result.getItem(), serverLevel.getRecipeManager(), serverLevel);
-            if (resultVal == null)
-                continue; // Unvalued item, fail-safe: don't buy
-
-            double totalResultValue = resultVal * result.getCount();
-
-            double totalPaymentValue = 0;
-            boolean paymentValid = true;
-
-            if (!payment1.isEmpty()) {
-                Double p1Val = eco.evaluateItem(payment1.getItem(), serverLevel.getRecipeManager(), serverLevel);
-                if (p1Val == null)
-                    paymentValid = false;
-                else
-                    totalPaymentValue += p1Val * payment1.getCount();
-            }
-            if (!payment2.isEmpty() && paymentValid) {
-                Double p2Val = eco.evaluateItem(payment2.getItem(), serverLevel.getRecipeManager(), serverLevel);
-                if (p2Val == null)
-                    paymentValid = false;
-                else
-                    totalPaymentValue += p2Val * payment2.getCount();
-            }
-
-            if (!paymentValid)
-                continue;
-
-            // Is it a good deal for the trader? Tolerance depends on rank.
-            double tolerance = switch (entity.getTraderRank()) {
-                case CITIZEN -> 0.85;   // Accepts up to 15% markup
-                case WEALTHY -> 0.95;   // Accepts up to 5% markup
-                case NOBLE -> 1.0;      // Only buys at or below market value
-            };
-            boolean isGoodDeal = totalResultValue >= totalPaymentValue * tolerance;
+            boolean hasCompleteOffer = !result.isEmpty() && (!payment1.isEmpty() || !payment2.isEmpty());
+            boolean isGoodDeal = false;
             boolean canAfford = false;
-            
-            if (isGoodDeal) {
-                boolean interested = entity.isInterestedIn(shop.shopCategory());
-                boolean rankInterested = entity.isRankInterested(shop.shopCategory(), totalResultValue);
-                double allowedBudget = interested ? entity.getBudget() : entity.getBudget() * 0.20;
-                canAfford = allowedBudget >= totalPaymentValue && rankInterested;
+
+            if (hasCompleteOffer) {
+                TraderEconomyManager eco = TraderEconomyManager.get();
+                Double resultVal = eco.evaluateItem(result.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                double totalResultValue = resultVal != null ? resultVal * result.getCount() : 0.0;
+
+                double totalPaymentValue = 0.0;
+                boolean paymentValid = true;
+
+                if (!payment1.isEmpty()) {
+                    Double p1Val = eco.evaluateItem(payment1.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    if (p1Val == null)
+                        paymentValid = false;
+                    else
+                        totalPaymentValue += p1Val * payment1.getCount();
+                }
+                if (!payment2.isEmpty() && paymentValid) {
+                    Double p2Val = eco.evaluateItem(payment2.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    if (p2Val == null)
+                        paymentValid = false;
+                    else
+                        totalPaymentValue += p2Val * payment2.getCount();
+                }
+
+                if (resultVal != null && paymentValid) {
+                    // Is it a good deal for the trader? Tolerance depends on rank.
+                    double tolerance = switch (entity.getTraderRank()) {
+                        case CITIZEN -> 0.85;   // Accepts up to 15% markup
+                        case WEALTHY -> 0.95;   // Accepts up to 5% markup
+                        case NOBLE -> 1.0;      // Only buys at or below market value
+                    };
+                    isGoodDeal = totalResultValue >= totalPaymentValue * tolerance;
+
+                    if (isGoodDeal) {
+                        boolean interested = entity.isInterestedIn(shop.shopCategory());
+                        boolean rankInterested = entity.isRankInterested(shop.shopCategory(), totalResultValue);
+                        double allowedBudget = interested ? entity.getBudget() : entity.getBudget() * 0.20;
+                        canAfford = allowedBudget >= totalPaymentValue && rankInterested;
+                    }
+                }
             }
 
             if (isGoodDeal && canAfford) {
                 entity.setTargetShop(pos);
                 return true;
             } else {
-                // Not buying, but might still do window shopping (20% chance)
+                // Not buying (unvalued item like dirt, unaffordable, bad deal, or wrong category),
+                // but window shopping allows the trader to inspect the shop and react with rejection
                 if (rollWindowShopping()) {
                     entity.setTargetShop(pos);
                     return true;
