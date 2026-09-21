@@ -18,8 +18,6 @@ public class OfferTemplateButton extends Button {
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow.png");
     private static final ResourceLocation TRADE_ARROW_DISABLED =
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow_disabled.png");
-    private static final ResourceLocation OUT_OF_STOCK_ICON = 
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/out_of_stock.png");
 
     // --- Customizable positions for the discount numbers ---
     // Offsets for the old price (crossed out). 0, 0 means exact default item count position.
@@ -87,17 +85,11 @@ public class OfferTemplateButton extends Button {
             renderPaymentItem(graphics, payment2, originalPayment2, getX() + xOffset, getY() + PAYMENT_2_Y_OFFSET);
         }
 
-        ResourceLocation arrowTexture = arrowActive ? TRADE_ARROW : TRADE_ARROW_DISABLED;
+        boolean showDisabledArrow = !arrowActive || isLimitReached;
+        ResourceLocation arrowTexture = showDisabledArrow ? TRADE_ARROW_DISABLED : TRADE_ARROW;
         int arrowX = getX() + ARROW_X_OFFSET;
         int arrowY = getY() + ARROW_Y_OFFSET;
         graphics.blit(arrowTexture, arrowX, arrowY, 0, 0, 10, 9, 10, 9);
-        
-        if (isLimitReached) {
-            graphics.pose().pushPose();
-            graphics.pose().translate(0, 0, 100);
-            graphics.blit(OUT_OF_STOCK_ICON, arrowX - 3, arrowY - 3, 0, 0, 16, 16, 16, 16);
-            graphics.pose().popPose();
-        }
 
         if (!result.isEmpty()) {
             int resultX = getX() + RESULT_X_OFFSET;
@@ -137,3 +129,4 @@ public class OfferTemplateButton extends Button {
         }
     }
 }
+

@@ -230,12 +230,17 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     }
 
     private void displayOfferInPreview(MarketplaceOffer offer) {
+        MarketplaceOfferViewState viewState = MarketplaceClientState.offerViewState(offer.id());
+        boolean available = viewState.maxPurchasable() > 0;
         ItemStack[] payments = normalizePaymentPair(offer.effectivePayments());
+        ItemStack[] originalPayments = normalizePaymentPair(offer.originalPayments());
         ItemStack p1 = payments[0];
         ItemStack p2 = payments[1];
+        ItemStack origP1 = originalPayments[0];
+        ItemStack origP2 = originalPayments[1];
 
         this.offerPreviewButton.visible = true;
-        this.offerPreviewButton.update(p1, p2, offer.result(), true);
+        this.offerPreviewButton.update(p1, p2, origP1, origP2, offer.result(), available, !available);
     }
 
     private void showTemplateSlotsInPreview() {

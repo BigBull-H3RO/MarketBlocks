@@ -190,41 +190,68 @@ public class MarketplaceMenu extends AbstractContainerMenu {
     }
 
     public void autoFillPayment(Player player, MarketplaceOffer offer) {
-        if (offer == null) return;
+        if (offer == null || isEditMode) return;
 
-        if (!isEditMode) {
-            clearTemplate(player);
-        }
+        clearPaymentSlots();
 
         List<ItemStack> effectivePayments = offer.effectivePayments();
         if (!effectivePayments.isEmpty()) {
-            transferItemsToSlot(player, effectivePayments.getFirst(), PAYMENT_SLOT_0);
+            transferRequiredItems(effectivePayments.getFirst(), PAYMENT_SLOT_0);
         }
         if (effectivePayments.size() > 1) {
-            transferItemsToSlot(player, effectivePayments.get(1), PAYMENT_SLOT_1);
+            transferRequiredItems(effectivePayments.get(1), PAYMENT_SLOT_1);
         }
+        slotsChanged(tradeContainer);
+        broadcastChanges();
     }
 
-    private void transferItemsToSlot(Player player, ItemStack required, int slotIndex) {
-        if (required.isEmpty()) return;
-
-        Inventory inv = player.getInventory();
-        int maxStackSize = required.getMaxStackSize();
-        int collected = 0;
-
-        for (int i = 0; i < inv.items.size() && collected < maxStackSize; i++) {
-            ItemStack invStack = inv.items.get(i);
-            if (!invStack.isEmpty() && ItemStack.isSameItemSameComponents(invStack, required)) {
-                int toMove = Math.min(maxStackSize - collected, invStack.getCount());
-                inv.removeItem(i, toMove);
-                collected += toMove;
+    private void clearPaymentSlots() {
+        for (int i = 0; i < 2; i++) {
+            Slot s = this.slots.get(i);
+            ItemStack stack = s.getItem();
+            if (!stack.isEmpty() && this.moveItemStackTo(stack, TEMPLATE_SLOTS, this.slots.size(), true)) {
+                s.set(stack);
+                s.setChanged();
             }
         }
+        clearResultIfNeeded();
+    }
 
-        if (collected > 0) {
-            ItemStack newStack = required.copy();
-            newStack.setCount(collected);
-            tradeContainer.setItem(slotIndex, newStack);
+    private void transferRequiredItems(ItemStack required, int slotIndex) {
+        if (required == null || required.isEmpty()) return;
+
+        Slot targetSlot = this.slots.get(slotIndex);
+        ItemStack cur = targetSlot.getItem();
+        int maxTargetStack = Math.min(required.getMaxStackSize(), targetSlot.getMaxStackSize());
+
+        if (!cur.isEmpty() && cur.getCount() >= maxTargetStack) {
+            return;
+        }
+
+        for (int i = TEMPLATE_SLOTS; i < this.slots.size(); i++) {
+            Slot sourceSlot = this.slots.get(i);
+            ItemStack invStack = sourceSlot.getItem();
+
+            if (!invStack.isEmpty() && ItemStack.isSameItemSameComponents(invStack, required)) {
+                if (cur.isEmpty() || ItemStack.isSameItemSameComponents(invStack, cur)) {
+                    int space = maxTargetStack - cur.getCount();
+                    if (space <= 0) break;
+
+                    int move = Math.min(space, invStack.getCount());
+                    if (move > 0) {
+                        ItemStack newStack = invStack.copy();
+                        newStack.setCount(cur.getCount() + move);
+                        invStack.shrink(move);
+                        sourceSlot.set(invStack);
+                        targetSlot.set(newStack);
+                        cur = newStack;
+
+                        if (cur.getCount() >= maxTargetStack) {
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
