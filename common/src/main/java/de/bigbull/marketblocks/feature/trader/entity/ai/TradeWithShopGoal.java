@@ -51,6 +51,14 @@ public class TradeWithShopGoal extends Goal {
     }
 
     @Override
+    public boolean canContinueToUse() {
+        if (entity.isInvisible()) return false;
+        if (entity.getTargetShop() == null) return false;
+        if (celebratingTimer > 0 || browsingPhase) return true;
+        return canUse();
+    }
+
+    @Override
     public void start() {
         // Natural inspection time: 4 to 8 seconds (80 to 160 ticks) before making a purchase decision
         this.tradeDelay = 80 + entity.getRandom().nextInt(81);
@@ -65,6 +73,18 @@ public class TradeWithShopGoal extends Goal {
         BlockPos target = entity.getTargetShop();
         if (target == null) return;
 
+        // Celebrating phase after a successful purchase: hold item proudly for ~2.5s without erratic twitching
+        if (celebratingTimer > 0) {
+            celebratingTimer--;
+            entity.getNavigation().stop();
+            entity.getLookControl().setLookAt(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 10.0F, (float) entity.getMaxHeadXRot());
+            if (celebratingTimer <= 0) {
+                entity.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+                finishAndLeave(target);
+            }
+            return;
+        }
+
         // Keep looking at the shop display
         double lookY = target.getY() + 0.5D;
         if (tradeDelay < 40) {
@@ -72,24 +92,6 @@ public class TradeWithShopGoal extends Goal {
             lookY = target.getY() + 0.25D;
         }
         entity.getLookControl().setLookAt(target.getX() + 0.5D, lookY, target.getZ() + 0.5D, 10.0F, (float) entity.getMaxHeadXRot());
-
-        // Celebrating phase after a successful purchase: hold item proudly for ~2.5s
-        if (celebratingTimer > 0) {
-            celebratingTimer--;
-            if (celebratingTimer % 15 == 0 && !entity.level().isClientSide()) {
-                // Subtle nodding
-                entity.getLookControl().setLookAt(
-                        entity.getX() + entity.getLookAngle().x,
-                        entity.getY() - 0.2D,
-                        entity.getZ() + entity.getLookAngle().z,
-                        30.0F, 30.0F);
-            }
-            if (celebratingTimer <= 0) {
-                entity.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
-                finishAndLeave(target);
-            }
-            return;
-        }
 
         if (tradeDelay > 0) {
             tradeDelay--;
