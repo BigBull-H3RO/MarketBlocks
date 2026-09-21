@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.util.DefaultRandomPos;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -60,8 +61,8 @@ public class TradeWithShopGoal extends Goal {
 
     @Override
     public void start() {
-        // Natural inspection time: 4 to 8 seconds (80 to 160 ticks) before making a purchase decision
-        this.tradeDelay = 80 + entity.getRandom().nextInt(81);
+        // Natural inspection time: 2 to 4 seconds (40 to 80 ticks) before making a purchase decision
+        this.tradeDelay = 40 + entity.getRandom().nextInt(41);
         this.browsingPhase = false;
         this.browsingTimer = 0;
         this.celebratingTimer = 0;
@@ -73,11 +74,19 @@ public class TradeWithShopGoal extends Goal {
         BlockPos target = entity.getTargetShop();
         if (target == null) return;
 
-        // Celebrating phase after a successful purchase: hold item proudly for ~2.5s without erratic twitching
+        // Celebrating phase after a successful purchase: hold item proudly for ~1.75s
         if (celebratingTimer > 0) {
             celebratingTimer--;
             entity.getNavigation().stop();
-            entity.getLookControl().setLookAt(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 10.0F, (float) entity.getMaxHeadXRot());
+
+            // Look proudly towards a nearby player if present, otherwise admire the counter/item
+            Player nearbyPlayer = entity.level().getNearestPlayer(entity, 8.0D);
+            if (nearbyPlayer != null) {
+                entity.getLookControl().setLookAt(nearbyPlayer.getX(), nearbyPlayer.getEyeY(), nearbyPlayer.getZ(), 20.0F, (float) entity.getMaxHeadXRot());
+            } else {
+                entity.getLookControl().setLookAt(target.getX() + 0.5D, target.getY() + 0.4D, target.getZ() + 0.5D, 10.0F, (float) entity.getMaxHeadXRot());
+            }
+
             if (celebratingTimer <= 0) {
                 entity.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                 finishAndLeave(target);
@@ -85,10 +94,10 @@ public class TradeWithShopGoal extends Goal {
             return;
         }
 
-        // Keep looking at the shop display
+        // Keep looking at the shop display during inspection
         double lookY = target.getY() + 0.5D;
-        if (tradeDelay < 40) {
-            // Halfway through: tilt head slightly down to examine the counter / showcase
+        if (tradeDelay < 25) {
+            // Lower half of inspection: tilt head slightly down to examine the counter / showcase
             lookY = target.getY() + 0.25D;
         }
         entity.getLookControl().setLookAt(target.getX() + 0.5D, lookY, target.getZ() + 0.5D, 10.0F, (float) entity.getMaxHeadXRot());
@@ -190,9 +199,9 @@ public class TradeWithShopGoal extends Goal {
                                     1, 0.0, 0.0, 0.0, 0.0);
                         }
 
-                        // Hold the purchased item visibly in hand for ~2.5 seconds
+                        // Hold the purchased item visibly in hand for ~1.75 seconds
                         entity.setItemSlot(EquipmentSlot.MAINHAND, result.copyWithCount(1));
-                        this.celebratingTimer = 50; // 2.5 seconds celebration
+                        this.celebratingTimer = 35; // 1.75 seconds celebration
                         return;
                     }
                 }
