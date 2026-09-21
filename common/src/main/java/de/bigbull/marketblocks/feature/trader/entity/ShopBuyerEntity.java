@@ -15,6 +15,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -89,6 +90,7 @@ public class ShopBuyerEntity extends PathfinderMob {
     private int despawnDelay;
     private final Set<BlockPos> visitedShops = new HashSet<>();
     private long nextShopSearchTime = 0;
+    private long nextDrinkGameTick = 0L;
 
     /** How many more shops this trader wants to visit before leaving. */
     private int shopsToVisit;
@@ -152,16 +154,14 @@ public class ShopBuyerEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(0, new UseItemGoal<>(
-                this,
+        this.goalSelector.addGoal(0, new DrinkPotionGoal(
                 PotionContents.createItemStack(Items.POTION, Potions.INVISIBILITY),
                 SoundEvents.WANDERING_TRADER_DISAPPEARED,
-                mob -> this.level().isNight() && !mob.isInvisible()));
-        this.goalSelector.addGoal(0, new UseItemGoal<>(
-                this,
+                true));
+        this.goalSelector.addGoal(0, new DrinkPotionGoal(
                 new ItemStack(Items.MILK_BUCKET),
                 SoundEvents.WANDERING_TRADER_REAPPEARED,
-                mob -> this.level().isDay() && mob.isInvisible()));
+                false));
 
         // Melee attack goal when raging (continuous pathing)
         this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.25D, true) {
@@ -351,9 +351,17 @@ public class ShopBuyerEntity extends PathfinderMob {
     }
 
     @Override
+    public void playAmbientSound() {
+        if (this.isInvisible()) {
+            return;
+        }
+        super.playAmbientSound();
+    }
+
+    @Override
     public int getAmbientSoundInterval() {
-        // ~15 seconds instead of vanilla 4-6 seconds to eliminate repetitive audio spam
-        return 300;
+        // ~45-60 seconds (900 ticks) instead of rapid spam to keep wandering audio subtle and non-intrusive
+        return 900;
     }
 
     @Override
@@ -724,5 +732,40 @@ public class ShopBuyerEntity extends PathfinderMob {
         }
 
         return super.finalizeSpawn(level, difficulty, reason, spawnData);
+    }
+
+    /**
+     * Prevents the vanilla/AI double-drinking bug where mobs drink potion or milk twice
+     * consecutively due to delayed update of the isInvisible flag.
+     */
+    private class DrinkPotionGoal extends UseItemGoal<ShopBuyerEntity> {
+        private final boolean isNightPotion;
+
+        DrinkPotionGoal(ItemStack stack, SoundEvent sound, boolean isNightPotion) {
+            super(ShopBuyerEntity.this, stack, sound, mob -> {
+                if (ShopBuyerEntity.this.level() instanceof ServerLevel sl) {
+                    if (sl.getGameTime() < ShopBuyerEntity.this.nextDrinkGameTick) {
+                        return false;
+                    }
+                }
+                if (isNightPotion) {
+                    return ShopBuyerEntity.this.level().isNight()
+                            && !ShopBuyerEntity.this.hasEffect(MobEffects.INVISIBILITY);
+                } else {
+                    return ShopBuyerEntity.this.level().isDay()
+                            && ShopBuyerEntity.this.hasEffect(MobEffects.INVISIBILITY);
+                }
+            });
+            this.isNightPotion = isNightPotion;
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            if (ShopBuyerEntity.this.level() instanceof ServerLevel sl) {
+                ShopBuyerEntity.this.nextDrinkGameTick = sl.getGameTime() + 100L; // 5s cooldown
+            }
+            ShopBuyerEntity.this.updateInvisibilityStatus();
+        }
     }
 }
