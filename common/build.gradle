@@ -21,6 +21,10 @@ dependencies {
     // fabric and neoforge both bundle mixinextras, so it is safe to use it in common
     compileOnly group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
     annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
+    // Compatibilities (Soft dependencies)
+    compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
+    compileOnly "maven.modrinth:jade:${jade_version}+neoforge"
+    compileOnly "info.journeymap:journeymap-api-common:${journeymap_api_version}"
 }
 
 configurations {

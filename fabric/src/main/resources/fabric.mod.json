@@ -20,6 +20,12 @@
     ],
     "client": [
       "de.bigbull.marketblocks.client.MarketBlocksClient"
+    ],
+    "jei_plugins": [
+      "de.bigbull.marketblocks.compat.jei.MarketBlocksJeiPlugin"
+    ],
+    "jade": [
+      "de.bigbull.marketblocks.compat.jade.JadePlugin"
     ]
   },
   "mixins": [
