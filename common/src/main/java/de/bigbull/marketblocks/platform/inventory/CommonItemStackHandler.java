@@ -117,8 +117,7 @@ public class CommonItemStackHandler implements ICommonItemHandler {
             if (!stacks.get(i).isEmpty()) {
                 CompoundTag itemTag = new CompoundTag();
                 itemTag.putInt("Slot", i);
-                stacks.get(i).save(registries, itemTag);
-                nbtTagList.add(itemTag);
+                nbtTagList.add(stacks.get(i).save(registries, itemTag));
             }
         }
         CompoundTag nbt = new CompoundTag();
@@ -129,12 +128,15 @@ public class CommonItemStackHandler implements ICommonItemHandler {
 
     public void deserializeNBT(HolderLookup.Provider registries, CompoundTag nbt) {
         setSize(nbt.contains("Size", Tag.TAG_INT) ? nbt.getInt("Size") : stacks.size());
+        for (int i = 0; i < stacks.size(); i++) {
+            stacks.set(i, ItemStack.EMPTY);
+        }
         ListTag tagList = nbt.getList("Items", Tag.TAG_COMPOUND);
         for (int i = 0; i < tagList.size(); i++) {
             CompoundTag itemTags = tagList.getCompound(i);
             int slot = itemTags.getInt("Slot");
             if (slot >= 0 && slot < stacks.size()) {
-                stacks.set(slot, ItemStack.parse(registries, itemTags).orElse(ItemStack.EMPTY));
+                ItemStack.parse(registries, itemTags).ifPresent(stack -> stacks.set(slot, stack));
             }
         }
         onLoad();

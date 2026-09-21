@@ -972,6 +972,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
                 be.updateNeighborCache();
                 be.lockAdjacentChests();
                 Services.PLATFORM.invalidateCapabilities(level, pos);
+                be.updateOfferSlot(false);
                 be.updateShopDirectory();
                 be.sync();
             }
@@ -1032,8 +1033,8 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        loadHandlers(tag, registries);
         loadOffer(tag, registries);
+        loadHandlers(tag, registries);
         settingsManager.load(tag);
         visualManager.load(tag);
 
