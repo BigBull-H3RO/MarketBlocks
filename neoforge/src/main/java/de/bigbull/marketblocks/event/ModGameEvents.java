@@ -8,7 +8,6 @@ import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.AxeItem;
@@ -80,7 +79,8 @@ public class ModGameEvents {
 
         if (Config.GIVE_TRADE_BOOK_ON_FIRST_JOIN.get()) {
             CompoundTag persistentData = player.getPersistentData();
-            if (!persistentData.getBoolean("MB_ReceivedTradeBook") && !player.getTags().contains("marketblocks.received_trade_book")) {
+            if (!persistentData.getBoolean("MB_ReceivedTradeBook")
+                    && !player.getTags().contains("marketblocks.received_trade_book")) {
                 persistentData.putBoolean("MB_ReceivedTradeBook", true);
                 player.addTag("marketblocks.received_trade_book");
                 ItemStack book = new ItemStack(RegistriesInit.TRADE_BOOK.get());
