@@ -96,6 +96,9 @@ public final class ShopSearchCommand {
             if (i < shops.size()) {
                 ShopDirectorySavedData.ShopEntry shop = shops.get(i);
                 String shopName = ShopDirectorySavedData.formatShopName(shop.shopName(), shop.shopId());
+                String waypointName = (shop.shopName() != null && !shop.shopName().isBlank())
+                        ? shop.shopName()
+                        : shopName;
                 String owner = shop.ownerName() != null ? shop.ownerName() : "Unknown";
 
                 Component status = shop.isClosed()
@@ -131,7 +134,7 @@ public final class ShopSearchCommand {
                         .withStyle(
                                 style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverText)));
 
-                CommandUtils.appendWaypointsAndTp(source, text, shop.pos(), shopName);
+                CommandUtils.appendWaypointsAndTp(source, text, shop.pos(), waypointName);
                 source.sendSuccess(() -> text, false);
             } else {
                 int mpIndex = i - shops.size();
