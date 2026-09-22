@@ -21,8 +21,11 @@
     "client": [
       "de.bigbull.marketblocks.client.MarketBlocksClient"
     ],
-    "jei_plugins": [
+    "jei_mod_plugin": [
       "de.bigbull.marketblocks.compat.jei.MarketBlocksJeiPlugin"
+    ],
+    "journeymap": [
+      "de.bigbull.marketblocks.compat.journeymap.MarketBlocksJourneyMapPlugin"
     ],
     "jade": [
       "de.bigbull.marketblocks.compat.jade.JadePlugin"
