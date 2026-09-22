@@ -1,5 +1,8 @@
 package de.bigbull.marketblocks.event;
 
+import de.bigbull.marketblocks.feature.waypoint.network.CreateWaypointPacket;
+import de.bigbull.marketblocks.network.NetworkHandler;
+
 import de.bigbull.marketblocks.Constants;
 
 import java.util.Locale;
@@ -161,36 +164,7 @@ public final class MarketBlocksCommandEvents {
                 String dim = StringArgumentType.getString(context, "dim");
                 String name = StringArgumentType.getString(context, "name");
 
-                String cleanName = name.replace(":", "");
-                String label = cleanName.isEmpty() ? "S" : cleanName.substring(0, 1).toUpperCase();
-                String xaeroDim = dim.replace("minecraft:", "Internal-") + "-waypoints";
-
-                String xaeroWaypoint = String.format(Locale.US,
-                                "xaero_waypoint:%s:%s:%d:%d:%d:1:false:0:Internal-dim%s",
-                                name, label, x, y, z, xaeroDim);
-
-                boolean hasJourneyMap = ModList.get().isLoaded("journeymap");
-                boolean hasXaero = ModList.get().isLoaded("xaerominimap")
-                                || ModList.get().isLoaded("xaeroworldmap");
-
-                if (!hasJourneyMap && !hasXaero) {
-                        player.sendSystemMessage(Component.translatable("command.marketblocks.internal.waypoint.coords",
-                                        name, x, y, z, dim).withStyle(ChatFormatting.GOLD));
-                        return 1;
-                }
-
-                if (hasJourneyMap) {
-                        player.sendSystemMessage(
-                                        Component.translatable("command.marketblocks.internal.waypoint.journeymap")
-                                                        .withStyle(ChatFormatting.YELLOW));
-                }
-
-                if (hasXaero) {
-                        player.sendSystemMessage(Component.translatable("command.marketblocks.internal.waypoint.xaero")
-                                        .withStyle(ChatFormatting.YELLOW));
-                        player.sendSystemMessage(Component.literal(xaeroWaypoint).withStyle(ChatFormatting.GRAY));
-                }
-
+                NetworkHandler.sendToPlayer(player, new CreateWaypointPacket(x, y, z, dim, name));
                 return 1;
         }
 

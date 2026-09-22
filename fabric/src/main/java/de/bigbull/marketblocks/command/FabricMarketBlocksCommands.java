@@ -1,5 +1,8 @@
 package de.bigbull.marketblocks.command;
 
+import de.bigbull.marketblocks.feature.waypoint.network.CreateWaypointPacket;
+import de.bigbull.marketblocks.network.NetworkHandler;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -113,35 +116,7 @@ public final class FabricMarketBlocksCommands {
         String dim = StringArgumentType.getString(context, "dim");
         String name = StringArgumentType.getString(context, "name");
 
-        String cleanName = name.replace(":", "");
-        String label = cleanName.isEmpty() ? "S" : cleanName.substring(0, 1).toUpperCase();
-        String xaeroDim = dim.replace("minecraft:", "Internal-") + "-waypoints";
-
-        String xaeroWaypoint = String.format(Locale.US,
-                "xaero_waypoint:%s:%s:%d:%d:%d:1:false:0:Internal-dim%s",
-                name, label, x, y, z, xaeroDim);
-
-        boolean hasJourneyMap = Services.PLATFORM.isModLoaded("journeymap");
-        boolean hasXaero = Services.PLATFORM.isModLoaded("xaerominimap")
-                || Services.PLATFORM.isModLoaded("xaeroworldmap");
-
-        if (!hasJourneyMap && !hasXaero) {
-            player.sendSystemMessage(Component.translatable("command.marketblocks.internal.waypoint.coords",
-                    name, x, y, z, dim).withStyle(ChatFormatting.GOLD));
-            return 1;
-        }
-
-        if (hasJourneyMap) {
-            player.sendSystemMessage(Component.translatable("command.marketblocks.internal.waypoint.journeymap")
-                    .withStyle(ChatFormatting.YELLOW));
-        }
-
-        if (hasXaero) {
-            player.sendSystemMessage(Component.translatable("command.marketblocks.internal.waypoint.xaero")
-                    .withStyle(ChatFormatting.YELLOW));
-            player.sendSystemMessage(Component.literal(xaeroWaypoint).withStyle(ChatFormatting.GRAY));
-        }
-
+        NetworkHandler.sendToPlayer(player, new CreateWaypointPacket(x, y, z, dim, name));
         return 1;
     }
 

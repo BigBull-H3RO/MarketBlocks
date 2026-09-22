@@ -41,6 +41,7 @@
   "command.marketblocks.internal.tp.success": "Téléporté à la boutique !",
   "command.marketblocks.internal.waypoint.coords": "Coordonnées du waypoint pour %s : X: %d, Y: %d, Z: %d (%s)",
   "command.marketblocks.internal.waypoint.journeymap": "Waypoint JourneyMap créé / lien généré.",
+  "command.marketblocks.internal.waypoint.journeymap.success": "Waypoint JourneyMap '%s' créé !",
   "command.marketblocks.internal.waypoint.xaero": "Lien de waypoint Xaero's Minimap :",
   "command.marketblocks.link.already_linked": "§cCe bloc est déjà lié à une place du marché.",
   "command.marketblocks.link.not_looking_at_block": "§cVous devez regarder un bloc pour le lier.",

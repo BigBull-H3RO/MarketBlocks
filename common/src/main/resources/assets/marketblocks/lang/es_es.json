@@ -41,6 +41,7 @@
   "command.marketblocks.internal.tp.success": "¡Teletransportado a la tienda!",
   "command.marketblocks.internal.waypoint.coords": "Coordenadas del punto de ruta para %s: X: %d, Y: %d, Z: %d (%s)",
   "command.marketblocks.internal.waypoint.journeymap": "Punto de ruta de JourneyMap creado / enlace generado.",
+  "command.marketblocks.internal.waypoint.journeymap.success": "¡Punto de ruta de JourneyMap '%s' creado!",
   "command.marketblocks.internal.waypoint.xaero": "Enlace de punto de ruta de Xaero's Minimap:",
   "command.marketblocks.link.already_linked": "§cEste bloque ya está vinculado a un mercado.",
   "command.marketblocks.link.not_looking_at_block": "§cDebes mirar un bloque para vincularlo.",

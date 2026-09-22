@@ -4,6 +4,7 @@ import de.bigbull.marketblocks.feature.marketplace.network.*;
 import de.bigbull.marketblocks.feature.singleoffer.network.*;
 import de.bigbull.marketblocks.feature.trader.network.*;
 import de.bigbull.marketblocks.core.config.network.ConfigSyncPacket;
+import de.bigbull.marketblocks.feature.waypoint.network.CreateWaypointPacket;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -74,5 +75,6 @@ public class FabricNetwork {
         registerClient(LinkedBlocksSyncPacket.TYPE, LinkedBlocksSyncPacket.CODEC);
         registerClient(TradeBookOpenPacket.TYPE, TradeBookOpenPacket.CODEC);
         registerClient(ConfigSyncPacket.TYPE, ConfigSyncPacket.CODEC);
+        registerClient(CreateWaypointPacket.TYPE, CreateWaypointPacket.CODEC);
     }
 }

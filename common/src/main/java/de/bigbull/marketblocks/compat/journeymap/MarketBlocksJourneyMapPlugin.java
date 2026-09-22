@@ -2,14 +2,20 @@ package de.bigbull.marketblocks.compat.journeymap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import journeymap.api.v2.client.IClientAPI;
 import journeymap.api.v2.client.IClientPlugin;
 import journeymap.api.v2.common.JourneyMapPlugin;
+import journeymap.api.v2.common.waypoint.Waypoint;
+import journeymap.api.v2.common.waypoint.WaypointFactory;
 import journeymap.api.v2.client.display.MarkerOverlay;
 import journeymap.api.v2.client.model.MapImage;
 import net.minecraft.core.BlockPos;
@@ -42,6 +48,44 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
     @Override
     public String getModId() {
         return Constants.MOD_ID;
+    }
+
+    public boolean createWaypoint(String name, BlockPos pos, ResourceLocation dimension) {
+        if (jmApi == null) {
+            Constants.LOG.warn("Cannot create waypoint '{}' at {}: JourneyMap API not initialized.", name, pos);
+            return false;
+        }
+
+        try {
+            ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimension);
+            Waypoint waypoint = WaypointFactory.createWaypoint(
+                    Constants.MOD_ID,
+                    pos,
+                    name,
+                    dimKey,
+                    true
+            );
+            waypoint.setColor(0x00D4FF);
+            waypoint.setShowBeacon(true);
+            waypoint.setShowOnMap(true);
+            waypoint.setShowInWorld(true);
+
+            try {
+                ResourceLocation icon = name.toLowerCase(Locale.ROOT).contains("marketplace")
+                        ? ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/marketplace.png")
+                        : ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/singleoffershop.png");
+                waypoint.setIconResourceLoctaion(icon);
+                waypoint.setIconTextureSize(16, 16);
+            } catch (Throwable ignored) {
+            }
+
+            jmApi.addWaypoint(Constants.MOD_ID, waypoint);
+            Constants.LOG.info("MarketBlocks: Created JourneyMap waypoint '{}' at {} in {}", name, pos, dimension);
+            return true;
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to create JourneyMap waypoint '{}' at {}", name, pos, e);
+            return false;
+        }
     }
 
     public void addShopMarker(SingleOfferShopBlockEntity shop) {
@@ -107,4 +151,3 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
         }
     }
 }
-

@@ -41,6 +41,7 @@
   "command.marketblocks.internal.tp.success": "Zum Shop teleportiert!",
   "command.marketblocks.internal.waypoint.coords": "Wegpunkt-Koordinaten für %s: X: %d, Y: %d, Z: %d (%s)",
   "command.marketblocks.internal.waypoint.journeymap": "JourneyMap-Wegpunkt erstellt / Link generiert.",
+  "command.marketblocks.internal.waypoint.journeymap.success": "JourneyMap-Wegpunkt '%s' erfolgreich erstellt!",
   "command.marketblocks.internal.waypoint.xaero": "Xaero's Minimap Wegpunkt-Link:",
   "command.marketblocks.link.already_linked": "§cDieser Block ist bereits mit einem Marktplatz verlinkt.",
   "command.marketblocks.link.not_looking_at_block": "§cDu musst einen Block ansehen, um ihn zu verlinken.",

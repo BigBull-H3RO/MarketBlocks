@@ -15,6 +15,7 @@ import de.bigbull.marketblocks.feature.singleoffer.network.TransactionLogSyncPac
 import de.bigbull.marketblocks.feature.trader.client.ShopBuyerRenderer;
 import de.bigbull.marketblocks.feature.trader.network.TradeBookOpenPacket;
 import de.bigbull.marketblocks.core.config.network.ConfigSyncPacket;
+import de.bigbull.marketblocks.feature.waypoint.network.CreateWaypointPacket;
 import de.bigbull.marketblocks.core.config.toml.TomlConfigManager;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import de.bigbull.marketblocks.platform.Services;
@@ -99,6 +100,9 @@ public class MarketBlocksClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPacket.TYPE, (payload, context) -> {
             ConfigSyncPacket.handle(payload, makeContext(context));
+        });
+        ClientPlayNetworking.registerGlobalReceiver(CreateWaypointPacket.TYPE, (payload, context) -> {
+            CreateWaypointPacket.handle(payload, makeContext(context));
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {

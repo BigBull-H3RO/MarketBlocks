@@ -5,6 +5,7 @@ import de.bigbull.marketblocks.feature.marketplace.network.*;
 import de.bigbull.marketblocks.feature.singleoffer.network.*;
 import de.bigbull.marketblocks.feature.trader.network.*;
 import de.bigbull.marketblocks.core.config.network.ConfigSyncPacket;
+import de.bigbull.marketblocks.feature.waypoint.network.CreateWaypointPacket;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -88,5 +89,6 @@ public class NeoForgeNetwork {
         registerClientPacket(registrar, LinkedBlocksSyncPacket.TYPE, LinkedBlocksSyncPacket.CODEC, LinkedBlocksSyncPacket::handle);
         registerClientPacket(registrar, TradeBookOpenPacket.TYPE, TradeBookOpenPacket.CODEC, TradeBookOpenPacket::handle);
         registerClientPacket(registrar, ConfigSyncPacket.TYPE, ConfigSyncPacket.CODEC, ConfigSyncPacket::handle);
+        registerClientPacket(registrar, CreateWaypointPacket.TYPE, CreateWaypointPacket.CODEC, CreateWaypointPacket::handle);
     }
 }
