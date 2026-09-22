@@ -16,7 +16,6 @@ import de.bigbull.marketblocks.core.command.ShopStatsCommand;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.core.data.MarketplaceLinkSavedData;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
-import de.bigbull.marketblocks.platform.Services;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -86,23 +85,33 @@ public final class FabricMarketBlocksCommands {
                                         .then(Commands.argument("x", IntegerArgumentType.integer())
                                                 .then(Commands.argument("y", IntegerArgumentType.integer())
                                                         .then(Commands.argument("z", IntegerArgumentType.integer())
-                                                                .then(Commands.argument("dim", StringArgumentType.string())
+                                                                .then(Commands
+                                                                        .argument("dim", StringArgumentType.string())
                                                                         .then(Commands
-                                                                                .argument("name", StringArgumentType.greedyString())
+                                                                                .argument("name",
+                                                                                        StringArgumentType
+                                                                                                .greedyString())
                                                                                 .executes(
                                                                                         FabricMarketBlocksCommands::executeInternalWaypoint)))))))
                                 .then(Commands.literal("tp")
                                         .then(Commands.argument("dim", StringArgumentType.string())
                                                 .then(Commands.argument("x", DoubleArgumentType.doubleArg())
                                                         .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                                                                .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                                                                        .executes(context -> executeInternalTp(context, false))
-                                                                        .then(Commands.argument("yaw", DoubleArgumentType.doubleArg())
+                                                                .then(Commands
+                                                                        .argument("z", DoubleArgumentType.doubleArg())
+                                                                        .executes(context -> executeInternalTp(context,
+                                                                                false))
+                                                                        .then(Commands
+                                                                                .argument("yaw",
+                                                                                        DoubleArgumentType.doubleArg())
                                                                                 .then(Commands
                                                                                         .argument("pitch",
-                                                                                                DoubleArgumentType.doubleArg())
-                                                                                        .executes(context -> executeInternalTp(context,
-                                                                                                true)))))))))));
+                                                                                                DoubleArgumentType
+                                                                                                        .doubleArg())
+                                                                                        .executes(
+                                                                                                context -> executeInternalTp(
+                                                                                                        context,
+                                                                                                        true)))))))))));
 
         dispatcher.register(Commands.literal("mb").redirect(rootNode));
     }
