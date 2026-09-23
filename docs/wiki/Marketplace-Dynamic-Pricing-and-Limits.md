@@ -1,71 +1,92 @@
 # Marketplace: Dynamic Pricing & Limits
 
-The Marketplace in MarketBlocks offers a server-authoritative limits and dynamic pricing engine designed to simulate a living, balanced economy.
+The Marketplace in MarketBlocks features a server-authoritative economics engine that combines **scarcity controls** (stock pools & daily limits) with an **algorithmic market temperature model** (supply & demand pricing).
 
 ---
 
-## Limits Overview
+## 🛑 Purchase Limits (Scarcity Controls)
 
-Each Marketplace offer can combine several independent limiting mechanisms to prevent inflation, hoarding, or market flooding:
+Each Marketplace trade offer can combine three independent limiting parameters configured via the in-game editor (Limits modal) or JSON:
 
-- **Daily Limit**: Restricts the maximum number of times an offer can be purchased within a real-time 24-hour cycle.
-- **Stock Limit**: Establishes a finite inventory pool for an offer, simulating physical scarcity.
-- **Restock Interval**: Refills the stock limit automatically after a defined interval of seconds has elapsed.
+| Parameter | Unit | In-Game Default | Description |
+|---|:---:|:---:|---|
+| **`daily_limit`** | Purchases / Day | *Unlimited* | Maximum purchases allowed within a 24-hour cycle. Resets at midnight. |
+| **`stock_limit`** | Items in Pool | *Unlimited* | Maximum available inventory pool before the offer becomes temporarily out of stock. |
+| **`restock_seconds`** | Seconds | *Disabled* | Timer interval in seconds. Once elapsed, the available stock is restored back to the `stock_limit`. |
+
+> ℹ️ Any value left blank in the GUI (or set to `<= 0` in JSON) is treated as unlimited / disabled.
 
 ---
 
-## Daily Limit: Global vs Per Player
+## 🌐 Daily Limit Scope: Global vs. Per-Player
 
-The scope of daily limits is governed by the server configuration in `config/marketblocks/marketplace.toml`:
+In `config/marketblocks/marketplace.toml`, administrators configure whether daily limits apply individually or server-wide:
 
 ```toml
 [Economy]
-# If true, daily purchase limits are shared globally across the entire server (server pool).
-# If false, daily limits apply per individual player (Default: false).
+# false = Limits apply per individual player (Default)
+# true  = Limits are shared globally across the entire server
 sharedDailyLimits = false
 ```
 
-### Modes:
-- **Per-Player Limits (`sharedDailyLimits = false` - Default)**:  
-  Each player has an individual daily counter. If an offer has a daily limit of 5, Player A can buy 5, and Player B can also buy 5.
-- **Global Server Limits (`sharedDailyLimits = true`)**:  
-  All players on the server draw from a single shared daily quota. If an offer has a daily limit of 5, once 5 total purchases occur across the server, the item is sold out for everyone until the next daily reset.
-
-> 💡 **Admin Tip:** To reset a specific player's daily limits for events or testing, use:  
-> `/marketblocks admin resetlimits <player>` (or `/mb admin resetlimits <player>`).
+> [!TIP]
+> Administrators can reset a player's daily purchase counters at any time using:
+> ```
+> /mb admin resetlimits <player>
+> ```
 
 ---
 
-## Dynamic Demand Pricing
+## 📈 The Dynamic Demand Pricing Engine
 
-Demand Pricing dynamically adjusts the payment price of an offer based on actual purchasing activity. Heavily bought items become progressively more expensive, while neglected items gradually cool down toward their base price.
+MarketBlocks uses a continuous **Market Temperature Model** (ranging from `-1.0` to `+1.0`) with real-world exponential decay:
 
-### Key Parameters (Configurable in GUI or JSON):
-- **`enabled`**: Toggles whether demand pricing is active for the specific offer.
-- **`base_multiplier`**: The baseline price multiplier (typically `1.0`).
-- **`demand_step`**: The increase added to the price multiplier upon each successful purchase (e.g., `0.05` adds +5% cost per buy).
-- **`min_multiplier`**: The lowest possible multiplier the price can decay to (e.g., `0.5` sets a 50% price floor).
-- **`max_multiplier`**: The highest possible multiplier the price can escalate to (e.g., `3.0` sets a 300% price ceiling).
+```
+Cold Market (Discounts)           Neutral Zone               Hot Market (Surges)
+      [-1.0  ..  -0.2]          [-0.2  ..  +0.2]              [+0.2  ..  +1.0]
+◄───────────────────────────────┼──────────────┼───────────────────────────────►
+ Price approaches minMultiplier   Base Price (1.0x)    Price approaches maxMultiplier
+```
 
-### Price Calculation:
-Whenever a player makes a purchase:
-1. The base payment item count is multiplied by the current `priceMultiplier`.
-2. The resulting count is rounded up (`Math.ceil`) to ensure at least 1 payment item is required (minimum 1).
-3. The multiplier increments by `demand_step`, capped at `max_multiplier`.
-
----
-
-## Runtime State & Upkeep
-
-The server continuously evaluates active limits and pricing in the background:
-- **Daily Resets**: At 00:00 (or after 24 hours of elapsed real time), daily purchase counters reset to zero.
-- **Restock Cycles**: When `restock_seconds` elapse, `stockRemaining` is replenished back up to the configured stock limit.
-- **Demand Cooling**: Over time without purchases, the demand multiplier slowly cools down backward toward `base_multiplier`.
+### 1. Market Zones
+- **Neutral Zone (`-0.2` to `+0.2`)**: The market is stable. Offers sell at their standard base price (`1.0x` $\times$ `base_multiplier`).
+- **Surge / Hot Zone (`+0.2` to `+1.0`)**: High purchase frequency heats up the market. Prices scale proportionally up toward `max_multiplier`.
+- **Discount / Cold Zone (`-1.0` to `-0.2`)**: Long periods without purchases cool down the market. Prices scale downward toward `min_multiplier`.
 
 ---
 
-## Best Practices for Server Admins
+### 2. Volatility Settings (`volatility`)
 
-- **Targeted Scarcity**: Use global daily limits for rare items (such as Elytra, Nether Stars, or decorative trophies) and per-player limits for essential consumables.
-- **Prevent Runaway Inflation**: Always set reasonable bounds (`min_multiplier` and `max_multiplier`) to prevent goods from becoming completely unobtainable or free.
-- **Synchronized Economy**: You can view the top performing Marketplace items at any time via `/mb stats marketplace`.
+The volatility setting determines how fast prices heat up on purchases and how quickly they cool down over time:
+
+| Volatility | Heat per Purchase | Real-Time Cooling Half-Life | Recommended Use Case |
+|:---:|:---:|:---:|---|
+| **`slow`** | `+0.02` | **~7 days** | High-volume staples (Cobblestone, Logs, Iron, Food) |
+| **`normal`** | `+0.05` | **~3 days** | Mid-tier commodities, potions, enchanted gear, tools |
+| **`fast`** | `+0.10` | **~1 day** | High-value exotics (Netherite, Elytra, Beacon, Totems) |
+
+---
+
+### 3. Multiplier Parameters
+
+Configured via the **Pricing Editor** modal or JSON:
+
+- **`enabled`**: Toggles dynamic pricing on or off for this specific offer.
+- **`base_multiplier`**: Baseline price multiplier (default: `1.0`).
+- **`min_multiplier`**: Price floor (minimum factor, default: `0.25` = 25% minimum cost).
+- **`max_multiplier`**: Price ceiling (maximum factor, default: `4.0` = 400% maximum cost).
+
+*(Prices are always rounded up to whole items, with a minimum of 1 item).*
+
+---
+
+## ⚙️ Server Runtime Upkeep & Synchronization
+
+The server evaluates active limits and pricing in a lightweight 1-second heartbeat loop (every 20 ticks):
+
+1. **Restock Timers**: Depleted stock refills back up to `stock_limit` once `restock_seconds` have elapsed.
+2. **Midnight Reset**: Daily purchase records reset automatically at each new game day.
+3. **Exponential Cooling**: Real-world elapsed time decays market temperature back toward discounts when items sit unbought.
+4. **Live Synchronization**: Any price or stock changes are pushed in real-time to all players currently browsing the Marketplace GUI.
+
+

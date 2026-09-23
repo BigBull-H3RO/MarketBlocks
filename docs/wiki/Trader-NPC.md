@@ -1,75 +1,102 @@
-# Trader NPCs: Autonomous Customer Guide
+# 🧭 Trader NPCs: Autonomous Customer Guide
 
-**Trader NPCs** are autonomous Wandering Traders that roam the Overworld looking for player-owned shops to browse and purchase items from. They create a living, breathing economy where your shops make sales even without other human players actively visiting!
-
----
-
-## 🌍 Spawning Mechanics & Fairness
-
-MarketBlocks uses a **multiplayer-fair** spawning system that ensures every player with a shop gets visits, without spamming the world:
-
-- **Shop-Proximity Requirement**: A Trader NPC will **only** spawn if an active player is within **64 blocks of at least one open shop with an active offer**. If you are mining deep underground in a cave or exploring the ocean, the trader will not spawn and your cooldown is preserved!
-- **Per-Player Daily Cooldown**: Each player has an independent **24,000-tick cooldown (1 full Minecraft day)**. You will never have another player on the server "steal" your visitor.
-- **Fair Spawn Ticks**: Every 60 seconds (1200 ticks), the server checks for eligible players who have completed their daily cooldown.
-- **Daytime Only**: In line with vanilla Wandering Traders, they only arrive during daylight hours.
-- **Safe Surface Spawning**: Traders only spawn on solid surface ground with open headroom — never trapped in tree leaves, submerged in rivers, or suffocating in walls.
-- **Dimension Cap**: A maximum of 4 Trader NPCs can exist simultaneously per dimension by default (configurable).
+**Trader NPCs** are autonomous Wandering Traders that travel the Overworld seeking out player-owned shops. They inspect showcased goods, spend coin budgets, and generate sales for your shop network even when other players are offline.
 
 ---
 
-## 👑 Social Ranks & Budgets
+## 🌍 Spawning & Despawning Lifecycles
 
-When a Trader NPC spawns, they roll a social rank that determines their shopping budget, item preferences, and purchasing power:
+MarketBlocks uses an anti-grief, multiplayer-fair lifecycle to ensure every player with an active shop receives visitors without overloading the world.
 
-| Rank | Spawn Chance | Budget (Coins) | Preferred Goods | Purchase Volume |
-|---|:---:|:---:|---|:---:|
-| **Citizen** | 70% | 32 – 128 | Everyday staples: bread, crops, building blocks, simple tools, torches. | **1 unit** |
-| **Wealthy** | 25% | 256 – 1024 | Mid-to-high tier goods: iron, gold, redstone, potions, quality weapons & armor. | **1 – 3 units** |
-| **Noble** | 5% | 1024 – 8192 | Luxury & rare treasures: diamonds, netherite, enchanted gear, rare potions. | **1 – 5 units (Bulk)** |
+### Spawning Conditions
+- **Shop Proximity Check**: A Trader NPC only spawns if an active player is within **64 blocks of an open shop with an active offer**. Cooldowns are never wasted while you are deep underground mining, battling in structures, or exploring oceans.
+- **Per-Player Daily Cooldown**: Each player has an independent **24,000-tick cooldown (1 Minecraft day)**. Visitors cannot be "stolen" by nearby neighbors.
+- **Spawn Interval & Chance**: Every 60 seconds (1200 ticks), the spawner checks players whose cooldown has elapsed and rolls a **25% chance** to spawn a visitor.
+- **Daytime & Surface Ground**: Traders spawn during daylight hours on solid, safe ground (12 to 28 blocks from the player) with clear headroom.
+- **Density & Suppression Limits**: A default maximum of **4 traders per dimension** can exist simultaneously. If an active trader is already within 80 blocks of a player, no second trader will arrive.
 
-### Purchasing Preferences & Standards:
-- **Citizens** accept fair prices (up to a 15% markup over baseline market value).
-- **Wealthy** merchants have higher budgets and can purchase 2 to 3 units if the price is right.
-- **Nobles** are aristocratic high-rollers: they **ignore cheap junk items** (items with value under 5 coins), but when they find genuine treasures or bulk diamonds, they will readily buy up to 5 units in a single visit!
-
----
-
-## 🛍️ In-Game Shopping Behavior
-
-Trader NPCs behave like real, thoughtful customers:
-
-1. **Natural Pacing**: They walk towards your shop counter at a calm, natural walking speed (`0.65`).
-2. **Theken-Toleranz ("Smart Reach")**: You can design authentic shop counters, tables, or fence barriers! If the block directly in front of the shop is occupied by a counter table, the trader comfortably stands 1.5 to 2.5 blocks away and trades across the counter (up to 3.5 blocks reach).
-3. **Window-Shopping & Inspection**: Upon arriving, the trader stops and carefully examines the showcased goods for **4 to 8 seconds**, tilting their head down to inspect the items.
-4. **Celebration & Purchase Feedback**:
-   - Plays a calm, authentic Wandering Trader affirmation sound (`WANDERING_TRADER_YES`) — no obnoxious high-pitched villager chatter!
-   - Emits emerald-green happy particles.
-   - **Holds the Item in Hand**: The trader proudly holds the purchased item visibly in their crossed arms for ~2.5 seconds before walking away.
-5. **Logged in History**: The trader's name and rank appear directly in your shop's **Transaction Log** (e.g. *"Jonathan (Noble) bought 2x Diamond"*).
+### Despawning Conditions
+A Trader NPC remains in the world until one of the following occurs:
+- **Shopping Tour Complete**: Each trader rolls a goal to visit between **1 and 5 distinct shops** (`maxShopsPerVisit`). Once their tour concludes, they depart.
+- **Budget Exhaustion**: If a trader runs out of money, they finish shopping and leave immediately.
+- **Time Limit**: Traders have a maximum lifespan of **40 minutes** (48,000 ticks, identical to vanilla Wandering Traders).
+- **Departure**: When departing, the trader calmly walks away and despawns out of player sight.
 
 ---
 
-## ⚔️ Easter Egg: Rage Mode
+## 👑 Social Ranks & Buying Power
 
-Trader NPCs are peaceful merchants, but they do not tolerate being harassed:
-- If a player **spam-clicks** the NPC repeatedly within a few seconds, the trader will become **enraged**!
-- An angry battle cry sounds, and the trader draws an enchanted sword:
-  - **Citizen**: Iron Sword
-  - **Wealthy**: Diamond Sword
-  - **Noble**: Netherite Sword (often with high Sharpness!)
-- The trader will pursue and attack the offending player until calmed down or the player flees.
-- *Server administrators can toggle this feature in `config/marketblocks/trader/trader.toml` via `[RageMode] enabled = true`.*
+Every Trader NPC rolls a social rank upon spawning. This determines their coin budget, tolerance for profit markups, and purchase volume:
+
+| Rank | Spawn Chance | Budget (Coins) | Purchase Volume | Pricing Tolerance & Standards |
+|---|:---:|:---:|:---:|---|
+| **Citizen** | 70% | 32 – 128 | **1 unit** | Accepts up to **15% markup** over base value. Focuses on everyday basics. |
+| **Wealthy** | 25% | 256 – 1024 | **1 – 3 units** | Accepts up to **5% markup**. Higher budgets for mid-to-high tier goods. |
+| **Noble** | 5% | 1024 – 8192 | **1 – 5 units (Bulk)** | Buys **strictly at or below** base value. Completely ignores items valued under 5 coins. |
+
+> [!NOTE]
+> The exact quantity purchased depends on the trader's remaining budget: a Wealthy or Noble customer will buy multiple units if their allowed budget can cover the total cost.
 
 ---
 
-## 🛠️ Server Customization & Economy Tuning
+## 🎯 Trader Interests & Shop Categories
 
-All Trader NPC mechanics can be customized inside `config/marketblocks/trader/`:
+When configuring a [SingleOfferShop](SingleOfferShop-Settings), you can assign a **Shop Category**. This setting directly controls which Trader NPCs spend their full budget at your shop!
 
-1. **`trader.toml`**: Toggle spawning, adjust the 24,000-tick player cooldown, check radius, and rank probabilities.
-2. **`trader_item_values.json`**: Override item values to teach traders how much diamonds, netherite, or custom modded items are worth on your server.
-3. **`trader_blacklist.json`**: Prevent unwanted items (dirt, seeds, joke items) from being bought by NPCs.
-4. **`trader_names.json`**: Add your own custom list of names (e.g. community members, lore figures) that appear on traders and in transaction logs.
+Each visiting trader rolls one of 5 **Interest Categories**:
 
-> 🔄 **Hot-Reload**: You can edit any of these three JSON files and run **`/mb admin reload`** to apply changes immediately without a server restart! See the [Configuration Guide](file:///e:/Projekte/Minecraft/Modding/Modding-Data/MarketBlocks/Antigravity/MarketBlocks/docs/wiki/Configuration-Guide.md) for full syntax and examples.
+| Interest Category | Preferred Shop Categories |
+|---|---|
+| **Farmer** | Food & Potions, Blocks, Misc |
+| **Alchemist** | Food & Potions, Valuables |
+| **Blacksmith** | Weapons & Armor, Tools, Blocks |
+| **Valuables** | Valuables |
+| **General** | All categories |
 
+### The Budget Impact:
+- **Matching Category**: The trader unlocks **100% of their budget** for purchases at that shop.
+- **Non-Matching Category (or `None`)**: The trader restricts spending to **20% of their budget** (`allowedBudget = budget * 0.20`), limiting themselves to small convenience purchases.
+- **Noble Item Filtering**: Regardless of category, Nobles refuse to purchase ordinary building blocks or basic tools, focusing solely on equipment, potions, valuables, or high-tier items.
+
+---
+
+## 💬 Inspecting & Interacting with Traders
+
+You can right-click any visiting Trader NPC at any time to inspect them:
+
+- **Rank & Interest Display**: The trader prints their profile to your chat (e.g. `[Citizen - Farmer]`), allowing you to immediately see what goods they are shopping for.
+- **Contextual Dialogue**: The trader will share ambient remarks reflecting their current task — whether searching for nearby storefronts, browsing, or expressing satisfaction after a purchase.
+- **Interaction Cooldown**: A built-in 1.5-second anti-spam cooldown prevents chat clutter.
+
+---
+
+## 🛍️ Counter Reach & Shopping Behavior
+
+Traders navigate storefronts with lifelike behaviors:
+
+- **Theken-Toleranz ("Smart Reach")**: Build realistic counters, slabs, or display fences! If the block in front of the shop is occupied by a table or counter, the trader stands comfortably on the customer side (up to 2.5 blocks away) and trades across the counter (up to 3.5 blocks total reach).
+- **Successful Trade**: The trader plays an affirmation sound (`WANDERING_TRADER_YES`), emits green villager particles, and visibly inspects the purchased item before continuing their tour.
+- **Transaction History**: Every purchase is recorded in the shop's transaction log (e.g. *"Jonathan (Noble) bought 2x Diamond"*).
+- **Window Shopping & Rejection**: If a shop is out of stock, closed, or overpriced, the trader browses the counter briefly, shakes their head with a refusal sound (`WANDERING_TRADER_NO`), marks the shop as visited, and moves on.
+
+---
+
+## ⚙️ Server Economy & Configuration
+
+All Trader NPC mechanics can be tuned in `config/marketblocks/trader/`:
+
+- **`trader.toml`**: Configure spawn cooldowns, detection radius, dimension limits, rank budgets, and feature toggles.
+- **`trader_item_values.json`**: Define baseline coin values for vanilla or custom modded items. Items not explicitly listed are automatically calculated from their crafting, smelting, or stonecutting recipes (+10% crafting step bonus).
+- **`trader_blacklist.json`**: Prevent unwanted items (dirt, junk, joke items) from ever being purchased by NPCs.
+- **`trader_names.json`**: Customize the pool of names assigned to visiting merchants.
+- **Dynamic Market Saturation**: Every unit sold to an NPC incrementally increases market saturation for that item. Heavily saturated goods temporarily yield lower payouts from NPCs until demand decays back to baseline over time.
+
+> 🔄 **Hot-Reload**: Run **`/mb admin reload`** to apply changes to JSON value and blacklist tables immediately without restarting the server.
+
+---
+
+## 🤫 Rumors & Mysteries
+
+> [!TIP]
+> **A Word of Caution to Impatient Shopkeepers**  
+> Wandering merchants take pride in peaceful trade. However, local rumors say that repeatedly provoking, crowding, or harassing a merchant in rapid succession might test their patience. Should a merchant feel threatened, they may unsheathe a weapon to defend their dignity! Server administrators can configure this feature via `[EasterEggs] rageModeEnabled` in `trader.toml`.

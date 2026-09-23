@@ -101,8 +101,8 @@ public class TraderConfig {
 
         BUILDER.push("EasterEggs");
         RAGE_MODE_ENABLED = BUILDER
-                .comment("If true, wandering traders get angry when attacked by players and fight back! Default: false")
-                .define("rageModeEnabled", false);
+                .comment("If true, wandering traders get angry when provoked by players and fight back! Default: true")
+                .define("rageModeEnabled", true);
         BUILDER.pop();
 
         SPEC = BUILDER.build();

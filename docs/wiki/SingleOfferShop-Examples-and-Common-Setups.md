@@ -49,43 +49,7 @@ A server-controlled admin shop offering unlimited tools or starter gear for newl
 
 ---
 
-## 🤝 Example 3: Community Guild Store (Co-Owners)
-
-A shop operated collaboratively by a team or faction sharing restocking responsibilities.
-
-- **Ownership**: Primary Owner + 3 Guild Co-Owners
-- **Access Mode**: Everyone
-- **Notifications**: All alerts enabled (`Notify Co-Owners = true`)
-
-### Setup Walkthrough:
-1. Primary owner places the shop and sets up the item offer.
-2. Go to **Settings -> Access**:
-   - Add teammate usernames to the **Co-Owners** list.
-3. Go to **Settings -> Notifications**:
-   - Enable `Notify on Purchase`, `Notify on Out of Stock`, and `Notify on Output Full`.
-   - Check `Notify Co-Owners` so all guild managers receive alerts.
-4. Co-owners can now deposit fresh stock, collect earnings, or change prices at any time!
-
----
-
-## 🔒 Example 4: VIP / Faction Outlet (Whitelist)
-
-A members-only shop that sells discounted high-tier gear exclusively to registered players.
-
-- **Access Mode**: Whitelist
-- **Access List**: Registered member usernames
-- **Visual Clerk**: Player Skin with custom name tag (`"VIP Armory"`)
-
-### Setup Walkthrough:
-1. Place the shop and deposit your merchandise.
-2. Go to **Settings -> Access**:
-   - Switch the Access Mode dropdown to **Whitelist**.
-   - Type in the usernames of permitted buyers and click add.
-3. Non-whitelisted visitors who try to purchase will receive an access denied notice in chat.
-
----
-
-## ⚙️ Example 5: Automated Farm Vendor (Hopper I/O)
+## ⚙️ Example 3: Automated Farm Vendor (Hopper & Redstone I/O)
 
 An automated shop connected directly to an automatic mob or crop farm via hoppers and chests.
 
@@ -93,13 +57,20 @@ An automated shop connected directly to an automatic mob or crop farm via hopper
 - **Redstone Pulse**: Emits a signal on every completed sale to drive a counter lamp.
 
 ### Setup Walkthrough:
-1. Ensure `enableChestExtension = true` in `config/marketblocks/singleoffer/general.toml` (if using adjacent chest extraction).
-2. Connect a hopper pointing into the **Back** of the shop block (from your farm).
-3. Place a hopper or chest below the **Bottom** of the shop to collect incoming payments.
-4. Go to **Settings -> I/O**:
+1. Connect a hopper pointing into the **Back** of the shop block (from your farm).
+2. Place a hopper or chest below the **Bottom** of the shop to collect incoming payments.
+3. Go to **Settings -> I/O**:
    - Configure Back as `INPUT` and Bottom as `OUTPUT`.
-5. Go to **Settings -> General**:
+4. Go to **Settings -> General**:
    - Toggle `Emit Redstone` to `ON`. Connect redstone dust behind the block to power note blocks, lamps, or transaction counters!
+5. *(Optional)* If `enableChestExtension = true` is set in `config/marketblocks/singleoffer/general.toml`, you can also place chests directly adjacent to the shop for automatic item pulling and profit pushing without hoppers!
+
+---
+
+## ⚡ Quick Configuration Setups
+
+- **🤝 Shared Guild Store (Co-Owners)**: Want teammates to help manage your shop? Go to **Settings -> Access**, type in usernames in the **Co-Owners** list, and enable `Notify Co-Owners` under **Settings -> Notifications** so all partners receive stock and sale alerts.
+- **🔒 VIP / Faction Outlet (Whitelist)**: To restrict sales exclusively to trusted clan members, switch the Access Mode dropdown in **Settings -> Access** to **Whitelist** and register permitted usernames. Non-whitelisted players will be unable to purchase.
 
 ---
 

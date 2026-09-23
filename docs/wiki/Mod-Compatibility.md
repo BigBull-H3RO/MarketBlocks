@@ -1,79 +1,65 @@
-# Mod Compatibility & Integrations
+# 🔌 Mod Compatibility & Integrations
 
-MarketBlocks is built to integrate smoothly into modpacks and multiplayer servers. Whether you are running a public SMP server with land claims, a rich RPG modpack with minimaps, or technical HUD overlays, MarketBlocks provides dedicated integrations.
+Overview of built-in integrations, HUD overlays, map waypoints, and land-claim protections provided by MarketBlocks.
 
 ---
 
-## 🗺️ Minimap & Waypoint Integrations
+## 🗺️ Minimaps & Waypoints
 
-Finding player shops and marketplace hubs in large worlds is seamless.
+### JourneyMap
+- **Live Map Markers**: All placed Trade Stands, Market Crates, and linked Marketplace Hubs automatically display map markers on the minimap and full-screen map. Markers update in real time when shops are placed, renamed, or dismantled.
+- **One-Click Waypoints**: Clicking **[Waypoint]** in `/mb search` results automatically creates a permanent, named waypoint in your JourneyMap manager.
+- **Config**: `enableJourneyMapCompat = true` in `config/marketblocks/main.toml`.
 
-### Interactive Chat Waypoints
-Whenever players run `/marketblocks search <item>` (or `/mb search <item>`), every matching shop entry in chat includes an interactive **[Waypoint]** button:
-- **JourneyMap**: Clicking creates a named waypoint in your JourneyMap manager with dimension and coordinates.
-- **Xaero's Minimap & Worldmap**: Clicking creates a waypoint directly on your HUD minimap and world map.
-- **Vanilla / No Map Mod**: Clicking prints the exact X, Y, Z coordinates and dimension in chat with clear formatting.
+### Xaero's Minimap & Worldmap
+- **Chat Waypoints**: Clicking **[Waypoint]** in `/mb search` results outputs a clickable Xaero waypoint link directly into chat.
+- **Config**: `enableXaerosCompat = true` in `config/marketblocks/main.toml`.
 
-### Live JourneyMap World Markers
-When **JourneyMap** is installed on the client and enabled in `marketblocks-client.toml` (`enableJourneyMapCompat = true`):
-- **Player Shops**: Any placed Trade Stand or Market Crate automatically displays a shop marker on your full-screen and mini map. Markers automatically update when shops are broken or renamed.
-- **Marketplace Hubs**: Any world block linked to the Marketplace via `/mb admin marketplace link` automatically receives a marketplace map marker.
+### Vanilla / No Map Mod Installed
+- Clicking **[Waypoint]** prints formatted X, Y, Z coordinates and dimension into chat.
 
 ---
 
 ## 🧭 Just Enough Items (JEI)
 
-MarketBlocks includes a native **JEI Plugin**:
-- **Automatic GUI Bounds Exclusion**: The custom side tabs on **SingleOfferShops** (General, I/O, NPC, Visuals, Notifications, Access, Log) and the category/editor tabs in the **Marketplace GUI** are registered as JEI *Extra Areas*.
-- **No Overlapping**: JEI's item grid automatically shifts aside, ensuring JEI search results never cover or block clicks on your shop tabs and action buttons.
+MarketBlocks includes a native JEI plugin (`MarketBlocksJeiPlugin`):
+- **GUI Extra Areas**: Registers the custom side tabs on **SingleOfferShops** (General, I/O, NPC, Visuals, Notifications, Access, Log) and the category/pagination tabs in the **Marketplace GUI** as exclusion zones.
+- **No Overlapping**: JEI's item grid automatically shifts aside so search results never overlap or block clicks on shop tabs and action buttons.
 
 ---
 
 ## 🖥️ Jade / WTHIT (HUD Overlays)
 
-MarketBlocks provides rich data providers for **Jade**:
+MarketBlocks provides native server data providers for **Jade**:
 
-### Shop Blocks (Trade Stands & Market Crates)
-When looking at any shop block in the world, the Jade overlay displays:
-- **Status**: Clearly shows whether the shop is **Open**, **Closed**, or an **Admin Shop**.
+### SingleOfferShop Blocks (Trade Stands & Market Crates)
+Looking at a shop block displays:
+- **Status**: `Open` (green), `Closed` (red), or `Admin Shop` (purple).
 - **Shop & Owner Name**: Displays the custom shop title and owner name.
-- **Active Offer**: Displays live item icons and quantities for both the item being sold and the required payment(s) (including secondary currency if configured).
-- **Stock Warnings**: Real-time server-synced alerts if the shop is **Out of Stock** or if the owner's **Output is Full**.
+- **Active Offer**: Live item icons and quantities for the item being sold and the required payment(s).
+- **Stock Warnings**: Displays `Out of Stock` or `Output Full` alerts in real time.
 
-### Wandering Shop Buyers
-If you encounter a wandering **Shop Buyer NPC**, looking at them with Jade displays their current remaining shopping **Budget**.
+### Trader NPCs (Shop Buyers)
+Looking at a wandering Trader NPC displays their current remaining **Coin Budget**.
 
 ---
 
-## 🛡️ Land Claiming & Grief Protection
+## 🛡️ Land Claiming & Claim Protections
 
-In multiplayer servers, players typically place shops inside claimed bases or town plots. By default, land protection mods prevent non-members from interacting with blocks. MarketBlocks ensures visitors can freely trade with your shops without compromising base security:
+Allows visitors to trade at shops placed inside protected territory without granting full block breaking or chest access permissions:
 
 ### FTB Chunks
-✅ **Supported out of the box!**  
-MarketBlocks includes the `ftbchunks:interact_whitelist` data tag for all shop blocks (`marketblocks:trade_stand`, `marketblocks:trade_stand_top`, `marketblocks:marketcrate`). Visitors can right-click shops to buy goods inside claimed chunks, but cannot break the blocks, open linked storage, or modify shop settings.
+- **Supported out of the box** via the included `ftbchunks:interact_whitelist` block tag (`trade_stand`, `trade_stand_top`, `marketcrate`).
+- Visitors can freely open and purchase from shops inside claimed chunks without server configuration.
 
 ### Open Parties and Claims (OpenPAC)
-⚠️ **Requires server configuration:**  
-OpenPAC requires server administrators to register exceptions in the server config:
-1. Open your server's `config/openpartiesandclaims-server.toml` file.
-2. Locate `forcedBlockProtectionExceptionList`.
-3. Add the MarketBlocks interact definitions:
-   ```toml
-   forcedBlockProtectionExceptionList = [
-       "interact$marketblocks:trade_stand",
-       "interact$marketblocks:trade_stand_top",
-       "interact$marketblocks:marketcrate"
-   ]
-   ```
-4. Restart the server or run `/openpac reload`. Players can now safely buy from shops in claimed plots!
+Requires adding the shop blocks to `forcedBlockProtectionExceptionList` in `config/openpartiesandclaims-server.toml`:
 
----
-
-## ⚙️ Configuration Toggles
-
-All mod integrations can be toggled on or off in configuration files:
-- **`config/marketblocks/main.toml`**:
-  - `enableJourneyMapCompat` (default: `true`): Toggles JourneyMap map icons and chat waypoints.
-  - `enableXaerosCompat` (default: `true`): Toggles Xaero's Minimap chat waypoints.
-  - `allowNonOpTeleport` (default: `false`): Allows non-OP players to click **[TP]** in chat search results.
+```toml
+forcedBlockProtectionExceptionList = [
+    "interact$marketblocks:trade_stand",
+    "interact$marketblocks:trade_stand_top",
+    "interact$marketblocks:marketcrate"
+]
+```
+Apply in-game with `/openpac reload` or a server restart.

@@ -129,7 +129,7 @@ public class ShopBuyerEntity extends PathfinderMob {
     private static final int SEARCHING_MSG_END = 8;
     private static final int BROWSING_MSG_START = 9;
     private static final int RAGE_CLICK_THRESHOLD = 3;
-    private static final int RAGE_CLICK_WINDOW_TICKS = 60;
+    private static final int RAGE_CLICK_WINDOW_TICKS = 40; // 3 clicks within 2 seconds (40 ticks)
     private static final double REVENGE_DETECTION_RADIUS = 16.0;
 
     private static final int BROWSING_MSG_END = 10;

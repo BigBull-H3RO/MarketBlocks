@@ -4,7 +4,6 @@
   - [Admin Shop Mode](SingleOfferShop-Admin-Shop-Mode)
   - [Setup Examples](SingleOfferShop-Examples-and-Common-Setups)
 - [Marketplace (Server Hub)](Marketplace)
-  - [In-Game Management](Marketplace-In-Game-Management)
   - [Dynamic Pricing & Limits](Marketplace-Dynamic-Pricing-and-Limits)
   - [JSON Configuration Guide](Marketplace-JSON-Configuration-Guide)
 - [Trader NPCs (Wandering Buyers)](Trader-NPC)

@@ -13,7 +13,7 @@ To convert a player shop block (Trade Stand or Market Crate) into an Admin Shop,
 1. **Global Edit Mode must be enabled**: Run `/marketblocks admin editmode true` (or `/mb admin editmode true`).
 2. The player must have **Operator rights** (permission level 2).
 
-When both conditions are met, an **Admin Shop** toggle switch becomes visible in the **Access** sub-tab of the shop's Settings menu.
+When both conditions are met, an **Admin Shop** toggle switch becomes visible at the bottom of the **General** sub-tab in the shop's Settings menu.
 
 ---
 

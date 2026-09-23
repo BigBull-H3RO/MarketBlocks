@@ -1,35 +1,36 @@
-# Commands & Permissions
+# 📜 Commands & Permissions
 
-This overview details all commands, permissions, and role hierarchies available in MarketBlocks.
+This guide provides a comprehensive reference for all commands, interactive search tools, operator controls, and role-based permissions in MarketBlocks.
 
-> 💡 **Tip:** Every command starting with `/marketblocks` can also be abbreviated with the alias **`/mb`** (e.g., `/mb search iron_ingot` or `/mb stats`).
+> 💡 **Tip:** Every command starting with `/marketblocks` can also be abbreviated using the alias **`/mb`** (e.g., `/mb search iron_ingot` or `/mb stats`).
 
 ---
 
-## Player Commands
+## 👤 Player Commands
 
 These commands can be executed by any player without special permissions:
 
 | Command | Alias | Description |
 |---|---|---|
-| `/marketblocks marketplace` | `/mb marketplace` | Opens the central Marketplace GUI (equivalent to the default keybind **O**). |
-| `/marketblocks search <item> [page]` | `/mb search <item> [page]` | Searches for SingleOfferShops and Marketplace offers selling or buying the specified item. |
-| `/marketblocks stats` | `/mb stats` | Displays the Top 10 SingleOfferShops and Top 10 Marketplace offers by total sales. |
-| `/marketblocks stats shops` | `/mb stats shops` | Displays the Top 10 player and admin shops by total sales volume. |
+| `/marketblocks marketplace` | `/mb marketplace` | Opens the central Marketplace GUI (requires an active player entity; equivalent to keybind **O**). |
+| `/marketblocks search <item> [page]` | `/mb search <item> [page]` | Searches for SingleOfferShops and Marketplace hubs buying or selling the specified item. Supports tab-completion for any item ID. |
+| `/marketblocks stats` | `/mb stats` | Displays both the Top 10 SingleOfferShops and Top 10 Marketplace offers by total sales. |
+| `/marketblocks stats shops` | `/mb stats shops` | Displays the Top 10 SingleOfferShops by total sales volume. |
 | `/marketblocks stats marketplace` | `/mb stats marketplace` | Displays the Top 10 Marketplace offers by total lifetime purchases. |
 
 ### Interactive Search Results
-When using `/marketblocks search <item>`, the chat outputs a paginated list of all matching shops and marketplace hubs:
-- **Shop / Hub Name & Owner**: Displays custom shop names or owners.
-- **Coordinates & Dimension**: Where the physical shop block is located.
-- **[Waypoint] Button**: Clicking this automatically registers a waypoint in **JourneyMap**, **Xaero's Minimap/Worldmap**, or outputs formatted coordinates in chat if no map mod is present.
-- **[TP] Button**: Teleports directly in front of the shop. By default, this requires operator level 2, but server administrators can allow all players to teleport by setting `allowNonOpTeleport = true` in `marketblocks-server.toml`.
+When using `/marketblocks search <item>`, the chat outputs an interactive, paginated list of all matching shops and marketplace hubs:
+
+- **Status & Shop Name**: Shows whether the shop is `[OPEN]` (green) or `[CLOSED]` (red), along with the custom shop name (or generated ID) and owner.
+- **Hover Offer Preview**: Hovering your mouse over any shop entry in chat reveals the complete trade offer (e.g. `2x Diamond -> 1x Netherite Ingot`), shop status, and owner.
+- **[Waypoint] Button**: Clicking this automatically registers a waypoint in **JourneyMap** or **Xaero's Minimap/Worldmap**, or outputs formatted coordinates in chat if no minimap mod is installed.
+- **[TP] Button**: Teleports the player directly in front of the shop, automatically oriented to face the shop block. By default, this requires operator level 2, but server administrators can allow all players to teleport by setting `allowNonOpTeleport = true` in `config/marketblocks/main.toml`.
 
 ---
 
-## Admin & Operator Commands
+## 🛡️ Operator & Admin Commands
 
-All administrative commands require **operator level 2** (`hasPermission(2)`).
+All administrative commands require **Operator Permission Level 2** (`hasPermission(2)`).
 
 ```
 /marketblocks admin <editmode|reload|resetlimits|marketplace|sale>
@@ -37,72 +38,66 @@ All administrative commands require **operator level 2** (`hasPermission(2)`).
 
 | Command | Purpose |
 |---|---|
-| `/marketblocks admin editmode [true\|false]` | Toggles or sets global edit mode. Enables the in-game editor for the Marketplace and unlocks the Admin Shop toggle in shop blocks. |
-| `/marketblocks admin reload` | Reloads the Marketplace JSON configuration (`marketplace.json`) and Trader economy files from disk without restarting the server. |
-| `/marketblocks admin resetlimits <player>` | Clears daily purchase limits for the specified player, allowing them to purchase daily-capped items again immediately. |
-| `/marketblocks admin marketplace link [name] [tp_pos]` | Links the block you are currently looking at to the Marketplace. Supports an optional display name and custom teleport arrival coordinates (`tp_pos`). |
-| `/marketblocks admin marketplace unlink [name]` | Unlinks the block you are currently looking at, or unlinks a specific registered block link by name (with auto-completion). |
-| `/marketblocks admin sale marketplace set <offer> <percent> <duration_minutes>` | Starts a timed discount on a Marketplace offer. Auto-completion displays item name, page, and current price. |
+| `/marketblocks admin editmode` | Toggles edit mode on or off for the executing operator. |
+| `/marketblocks admin editmode <true\|false> [targets]` | Explicitly sets edit mode for yourself or for specified target players (e.g. `@a` or player names). |
+| `/marketblocks admin reload` | Hot-reloads all TOML configurations (`main.toml`, `trader.toml`) and syncs them to connected clients, plus `marketplace.json` and Trader economy files (`trader_item_values.json`, etc.). |
+| `/marketblocks admin resetlimits <player>` | Clears the rolling 24-hour purchase limits for the specified player, allowing them to purchase daily-capped items again immediately. |
+| `/marketblocks admin marketplace link [name] [tp_pos]` | Links the targeted block (within 5 blocks raycast) to the Marketplace as an in-world hub. Supports an optional display name and custom teleport landing coordinates (`tp_pos`). |
+| `/marketblocks admin marketplace unlink [name]` | Unlinks the block you are currently looking at, or unlinks a registered hub by name (with tab-completion of registered names and coordinates). |
+| `/marketblocks admin sale marketplace set <offer> <percent> <duration_minutes>` | Starts a timed discount (or surcharge if positive) on a Marketplace offer. Auto-completion displays offer name, page, and current price. |
 | `/marketblocks admin sale marketplace remove <offer>` | Immediately removes an active sale discount from a Marketplace offer. |
-| `/marketblocks admin sale shop set <shop> <percent> <duration_minutes>` | Starts a timed discount on an Admin Shop block. Auto-completion displays shop name, position, and price. |
+| `/marketblocks admin sale shop set <shop> <percent> <duration_minutes>` | Starts a timed discount on an Admin Shop block. Auto-completion displays shop name and trade offer. |
 | `/marketblocks admin sale shop remove <shop>` | Immediately removes an active sale discount from an Admin Shop block. |
 
 ---
 
-## Global Admin Mode (`editmode`)
+## 🔧 Global Admin Mode (`editmode`)
 
-Global Admin Mode (`/marketblocks admin editmode true`) is a central administrative toggle:
+Global Admin Mode (`/marketblocks admin editmode true`) provides in-game management tools:
 
 1. **Marketplace In-Game Editor**: Unlocks visual editing buttons in the Marketplace GUI to create new pages, add/edit/delete offers, reorder items, and configure pricing/limits live.
-2. **Admin Shop Mode**: Allows operators to convert any placed SingleOfferShop (Trade Stand or Market Crate) into an **Admin Shop** via the Access settings tab. Admin shops have infinite stock and require no input inventory.
-3. **Owner Bypass**: Operators in edit mode can open and modify the settings and inventory of any player's shop block.
-4. **Live Synchronization**: Toggling edit mode instantly refreshes the interface for all currently connected players who have a shop or marketplace menu open.
+2. **Admin Shop Mode**: Unlocks the **Admin Shop** toggle switch in the Access tab of SingleOfferShops. Admin shops feature infinite stock and require no storage chests.
+3. **Owner Bypass**: Operators in edit mode can open, inspect, restock, or edit the settings of any player-owned shop block.
+4. **Live Synchronization**: Toggling edit mode automatically broadcasts changes to all connected players who currently have a shop or marketplace menu open.
 
 ---
 
-## SingleOfferShop Ownership & Breaking Rules
+## 🔒 Shop Breaking & Protection Rules
 
-Shop block security in MarketBlocks is enforced automatically by the server:
+Shop blocks (Trade Stands and Market Crates) feature built-in server-side grief protection:
 
-| Condition | Survival Player | Operator (Survival) | Operator (Creative Mode) |
+| Player Status | Survival / Adventure Mode | Creative Mode (Without Shift) | Creative Mode (With Shift) |
 |---|:---:|:---:|:---:|
-| **Shop Owner** | ✅ Normal Break | ✅ Normal Break | ✅ Normal Break |
-| **Non-Owner** | ❌ Blocked (Owner only) | ❌ Blocked (Owner only) | ❌ Blocked (Click without Shift) |
-| **Shift + Break** | ❌ Blocked | ❌ Blocked | 🛡️ **Admin Bypass Authorized** |
+| **Primary Owner** | ✅ Normal Break | ❌ Blocked *(Accidental break hint)* | ✅ Dismantled safely |
+| **Non-Owner / Visitor** | ❌ Blocked *(Owner only)* | ❌ Blocked *(Owner only)* | ❌ Blocked *(Owner only)* |
+| **Operator (Non-Owner)** | ❌ Blocked *(Owner only)* | ❌ Blocked *(Admin break hint)* | 🛡️ **Admin Bypass Authorized** |
+| **Admin Shop** | ❌ Blocked *(Server protected)* | ❌ Blocked *(Admin shop hint)* | 🛡️ **Admin Bypass Authorized** |
 
-- **Automatic Ownership**: The first player to place and open a fresh shop block is registered as the permanent **Primary Owner**.
-- **Explosion Immunity**: All shop blocks have bedrock-level blast resistance by default (`3600000.0`), protecting them from Creepers, TNT cannons, and Withers.
-- **Accidental Break Protection**: In Creative mode, blocks are broken instantly in one click. To protect player bases from accidental griefing, operators in Creative mode **must hold Shift while breaking** to dismantle a player's shop. Without Shift, the action is blocked and a helpful hint is displayed.
+### Key Protection Features:
+- **Explosion Immunity**: All shop blocks have bedrock-tier blast resistance (`3,600,000.0`), preventing damage from Creepers, TNT cannons, and Withers.
+- **Accidental Break Protection**: In Creative mode, blocks break in a single click. To prevent players and admins from accidentally one-shotting shops, **holding Shift while breaking is strictly required**. Left-clicking without Shift cancels the break and sends a reminder message.
+- **Safe Inventory Drops**: When a shop is dismantled by its owner (or an authorized admin), all stored stock and collected profits drop safely at the player's feet.
 
 ---
 
-## SingleOfferShop Permissions & Roles
+## 👥 Shop Block Roles & Permissions
 
-Permissions on individual shop blocks (Trade Stands & Market Crates) are governed by the shop's internal ownership system:
+Permissions on individual shop blocks are managed via the shop's ownership and access control settings:
 
 | Role | Offers Tab | Inventory Tab | Settings Tab | Log Tab |
 |---|:---:|:---:|:---:|:---:|
-| **Primary Owner** (creator) | ✅ Full | ✅ Full | ✅ Full | ✅ View & Clear |
-| **Co-Owner** (up to 10 added) | ✅ Full | ✅ Full | ✅ Full | ✅ View only |
-| **Operator** (edit mode active) | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
+| **Primary Owner** (Creator) | ✅ Full | ✅ Full | ✅ Full | ✅ View & Clear |
+| **Co-Owner** (up to 10 registered) | ✅ Full | ✅ Full | ✅ Full | ✅ View only |
+| **Operator** (Edit mode active) | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
 | **Customer / Visitor** | ✅ Buy only | ❌ Denied | ❌ Denied | ❌ Denied |
 
-> ℹ️ **Note on Admin Shops:** When a shop is set to Admin Shop Mode, the **Inventory Tab** is completely hidden for all players (including owners), because items are created and consumed infinitely without physical storage.
-
-### Access Control Settings
-Shop owners can control who is allowed to purchase from their shop via the **Access** tab:
-- **Everyone** (default): All players on the server can purchase.
-- **Whitelist**: Only players explicitly added to the access list can purchase.
-- **Blacklist**: All players can purchase except those added to the access list.
-- **Paused / Closed Shop**: Owners can pause their shop at any time with the dedicated status toggle button. When paused, nobody can buy (except operators in edit mode).
+> ℹ️ For details on setting up co-owners, whitelists, blacklists, and customer rules, see the [SingleOfferShop Guide](SingleOfferShop) and [SingleOfferShop Settings](SingleOfferShop-Settings).
 
 ---
 
-## Internal System Commands
+## ⚡ Internal Click Commands
 
-MarketBlocks registers an internal command tree used exclusively by interactive chat click-events:
+MarketBlocks registers an internal command tree used exclusively by interactive chat click-actions:
 
-- `/marketblocks internal waypoint <x> <y> <z> <dim> <name>`: Dispatched when clicking **[Waypoint]** in search results. Sends waypoints to JourneyMap or Xaero's Minimap.
-- `/marketblocks internal tp <dim> <x> <y> <z> [yaw pitch]`: Dispatched when clicking **[TP]** in search results. Validates permissions and teleports the player directly in front of the target shop block facing the shop.
-
-> 🔒 Players cannot abuse `/marketblocks internal tp` to teleport around the world without permission: the server validates that the player has OP level 2 or that `allowNonOpTeleport` is explicitly set to `true` in the server configuration.
+- **`/marketblocks internal waypoint <x> <y> <z> <dim> <name>`**: Dispatched when clicking **[Waypoint]** in search results. Sends waypoint packets to JourneyMap or Xaero's Minimap.
+- **`/marketblocks internal tp <dim> <x> <y> <z> [yaw pitch]`**: Dispatched when clicking **[TP]** in search results. Validates that the player has OP level 2 or that `allowNonOpTeleport = true` in `config/marketblocks/main.toml`. Automatically faces the player toward the front of the shop.
