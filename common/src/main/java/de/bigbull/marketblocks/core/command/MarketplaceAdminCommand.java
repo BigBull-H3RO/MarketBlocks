@@ -124,43 +124,67 @@ public final class MarketplaceAdminCommand {
                                 .requires(source -> source.hasPermission(2))
                                 .then(Commands.literal("editmode")
                                                 .executes(context -> {
-                                                        if (context.getSource().getEntity() instanceof ServerPlayer player) {
-                                                                boolean next = MarketplaceManager.get().toggleEditMode(player);
+                                                        if (context.getSource()
+                                                                        .getEntity() instanceof ServerPlayer player) {
+                                                                boolean next = MarketplaceManager.get()
+                                                                                .toggleEditMode(player);
                                                                 sendEditModeFeedback(context.getSource(), player, next);
                                                                 return 1;
                                                         } else {
-                                                                context.getSource().sendFailure(Component.translatable("command.marketblocks.editmode.player_only"));
+                                                                context.getSource().sendFailure(Component.translatable(
+                                                                                "command.marketblocks.editmode.player_only"));
                                                                 return 0;
                                                         }
                                                 })
                                                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                                                                 .executes(context -> {
-                                                                        boolean enabled = BoolArgumentType.getBool(context, "enabled");
-                                                                        if (context.getSource().getEntity() instanceof ServerPlayer player) {
-                                                                                MarketplaceManager.get().setEditMode(player, enabled);
-                                                                                sendEditModeFeedback(context.getSource(), player, enabled);
+                                                                        boolean enabled = BoolArgumentType
+                                                                                        .getBool(context, "enabled");
+                                                                        if (context.getSource()
+                                                                                        .getEntity() instanceof ServerPlayer player) {
+                                                                                MarketplaceManager.get().setEditMode(
+                                                                                                player, enabled);
+                                                                                sendEditModeFeedback(
+                                                                                                context.getSource(),
+                                                                                                player, enabled);
                                                                                 return 1;
                                                                         } else {
-                                                                                context.getSource().sendFailure(Component.translatable("command.marketblocks.editmode.player_only"));
+                                                                                context.getSource().sendFailure(
+                                                                                                Component.translatable(
+                                                                                                                "command.marketblocks.editmode.player_only"));
                                                                                 return 0;
                                                                         }
                                                                 })
-                                                                .then(Commands.argument("targets", net.minecraft.commands.arguments.EntityArgument.players())
+                                                                .then(Commands.argument("targets",
+                                                                                net.minecraft.commands.arguments.EntityArgument
+                                                                                                .players())
                                                                                 .executes(context -> {
-                                                                                        boolean enabled = BoolArgumentType.getBool(context, "enabled");
-                                                                                        java.util.Collection<ServerPlayer> targets = net.minecraft.commands.arguments.EntityArgument.getPlayers(context, "targets");
+                                                                                        boolean enabled = BoolArgumentType
+                                                                                                        .getBool(context,
+                                                                                                                        "enabled");
+                                                                                        java.util.Collection<ServerPlayer> targets = net.minecraft.commands.arguments.EntityArgument
+                                                                                                        .getPlayers(context,
+                                                                                                                        "targets");
                                                                                         for (ServerPlayer target : targets) {
-                                                                                                MarketplaceManager.get().setEditMode(target, enabled);
-                                                                                                sendEditModeFeedback(context.getSource(), target, enabled);
+                                                                                                MarketplaceManager.get()
+                                                                                                                .setEditMode(target,
+                                                                                                                                enabled);
+                                                                                                sendEditModeFeedback(
+                                                                                                                context.getSource(),
+                                                                                                                target,
+                                                                                                                enabled);
                                                                                         }
                                                                                         return targets.size();
                                                                                 }))))
                                 .then(Commands.literal("reload")
                                                 .executes(context -> {
-                                                        de.bigbull.marketblocks.core.config.toml.TomlConfigManager.loadAll();
-							de.bigbull.marketblocks.core.config.toml.TomlConfigManager.syncToAll(context.getSource().getServer());
-							MarketplaceManager.get().reload();
-                                                        de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager.get().load();
+                                                        de.bigbull.marketblocks.core.config.toml.TomlConfigManager
+                                                                        .loadAll();
+                                                        de.bigbull.marketblocks.core.config.toml.TomlConfigManager
+                                                                        .syncToAll(context.getSource().getServer());
+                                                        MarketplaceManager.get().reload();
+                                                        de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager
+                                                                        .get().load();
                                                         context.getSource()
                                                                         .sendSuccess(() -> Component.translatable(
                                                                                         "command.marketblocks.reload.success"),
@@ -468,26 +492,23 @@ public final class MarketplaceAdminCommand {
                 return 1;
         }
 
-        	private static void sendEditModeFeedback(CommandSourceStack source, ServerPlayer target, boolean enabled) {
-		refreshOpenSingleOfferMenus(source);
-		if (source.getEntity() == target) {
-			source.sendSuccess(
-					() -> Component.translatable(enabled ? EDIT_MODE_ENABLED_KEY : EDIT_MODE_DISABLED_KEY),
-					false);
-		} else {
-			source.sendSuccess(
-					() -> Component.translatable(enabled ? "command.marketblocks.editmode.target_enabled" : "command.marketblocks.editmode.target_disabled", target.getDisplayName()),
-					true);
-			target.sendSystemMessage(Component.translatable(enabled ? EDIT_MODE_ENABLED_KEY : EDIT_MODE_DISABLED_KEY));
-		}
-	}
-
-	private static void setGlobalAdminModeAndNotify(boolean enabled, CommandSourceStack source) {
-                MarketplaceManager.get().setGlobalEditModeEnabled(enabled);
+        private static void sendEditModeFeedback(CommandSourceStack source, ServerPlayer target, boolean enabled) {
                 refreshOpenSingleOfferMenus(source);
-                source.sendSuccess(
-                                () -> Component.translatable(enabled ? EDIT_MODE_ENABLED_KEY : EDIT_MODE_DISABLED_KEY),
-                                true);
+                if (source.getEntity() == target) {
+                        source.sendSuccess(
+                                        () -> Component.translatable(
+                                                        enabled ? EDIT_MODE_ENABLED_KEY : EDIT_MODE_DISABLED_KEY),
+                                        false);
+                } else {
+                        source.sendSuccess(
+                                        () -> Component.translatable(enabled
+                                                        ? "command.marketblocks.editmode.target_enabled"
+                                                        : "command.marketblocks.editmode.target_disabled",
+                                                        target.getDisplayName()),
+                                        true);
+                        target.sendSystemMessage(Component
+                                        .translatable(enabled ? EDIT_MODE_ENABLED_KEY : EDIT_MODE_DISABLED_KEY));
+                }
         }
 
         private static void refreshOpenSingleOfferMenus(CommandSourceStack source) {

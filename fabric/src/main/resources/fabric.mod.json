@@ -8,8 +8,9 @@
     "${mod_author}"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://github.com/BigBull-H3RO/MarketBlocks",
+    "sources": "https://github.com/BigBull-H3RO/MarketBlocks",
+    "issues": "https://github.com/BigBull-H3RO/MarketBlocks/issues"
   },
   "license": "${license}",
   "icon": "${mod_id}.png",
@@ -42,6 +43,7 @@
     "java": ">=${java_version}"
   },
   "suggests": {
-    "another-mod": "*"
+    "jei": "*",
+    "jade": "*"
   }
 }

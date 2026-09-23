@@ -41,3 +41,7 @@ todo.md
 # assistant and internal tools
 .agents/
 .eclipse/
+
+# release descriptions
+docs/descriptions/
+
