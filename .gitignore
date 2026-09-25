@@ -21,9 +21,6 @@ out
 build
 .gradle
 
-# local configuration
-local.properties
-
 # logs
 logs/
 *.log
