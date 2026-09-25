@@ -192,6 +192,10 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hitResult) {
+        if (player.isSpectator()) {
+            return InteractionResult.PASS;
+        }
+
         if (level.isClientSide)
             return InteractionResult.SUCCESS;
 
@@ -222,11 +226,6 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shop) {
-            return new SimpleMenuProvider(
-                    (id, inv, p) -> new SingleOfferShopMenu(id, inv, shop),
-                    shop.getDisplayName());
-        }
         return null;
     }
 

@@ -26,3 +26,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Localization & Configuration:**
   - In-depth configuration via `main.toml`, `trader.toml`, and `client.toml`.
   - Translations for English (`en_us`), German (`de_de`), Spanish (`es_es`), and French (`fr_fr`).
+### Fixed
+- Fixed client network protocol error / crash when interacting with shop blocks in spectator mode.
