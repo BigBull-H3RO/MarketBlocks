@@ -42,9 +42,9 @@ jobs:
       - name: Resolve version and release tag from gradle.properties
         id: release_tag
         run: |
-          mod_version=$(grep '^mod_version=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r' | xargs)
+          mod_version=$(grep -E '^(version|mod_version)=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r' | xargs)
           if [ -z "$mod_version" ]; then
-            echo "::error::Could not read mod_version from gradle.properties"
+            echo "::error::Could not read version from gradle.properties"
             exit 1
           fi
           echo "mod_version=$mod_version" >> "$GITHUB_OUTPUT"
@@ -61,6 +61,30 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git tag "$RELEASE_TAG" "$GITHUB_SHA"
             git push origin "$RELEASE_TAG"
+          fi
+
+      - name: Extract changelog entry
+        id: changelog
+        run: |
+          version="${{ steps.release_tag.outputs.mod_version }}"
+          if [ -f CHANGELOG.md ]; then
+            notes=$(awk -v ver="$version" '
+              $0 ~ "^## \\[" ver "\\]" { flag = 1; next }
+              flag && /^## \[/ { exit }
+              flag { print }
+            ' CHANGELOG.md)
+            if [ -n "$notes" ]; then
+              echo "Found changelog entry for $version in CHANGELOG.md"
+              echo "$notes" > release_notes.md
+              echo "has_notes=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "No changelog entry found for $version in CHANGELOG.md"
+              touch release_notes.md
+              echo "has_notes=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            touch release_notes.md
+            echo "has_notes=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Validate Gradle wrapper
@@ -86,7 +110,12 @@ jobs:
         with:
           tag_name: ${{ steps.release_tag.outputs.tag }}
           name: MarketBlocks ${{ steps.release_tag.outputs.mod_version }}
+          body_path: release_notes.md
           files: |
             fabric/build/libs/*.jar
+            !fabric/build/libs/*-sources.jar
+            !fabric/build/libs/*-javadoc.jar
             neoforge/build/libs/*.jar
+            !neoforge/build/libs/*-sources.jar
+            !neoforge/build/libs/*-javadoc.jar
           generate_release_notes: true
