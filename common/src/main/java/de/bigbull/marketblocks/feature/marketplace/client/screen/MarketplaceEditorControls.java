@@ -10,6 +10,7 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -56,6 +57,9 @@ public final class MarketplaceEditorControls {
                         false, name -> NetworkHandler.sendToServer(new MarketplaceCreatePagePacket(name))),
                 Component.translatable("gui.marketblocks.marketplace.add_page"), () -> false);
         addBtn.active = context.pages().size() < MarketplaceManager.MAX_PAGES;
+        if (!addBtn.active) {
+            addBtn.setTooltip(Tooltip.create(Component.translatable("message.marketblocks.marketplace.page_limit_reached", MarketplaceManager.MAX_PAGES)));
+        }
         callbacks.addWidget(addBtn);
     }
 
@@ -111,11 +115,16 @@ public final class MarketplaceEditorControls {
                                             context.selectedOfferId(), page.name(), 1)),
                             Component.translatable("gui.marketblocks.marketplace.move_offer_down")));
         } else {
-            callbacks.addWidget(new IconButton(actionX, actionY, 20, 20, context.buttonSprites(), context.addIcon(),
+            IconButton addOfferBtn = new IconButton(actionX, actionY, 20, 20, context.buttonSprites(), context.addIcon(),
                     ignored -> de.bigbull.marketblocks.network.NetworkHandler.sendToServer(
                             new de.bigbull.marketblocks.feature.marketplace.network.MarketplaceAddOfferPacket(
                                     page.name())),
-                    Component.translatable("gui.marketblocks.marketplace.add_offer"), () -> false));
+                    Component.translatable("gui.marketblocks.marketplace.add_offer"), () -> false);
+            addOfferBtn.active = page.size() < MarketplaceManager.MAX_OFFERS_PER_PAGE;
+            if (!addOfferBtn.active) {
+                addOfferBtn.setTooltip(Tooltip.create(Component.translatable("message.marketblocks.marketplace.offer_limit_reached", MarketplaceManager.MAX_OFFERS_PER_PAGE)));
+            }
+            callbacks.addWidget(addOfferBtn);
         }
     }
 

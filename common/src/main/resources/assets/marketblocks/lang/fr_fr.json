@@ -482,6 +482,7 @@
   "message.marketblocks.marketplace.limits.invalid_data": "Impossible d'enregistrer les limites : données invalides.",
   "message.marketblocks.marketplace.limits.invalid_positive_int": "Veuillez entrer uniquement des nombres entiers positifs pour les limites.",
   "message.marketblocks.marketplace.limits.no_connection": "Impossible d'enregistrer les limites : aucune connexion au serveur.",
+  "message.marketblocks.marketplace.offer_limit_reached": "Le nombre maximum de %s offres par page a été atteint.",
   "message.marketblocks.marketplace.page_limit_reached": "Le nombre maximum de %s pages a été atteint.",
   "message.marketblocks.marketplace.page_name_blank": "Le nom de la page ne doit pas être vide.",
   "message.marketblocks.marketplace.page_name_duplicate": "Une page nommée '%s' existe déjà.",

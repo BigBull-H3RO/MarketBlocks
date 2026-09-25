@@ -56,8 +56,12 @@ public final class ShopTransactionLogSavedData extends SavedData {
             ArrayDeque<TransactionLogEntry> deque = new ArrayDeque<>();
             ListTag entriesTag = shopTag.getList(NBT_ENTRIES, Tag.TAG_COMPOUND);
             for (int j = 0; j < entriesTag.size(); j++) {
-                TransactionLogEntry entry = TransactionLogEntry.fromTag(entriesTag.getCompound(j), registries);
-                deque.addLast(entry);
+                try {
+                    TransactionLogEntry entry = TransactionLogEntry.fromTag(entriesTag.getCompound(j), registries);
+                    deque.addLast(entry);
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to load transaction log entry for shop {}", key, e);
+                }
             }
 
             if (!deque.isEmpty()) {
@@ -79,7 +83,11 @@ public final class ShopTransactionLogSavedData extends SavedData {
             shopTag.putString(NBT_KEY, key);
             ListTag entriesTag = new ListTag();
             for (TransactionLogEntry entry : deque) {
-                entriesTag.add(entry.toTag(registries));
+                try {
+                    entriesTag.add(entry.toTag(registries));
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to save transaction log entry for shop {}", key, e);
+                }
             }
             shopTag.put(NBT_ENTRIES, entriesTag);
             shops.add(shopTag);

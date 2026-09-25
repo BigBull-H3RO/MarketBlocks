@@ -52,6 +52,7 @@ public final class MarketplaceManager {
     private static final int RUNTIME_UPKEEP_INTERVAL_TICKS = 20;
     public static final int MAX_PAGE_NAME_LENGTH = 64;
     public static final int MAX_PAGES = 100;
+    public static final int MAX_OFFERS_PER_PAGE = 50;
 
     private static final MarketplaceManager INSTANCE = new MarketplaceManager();
 
@@ -532,6 +533,10 @@ public final class MarketplaceManager {
             MarketplacePage page = getPage(normalizedPageName);
             if (page == null) {
                 return MutationResult.failure(Component.translatable("message.marketblocks.marketplace.page_not_found"));
+            }
+
+            if (page.internalOffers().size() >= MAX_OFFERS_PER_PAGE) {
+                return MutationResult.failure(Component.translatable("message.marketblocks.marketplace.offer_limit_reached", MAX_OFFERS_PER_PAGE));
             }
 
             if (offer == null) {

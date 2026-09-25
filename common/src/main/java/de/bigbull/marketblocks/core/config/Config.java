@@ -21,6 +21,8 @@ public class Config {
     // Integrations
     public static final TomlConfigValue.BooleanValue ENABLE_XAEROS_COMPAT;
     public static final TomlConfigValue.BooleanValue ENABLE_JOURNEYMAP_COMPAT;
+    public static final TomlConfigValue.BooleanValue ENABLE_JADE_COMPAT;
+    public static final TomlConfigValue.BooleanValue ENABLE_JADE_TRADER_BUDGET;
 
     static {
         COMMON_BUILDER.push("General Settings");
@@ -42,6 +44,13 @@ public class Config {
         ENABLE_JOURNEYMAP_COMPAT = COMMON_BUILDER
                 .comment("Enable JourneyMap chat waypoint suggestions and map icons.")
                 .define("enableJourneyMapCompat", true);
+        ENABLE_JADE_COMPAT = COMMON_BUILDER
+                .comment("Enable Jade / WTHIT tooltip integration for shops and traders.")
+                .define("enableJadeCompat", true);
+        ENABLE_JADE_TRADER_BUDGET = COMMON_BUILDER
+                .comment("Show the current coin budget of Shop Buyer (Trader) NPCs in the Jade tooltip.",
+                        "Default: false (Disabled by default to avoid spoiling budget/wealth rank).")
+                .define("enableJadeTraderBudget", false);
         COMMON_BUILDER.pop();
 
         COMMON_SPEC = COMMON_BUILDER.build();

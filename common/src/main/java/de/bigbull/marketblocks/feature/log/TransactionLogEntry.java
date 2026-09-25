@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.feature.log;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.bigbull.marketblocks.Constants;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
@@ -34,6 +35,7 @@ public record TransactionLogEntry(
     private static final String NBT_BOUGHT_STACKS = "BoughtStacks";
     private static final String NBT_AGGREGATION_COUNT = "AggregationCount";
     private static final String NBT_PURCHASE_KIND = "PurchaseKind";
+    private static final String NBT_REAL_COUNT = "RealCount";
 
     private static final UUID UNKNOWN_BUYER_UUID = new UUID(0L, 0L);
     private static final int MAX_NAME_LENGTH = 64;
@@ -177,7 +179,18 @@ public record TransactionLogEntry(
 
     private static ListTag toStackListTag(List<ItemStack> stacks, HolderLookup.Provider registries) {
         ListTag listTag = new ListTag();
-        for (ItemStack stack : sanitizeStacks(stacks)) listTag.add(stack.save(registries));
+        for (ItemStack stack : sanitizeStacks(stacks)) {
+            int realCount = stack.getCount();
+            try {
+                Tag rawTag = stack.copyWithCount(1).save(registries);
+                if (rawTag instanceof CompoundTag compound) {
+                    compound.putInt(NBT_REAL_COUNT, realCount);
+                    listTag.add(compound);
+                }
+            } catch (Exception e) {
+                Constants.LOG.error("Failed to serialize transaction log stack: {}", stack, e);
+            }
+        }
         return listTag;
     }
 
@@ -185,8 +198,21 @@ public record TransactionLogEntry(
         if (listTag == null || listTag.isEmpty()) return List.of();
         List<ItemStack> loaded = new ArrayList<>(Math.min(listTag.size(), MAX_STACKS_PER_SIDE));
         for (int i = 0; i < listTag.size() && loaded.size() < MAX_STACKS_PER_SIDE; i++) {
-            ItemStack stack = ItemStack.parseOptional(registries, listTag.getCompound(i));
-            if (!stack.isEmpty() && stack.getCount() > 0) loaded.add(stack);
+            CompoundTag compound = listTag.getCompound(i);
+            try {
+                if (!compound.contains(NBT_REAL_COUNT, Tag.TAG_INT)) {
+                    continue;
+                }
+                ItemStack stack = ItemStack.parseOptional(registries, compound);
+                if (!stack.isEmpty()) {
+                    stack.setCount(compound.getInt(NBT_REAL_COUNT));
+                    if (stack.getCount() > 0) {
+                        loaded.add(stack);
+                    }
+                }
+            } catch (Exception e) {
+                Constants.LOG.error("Failed to deserialize transaction log stack", e);
+            }
         }
         return loaded.isEmpty() ? List.of() : List.copyOf(loaded);
     }

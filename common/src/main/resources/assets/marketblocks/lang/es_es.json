@@ -482,6 +482,7 @@
   "message.marketblocks.marketplace.limits.invalid_data": "No se pudieron guardar los límites: datos no válidos.",
   "message.marketblocks.marketplace.limits.invalid_positive_int": "Por favor, introduce solo números enteros positivos para los límites.",
   "message.marketblocks.marketplace.limits.no_connection": "No se pudieron guardar los límites: sin conexión con el servidor.",
+  "message.marketblocks.marketplace.offer_limit_reached": "Se ha alcanzado el número máximo de %s ofertas por página.",
   "message.marketblocks.marketplace.page_limit_reached": "Se ha alcanzado el número máximo de %s páginas.",
   "message.marketblocks.marketplace.page_name_blank": "El nombre de la página no debe estar vacío.",
   "message.marketblocks.marketplace.page_name_duplicate": "Ya existe una página con el nombre '%s'.",

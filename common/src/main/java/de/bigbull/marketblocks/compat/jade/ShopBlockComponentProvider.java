@@ -10,6 +10,7 @@ import snownee.jade.api.ITooltip;
 import snownee.jade.api.config.IPluginConfig;
 import snownee.jade.api.ui.IElementHelper;
 import de.bigbull.marketblocks.Constants;
+import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 
 import net.minecraft.world.phys.Vec2;
@@ -26,6 +27,9 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
 
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
+        if (!Config.ENABLE_JADE_COMPAT.get()) {
+            return;
+        }
         BlockEntity be = accessor.getBlockEntity();
         if (be == null && accessor.getBlock() instanceof TradeStandTopBlock) {
             be = accessor.getLevel().getBlockEntity(accessor.getPosition().below());
@@ -106,6 +110,9 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
 
     @Override
     public void appendServerData(CompoundTag data, BlockAccessor accessor) {
+        if (!Config.ENABLE_JADE_COMPAT.get()) {
+            return;
+        }
         BlockEntity be = accessor.getBlockEntity();
         if (be == null && accessor.getBlock() instanceof TradeStandTopBlock) {
             be = accessor.getLevel().getBlockEntity(accessor.getPosition().below());

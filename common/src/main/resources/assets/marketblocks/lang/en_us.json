@@ -482,6 +482,7 @@
   "message.marketblocks.marketplace.limits.invalid_data": "Could not save limits: invalid data.",
   "message.marketblocks.marketplace.limits.invalid_positive_int": "Please enter only positive whole numbers for limits.",
   "message.marketblocks.marketplace.limits.no_connection": "Could not save limits: no server connection.",
+  "message.marketblocks.marketplace.offer_limit_reached": "The maximum number of %s offers per page has been reached.",
   "message.marketblocks.marketplace.page_limit_reached": "The maximum number of %s pages has been reached.",
   "message.marketblocks.marketplace.page_name_blank": "The page name must not be empty.",
   "message.marketblocks.marketplace.page_name_duplicate": "A page named '%s' already exists.",
