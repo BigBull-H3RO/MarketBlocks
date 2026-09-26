@@ -2,15 +2,17 @@
 
 The **SingleOfferShop** is a player-owned trading block that showcases and sells one specific item offer with built-in grief protection, automated stock tracking, and customer access control.
 
+![Player Shops Overview](../assets/screenshots/player_shops.png)
+
 ---
 
 ## 🔨 Crafting Recipes
 
 Both shop blocks are craftable at a standard Crafting Table:
 
-| **Trade Stand** | **Market Crate** |
-|:---:|:---:|
-| ![Trade Stand Recipe](../images/recipes/trade_stand.png)<br>*(2 Blocks Tall, Glass Showcase)* | ![Market Crate Recipe](../images/recipes/market_crate.png)<br>*(Single Block, Dynamic Stock Display)* |
+| **Trade Stand** | **Market Crate** | **Trade Book** |
+|:---:|:---:|:---:|
+| ![Trade Stand Recipe](../assets/screenshots/wiki/trade_stand_recipe.png)<br>*(2 Blocks Tall, Glass Showcase)* | ![Market Crate Recipe](../assets/screenshots/wiki/market_crate_recipe.png)<br>*(Single Block, Dynamic Stock Display)* | ![Trade Book Recipe](../assets/screenshots/wiki/trade_book_recipe.png)<br>*(In-Game Guide & Shop Overview)* |
 
 ---
 
@@ -54,9 +56,14 @@ The primary owner can register up to **10 Co-Owners** via the **Access** setting
    - **Payment Slots (Left)**: Place up to 2 items that customers must pay (e.g., 2 Diamonds + 1 Gold Ingot).
    - **Result Slot (Right)**: Place the item the customer receives (e.g., 1 Netherite Upgrade Smithing Template).
    - Click the green **Create Offer** checkmark button to activate the trade and claim ownership.
+
+![Shop Offers GUI](../assets/screenshots/wiki/shop_offer_gui.png)
+
 3. **Fill Stock** (in the *Inventory* tab):
    - **Input Storage (Left)**: Place the merchandise you are selling into the input slots.
    - **Output Storage (Right)**: Customer payments are safely stored here until collected.
+
+![Shop Inventory GUI](../assets/screenshots/wiki/shop_inventory_gui_2.png)
 
 ---
 
@@ -75,6 +82,8 @@ In the **Offers** tab, customers see the large **Offer Preview Button** at the t
 ---
 
 ## 📜 Transaction Log
+
+![Shop Transaction Log](../assets/screenshots/wiki/shop_log_gui.png)
 
 Every trade is recorded in the shop's **Log** tab:
 - Displays customer names, player heads (with skin layers), exact payment and purchased items, and relative timestamps (e.g., *"5m ago"*).

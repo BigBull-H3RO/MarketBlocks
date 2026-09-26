@@ -2,6 +2,8 @@
 
 **Trader NPCs** are autonomous Wandering Traders that travel the Overworld seeking out player-owned shops. They inspect showcased goods, spend coin budgets, and generate sales for your shop network even when other players are offline.
 
+![Trader NPC Overview](../assets/screenshots/trade_npc.png)
+
 ---
 
 ## 🌍 Spawning & Despawning Lifecycles
