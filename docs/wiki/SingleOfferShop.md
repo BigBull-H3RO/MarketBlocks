@@ -2,7 +2,7 @@
 
 The **SingleOfferShop** is a player-owned trading block that showcases and sells one specific item offer with built-in grief protection, automated stock tracking, and customer access control.
 
-![Player Shops Overview](../assets/screenshots/player_shops.png)
+![Player Shops Overview](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/player_shops.png)
 
 ---
 
@@ -12,7 +12,7 @@ Both shop blocks are craftable at a standard Crafting Table:
 
 | **Trade Stand** | **Market Crate** | **Trade Book** |
 |:---:|:---:|:---:|
-| ![Trade Stand Recipe](../assets/screenshots/wiki/trade_stand_recipe.png)<br>*(2 Blocks Tall, Glass Showcase)* | ![Market Crate Recipe](../assets/screenshots/wiki/market_crate_recipe.png)<br>*(Single Block, Dynamic Stock Display)* | ![Trade Book Recipe](../assets/screenshots/wiki/trade_book_recipe.png)<br>*(In-Game Guide & Shop Overview)* |
+| ![Trade Stand Recipe](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/wiki/trade_stand_recipe.png)<br>*(2 Blocks Tall, Glass Showcase)* | ![Market Crate Recipe](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/wiki/market_crate_recipe.png)<br>*(Single Block, Dynamic Stock Display)* | ![Trade Book Recipe](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/wiki/trade_book_recipe.png)<br>*(In-Game Guide & Shop Overview)* |
 
 ---
 
@@ -57,13 +57,13 @@ The primary owner can register up to **10 Co-Owners** via the **Access** setting
    - **Result Slot (Right)**: Place the item the customer receives (e.g., 1 Netherite Upgrade Smithing Template).
    - Click the green **Create Offer** checkmark button to activate the trade and claim ownership.
 
-![Shop Offers GUI](../assets/screenshots/wiki/shop_offer_gui.png)
+![Shop Offers GUI](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/wiki/shop_offer_gui.png)
 
 3. **Fill Stock** (in the *Inventory* tab):
    - **Input Storage (Left)**: Place the merchandise you are selling into the input slots.
    - **Output Storage (Right)**: Customer payments are safely stored here until collected.
 
-![Shop Inventory GUI](../assets/screenshots/wiki/shop_inventory_gui_2.png)
+![Shop Inventory GUI](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/wiki/shop_inventory_gui_2.png)
 
 ---
 
@@ -83,7 +83,7 @@ In the **Offers** tab, customers see the large **Offer Preview Button** at the t
 
 ## 📜 Transaction Log
 
-![Shop Transaction Log](../assets/screenshots/wiki/shop_log_gui.png)
+![Shop Transaction Log](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/wiki/shop_log_gui.png)
 
 Every trade is recorded in the shop's **Log** tab:
 - Displays customer names, player heads (with skin layers), exact payment and purchased items, and relative timestamps (e.g., *"5m ago"*).

@@ -28,7 +28,7 @@ MarketBlocks includes a native JEI plugin (`MarketBlocksJeiPlugin`):
 
 ---
 
-## 🖥️ Jade / WTHIT (HUD Overlays)
+## 🖥️ Jade (HUD Overlays)
 
 MarketBlocks provides native server data providers for **Jade**:
 

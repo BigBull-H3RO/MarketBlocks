@@ -45,7 +45,7 @@ public class Config {
                 .comment("Enable JourneyMap chat waypoint suggestions and map icons.")
                 .define("enableJourneyMapCompat", true);
         ENABLE_JADE_COMPAT = COMMON_BUILDER
-                .comment("Enable Jade / WTHIT tooltip integration for shops and traders.")
+                .comment("Enable Jade tooltip integration for shops and traders.")
                 .define("enableJadeCompat", true);
         ENABLE_JADE_TRADER_BUDGET = COMMON_BUILDER
                 .comment("Show the current coin budget of Shop Buyer (Trader) NPCs in the Jade tooltip.",

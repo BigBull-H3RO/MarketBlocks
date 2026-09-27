@@ -2,7 +2,7 @@
 
 **Trader NPCs** are autonomous Wandering Traders that travel the Overworld seeking out player-owned shops. They inspect showcased goods, spend coin budgets, and generate sales for your shop network even when other players are offline.
 
-![Trader NPC Overview](../assets/screenshots/trade_npc.png)
+![Trader NPC Overview](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/trade_npc.png)
 
 ---
 
