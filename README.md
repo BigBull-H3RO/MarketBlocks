@@ -12,8 +12,8 @@
 [![NeoForge](https://img.shields.io/badge/Modloader-NeoForge-e06522.svg?style=flat)](https://neoforged.net/)[![Fabric](https://img.shields.io/badge/%20-Fabric-dbb68a.svg?style=flat&logo=fabric)](https://fabricmc.net/)&nbsp;
 [![Wiki](https://img.shields.io/badge/Documentation-GitHub_Wiki-blue.svg?style=flat&logo=github)](https://github.com/BigBull-H3RO/MarketBlocks/wiki)&nbsp;
 [![License: MIT & Custom Assets](https://img.shields.io/badge/License-MIT_%26_Custom_Assets-0280ff.svg?style=flat)](https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE)&nbsp;
-[![CurseForge](https://cf.way2muchnoise.eu/1214103.svg)](https://www.curseforge.com/minecraft/mc-mods/marketblocks)&nbsp;
-[![Modrinth](https://img.shields.io/modrinth/dt/u43pMIKj?logo=modrinth&label=&suffix=%20&style=flat&color=242629&labelColor=5ca424&logoColor=1c1c1c)](https://modrinth.com/mod/marketblocks)
+[![CurseForge](https://cf.way2muchnoise.eu/1713762.svg)](https://www.curseforge.com/minecraft/mc-mods/marketblocks)&nbsp;
+[![Modrinth](https://img.shields.io/modrinth/dt/apfBVEsm?logo=modrinth&label=&suffix=%20&style=flat&color=242629&labelColor=5ca424&logoColor=1c1c1c)](https://modrinth.com/mod/marketblocks)
 
 </div>
 
