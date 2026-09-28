@@ -153,7 +153,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_tag.outputs.tag }}
-          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [${{ steps.release_tag.outputs.mc_version }}]"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} for Minecraft ${{ steps.release_tag.outputs.mc_version }}"
           body_path: release_notes.md
           files: |
             fabric/build/libs/*.jar
@@ -171,7 +171,7 @@ jobs:
           modrinth-id: "apfBVEsm"
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           files: "fabric/build/libs/marketblocks-fabric-${{ steps.release_tag.outputs.mc_version }}-${{ steps.release_tag.outputs.mod_version }}.jar"
-          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [Fabric ${{ steps.release_tag.outputs.mc_version }}]"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} for Fabric ${{ steps.release_tag.outputs.mc_version }}"
           version: "${{ steps.release_tag.outputs.full_version }}-fabric"
           version-type: release
           loaders: fabric
@@ -187,7 +187,7 @@ jobs:
           curseforge-id: "1713762"
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           files: "fabric/build/libs/marketblocks-fabric-${{ steps.release_tag.outputs.mc_version }}-${{ steps.release_tag.outputs.mod_version }}.jar"
-          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [Fabric ${{ steps.release_tag.outputs.mc_version }}]"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} for Fabric ${{ steps.release_tag.outputs.mc_version }}"
           version-type: release
           loaders: fabric
           game-versions: "${{ steps.release_tag.outputs.mc_version }}"
@@ -202,7 +202,7 @@ jobs:
           modrinth-id: "apfBVEsm"
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           files: "neoforge/build/libs/marketblocks-neoforge-${{ steps.release_tag.outputs.mc_version }}-${{ steps.release_tag.outputs.mod_version }}.jar"
-          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [NeoForge ${{ steps.release_tag.outputs.mc_version }}]"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} for NeoForge ${{ steps.release_tag.outputs.mc_version }}"
           version: "${{ steps.release_tag.outputs.full_version }}-neoforge"
           version-type: release
           loaders: neoforge
@@ -218,7 +218,7 @@ jobs:
           curseforge-id: "1713762"
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           files: "neoforge/build/libs/marketblocks-neoforge-${{ steps.release_tag.outputs.mc_version }}-${{ steps.release_tag.outputs.mod_version }}.jar"
-          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [NeoForge ${{ steps.release_tag.outputs.mc_version }}]"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} for NeoForge ${{ steps.release_tag.outputs.mc_version }}"
           version-type: release
           loaders: neoforge
           game-versions: "${{ steps.release_tag.outputs.mc_version }}"
