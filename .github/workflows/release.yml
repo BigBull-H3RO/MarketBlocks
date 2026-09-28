@@ -82,7 +82,11 @@ jobs:
           mod_ver="${{ steps.release_tag.outputs.mod_version }}"
           if [ -f CHANGELOG.md ]; then
             notes=$(awk -v fver="$full_ver" -v mver="$mod_ver" '
-              $0 ~ "^## \\[" fver "\\]" || $0 ~ "^## \\[" mver "\\]" { flag = 1; next }
+              BEGIN {
+                target1 = "## [" fver "]";
+                target2 = "## [" mver "]";
+              }
+              index($0, target1) == 1 || index($0, target2) == 1 { flag = 1; next }
               flag && /^## \[/ { exit }
               flag { print }
             ' CHANGELOG.md)
