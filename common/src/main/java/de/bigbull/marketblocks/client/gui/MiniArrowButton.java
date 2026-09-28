@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -56,7 +57,7 @@ public class MiniArrowButton extends AbstractWidget {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.active && this.visible && this.isValidClickButton(button)) {
-            if (this.clicked(mouseX, mouseY)) {
+            if (this.isMouseOver(mouseX, mouseY)) {
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 if (this.stepperMode) {
                     if (mouseY < getY() + (getHeight() / 2.0)) {
@@ -110,11 +111,11 @@ public class MiniArrowButton extends AbstractWidget {
         // Draw non-hovered button first so the hovered button's highlight renders
         // cleanly on top
         if (downHovered) {
-            graphics.blitSprite(upSprite, x, y, w, btnH);
-            graphics.blitSprite(downSprite, x, btn2Y, w, btnH);
+            graphics.blitSprite(RenderType::guiTextured, upSprite, x, y, w, btnH);
+            graphics.blitSprite(RenderType::guiTextured, downSprite, x, btn2Y, w, btnH);
         } else {
-            graphics.blitSprite(downSprite, x, btn2Y, w, btnH);
-            graphics.blitSprite(upSprite, x, y, w, btnH);
+            graphics.blitSprite(RenderType::guiTextured, downSprite, x, btn2Y, w, btnH);
+            graphics.blitSprite(RenderType::guiTextured, upSprite, x, y, w, btnH);
         }
 
         // Arrows
@@ -137,7 +138,7 @@ public class MiniArrowButton extends AbstractWidget {
     private void renderSingle(GuiGraphics graphics, int x, int y, int w, int h) {
         boolean hovered = this.active && this.isHovered();
         ResourceLocation sprite = BUTTON_SPRITES.get(this.active, hovered);
-        graphics.blitSprite(sprite, x, y, w, h);
+        graphics.blitSprite(RenderType::guiTextured, sprite, x, y, w, h);
 
         int arrow = !this.active ? ARROW_COLOR_DISABLED : ARROW_COLOR;
         int cx = x + (w / 2);

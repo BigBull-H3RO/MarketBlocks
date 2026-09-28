@@ -8,6 +8,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -45,7 +46,7 @@ public class TradeBookLayoutUtils {
             graphics.fill(0, 0, size, size, 0xFF181818);
         }
 
-        PlayerFaceRenderer.draw(graphics, skin.texture(), 0, 0, size);
+        PlayerFaceRenderer.draw(graphics, skin, 0, 0, size);
 
         graphics.pose().popPose();
     }
@@ -79,7 +80,7 @@ public class TradeBookLayoutUtils {
 
     public static void renderInlineOffer(GuiGraphics graphics, ShopOfferData offer, int x, int y, String status, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
         int itemY = y - 5;
-        graphics.blit(OFFER_GUI, x - 3, itemY - 6, 0, 2, 96, 28, 96, 32);
+        graphics.blit(RenderType::guiTextured, OFFER_GUI, x - 3, itemY - 6, 0.0f, 2.0f, 96, 28, 96, 32);
 
         int p1x = x + OfferTemplateButton.PAYMENT_1_X_OFFSET;
         int p2x = x + OfferTemplateButton.PAYMENT_2_X_OFFSET;
@@ -96,7 +97,7 @@ public class TradeBookLayoutUtils {
         }
 
         ResourceLocation arrowTexture = status.equals("OK") ? TRADE_ARROW : TRADE_ARROW_DISABLED;
-        graphics.blit(arrowTexture, arrX, itemY + 4, 0, 0, 10, 9, 10, 9);
+        graphics.blit(RenderType::guiTextured, arrowTexture, arrX, itemY + 4, 0.0f, 0.0f, 10, 9, 10, 9);
 
         if (!offer.result().isEmpty()) {
             graphics.renderItem(offer.result(), resX, itemY);

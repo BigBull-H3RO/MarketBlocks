@@ -189,12 +189,12 @@ public class MarketBlocks implements ModInitializer {
             MarketplaceLinkSavedData linkData = MarketplaceLinkSavedData.get(serverPlayer.serverLevel());
             if (linkData.isLinked(globalPos)) {
                 if (!player.hasPermissions(2)) {
-                    player.sendSystemMessage(Component.translatable("command.marketblocks.break.denied"));
+                    player.displayClientMessage(Component.translatable("command.marketblocks.break.denied"), false);
                     return false;
                 } else {
                     linkData.removeLink(globalPos);
                     linkData.syncToAll(serverPlayer.getServer());
-                    player.sendSystemMessage(Component.translatable("command.marketblocks.break.unlinked"));
+                    player.displayClientMessage(Component.translatable("command.marketblocks.break.unlinked"), false);
                 }
             }
 

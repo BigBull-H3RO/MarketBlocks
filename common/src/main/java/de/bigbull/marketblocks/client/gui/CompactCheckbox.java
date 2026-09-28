@@ -122,7 +122,7 @@ public class CompactCheckbox extends AbstractButton {
     }
 
     @Override
-    protected boolean clicked(double mouseX, double mouseY) {
+    public boolean isMouseOver(double mouseX, double mouseY) {
         return isBoxHovered(mouseX, mouseY);
     }
 

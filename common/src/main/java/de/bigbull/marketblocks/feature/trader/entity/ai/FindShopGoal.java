@@ -115,21 +115,21 @@ public class FindShopGoal extends Goal {
 
             if (hasCompleteOffer) {
                 TraderEconomyManager eco = TraderEconomyManager.get();
-                Double resultVal = eco.evaluateItem(result.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                Double resultVal = eco.evaluateItem(result.getItem(), serverLevel.recipeAccess(), serverLevel);
                 double totalResultValue = resultVal != null ? resultVal * result.getCount() : 0.0;
 
                 double totalPaymentValue = 0.0;
                 boolean paymentValid = true;
 
                 if (!payment1.isEmpty()) {
-                    Double p1Val = eco.evaluateItem(payment1.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    Double p1Val = eco.evaluateItem(payment1.getItem(), serverLevel.recipeAccess(), serverLevel);
                     if (p1Val == null)
                         paymentValid = false;
                     else
                         totalPaymentValue += p1Val * payment1.getCount();
                 }
                 if (!payment2.isEmpty() && paymentValid) {
-                    Double p2Val = eco.evaluateItem(payment2.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    Double p2Val = eco.evaluateItem(payment2.getItem(), serverLevel.recipeAccess(), serverLevel);
                     if (p2Val == null)
                         paymentValid = false;
                     else

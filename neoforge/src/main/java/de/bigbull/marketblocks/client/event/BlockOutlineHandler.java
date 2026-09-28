@@ -8,10 +8,12 @@ import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -44,6 +46,10 @@ public class BlockOutlineHandler {
 
     @SubscribeEvent
     public static void onBlockHighlight(RenderHighlightEvent.Block event) {
+        if (event.isForTranslucentBlocks()) {
+            return;
+        }
+
         Level level = Minecraft.getInstance().level;
         if (level == null) {
             return;
@@ -82,7 +88,6 @@ public class BlockOutlineHandler {
         Camera camera = event.getCamera();
         Vec3 camPos = camera.getPosition();
         PoseStack poseStack = event.getPoseStack();
-        VertexConsumer consumer = event.getMultiBufferSource().getBuffer(RenderType.lines());
 
         BlockState baseState = level.getBlockState(outlineOrigin);
         boolean hasShowcase = TradeStandBlock.hasShowcase(baseState)
@@ -95,20 +100,36 @@ public class BlockOutlineHandler {
                 outlineOrigin.getY() - camPos.y,
                 outlineOrigin.getZ() - camPos.z);
 
-        LevelRenderer.renderVoxelShape(
+        boolean highContrast = Minecraft.getInstance().options.highContrastBlockOutline().get();
+        if (highContrast) {
+            VertexConsumer secondaryConsumer = event.getMultiBufferSource().getBuffer(RenderType.secondaryBlockOutline());
+            ShapeRenderer.renderShape(
+                    poseStack,
+                    secondaryConsumer,
+                    outline,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -16777216);
+        }
+
+        VertexConsumer consumer = event.getMultiBufferSource().getBuffer(RenderType.lines());
+        int color = highContrast ? -11010079 : ARGB.color(102, -16777216);
+
+        ShapeRenderer.renderShape(
                 poseStack,
                 consumer,
                 outline,
                 0.0,
                 0.0,
                 0.0,
-                0.0f,
-                0.0f,
-                0.0f,
-                0.4f,
-                true);
+                color);
 
         poseStack.popPose();
+
+        if (event.getMultiBufferSource() instanceof MultiBufferSource.BufferSource bufferSource) {
+            bufferSource.endLastBatch();
+        }
     }
 
     private static void renderMarketCrateOutline(RenderHighlightEvent.Block event, BlockPos pos, BlockState state) {
@@ -117,12 +138,35 @@ public class BlockOutlineHandler {
         Camera camera = event.getCamera();
         Vec3 camPos = camera.getPosition();
         PoseStack poseStack = event.getPoseStack();
-        VertexConsumer consumer = event.getMultiBufferSource().getBuffer(RenderType.lines());
 
         Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
                 ? state.getValue(BlockStateProperties.HORIZONTAL_FACING)
                 : Direction.NORTH;
 
+        float yRot = switch (facing) {
+            case EAST -> -90.0f;
+            case SOUTH -> 180.0f;
+            case WEST -> 90.0f;
+            default -> 0.0f;
+        };
+
+        boolean highContrast = Minecraft.getInstance().options.highContrastBlockOutline().get();
+        if (highContrast) {
+            VertexConsumer secondaryConsumer = event.getMultiBufferSource().getBuffer(RenderType.secondaryBlockOutline());
+            renderMarketCrateShape(poseStack, secondaryConsumer, pos, camPos, yRot, -16777216);
+        }
+
+        VertexConsumer consumer = event.getMultiBufferSource().getBuffer(RenderType.lines());
+        int color = highContrast ? -11010079 : ARGB.color(102, -16777216);
+        renderMarketCrateShape(poseStack, consumer, pos, camPos, yRot, color);
+
+        if (event.getMultiBufferSource() instanceof MultiBufferSource.BufferSource bufferSource) {
+            bufferSource.endLastBatch();
+        }
+    }
+
+    private static void renderMarketCrateShape(PoseStack poseStack, VertexConsumer consumer, BlockPos pos, Vec3 camPos,
+            float yRot, int color) {
         poseStack.pushPose();
         poseStack.translate(
                 pos.getX() - camPos.x,
@@ -132,33 +176,17 @@ public class BlockOutlineHandler {
         poseStack.pushPose();
         poseStack.translate(0.5, 0.5, 0.5);
 
-        float yRot = 0;
-        switch (facing) {
-            case EAST:
-                yRot = -90;
-                break;
-            case SOUTH:
-                yRot = 180;
-                break;
-            case WEST:
-                yRot = 90;
-                break;
-            default:
-                yRot = 0;
-                break;
-        }
-
-        if (yRot != 0) {
+        if (yRot != 0.0f) {
             poseStack.mulPose(new Quaternionf(new AxisAngle4f((float) Math.toRadians(yRot), 0.0f, 1.0f, 0.0f)));
         }
 
         poseStack.translate(-0.5, -0.5, -0.5);
 
-        LevelRenderer.renderVoxelShape(
+        ShapeRenderer.renderShape(
                 poseStack, consumer, CRATE_BASE_OUTLINE,
-                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true);
+                0.0, 0.0, 0.0, color);
 
-        renderSlantedBasket(poseStack, consumer);
+        renderSlantedBasket(poseStack, consumer, color);
 
         poseStack.pushPose();
 
@@ -166,43 +194,43 @@ public class BlockOutlineHandler {
         poseStack.mulPose(new Quaternionf(new AxisAngle4f((float) Math.toRadians(-22.5), 1.0f, 0.0f, 0.0f)));
         poseStack.translate(-8.0 / 16.0, -15.0 / 16.0, -15.5 / 16.0);
 
-        LevelRenderer.renderVoxelShape(
+        ShapeRenderer.renderShape(
                 poseStack, consumer, CRATE_LID_OUTLINE,
-                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true);
-        LevelRenderer.renderVoxelShape(
+                0.0, 0.0, 0.0, color);
+        ShapeRenderer.renderShape(
                 poseStack, consumer, CRATE_LID_INNER_OUTLINE,
-                0.0, 0.0, 0.0, 0.0f, 0.0f, 0.0f, 0.4f, true);
+                0.0, 0.0, 0.0, color);
 
         poseStack.popPose();
         poseStack.popPose();
         poseStack.popPose();
     }
 
-    private static void renderSlantedBasket(PoseStack poseStack, VertexConsumer consumer) {
+    private static void renderSlantedBasket(PoseStack poseStack, VertexConsumer consumer, int color) {
         float minX = 1 / 16f, maxX = 15 / 16f;
         float minZ = 1 / 16f, maxZ = 15 / 16f;
         float yBottom = 8 / 16f;
         float yFrontTop = 10 / 16f;
         float yBackTop = 15 / 16f;
 
-        drawLine(poseStack, consumer, minX, yBottom, minZ, maxX, yBottom, minZ);
-        drawLine(poseStack, consumer, maxX, yBottom, minZ, maxX, yBottom, maxZ);
-        drawLine(poseStack, consumer, maxX, yBottom, maxZ, minX, yBottom, maxZ);
-        drawLine(poseStack, consumer, minX, yBottom, maxZ, minX, yBottom, minZ);
+        drawLine(poseStack, consumer, minX, yBottom, minZ, maxX, yBottom, minZ, color);
+        drawLine(poseStack, consumer, maxX, yBottom, minZ, maxX, yBottom, maxZ, color);
+        drawLine(poseStack, consumer, maxX, yBottom, maxZ, minX, yBottom, maxZ, color);
+        drawLine(poseStack, consumer, minX, yBottom, maxZ, minX, yBottom, minZ, color);
 
-        drawLine(poseStack, consumer, minX, yBottom, minZ, minX, yFrontTop, minZ);
-        drawLine(poseStack, consumer, maxX, yBottom, minZ, maxX, yFrontTop, minZ);
-        drawLine(poseStack, consumer, maxX, yBottom, maxZ, maxX, yBackTop, maxZ);
-        drawLine(poseStack, consumer, minX, yBottom, maxZ, minX, yBackTop, maxZ);
+        drawLine(poseStack, consumer, minX, yBottom, minZ, minX, yFrontTop, minZ, color);
+        drawLine(poseStack, consumer, maxX, yBottom, minZ, maxX, yFrontTop, minZ, color);
+        drawLine(poseStack, consumer, maxX, yBottom, maxZ, maxX, yBackTop, maxZ, color);
+        drawLine(poseStack, consumer, minX, yBottom, maxZ, minX, yBackTop, maxZ, color);
 
-        drawLine(poseStack, consumer, minX, yFrontTop, minZ, maxX, yFrontTop, minZ);
-        drawLine(poseStack, consumer, maxX, yBackTop, maxZ, minX, yBackTop, maxZ);
-        drawLine(poseStack, consumer, minX, yFrontTop, minZ, minX, yBackTop, maxZ);
-        drawLine(poseStack, consumer, maxX, yFrontTop, minZ, maxX, yBackTop, maxZ);
+        drawLine(poseStack, consumer, minX, yFrontTop, minZ, maxX, yFrontTop, minZ, color);
+        drawLine(poseStack, consumer, maxX, yBackTop, maxZ, minX, yBackTop, maxZ, color);
+        drawLine(poseStack, consumer, minX, yFrontTop, minZ, minX, yBackTop, maxZ, color);
+        drawLine(poseStack, consumer, maxX, yFrontTop, minZ, maxX, yBackTop, maxZ, color);
     }
 
     private static void drawLine(PoseStack poseStack, VertexConsumer consumer, float x1, float y1, float z1, float x2,
-            float y2, float z2) {
+            float y2, float z2, int color) {
         PoseStack.Pose pose = poseStack.last();
         org.joml.Matrix4f matrix4f = pose.pose();
 
@@ -216,7 +244,7 @@ public class BlockOutlineHandler {
             dz /= len;
         }
 
-        consumer.addVertex(matrix4f, x1, y1, z1).setColor(0.0f, 0.0f, 0.0f, 0.4f).setNormal(pose, dx, dy, dz);
-        consumer.addVertex(matrix4f, x2, y2, z2).setColor(0.0f, 0.0f, 0.0f, 0.4f).setNormal(pose, dx, dy, dz);
+        consumer.addVertex(matrix4f, x1, y1, z1).setColor(color).setNormal(pose, dx, dy, dz);
+        consumer.addVertex(matrix4f, x2, y2, z2).setColor(color).setNormal(pose, dx, dy, dz);
     }
 }

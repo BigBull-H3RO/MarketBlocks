@@ -13,7 +13,7 @@ import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import journeymap.api.v2.client.IClientAPI;
 import journeymap.api.v2.client.IClientPlugin;
-import journeymap.api.v2.common.JourneyMapPlugin;
+import journeymap.api.v2.client.JourneyMapPlugin;
 import journeymap.api.v2.common.waypoint.Waypoint;
 import journeymap.api.v2.common.waypoint.WaypointFactory;
 import journeymap.api.v2.client.display.MarkerOverlay;
@@ -58,7 +58,7 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
 
         try {
             ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimension);
-            Waypoint waypoint = WaypointFactory.createWaypoint(
+            Waypoint waypoint = WaypointFactory.createClientWaypoint(
                     Constants.MOD_ID,
                     pos,
                     name,
@@ -66,9 +66,7 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
                     true
             );
             waypoint.setColor(0x00D4FF);
-            waypoint.setShowBeacon(true);
-            waypoint.setShowOnMap(true);
-            waypoint.setShowInWorld(true);
+            waypoint.setEnabled(true);
 
             try {
                 ResourceLocation icon = name.toLowerCase(Locale.ROOT).contains("marketplace")

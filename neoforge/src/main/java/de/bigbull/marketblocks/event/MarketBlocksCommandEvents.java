@@ -7,6 +7,7 @@ import de.bigbull.marketblocks.Constants;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -209,7 +210,7 @@ public final class MarketBlocksCommandEvents {
                         }
                 }
 
-                player.teleportTo(targetLevel, x, y, z, yaw, pitch);
+                player.teleportTo(targetLevel, x, y, z, Set.of(), yaw, pitch, false);
                 player.sendSystemMessage(
                                 Component.translatable("command.marketblocks.internal.tp.success")
                                                 .withStyle(ChatFormatting.GREEN));

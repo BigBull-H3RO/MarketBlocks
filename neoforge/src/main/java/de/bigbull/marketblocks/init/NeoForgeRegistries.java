@@ -16,6 +16,7 @@ import de.bigbull.marketblocks.feature.trader.item.TradeBookItem;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
@@ -25,6 +26,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -35,7 +37,6 @@ import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -64,49 +65,50 @@ public final class NeoForgeRegistries {
 
     public static void init() {
         // Blocks
-        DeferredBlock<Block> tradeStand = BLOCKS.register("trade_stand", () -> new TradeStandBlock(tradeStandProperties()));
+        DeferredBlock<Block> tradeStand = BLOCKS.registerBlock("trade_stand", TradeStandBlock::new, tradeStandProperties());
         RegistriesInit.TRADE_STAND_BLOCK = tradeStand;
 
-        DeferredBlock<Block> tradeStandTop = BLOCKS.register("trade_stand_top", () -> new TradeStandTopBlock(tradeStandProperties().sound(SoundType.GLASS)));
+        DeferredBlock<Block> tradeStandTop = BLOCKS.registerBlock("trade_stand_top", TradeStandTopBlock::new, tradeStandProperties().sound(SoundType.GLASS));
         RegistriesInit.TRADE_STAND_BLOCK_TOP = tradeStandTop;
 
-        DeferredBlock<Block> marketCrate = BLOCKS.register("marketcrate", () -> new MarketCrateBlock(
+        DeferredBlock<Block> marketCrate = BLOCKS.registerBlock("marketcrate", MarketCrateBlock::new,
                 BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
                         .noOcclusion()
                         .mapColor(MapColor.WOOD)
                         .instrument(NoteBlockInstrument.BASS)
                         .strength(2.5F, 3600000.0F)
                         .sound(SoundType.WOOD)
-                        .pushReaction(PushReaction.BLOCK)));
+                        .pushReaction(PushReaction.BLOCK));
         RegistriesInit.MARKETCRATE_BLOCK = marketCrate;
 
         // Block Items
-        DeferredItem<BlockItem> tradeStandItem = ITEMS.register("trade_stand", () -> new BlockItem(tradeStand.get(), new Item.Properties()));
+        DeferredItem<BlockItem> tradeStandItem = ITEMS.registerSimpleBlockItem("trade_stand", tradeStand);
         RegistriesInit.TRADE_STAND_ITEM = () -> tradeStandItem.get();
 
-        DeferredItem<BlockItem> marketCrateItem = ITEMS.register("marketcrate", () -> new BlockItem(marketCrate.get(), new Item.Properties()));
+        DeferredItem<BlockItem> marketCrateItem = ITEMS.registerSimpleBlockItem("marketcrate", marketCrate);
         RegistriesInit.MARKETCRATE_ITEM = () -> marketCrateItem.get();
 
         // Items
-        DeferredItem<Item> tradeBook = ITEMS.register("trade_book", () -> new TradeBookItem(new Item.Properties().stacksTo(1)));
+        DeferredItem<Item> tradeBook = ITEMS.registerItem("trade_book", TradeBookItem::new, new Item.Properties().stacksTo(1));
         RegistriesInit.TRADE_BOOK = tradeBook;
 
         // Entity Types
+        ResourceKey<EntityType<?>> shopBuyerKey = ResourceKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer"));
         DeferredHolder<EntityType<?>, EntityType<ShopBuyerEntity>> shopBuyer = ENTITY_TYPES.register("shop_buyer",
                 () -> EntityType.Builder.of(ShopBuyerEntity::new, MobCategory.CREATURE)
                         .sized(0.6F, 1.95F)
                         .clientTrackingRange(10)
-                        .build("shop_buyer"));
+                        .build(shopBuyerKey));
         RegistriesInit.SHOP_BUYER = shopBuyer;
 
         // Spawn Egg
-        DeferredItem<Item> spawnEgg = ITEMS.register("shop_buyer_spawn_egg",
-                () -> new DeferredSpawnEggItem(shopBuyer, 0x0000AA, 0xFFFF00, new Item.Properties()));
+        DeferredItem<Item> spawnEgg = ITEMS.registerItem("shop_buyer_spawn_egg",
+                props -> new SpawnEggItem(shopBuyer.get(), props));
         RegistriesInit.SHOP_BUYER_SPAWN_EGG = spawnEgg;
 
         // Block Entities
         DeferredHolder<BlockEntityType<?>, BlockEntityType<SingleOfferShopBlockEntity>> shopBe = BLOCK_ENTITIES.register("single_offer_shop",
-                () -> BlockEntityType.Builder.of(SingleOfferShopBlockEntity::new, tradeStand.get(), marketCrate.get()).build(null));
+                () -> new BlockEntityType<>(SingleOfferShopBlockEntity::new, java.util.Set.of(tradeStand.get(), marketCrate.get())));
         RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY = shopBe;
 
         // Menus

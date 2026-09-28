@@ -36,6 +36,9 @@ import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -908,7 +911,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private void renderOffersBg(GuiGraphics graphics) {
-        graphics.blit(OFFERS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+        graphics.blit(RenderType::guiTextured, OFFERS_BG, leftPos, topPos, 0.0F, 0.0F, imageWidth, imageHeight, 256, 256);
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         offerButton.active = be.hasOffer();
         if (be.hasOffer()) {
@@ -928,20 +931,20 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         boolean outputBlocked = !be.isAdminShopEnabled() && be.hasOffer() && be.isOutputSpaceMissing();
 
         if (paused) {
-            graphics.blit(SHOP_PAUSED_ICON, iconX, iconY, 0, 0, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(),
+            graphics.blit(RenderType::guiTextured, SHOP_PAUSED_ICON, iconX, iconY, 0.0F, 0.0F, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(),
                     STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height());
         } else if (outOfStock) {
-            graphics.blit(OUT_OF_STOCK_ICON, iconX, iconY, 0, 0, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(),
+            graphics.blit(RenderType::guiTextured, OUT_OF_STOCK_ICON, iconX, iconY, 0.0F, 0.0F, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(),
                     STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height());
         } else if (outputBlocked || (be.hasOffer() && be.isOfferAvailable() && be.isOutputAlmostFull())) {
-            graphics.blit(OUTPUT_FULL_ICON, iconX, iconY, 0, 0, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(),
+            graphics.blit(RenderType::guiTextured, OUTPUT_FULL_ICON, iconX, iconY, 0.0F, 0.0F, STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height(),
                     STATUS_ICON_RECT.width(), STATUS_ICON_RECT.height());
         }
     }
 
     private void renderInventoryBg(GuiGraphics graphics) {
-        graphics.blit(INVENTORY_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
-        graphics.blit(INPUT_OUTPUT_ICON, leftPos + 77, topPos + 33, 0, 0, 22, 22, 22, 22);
+        graphics.blit(RenderType::guiTextured, INVENTORY_BG, leftPos, topPos, 0.0F, 0.0F, imageWidth, imageHeight, 256, 256);
+        graphics.blit(RenderType::guiTextured, INPUT_OUTPUT_ICON, leftPos + 77, topPos + 33, 0.0F, 0.0F, 22, 22, 22, 22);
     }
 
     private void renderSettingsBg(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -951,7 +954,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
         }
 
-        graphics.blit(SETTINGS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+        graphics.blit(RenderType::guiTextured, SETTINGS_BG, leftPos, topPos, 0.0F, 0.0F, imageWidth, imageHeight, 256, 256);
 
         for (IconButton tab : categoryTabs) {
             if (tab.isSelected()) {
@@ -995,7 +998,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     private void renderLogBg(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.blit(SETTINGS_BG, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+        graphics.blit(RenderType::guiTextured, SETTINGS_BG, leftPos, topPos, 0.0F, 0.0F, imageWidth, imageHeight, 256, 256);
         logPanel.renderBackground(graphics, font, leftPos, topPos, mouseX, mouseY, menu.getTransactionLogEntries());
     }
 
@@ -1061,12 +1064,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private void renderOwnerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(id != null ? id : Util.NIL_UUID, name != null ? name : "");
-        ResourceLocation skinTexture = client.getSkinManager().getInsecureSkin(profile).texture();
+        PlayerSkin skin = client.getSkinManager().getInsecureSkin(profile);
 
         graphics.fill(x - 1, y - 1, x + 9, y + 9, 0xFF2A2A2A);
         graphics.fill(x, y, x + 8, y + 8, 0xFF181818);
-        graphics.blit(skinTexture, x, y, 8, 8, 8.0F, 8.0F, 8, 8, 64, 64);
-        graphics.blit(skinTexture, x, y, 8, 8, 40.0F, 8.0F, 8, 8, 64, 64);
+        PlayerFaceRenderer.draw(graphics, skin, x, y, 8);
     }
 
     private void renderInventoryLabels(GuiGraphics graphics) {

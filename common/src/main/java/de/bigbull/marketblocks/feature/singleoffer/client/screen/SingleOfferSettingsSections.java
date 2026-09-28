@@ -23,6 +23,7 @@ import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -378,19 +379,19 @@ public final class SingleOfferSettingsSections {
         int legY = b1Y + 16;
 
         // Row 1: EINGANG (Green)
-        graphics.blitSprite(SideModeButton.INPUT_ICON, legX, legY, 11, 11);
+        graphics.blitSprite(RenderType::guiTextured, SideModeButton.INPUT_ICON, legX, legY, 11, 11);
         Component inText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.input"));
         graphics.drawString(font, inText, legX + 14, legY + 2, enabled ? 0x008800 : 0x808080, false);
 
         // Row 2: AUSGANG (Red)
         legY += 14;
-        graphics.blitSprite(SideModeButton.OUTPUT_ICON, legX, legY, 11, 11);
+        graphics.blitSprite(RenderType::guiTextured, SideModeButton.OUTPUT_ICON, legX, legY, 11, 11);
         Component outText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.output"));
         graphics.drawString(font, outText, legX + 14, legY + 2, enabled ? 0xBC0000 : 0x808080, false);
 
         // Row 3: DEAKTIVIERT (Dark grey)
         legY += 14;
-        graphics.blitSprite(SideModeButton.DISABLED_ICON, legX, legY, 11, 11);
+        graphics.blitSprite(RenderType::guiTextured, SideModeButton.DISABLED_ICON, legX, legY, 11, 11);
         Component disText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.disabled"));
         graphics.drawString(font, disText, legX + 14, legY + 2, enabled ? 0x505050 : 0x808080, false);
 

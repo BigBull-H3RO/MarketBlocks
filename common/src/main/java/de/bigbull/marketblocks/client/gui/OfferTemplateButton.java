@@ -3,6 +3,7 @@ package de.bigbull.marketblocks.client.gui;
 import de.bigbull.marketblocks.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -89,7 +90,7 @@ public class OfferTemplateButton extends Button {
         ResourceLocation arrowTexture = showDisabledArrow ? TRADE_ARROW_DISABLED : TRADE_ARROW;
         int arrowX = getX() + ARROW_X_OFFSET;
         int arrowY = getY() + ARROW_Y_OFFSET;
-        graphics.blit(arrowTexture, arrowX, arrowY, 0, 0, 10, 9, 10, 9);
+        graphics.blit(RenderType::guiTextured, arrowTexture, arrowX, arrowY, 0.0F, 0.0F, 10, 9, 10, 9);
 
         if (!result.isEmpty()) {
             int resultX = getX() + RESULT_X_OFFSET;
@@ -129,4 +130,3 @@ public class OfferTemplateButton extends Button {
         }
     }
 }
-

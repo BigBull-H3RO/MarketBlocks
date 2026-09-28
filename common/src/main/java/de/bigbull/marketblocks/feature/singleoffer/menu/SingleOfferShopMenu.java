@@ -397,14 +397,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             boolean adminShop = blockEntity.isAdminShopEnabled();
             if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
                 if (!player.level().isClientSide) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                    player.displayClientMessage(Component.translatable("gui.marketblocks.out_of_stock"), false);
                 }
                 return ItemStack.EMPTY;
             }
 
             if (!adminShop && blockEntity.isOutputSpaceMissing()) {
                 if (!player.level().isClientSide) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                    player.displayClientMessage(Component.translatable("gui.marketblocks.output_full"), false);
                 }
                 return ItemStack.EMPTY;
             }
@@ -525,11 +525,11 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 if (blockEntity.getOfferHandler().getStackInSlot(0).isEmpty()) {
                     boolean adminShop = blockEntity.isAdminShopEnabled();
                     if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
-                        player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                        player.displayClientMessage(Component.translatable("gui.marketblocks.out_of_stock"), false);
                         return;
                     }
                     if (!adminShop && blockEntity.isOutputSpaceMissing()) {
-                        player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                        player.displayClientMessage(Component.translatable("gui.marketblocks.output_full"), false);
                         return;
                     }
                 }
@@ -649,14 +649,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             boolean adminShop = blockEntity.isAdminShopEnabled();
             if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
                 if (!player.level().isClientSide) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
+                    player.displayClientMessage(Component.translatable("gui.marketblocks.out_of_stock"), false);
                 }
                 return false;
             }
 
             if (!adminShop && blockEntity.isOutputSpaceMissing()) {
                 if (!player.level().isClientSide) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
+                    player.displayClientMessage(Component.translatable("gui.marketblocks.output_full"), false);
                 }
                 return false;
             }

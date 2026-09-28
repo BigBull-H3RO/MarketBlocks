@@ -136,7 +136,7 @@ public class NpcEconomySavedData extends SavedData {
                 if (entryTag.contains("Item", Tag.TAG_STRING)) {
                     ResourceLocation key = ResourceLocation.tryParse(entryTag.getString("Item"));
                     if (key != null && BuiltInRegistries.ITEM.containsKey(key)) {
-                        Item item = BuiltInRegistries.ITEM.get(key);
+                        Item item = BuiltInRegistries.ITEM.getValue(key);
                         data.itemSaturation.put(item, entryTag.getDouble("Saturation"));
                     }
                 }

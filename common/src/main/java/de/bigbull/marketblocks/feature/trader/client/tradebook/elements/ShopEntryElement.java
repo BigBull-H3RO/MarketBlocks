@@ -5,6 +5,7 @@ import java.util.UUID;
 import de.bigbull.marketblocks.feature.trader.network.TeleportRequestPacket;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -116,7 +117,7 @@ public class ShopEntryElement implements ITradeBookElement {
             int offerX = startX + 30;
             int frameX = offerX - 3;
             int frameY = currentY - 5;
-            graphics.blit(TradeBookLayoutUtils.OFFER_GUI, frameX, frameY, 0, 2, 96, 28, 96, 32);
+            graphics.blit(RenderType::guiTextured, TradeBookLayoutUtils.OFFER_GUI, frameX, frameY, 0.0F, 2.0F, 96, 28, 96, 32);
 
             String noOfferStr = Component.translatable("gui.marketblocks.trade_book.active.no_offer").getString();
             int noOfferWidth = context.getFont().width(noOfferStr);

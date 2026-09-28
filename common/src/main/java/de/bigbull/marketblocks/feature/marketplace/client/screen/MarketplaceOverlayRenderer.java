@@ -15,6 +15,7 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewStat
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -103,7 +104,7 @@ public final class MarketplaceOverlayRenderer {
         if (viewState.maxPurchasable() <= 0) {
             int slotIconX = context.leftPos() + STATUS_ICON_X;
             int slotIconY = context.topPos() + STATUS_ICON_Y;
-            guiGraphics.blit(OUT_OF_STOCK_ICON, slotIconX, slotIconY, 0, 0, STATUS_ICON_WIDTH, STATUS_ICON_HEIGHT,
+            guiGraphics.blit(RenderType::guiTextured, OUT_OF_STOCK_ICON, slotIconX, slotIconY, 0.0F, 0.0F, STATUS_ICON_WIDTH, STATUS_ICON_HEIGHT,
                     STATUS_ICON_WIDTH, STATUS_ICON_HEIGHT);
         }
 

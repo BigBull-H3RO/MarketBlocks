@@ -1,13 +1,11 @@
 package de.bigbull.marketblocks.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.marketplace.client.screen.MarketplaceScreen;
 import de.bigbull.marketblocks.feature.marketplace.network.LinkedBlocksSyncPacket;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceOpenRequestPacket;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceSyncPacket;
-import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.singleoffer.client.render.SingleOfferShopBlockEntityRenderer;
 import de.bigbull.marketblocks.feature.singleoffer.client.screen.SingleOfferShopScreen;
 import de.bigbull.marketblocks.feature.singleoffer.network.OfferStatusPacket;
@@ -30,11 +28,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
-import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.component.BlockItemStateProperties;
 import org.lwjgl.glfw.GLFW;
 
 public class MarketBlocksClient implements ClientModInitializer {
@@ -61,17 +55,6 @@ public class MarketBlocksClient implements ClientModInitializer {
         // Render layers
         BlockRenderLayerMap.INSTANCE.putBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), RenderType.cutout());
         BlockRenderLayerMap.INSTANCE.putBlock(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), RenderType.cutout());
-
-        // Item Properties
-        ItemProperties.register(RegistriesInit.TRADE_STAND_BLOCK.get().asItem(),
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "has_showcase"),
-                (stack, level, entity, seed) -> {
-                    BlockItemStateProperties properties = stack.get(DataComponents.BLOCK_STATE);
-                    if (properties != null && Boolean.TRUE.equals(properties.get(TradeStandBlock.HAS_SHOWCASE))) {
-                        return 1.0F;
-                    }
-                    return 0.0F;
-                });
 
         // Keybindings
         KeyBindingHelper.registerKeyBinding(OPEN_MARKETPLACE);

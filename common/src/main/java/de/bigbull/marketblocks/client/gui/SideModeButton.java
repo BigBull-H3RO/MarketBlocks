@@ -4,6 +4,7 @@ import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -30,23 +31,25 @@ public class SideModeButton extends Button {
 
     private final Component sideName;
     private SideMode mode;
-    private final Consumer<SideMode> callback;
-    private int pressTicks;
-    private boolean isPressing;
+    private final Consumer<SideMode> onModeChanged;
+    private boolean isPressing = false;
+    private int pressTicks = 0;
 
-    public SideModeButton(int x, int y, int width, int height, Component sideName, SideMode initialMode, Consumer<SideMode> callback) {
+    public SideModeButton(int x, int y, int width, int height, Component sideName, SideMode initialMode, Consumer<SideMode> onModeChanged) {
         super(x, y, width, height, Component.empty(), b -> {
         }, DEFAULT_NARRATION);
         this.sideName = sideName;
         this.mode = initialMode;
-        this.callback = callback;
-        this.pressTicks = 0;
-        this.isPressing = false;
+        this.onModeChanged = onModeChanged;
         updateTooltip();
     }
 
-    public SideModeButton(int x, int y, int width, int height, SideMode initialMode, Consumer<SideMode> callback) {
-        this(x, y, width, height, Component.empty(), initialMode, callback);
+    public SideModeButton(int x, int y, int width, int height, SideMode initialMode, Consumer<SideMode> onModeChanged) {
+        this(x, y, width, height, Component.empty(), initialMode, onModeChanged);
+    }
+
+    public SideMode getMode() {
+        return mode;
     }
 
     public void setMode(SideMode mode) {
@@ -68,29 +71,49 @@ public class SideModeButton extends Button {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!this.active || !this.visible) {
-            return false;
-        }
-        if (button == 0 && this.isMouseOver(mouseX, mouseY)) {
-            this.isPressing = true;
-            this.playDownSound(Minecraft.getInstance().getSoundManager());
-            return true;
-        }
-        return false;
+    public void onPress() {
+        // Not used, handled in mouseClicked
+    }
+
+    @Override
+    public void onClick(double mouseX, double mouseY) {
+        // Handled in mouseClicked
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.isPressing && button == 0) {
-            this.isPressing = false;
-            if (this.isMouseOver(mouseX, mouseY)) {
-                this.mode = this.mode.next();
-                this.pressTicks = 10;
+        if (button == 0 || button == 1) {
+            isPressing = false;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.active || !this.visible) {
+            return false;
+        }
+
+        if (this.isMouseOver(mouseX, mouseY)) {
+            this.playDownSound(Minecraft.getInstance().getSoundManager());
+            isPressing = true;
+            pressTicks = 4;
+
+            if (button == 0) { // Left click -> Next mode
+                mode = mode.next();
                 updateTooltip();
-                this.callback.accept(this.mode);
+                if (onModeChanged != null) {
+                    onModeChanged.accept(mode);
+                }
+                return true;
+            } else if (button == 1) { // Right click -> Previous mode
+                mode = mode.previous();
+                updateTooltip();
+                if (onModeChanged != null) {
+                    onModeChanged.accept(mode);
+                }
+                return true;
             }
-            return true;
         }
         return false;
     }
@@ -112,7 +135,7 @@ public class SideModeButton extends Button {
             pressTicks--;
         }
 
-        graphics.blitSprite(background, getX(), getY(), getWidth(), getHeight());
+        graphics.blitSprite(RenderType::guiTextured, background, getX(), getY(), getWidth(), getHeight());
 
         ResourceLocation icon = switch (mode) {
             case DISABLED -> DISABLED_ICON;
@@ -122,6 +145,6 @@ public class SideModeButton extends Button {
 
         int iconX = getX() + (getWidth() - 16) / 2;
         int iconY = getY() + (getHeight() - 16) / 2;
-        graphics.blitSprite(icon, iconX, iconY, 16, 16);
+        graphics.blitSprite(RenderType::guiTextured, icon, iconX, iconY, 16, 16);
     }
 }

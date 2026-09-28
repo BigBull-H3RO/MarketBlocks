@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
@@ -63,11 +64,10 @@ public class VanillaIconButton extends Button {
         int iconRenderHeight = Math.max(1, Math.round(sourceHeight * scale));
         int iconX = getX() + (getWidth() - iconRenderWidth) / 2;
         int iconY = getY() + (getHeight() - iconRenderHeight) / 2 + iconYOffset;
-        graphics.blit(icon, iconX, iconY, iconRenderWidth, iconRenderHeight,
+        graphics.blit(RenderType::guiTextured, icon, iconX, iconY,
                 (float) sourceU, (float) sourceV,
                 sourceWidth, sourceHeight,
+                iconRenderWidth, iconRenderHeight,
                 ICON_TEXTURE_SIZE, ICON_TEXTURE_SIZE);
     }
 }
-
-

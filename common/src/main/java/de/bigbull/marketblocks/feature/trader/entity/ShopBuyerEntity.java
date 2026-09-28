@@ -46,7 +46,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.SpawnGroupData;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.util.RandomSource;
@@ -472,7 +472,7 @@ public class ShopBuyerEntity extends PathfinderMob {
 
             // If already raging against this player, ignore peaceful interaction
             if (this.isRaging) {
-                return InteractionResult.sidedSuccess(this.level().isClientSide);
+                return this.level().isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
             }
 
             // Track clicks for Rage Mode Easter Egg trigger
@@ -486,14 +486,14 @@ public class ShopBuyerEntity extends PathfinderMob {
                 if (clicks.size() >= threshold) {
                     clicks.clear();
                     triggerRageMode(player);
-                    return InteractionResult.sidedSuccess(this.level().isClientSide);
+                    return this.level().isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
                 }
             }
 
             // Dialog cooldown (anti-spam): 30 ticks (1.5s) per player
             Long lastTime = lastDialogTimes.get(playerUuid);
             if (lastTime != null && (gameTime - lastTime) < 30) {
-                return InteractionResult.sidedSuccess(this.level().isClientSide);
+                return this.level().isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
             }
             lastDialogTimes.put(playerUuid, gameTime);
 
@@ -503,15 +503,15 @@ public class ShopBuyerEntity extends PathfinderMob {
                     Component.translatable("entity.marketblocks.shop_buyer.rank." + getTraderRank().name().toLowerCase()),
                     Component.translatable("entity.marketblocks.shop_buyer.category." + getInterestCategory().name().toLowerCase())
             ).withStyle(ChatFormatting.GRAY);
-            player.sendSystemMessage(rankInfo);
+            player.displayClientMessage(rankInfo, false);
 
             int messageIndex = selectInteractMessage();
-            player.sendSystemMessage(Component
-                    .translatable("message.marketblocks.shop_buyer.interact." + messageIndex));
+            player.displayClientMessage(Component
+                    .translatable("message.marketblocks.shop_buyer.interact." + messageIndex), false);
             this.getLookControl().setLookAt(player, 30.0F, 30.0F);
             this.playSound(SoundEvents.WANDERING_TRADER_NO, this.getSoundVolume(), this.getVoicePitch());
         }
-        return InteractionResult.sidedSuccess(this.level().isClientSide);
+        return this.level().isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
 
     @Override
@@ -523,8 +523,8 @@ public class ShopBuyerEntity extends PathfinderMob {
     }
 
     @Override
-    public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
-        boolean success = super.doHurtTarget(target);
+    public boolean doHurtTarget(ServerLevel level, net.minecraft.world.entity.Entity target) {
+        boolean success = super.doHurtTarget(level, target);
         if (success) {
             this.swing(InteractionHand.MAIN_HAND);
             this.playSound(SoundEvents.PLAYER_ATTACK_STRONG, 1.0F, 1.0F);
@@ -551,7 +551,7 @@ public class ShopBuyerEntity extends PathfinderMob {
 
         int msgIndex = 1 + this.random.nextInt(3);
         String nameStr = this.hasCustomName() ? this.getCustomName().getString() : Component.translatable("entity.marketblocks.shop_buyer").getString();
-        target.sendSystemMessage(Component.translatable("message.marketblocks.shop_buyer.rage." + msgIndex, nameStr));
+        target.displayClientMessage(Component.translatable("message.marketblocks.shop_buyer.rage." + msgIndex, nameStr), false);
     }
 
     public void triggerRevenge(Player player) {
@@ -562,7 +562,7 @@ public class ShopBuyerEntity extends PathfinderMob {
         equipRageWeapon();
 
         String nameStr = this.hasCustomName() ? this.getCustomName().getString() : Component.translatable("entity.marketblocks.shop_buyer").getString();
-        player.sendSystemMessage(Component.translatable("message.marketblocks.shop_buyer.revenge", nameStr));
+        player.displayClientMessage(Component.translatable("message.marketblocks.shop_buyer.revenge", nameStr), false);
     }
 
     public void calmDown() {
@@ -587,9 +587,9 @@ public class ShopBuyerEntity extends PathfinderMob {
         };
 
         if (this.random.nextInt(100) < enchantChance) {
-            var registry = this.level().registryAccess().registry(Registries.ENCHANTMENT);
+            var registry = this.level().registryAccess().lookup(Registries.ENCHANTMENT);
             if (registry.isPresent()) {
-                var sharpnessHolder = registry.get().getHolder(Enchantments.SHARPNESS);
+                var sharpnessHolder = registry.get().get(Enchantments.SHARPNESS);
                 if (sharpnessHolder.isPresent()) {
                     int level;
                     if (this.random.nextInt(100) == 0) {
@@ -694,8 +694,7 @@ public class ShopBuyerEntity extends PathfinderMob {
 
     @Nullable
     @Override
-    @SuppressWarnings("deprecation")
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType reason,
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason reason,
             @Nullable SpawnGroupData spawnData) {
         RandomSource random = level.getRandom();
 
@@ -739,7 +738,6 @@ public class ShopBuyerEntity extends PathfinderMob {
      * consecutively due to delayed update of the isInvisible flag.
      */
     private class DrinkPotionGoal extends UseItemGoal<ShopBuyerEntity> {
-        private final boolean isNightPotion;
 
         DrinkPotionGoal(ItemStack stack, SoundEvent sound, boolean isNightPotion) {
             super(ShopBuyerEntity.this, stack, sound, mob -> {
@@ -756,7 +754,6 @@ public class ShopBuyerEntity extends PathfinderMob {
                             && ShopBuyerEntity.this.hasEffect(MobEffects.INVISIBILITY);
                 }
             });
-            this.isNightPotion = isNightPotion;
         }
 
         @Override

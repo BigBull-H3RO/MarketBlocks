@@ -17,11 +17,14 @@ import de.bigbull.marketblocks.platform.FabricPlatformHelper;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
@@ -52,64 +55,78 @@ public final class FabricRegistries {
 
     public static void init() {
         // Blocks
+        ResourceLocation tradeStandId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand");
+        ResourceKey<Block> tradeStandKey = ResourceKey.create(Registries.BLOCK, tradeStandId);
         Block tradeStand = Registry.register(BuiltInRegistries.BLOCK,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand"),
-                new TradeStandBlock(tradeStandProperties()));
+                tradeStandKey,
+                new TradeStandBlock(tradeStandProperties().setId(tradeStandKey)));
         RegistriesInit.TRADE_STAND_BLOCK = () -> tradeStand;
 
+        ResourceLocation tradeStandTopId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand_top");
+        ResourceKey<Block> tradeStandTopKey = ResourceKey.create(Registries.BLOCK, tradeStandTopId);
         Block tradeStandTop = Registry.register(BuiltInRegistries.BLOCK,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand_top"),
-                new TradeStandTopBlock(tradeStandProperties().sound(SoundType.GLASS)));
+                tradeStandTopKey,
+                new TradeStandTopBlock(tradeStandProperties().sound(SoundType.GLASS).setId(tradeStandTopKey)));
         RegistriesInit.TRADE_STAND_BLOCK_TOP = () -> tradeStandTop;
 
+        ResourceLocation marketCrateId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketcrate");
+        ResourceKey<Block> marketCrateKey = ResourceKey.create(Registries.BLOCK, marketCrateId);
         Block marketCrate = Registry.register(BuiltInRegistries.BLOCK,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketcrate"),
+                marketCrateKey,
                 new MarketCrateBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
                         .noOcclusion()
                         .mapColor(MapColor.WOOD)
                         .instrument(NoteBlockInstrument.BASS)
                         .strength(2.5F, 3600000.0F)
                         .sound(SoundType.WOOD)
-                        .pushReaction(PushReaction.BLOCK)));
+                        .pushReaction(PushReaction.BLOCK)
+                        .setId(marketCrateKey)));
         RegistriesInit.MARKETCRATE_BLOCK = () -> marketCrate;
 
         // Block Items
+        ResourceKey<Item> tradeStandItemKey = ResourceKey.create(Registries.ITEM, tradeStandId);
         Item tradeStandItem = Registry.register(BuiltInRegistries.ITEM,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand"),
-                new BlockItem(tradeStand, new Item.Properties()));
+                tradeStandItemKey,
+                new BlockItem(tradeStand, new Item.Properties().setId(tradeStandItemKey).useBlockDescriptionPrefix()));
         RegistriesInit.TRADE_STAND_ITEM = () -> tradeStandItem;
 
+        ResourceKey<Item> marketCrateItemKey = ResourceKey.create(Registries.ITEM, marketCrateId);
         Item marketCrateItem = Registry.register(BuiltInRegistries.ITEM,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketcrate"),
-                new BlockItem(marketCrate, new Item.Properties()));
+                marketCrateItemKey,
+                new BlockItem(marketCrate, new Item.Properties().setId(marketCrateItemKey).useBlockDescriptionPrefix()));
         RegistriesInit.MARKETCRATE_ITEM = () -> marketCrateItem;
 
         // Items
+        ResourceLocation tradeBookId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_book");
+        ResourceKey<Item> tradeBookKey = ResourceKey.create(Registries.ITEM, tradeBookId);
         Item tradeBook = Registry.register(BuiltInRegistries.ITEM,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_book"),
-                new TradeBookItem(new Item.Properties().stacksTo(1)));
+                tradeBookKey,
+                new TradeBookItem(new Item.Properties().setId(tradeBookKey).stacksTo(1)));
         RegistriesInit.TRADE_BOOK = () -> tradeBook;
 
         // Entity Types
         ResourceLocation shopBuyerId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer");
+        ResourceKey<EntityType<?>> shopBuyerKey = ResourceKey.create(Registries.ENTITY_TYPE, shopBuyerId);
         EntityType<ShopBuyerEntity> shopBuyer = Registry.register(BuiltInRegistries.ENTITY_TYPE,
-                shopBuyerId,
+                shopBuyerKey,
                 EntityType.Builder.of(ShopBuyerEntity::new, MobCategory.CREATURE)
                         .sized(0.6F, 1.95F)
                         .clientTrackingRange(10)
-                        .build(Constants.MOD_ID + ":shop_buyer"));
+                        .build(shopBuyerKey));
         RegistriesInit.SHOP_BUYER = () -> shopBuyer;
 
         // Spawn Egg
+        ResourceLocation spawnEggId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer_spawn_egg");
+        ResourceKey<Item> spawnEggKey = ResourceKey.create(Registries.ITEM, spawnEggId);
         Item spawnEgg = Registry.register(BuiltInRegistries.ITEM,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer_spawn_egg"),
-                new SpawnEggItem(shopBuyer, 0x0000AA, 0xFFFF00, new Item.Properties()));
+                spawnEggKey,
+                new SpawnEggItem(shopBuyer, new Item.Properties().setId(spawnEggKey)));
         RegistriesInit.SHOP_BUYER_SPAWN_EGG = () -> spawnEgg;
 
         // Block Entities
         BlockEntityType<SingleOfferShopBlockEntity> shopBe = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
                 ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_shop"),
-                BlockEntityType.Builder.of(SingleOfferShopBlockEntity::new, tradeStand, marketCrate).build(null));
+                FabricBlockEntityTypeBuilder.create(SingleOfferShopBlockEntity::new, tradeStand, marketCrate).build());
         RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY = () -> shopBe;
 
         // Menus

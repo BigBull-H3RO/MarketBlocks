@@ -4,16 +4,11 @@ import de.bigbull.marketblocks.Constants;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
-import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.marketplace.client.screen.MarketplaceScreen;
 import de.bigbull.marketblocks.feature.singleoffer.client.screen.SingleOfferShopScreen;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -63,16 +58,6 @@ public class ClientEvents {
         event.enqueueWork(() -> {
             ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK.get(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), RenderType.cutout());
-
-            ItemProperties.register(RegistriesInit.TRADE_STAND_BLOCK.get().asItem(),
-                    ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "has_showcase"),
-                    (stack, level, entity, seed) -> {
-                        BlockItemStateProperties properties = stack.get(DataComponents.BLOCK_STATE);
-                        if (properties != null && Boolean.TRUE.equals(properties.get(TradeStandBlock.HAS_SHOWCASE))) {
-                            return 1.0F;
-                        }
-                        return 0.0F;
-                    });
         });
     }
 

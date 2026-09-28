@@ -10,9 +10,10 @@ import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -43,8 +44,9 @@ public final class MarketBlocksLifecycleEvents {
     }
 
     @SubscribeEvent
-    public static void onAddReloadListeners(AddReloadListenerEvent event) {
-        event.addListener((barrier, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor,
+    public static void onAddReloadListeners(AddServerReloadListenersEvent event) {
+        event.addListener(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trader_economy"),
+                (barrier, resourceManager, backgroundExecutor,
                 gameExecutor) -> barrier.wait(null).thenRunAsync(() -> {
                     MarketplaceManager.get().reload();
                     TraderEconomyManager.get().load();

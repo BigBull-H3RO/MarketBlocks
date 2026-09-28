@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -156,12 +157,12 @@ public class IconButton extends Button {
             graphics.pose().translate(-(getX() + getWidth() / 2.0F), 0, 0);
 
             RenderSystem.disableCull();
-            graphics.blitSprite(background, getX() + offX, getY() + offY, renderWidth, renderHeight);
+            graphics.blitSprite(RenderType::guiTextured, background, getX() + offX, getY() + offY, renderWidth, renderHeight);
             RenderSystem.enableCull();
 
             graphics.pose().popPose();
         } else {
-            graphics.blitSprite(background, getX() + offX, getY() + offY, renderWidth, renderHeight);
+            graphics.blitSprite(RenderType::guiTextured, background, getX() + offX, getY() + offY, renderWidth, renderHeight);
         }
 
         ResourceLocation iconToRender;
@@ -186,14 +187,7 @@ public class IconButton extends Button {
         int iconX = getX() + (getWidth() - iconSize) / 2 + currentIconOffsetX;
         int iconY = getY() + (getHeight() - iconSize) / 2 + currentIconOffsetY;
 
-        if (tintIcon) {
-            graphics.setColor(0.55F, 0.55F, 0.55F, 0.7F);
-        }
-
-        graphics.blit(iconToRender, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
-
-        if (tintIcon) {
-            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        }
+        int iconColor = tintIcon ? 0xB28C8C8C : -1;
+        graphics.blit(RenderType::guiTextured, iconToRender, iconX, iconY, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize, iconColor);
     }
 }

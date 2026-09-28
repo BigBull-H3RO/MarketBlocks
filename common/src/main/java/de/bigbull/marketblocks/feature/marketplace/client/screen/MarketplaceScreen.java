@@ -20,6 +20,7 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewStat
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -703,7 +704,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
-        guiGraphics.blit(BACKGROUND_TEXTURE, i, j, 0, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
+        guiGraphics.blit(RenderType::guiTextured, BACKGROUND_TEXTURE, i, j, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
 
         if (isLocalEditMode) {
             guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 166,
@@ -720,14 +721,14 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         int maxScroll = Math.max(0, visibleOffers.size() - maxVisibleRows);
 
         if (maxScroll <= 0) {
-            guiGraphics.blitSprite(SCROLLER_DISABLED_SPRITE, scrollerX, scrollerY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            guiGraphics.blitSprite(RenderType::guiTextured, SCROLLER_DISABLED_SPRITE, scrollerX, scrollerY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
             return;
         }
 
         float progress = (float) scrollOffset / (float) maxScroll;
         int handleTravel = Math.max(0, scrollerH - SCROLLER_HEIGHT);
         int handleY = scrollerY + Mth.floor(progress * handleTravel);
-        guiGraphics.blitSprite(SCROLLER_SPRITE, scrollerX, handleY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+        guiGraphics.blitSprite(RenderType::guiTextured, SCROLLER_SPRITE, scrollerX, handleY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
     }
 
     private boolean isScrollBarActive() {

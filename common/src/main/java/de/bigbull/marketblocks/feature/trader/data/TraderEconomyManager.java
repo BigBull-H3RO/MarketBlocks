@@ -18,8 +18,12 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.SingleItemRecipe;
+import net.minecraft.world.item.crafting.display.RecipeDisplay;
+import net.minecraft.world.item.crafting.display.SlotDisplayContext;
 import de.bigbull.marketblocks.platform.Services;
+import net.minecraft.core.Holder;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.context.ContextMap;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -160,7 +164,7 @@ public class TraderEconomyManager {
         baseValues.clear();
         JsonObject obj = GSON.fromJson(Files.readString(file), JsonObject.class);
         for (String key : obj.keySet()) {
-            Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(key));
+            Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(key));
             if (item != Items.AIR) {
                 baseValues.put(item, obj.get(key).getAsDouble());
             }
@@ -214,7 +218,7 @@ public class TraderEconomyManager {
         blacklist.clear();
         JsonArray arr = GSON.fromJson(Files.readString(file), JsonArray.class);
         for (JsonElement el : arr) {
-            Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(el.getAsString()));
+            Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(el.getAsString()));
             if (item != Items.AIR) {
                 blacklist.add(item);
             }
@@ -335,7 +339,7 @@ public class TraderEconomyManager {
         } else if (calculatedCache.containsKey(item)) {
             base = calculatedCache.get(item);
         } else if (recipeManager != null) {
-            Double calc = calculateFromRecipe(item, recipeManager, new HashSet<>());
+            Double calc = calculateFromRecipe(item, recipeManager, level, new HashSet<>());
             if (calc != null) {
                 calculatedCache.put(item, calc);
                 base = calc;
@@ -354,10 +358,13 @@ public class TraderEconomyManager {
         return base;
     }
 
-    private Double calculateFromRecipe(Item target, RecipeManager recipeManager, Set<Item> visited) {
+    @SuppressWarnings("deprecation")
+    private Double calculateFromRecipe(Item target, RecipeManager recipeManager, ServerLevel level, Set<Item> visited) {
         if (visited.contains(target))
             return null; // Prevent infinite loops
         visited.add(target);
+
+        ContextMap contextMap = level != null ? SlotDisplayContext.fromLevel(level) : new ContextMap.Builder().create(SlotDisplayContext.CONTEXT);
 
         // Find a recipe that produces this item
         for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
@@ -371,33 +378,32 @@ public class TraderEconomyManager {
                     continue;
                 }
 
-                ItemStack resultItem;
-                try {
-                    resultItem = recipe.getResultItem(null);
-                } catch (Exception e) {
-                    continue; // Skip recipes that require registry access
+                ItemStack resultItem = ItemStack.EMPTY;
+                for (RecipeDisplay display : recipe.display()) {
+                    resultItem = display.result().resolveForFirstStack(contextMap);
+                    if (!resultItem.isEmpty()) {
+                        break;
+                    }
                 }
-                if (resultItem != null && resultItem.getItem() == target) {
+
+                if (!resultItem.isEmpty() && resultItem.getItem() == target) {
                     double totalValue = 0;
                     boolean valid = true;
 
-                    for (Ingredient ingredient : recipe.getIngredients()) {
+                    for (Ingredient ingredient : recipe.placementInfo().ingredients()) {
                         if (ingredient.isEmpty())
                             continue;
 
-                        ItemStack[] items = ingredient.getItems();
-                        if (items.length == 0) {
+                        Item ingItem = ingredient.items().findFirst().map(Holder::value).orElse(null);
+                        if (ingItem == null) {
                             valid = false;
                             break;
                         }
 
-                        // Just take the first item of the ingredient as representative
-                        Item ingItem = items[0].getItem();
-
                         Double ingValue = baseValues.get(ingItem);
                         if (ingValue == null) {
                             // Recursive calculation
-                            ingValue = calculateFromRecipe(ingItem, recipeManager, visited);
+                            ingValue = calculateFromRecipe(ingItem, recipeManager, level, visited);
                         }
 
                         if (ingValue == null) {

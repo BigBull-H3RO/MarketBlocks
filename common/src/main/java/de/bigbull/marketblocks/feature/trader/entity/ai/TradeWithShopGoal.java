@@ -144,16 +144,16 @@ public class TradeWithShopGoal extends Goal {
                 double resultValue = 0;
 
                 if (!result.isEmpty()) {
-                    Double v = eco.evaluateItem(result.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    Double v = eco.evaluateItem(result.getItem(), serverLevel.recipeAccess(), serverLevel);
                     if (v != null) resultValue = v * result.getCount();
                 }
 
                 if (!p1.isEmpty()) {
-                    Double v = eco.evaluateItem(p1.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    Double v = eco.evaluateItem(p1.getItem(), serverLevel.recipeAccess(), serverLevel);
                     if (v != null) paymentValue += v * p1.getCount();
                 }
                 if (!p2.isEmpty()) {
-                    Double v = eco.evaluateItem(p2.getItem(), serverLevel.getRecipeManager(), serverLevel);
+                    Double v = eco.evaluateItem(p2.getItem(), serverLevel.recipeAccess(), serverLevel);
                     if (v != null) paymentValue += v * p2.getCount();
                 }
 

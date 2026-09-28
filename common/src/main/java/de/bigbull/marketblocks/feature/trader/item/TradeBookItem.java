@@ -7,7 +7,7 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -36,15 +36,14 @@ public class TradeBookItem extends Item {
         }
 
         @Override
-        public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-                ItemStack itemStack = player.getItemInHand(hand);
+        public InteractionResult use(Level level, Player player, InteractionHand hand) {
                 if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
                         Map<String, TradeBookOpenPacket.ShopOfferData> offers = new HashMap<>();
                         List<Component> pages = createDynamicPages(serverPlayer, offers);
                         NetworkHandler.sendToPlayer(serverPlayer, new TradeBookOpenPacket(pages, offers));
-                        return InteractionResultHolder.success(itemStack);
+                        return InteractionResult.SUCCESS;
                 }
-                return InteractionResultHolder.consume(itemStack);
+                return InteractionResult.CONSUME;
         }
 
         private List<Component> createDynamicPages(ServerPlayer player,
@@ -471,7 +470,7 @@ public class TradeBookItem extends Item {
                                         sign = "▼";
                                 }
 
-                                String itemName = item.getDescription().getString();
+                                String itemName = item.getName().getString();
                                 if (itemName.length() > 14) {
                                         itemName = itemName.substring(0, 12) + "..";
                                 }
@@ -483,7 +482,7 @@ public class TradeBookItem extends Item {
                                         baseVal = baseValObj;
                                 } else {
                                         Double evaluated = TraderEconomyManager.get().evaluateItem(
-                                                        item, player.serverLevel().getRecipeManager(), player.serverLevel());
+                                                        item, player.serverLevel().recipeAccess(), player.serverLevel());
                                         baseVal = evaluated != null ? evaluated : 0.0;
                                 }
                                 double currentVal = baseVal * mult;

@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -290,7 +291,7 @@ public class TradeBookScreen extends Screen {
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderTransparentBackground(guiGraphics);
-        guiGraphics.blit(BOOK_LOCATION, (this.width - IMAGE_WIDTH) / 2, 2, 121, 0, IMAGE_WIDTH, IMAGE_HEIGHT, 512, 256);
+        guiGraphics.blit(RenderType::guiTextured, BOOK_LOCATION, (this.width - IMAGE_WIDTH) / 2, 2, 121.0f, 0.0f, IMAGE_WIDTH, IMAGE_HEIGHT, 512, 256);
     }
 
     @Override

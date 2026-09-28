@@ -105,7 +105,6 @@ public final class VisualShopNpcRenderer {
         if (settings.usePlayerSkin()) {
             String skinName = settings.playerSkinName();
             RemotePlayer player = state.getOrCreateRenderPlayer(level, skinName == null ? "" : skinName);
-            player.noCulling = true;
             player.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
             player.setYRot(bodyYaw);
             player.yBodyRot = bodyYaw;
@@ -131,7 +130,6 @@ public final class VisualShopNpcRenderer {
                     spawnPos.x - shopPos.getX(),
                     spawnPos.y - shopPos.getY() + animationYOffset,
                     spawnPos.z - shopPos.getZ(),
-                    bodyYaw,
                     partialTick,
                     poseStack,
                     bufferSource,
@@ -141,7 +139,6 @@ public final class VisualShopNpcRenderer {
             dispatcher.setRenderShadow(true);
         } else {
             Villager villager = state.getOrCreateRenderVillager(level);
-            villager.noCulling = true;
             VillagerData data = villager.getVillagerData().setProfession(settings.profession().toVillagerProfession());
             villager.setVillagerData(data);
             villager.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
@@ -166,7 +163,6 @@ public final class VisualShopNpcRenderer {
                     spawnPos.x - shopPos.getX(),
                     spawnPos.y - shopPos.getY() + animationYOffset,
                     spawnPos.z - shopPos.getZ(),
-                    bodyYaw,
                     partialTick,
                     poseStack,
                     bufferSource,

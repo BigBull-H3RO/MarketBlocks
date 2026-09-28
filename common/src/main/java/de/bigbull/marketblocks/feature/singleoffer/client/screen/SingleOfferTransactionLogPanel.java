@@ -8,6 +8,9 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -94,9 +97,9 @@ public class SingleOfferTransactionLogPanel {
             int travel = Math.max(1, trackH - SCROLLER_HEIGHT);
             float progress = (float) scrollPixelOffset / (float) maxScroll;
             int knobY = trackY + (int) (progress * travel);
-            graphics.blitSprite(SCROLLER_SPRITE, trackX, knobY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            graphics.blitSprite(RenderType::guiTextured, SCROLLER_SPRITE, trackX, knobY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
         } else {
-            graphics.blitSprite(SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            graphics.blitSprite(RenderType::guiTextured, SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
         }
 
         // 4. Empty State
@@ -155,7 +158,7 @@ public class SingleOfferTransactionLogPanel {
         ResourceLocation expandIcon = isExpanded ? MOVE_DOWN_MINI_ICON : MOVE_RIGHT_MINI_ICON;
         int expandX = x + ROW_WIDTH - 14;
         int expandY = y + 4;
-        graphics.blit(expandIcon, expandX, expandY, 12, 12, 0.0F, 0.0F, 18, 18, 18, 18);
+        graphics.blit(RenderType::guiTextured, expandIcon, expandX, expandY, 0.0F, 0.0F, 12, 12, 18, 18, 18, 18);
 
         // Relative Time
         Component timeText = formatRelativeTime(entry.epochSecond());
@@ -225,7 +228,7 @@ public class SingleOfferTransactionLogPanel {
             }
 
             // Trade arrow
-            graphics.blit(TRADE_ARROW_ICON, arrowX, arrowY, 0, 0, 10, 9, 10, 9);
+            graphics.blit(RenderType::guiTextured, TRADE_ARROW_ICON, arrowX, arrowY, 0.0F, 0.0F, 10, 9, 10, 9);
 
             // Bought item (no extra background box)
             if (!bought.isEmpty()) {
@@ -241,12 +244,8 @@ public class SingleOfferTransactionLogPanel {
         }
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(id, name != null ? name : "");
-        ResourceLocation skinTexture = client.getSkinManager().getInsecureSkin(profile).texture();
-
-        // Base head layer (8x8 at u=8, v=8, src 8x8, tex 64x64)
-        graphics.blit(skinTexture, x, y, 8, 8, 8.0F, 8.0F, 8, 8, 64, 64);
-        // Outer hat layer (8x8 at u=40, v=8, src 8x8, tex 64x64)
-        graphics.blit(skinTexture, x, y, 8, 8, 40.0F, 8.0F, 8, 8, 64, 64);
+        PlayerSkin skin = client.getSkinManager().getInsecureSkin(profile);
+        PlayerFaceRenderer.draw(graphics, skin, x, y, 8);
     }
 
     public void renderHoverTooltip(GuiGraphics graphics, Font font, int leftPos, int topPos, int mouseX, int mouseY,

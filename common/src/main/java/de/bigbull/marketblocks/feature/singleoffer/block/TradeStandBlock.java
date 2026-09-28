@@ -100,8 +100,7 @@ public class TradeStandBlock extends BaseShopBlock {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
         return createCloneStack(state);
     }
 
@@ -144,7 +143,7 @@ public class TradeStandBlock extends BaseShopBlock {
                     SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return level.isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
 
     public static InteractionResult tryDisableShowcase(Level level, BlockPos pos, BlockState state, Player player) {
@@ -171,7 +170,7 @@ public class TradeStandBlock extends BaseShopBlock {
                     SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return level.isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
 
     private static @NotNull ItemEntity getItemEntity(Level level, BlockPos pos) {
@@ -234,8 +233,8 @@ public class TradeStandBlock extends BaseShopBlock {
             return state;
         }
         if (!level.isClientSide() && state.getValue(HAS_SHOWCASE)) {
-            var registry = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            var silkTouchHolder = registry.getHolder(Enchantments.SILK_TOUCH);
+            var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+            var silkTouchHolder = registry.get(Enchantments.SILK_TOUCH);
 
             boolean hasSilkTouch = silkTouchHolder.isPresent()
                     && net.minecraft.world.item.enchantment.EnchantmentHelper

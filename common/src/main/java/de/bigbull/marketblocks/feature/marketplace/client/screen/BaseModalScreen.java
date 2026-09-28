@@ -63,7 +63,7 @@ public abstract class BaseModalScreen extends Screen {
     }
 
     @Override
-    protected void renderBlurredBackground(float partialTick) {
+    protected void renderBlurredBackground() {
     }
 
     @Override

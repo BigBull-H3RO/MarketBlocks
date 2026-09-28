@@ -1,6 +1,7 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -37,9 +38,9 @@ public class RecipeElement implements ITradeBookElement {
         float inverseScale = 1.0f / TradeBookLayoutUtils.TEXT_SCALE;
         graphics.pose().scale(inverseScale, inverseScale, 1.0f);
 
-        graphics.blit(CRAFTING_GRID, 0, 0, 0, 0, 64, 64, 64, 64);
-        graphics.blit(CRAFTING_ARROW, 68, 24, 0, 0, 16, 16, 16, 16);
-        graphics.blit(CRAFTING_RESULT, 88, 16, 0, 0, 32, 32, 32, 32);
+        graphics.blit(RenderType::guiTextured, CRAFTING_GRID, 0, 0, 0.0F, 0.0F, 64, 64, 64, 64);
+        graphics.blit(RenderType::guiTextured, CRAFTING_ARROW, 68, 24, 0.0F, 0.0F, 16, 16, 16, 16);
+        graphics.blit(RenderType::guiTextured, CRAFTING_RESULT, 88, 16, 0.0F, 0.0F, 32, 32, 32, 32);
 
         double localMouseX = ((mouseX / scale) - (x - 3)) / inverseScale;
         double localMouseY = ((mouseY / scale) - baseY) / inverseScale;

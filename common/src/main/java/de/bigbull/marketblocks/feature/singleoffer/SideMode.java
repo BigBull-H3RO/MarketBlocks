@@ -22,6 +22,10 @@ public enum SideMode {
         return VALUES[(ordinal() + 1) % VALUES.length];
     }
 
+    public SideMode previous() {
+        return VALUES[(ordinal() - 1 + VALUES.length) % VALUES.length];
+    }
+
     public Component getDisplayName() {
         return Component.translatable(translationKey);
     }

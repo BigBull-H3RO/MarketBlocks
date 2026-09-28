@@ -22,11 +22,14 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.item.ItemModelResolver;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -34,7 +37,6 @@ import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.phys.Vec3;
 
@@ -51,8 +53,13 @@ import org.joml.Matrix4f;
 public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity> {
     private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/trade_arrow.png");
+    private final ItemRenderer itemRenderer;
+    private final ItemModelResolver itemModelResolver;
+    private final ItemStackRenderState renderState = new ItemStackRenderState();
 
     public SingleOfferShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
+        this.itemRenderer = context.getItemRenderer();
+        this.itemModelResolver = context.getItemModelResolver();
     }
 
     @Override
@@ -91,7 +98,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
             config = shopBlock.getRenderConfig(blockEntity.getBlockState());
         }
 
-        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
+        ItemRenderer itemRenderer = this.itemRenderer;
         Font font = Minecraft.getInstance().font;
         Direction dir = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
 
@@ -103,8 +110,9 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         if (!result.isEmpty()) {
             ShopRenderConfig.SlotRenderConfig offerItem = config.getOfferItem();
-            BakedModel offerModel = itemRenderer.getModel(result, blockEntity.getLevel(), null, 0);
-            float finalOfferScale = getFinalOfferScale(offerModel, offerItem, result) * offerSettings.scale();
+            this.itemModelResolver.updateForTopItem(this.renderState, result, ItemDisplayContext.FIXED, false, blockEntity.getLevel(), null, 0);
+            boolean isOffer3D = this.renderState.isGui3d();
+            float finalOfferScale = getFinalOfferScale(isOffer3D, offerItem, result) * offerSettings.scale();
 
             if (renderOfferItem) {
 
@@ -349,9 +357,8 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         return yRest;
     }
 
-    private static float getFinalOfferScale(BakedModel offerModel, ShopRenderConfig.SlotRenderConfig offerItem,
+    private static float getFinalOfferScale(boolean isOffer3D, ShopRenderConfig.SlotRenderConfig offerItem,
             ItemStack result) {
-        boolean isOffer3D = offerModel != null && offerModel.isGui3d();
         float finalOfferScale = offerItem.scale();
 
         if (!isOffer3D) {
@@ -411,8 +418,8 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
         applySlotRotation(poseStack, itemConfig);
 
-        BakedModel bakedModel = Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel(stack);
-        boolean is3D = bakedModel != null && bakedModel.isGui3d();
+        this.itemModelResolver.updateForTopItem(this.renderState, stack, ItemDisplayContext.FIXED, false, null, null, 0);
+        boolean is3D = this.renderState.isGui3d();
         ItemDisplayContext displayContext = is3D ? ItemDisplayContext.FIXED : ItemDisplayContext.GUI;
 
         if (is3D)
@@ -505,8 +512,9 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
     private static boolean isToolOrWeapon(ItemStack stack) {
         Item item = stack.getItem();
-        return item instanceof TieredItem || item instanceof SwordItem || item instanceof TridentItem ||
-                item instanceof ProjectileWeaponItem || item instanceof ShieldItem || item instanceof MaceItem;
+        return item instanceof DiggerItem || item instanceof SwordItem || item instanceof TridentItem ||
+                item instanceof ProjectileWeaponItem || item instanceof ShieldItem || item instanceof MaceItem ||
+                stack.has(DataComponents.TOOL);
     }
 
 }

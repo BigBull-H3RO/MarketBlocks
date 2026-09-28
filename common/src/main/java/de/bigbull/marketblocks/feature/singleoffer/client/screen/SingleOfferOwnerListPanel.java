@@ -7,6 +7,9 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -153,9 +156,9 @@ public class SingleOfferOwnerListPanel {
         if (isOwnerScrollActive()) {
             int barFull = Math.max(0, SCROLLER_TRACK_HEIGHT - SCROLLER_HEIGHT);
             int knobY = trackY + (int) (ownerScrollOffs * (float) barFull);
-            graphics.blitSprite(SCROLLER_SPRITE, trackX, knobY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
+            graphics.blitSprite(RenderType::guiTextured, SCROLLER_SPRITE, trackX, knobY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
         } else {
-            graphics.blitSprite(SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
+            graphics.blitSprite(RenderType::guiTextured, SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
         }
 
         // 3. Empty State (centered in content area to the left of the scrollbar)
@@ -217,12 +220,8 @@ public class SingleOfferOwnerListPanel {
     private void renderPlayerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(id, name);
-        ResourceLocation skinTexture = client.getSkinManager().getInsecureSkin(profile).texture();
-
-        // Base head layer (8x8 at u=8, v=8, src 8x8, tex 64x64)
-        graphics.blit(skinTexture, x, y, 8, 8, 8.0F, 8.0F, 8, 8, 64, 64);
-        // Outer hat layer (8x8 at u=40, v=8, src 8x8, tex 64x64)
-        graphics.blit(skinTexture, x, y, 8, 8, 40.0F, 8.0F, 8, 8, 64, 64);
+        PlayerSkin skin = client.getSkinManager().getInsecureSkin(profile);
+        PlayerFaceRenderer.draw(graphics, skin, x, y, 8);
     }
 
     public boolean onMouseClicked(double mouseX, double mouseY, int leftPos) {

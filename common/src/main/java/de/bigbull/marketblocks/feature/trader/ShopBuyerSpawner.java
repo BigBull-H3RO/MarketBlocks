@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -144,10 +145,10 @@ public class ShopBuyerSpawner {
             // 5. Find a safe surface spawn position near the player (between 12 and 28 blocks away)
             BlockPos spawnPos = findSafeSpawnPos(level, pPos, level.getRandom());
             if (spawnPos != null) {
-                ShopBuyerEntity entity = RegistriesInit.SHOP_BUYER.get().create(level);
+                ShopBuyerEntity entity = RegistriesInit.SHOP_BUYER.get().create(level, EntitySpawnReason.NATURAL);
                 if (entity != null) {
                     entity.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
-                    entity.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), net.minecraft.world.entity.MobSpawnType.NATURAL, null);
+                    entity.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), EntitySpawnReason.NATURAL, null);
                     level.addFreshEntity(entity);
 
                     LAST_SPAWN_PER_PLAYER.put(playerId, gameTime);
@@ -169,7 +170,7 @@ public class ShopBuyerSpawner {
             BlockState feet = level.getBlockState(surfacePos);
             BlockState head = level.getBlockState(surfacePos.above());
 
-            if (floor.isSolidRender(level, surfacePos.below())
+            if (floor.isSolidRender()
                     && !floor.is(BlockTags.LEAVES)
                     && feet.isAir()
                     && head.isAir()

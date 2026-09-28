@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.platform.network.PacketContext;
+import java.util.Set;
 
 /**
  * Client-to-server packet sent when a player clicks the teleport button
@@ -91,7 +92,7 @@ public record TeleportRequestPacket(String shopId) implements CustomPacketPayloa
                 return;
             }
 
-            player.teleportTo(targetLevel, tpX, tpY, tpZ, yaw, pitch);
+            player.teleportTo(targetLevel, tpX, tpY, tpZ, Set.of(), yaw, pitch, false);
         });
     }
 }

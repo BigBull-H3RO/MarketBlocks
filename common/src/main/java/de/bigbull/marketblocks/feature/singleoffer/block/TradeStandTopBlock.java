@@ -19,6 +19,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.redstone.Orientation;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * An invisible secondary block placed on top of a {@link TradeStandBlock} when
@@ -68,9 +70,9 @@ public class TradeStandTopBlock extends Block {
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos,
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, @Nullable Orientation orientation,
             boolean isMoving) {
-        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        super.neighborChanged(state, level, pos, block, orientation, isMoving);
         if (!level.isClientSide && !state.canSurvive(level, pos)) {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         }
@@ -92,8 +94,7 @@ public class TradeStandTopBlock extends Block {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
         BlockPos basePos = pos.below();
         BlockState baseState = level.getBlockState(basePos);
 
