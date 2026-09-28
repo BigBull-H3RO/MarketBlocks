@@ -42,8 +42,8 @@
 ## 🧪 Testing & Verification
 <!-- How did you test your changes? Please describe steps to verify behavior. -->
 - **Environment:**
-  - Minecraft Version: `1.21.1`
-  - Loader: <!-- NeoForge 21.1.x / Fabric Loader 0.19.x -->
+  - Minecraft Version: `1.21.4` (or `1.21.1`)
+  - Loader: <!-- NeoForge 21.4.x / Fabric Loader 0.19.x -->
   - Environment: <!-- Singleplayer / Dedicated Server / Both -->
 
 ### Steps to test:
