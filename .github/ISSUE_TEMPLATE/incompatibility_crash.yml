@@ -79,8 +79,8 @@ body:
       label: Minimal mod set used for reproduction
       description: "List only the required mods (including versions), loader and API dependencies."
       placeholder: |
-        - NeoForge: 21.1.x
-        - MarketBlocks: 0.1-1.21.1
+        - NeoForge: 21.4.x
+        - MarketBlocks: 1.0.0+1.21.4
         - ConflictingMod: 1.0.0
     validations:
       required: true
