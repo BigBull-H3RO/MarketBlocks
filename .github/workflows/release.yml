@@ -4,7 +4,15 @@ on:
   push:
     branches:
       - "main"
+      - "1.21.1"
+      - "1.21.4"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry Run (Testlauf: Build & Metadaten pruefen ohne echten Upload)'
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -17,7 +25,7 @@ jobs:
   release:
     name: Build and Publish Release
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')) }}
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]'))
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,7 +43,7 @@ jobs:
         run: |
           parent_count=$(git rev-list --parents -n 1 "$GITHUB_SHA" | awk '{print NF-1}')
           if [ "$parent_count" -ne 1 ]; then
-            echo "::error::Release via PR merge commit is blocked. Create a dedicated direct commit on main with '[release]'."
+            echo "::error::Release via PR merge commit is blocked. Create a dedicated direct commit with '[release]'."
             exit 1
           fi
 
@@ -43,14 +51,18 @@ jobs:
         id: release_tag
         run: |
           mod_version=$(grep -E '^(version|mod_version)=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r' | xargs)
-          if [ -z "$mod_version" ]; then
-            echo "::error::Could not read version from gradle.properties"
+          mc_version=$(grep -E '^minecraft_version=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r' | xargs)
+          if [ -z "$mod_version" ] || [ -z "$mc_version" ]; then
+            echo "::error::Could not read version or minecraft_version from gradle.properties"
             exit 1
           fi
           echo "mod_version=$mod_version" >> "$GITHUB_OUTPUT"
-          echo "tag=v$mod_version" >> "$GITHUB_OUTPUT"
+          echo "mc_version=$mc_version" >> "$GITHUB_OUTPUT"
+          echo "full_version=${mod_version}+${mc_version}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${mod_version}+${mc_version}" >> "$GITHUB_OUTPUT"
 
       - name: Create and push release tag if missing
+        if: github.event.inputs.dry_run != 'true'
         env:
           RELEASE_TAG: ${{ steps.release_tag.outputs.tag }}
         run: |
@@ -66,19 +78,20 @@ jobs:
       - name: Extract changelog entry
         id: changelog
         run: |
-          version="${{ steps.release_tag.outputs.mod_version }}"
+          full_ver="${{ steps.release_tag.outputs.full_version }}"
+          mod_ver="${{ steps.release_tag.outputs.mod_version }}"
           if [ -f CHANGELOG.md ]; then
-            notes=$(awk -v ver="$version" '
-              $0 ~ "^## \\[" ver "\\]" { flag = 1; next }
+            notes=$(awk -v fver="$full_ver" -v mver="$mod_ver" '
+              $0 ~ "^## \\[" fver "\\]" || $0 ~ "^## \\[" mver "\\]" { flag = 1; next }
               flag && /^## \[/ { exit }
               flag { print }
             ' CHANGELOG.md)
             if [ -n "$notes" ]; then
-              echo "Found changelog entry for $version in CHANGELOG.md"
+              echo "Found changelog entry in CHANGELOG.md"
               echo "$notes" > release_notes.md
               echo "has_notes=true" >> "$GITHUB_OUTPUT"
             else
-              echo "No changelog entry found for $version in CHANGELOG.md"
+              echo "No changelog entry found in CHANGELOG.md"
               touch release_notes.md
               echo "has_notes=false" >> "$GITHUB_OUTPUT"
             fi
@@ -105,11 +118,38 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew --no-daemon build -Prelease=true
 
+      - name: Dry Run Summary
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "================================================="
+          echo "               DRY RUN VERIFICATION              "
+          echo "================================================="
+          echo "Mod Version:       ${{ steps.release_tag.outputs.mod_version }}"
+          echo "Minecraft Version: ${{ steps.release_tag.outputs.mc_version }}"
+          echo "Full Version:      ${{ steps.release_tag.outputs.full_version }}"
+          echo "Release Tag:       ${{ steps.release_tag.outputs.tag }}"
+          echo "Environment:       client | server (Both Required)"
+          echo "Java Version:      21"
+          echo "-------------------------------------------------"
+          echo "CurseForge Token configured: ${{ secrets.CURSEFORGE_TOKEN != '' }}"
+          echo "CurseForge Project ID:       1713762"
+          echo "Modrinth Token configured:   ${{ secrets.MODRINTH_TOKEN != '' }}"
+          echo "Modrinth Project ID:         apfBVEsm"
+          echo "-------------------------------------------------"
+          echo "Extracted Changelog Notes:"
+          cat release_notes.md
+          echo "-------------------------------------------------"
+          echo "Built Artifacts:"
+          ls -lh fabric/build/libs/*.jar neoforge/build/libs/*.jar
+          echo "================================================="
+          echo "Dry run successful. No files were published to GitHub, Modrinth, or CurseForge."
+
       - name: Publish GitHub release
+        if: github.event.inputs.dry_run != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_tag.outputs.tag }}
-          name: MarketBlocks ${{ steps.release_tag.outputs.mod_version }}
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [${{ steps.release_tag.outputs.mc_version }}]"
           body_path: release_notes.md
           files: |
             fabric/build/libs/*.jar
@@ -119,3 +159,65 @@ jobs:
             !neoforge/build/libs/*-sources.jar
             !neoforge/build/libs/*-javadoc.jar
           generate_release_notes: true
+
+      - name: Publish Fabric to Modrinth
+        if: github.event.inputs.dry_run != 'true'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: "apfBVEsm"
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: "fabric/build/libs/marketblocks-fabric-${{ steps.release_tag.outputs.mc_version }}-${{ steps.release_tag.outputs.mod_version }}.jar"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [Fabric ${{ steps.release_tag.outputs.mc_version }}]"
+          version: "${{ steps.release_tag.outputs.full_version }}-fabric"
+          version-type: release
+          loaders: fabric
+          game-versions: "${{ steps.release_tag.outputs.mc_version }}"
+          java: 21
+          environment: client | server
+          changelog-file: release_notes.md
+
+      - name: Publish Fabric to CurseForge
+        if: github.event.inputs.dry_run != 'true'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: "1713762"
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: "fabric/build/libs/marketblocks-fabric-${{ steps.release_tag.outputs.mc_version }}-${{ steps.release_tag.outputs.mod_version }}.jar"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [Fabric ${{ steps.release_tag.outputs.mc_version }}]"
+          version-type: release
+          loaders: fabric
+          game-versions: "${{ steps.release_tag.outputs.mc_version }}"
+          java: 21
+          environment: client | server
+          changelog-file: release_notes.md
+
+      - name: Publish NeoForge to Modrinth
+        if: github.event.inputs.dry_run != 'true'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: "apfBVEsm"
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: "neoforge/build/libs/marketblocks-neoforge-${{ steps.release_tag.outputs.mc_version }}-${{ steps.release_tag.outputs.mod_version }}.jar"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [NeoForge ${{ steps.release_tag.outputs.mc_version }}]"
+          version: "${{ steps.release_tag.outputs.full_version }}-neoforge"
+          version-type: release
+          loaders: neoforge
+          game-versions: "${{ steps.release_tag.outputs.mc_version }}"
+          java: 21
+          environment: client | server
+          changelog-file: release_notes.md
+
+      - name: Publish NeoForge to CurseForge
+        if: github.event.inputs.dry_run != 'true'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: "1713762"
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: "neoforge/build/libs/marketblocks-neoforge-${{ steps.release_tag.outputs.mc_version }}-${{ steps.release_tag.outputs.mod_version }}.jar"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [NeoForge ${{ steps.release_tag.outputs.mc_version }}]"
+          version-type: release
+          loaders: neoforge
+          game-versions: "${{ steps.release_tag.outputs.mc_version }}"
+          java: 21
+          environment: client | server
+          changelog-file: release_notes.md

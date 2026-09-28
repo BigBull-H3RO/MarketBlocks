@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-09-27
+## [1.0.0+1.21.4] - 2026-09-28
+### Added
+- **Minecraft 1.21.4 Support:** Initial release with full feature parity on Fabric & NeoForge for Minecraft 1.21.4.
+
+## [1.0.0+1.21.1] - 2026-09-27
 ### Added
 - **Multi-Loader Support:** Full simultaneous support for **Fabric** and **NeoForge** on Minecraft 1.21.1.
 - **Physical Player Shops:**
