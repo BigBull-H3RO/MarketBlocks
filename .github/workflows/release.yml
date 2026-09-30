@@ -154,7 +154,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_tag.outputs.tag }}
-          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} for Minecraft ${{ steps.release_tag.outputs.mc_version }}"
+          name: "MarketBlocks ${{ steps.release_tag.outputs.mod_version }} [${{ steps.release_tag.outputs.mc_version }}]"
           body_path: release_notes.md
           files: |
             fabric/build/libs/*.jar
