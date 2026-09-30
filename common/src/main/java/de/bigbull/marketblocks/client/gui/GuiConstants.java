@@ -2,8 +2,9 @@ package de.bigbull.marketblocks.client.gui;
 
 import de.bigbull.marketblocks.Constants;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Shared GUI constants for single-offer shop menus and screens.
@@ -19,7 +20,8 @@ public final class GuiConstants {
     public static final int PLAYER_INV_LABEL_Y = PLAYER_INV_Y_START - 11;
 
     /** Compact pixel-art micro font for subheadings, group boxes, and slider labels. */
-    public static final ResourceLocation COMPACT_FONT = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "compact");
+    public static final Identifier COMPACT_FONT_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "compact");
+    public static final FontDescription COMPACT_FONT = new FontDescription.Resource(COMPACT_FONT_ID);
 
     private GuiConstants() {
     }

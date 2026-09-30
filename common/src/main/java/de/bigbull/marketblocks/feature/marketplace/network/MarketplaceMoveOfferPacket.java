@@ -7,7 +7,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public record MarketplaceMoveOfferPacket(UUID offerId, String targetPage, int direction) implements CustomPacketPayload {
     public static final Type<MarketplaceMoveOfferPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_move_offer"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_move_offer"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceMoveOfferPacket> CODEC = StreamCodec.composite(
             UUIDUtil.STREAM_CODEC,

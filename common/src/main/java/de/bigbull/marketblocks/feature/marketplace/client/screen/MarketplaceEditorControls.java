@@ -13,7 +13,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 import java.util.UUID;
@@ -194,15 +194,15 @@ public final class MarketplaceEditorControls {
             int rightButtonSize,
             int rightButtonGap,
             WidgetSprites buttonSprites,
-            ResourceLocation addIcon,
-            ResourceLocation deleteIcon,
-            ResourceLocation addPageIcon,
-            ResourceLocation deletePageIcon,
-            ResourceLocation renamePageIcon,
-            ResourceLocation moveUpIcon,
-            ResourceLocation moveDownIcon,
-            ResourceLocation limitsIcon,
-            ResourceLocation pricingIcon) {
+            Identifier addIcon,
+            Identifier deleteIcon,
+            Identifier addPageIcon,
+            Identifier deletePageIcon,
+            Identifier renamePageIcon,
+            Identifier moveUpIcon,
+            Identifier moveDownIcon,
+            Identifier limitsIcon,
+            Identifier pricingIcon) {
         int previewX() {
             return leftPos + previewXOffset;
         }

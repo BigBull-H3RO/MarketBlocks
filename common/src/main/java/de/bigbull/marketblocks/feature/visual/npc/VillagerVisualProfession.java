@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.feature.visual.npc;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.npc.villager.VillagerProfession;
 
 /**
  * Represents the visual profession applied to a rendered shop villager.
@@ -48,10 +48,9 @@ public enum VillagerVisualProfession {
 
     public VillagerProfession toVillagerProfession() {
         if (this == NONE) {
-            return VillagerProfession.NONE;
+            return BuiltInRegistries.VILLAGER_PROFESSION.getValue(BuiltInRegistries.VILLAGER_PROFESSION.getDefaultKey());
         }
-        ResourceLocation id = ResourceLocation.withDefaultNamespace(vanillaId);
-        return BuiltInRegistries.VILLAGER_PROFESSION.getOptional(id).orElse(VillagerProfession.NONE);
+        return BuiltInRegistries.VILLAGER_PROFESSION.getValue(Identifier.withDefaultNamespace(vanillaId));
     }
 
     public static VillagerVisualProfession fromSerialized(String value) {

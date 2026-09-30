@@ -9,7 +9,7 @@ import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
 import java.util.HashMap;
@@ -32,7 +32,7 @@ public record TradeBookOpenPacket(List<Component> pages, Map<String, ShopOfferDa
     }
 
     public static final CustomPacketPayload.Type<TradeBookOpenPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_book_open"));
+            new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "trade_book_open"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, TradeBookOpenPacket> CODEC = StreamCodec.composite(
             ComponentSerialization.TRUSTED_STREAM_CODEC.apply(ByteBufCodecs.list()), TradeBookOpenPacket::pages,

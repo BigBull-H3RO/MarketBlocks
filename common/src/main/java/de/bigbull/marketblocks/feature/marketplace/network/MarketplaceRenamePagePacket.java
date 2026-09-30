@@ -6,14 +6,14 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 import de.bigbull.marketblocks.util.NameValidator;
 
 public record MarketplaceRenamePagePacket(String oldName, String newName) implements CustomPacketPayload {
     public static final Type<MarketplaceRenamePagePacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_rename_page"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_rename_page"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceRenamePagePacket> CODEC = StreamCodec.composite(
             ByteBufCodecs.stringUtf8(MarketplaceManager.MAX_PAGE_NAME_LENGTH),

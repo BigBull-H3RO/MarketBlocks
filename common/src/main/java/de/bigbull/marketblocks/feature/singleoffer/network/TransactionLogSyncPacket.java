@@ -7,12 +7,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ public record TransactionLogSyncPacket(BlockPos pos, CompoundTag payload) implem
     private static final int MAX_SYNC_ENTRIES = 200;
 
     public static final Type<TransactionLogSyncPacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_transaction_log_sync"));
+            new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_transaction_log_sync"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, TransactionLogSyncPacket> CODEC = new StreamCodec<>() {
         @Override
@@ -66,18 +65,18 @@ public record TransactionLogSyncPacket(BlockPos pos, CompoundTag payload) implem
     }
 
     public List<TransactionLogEntry> decodeEntries(HolderLookup.Provider registries) {
-        if (payload == null || !payload.contains(NBT_ENTRIES, Tag.TAG_LIST)) {
+        if (payload == null || !payload.contains(NBT_ENTRIES)) {
             return List.of();
         }
 
-        ListTag listTag = payload.getList(NBT_ENTRIES, Tag.TAG_COMPOUND);
+        ListTag listTag = payload.getListOrEmpty(NBT_ENTRIES);
         if (listTag.isEmpty()) {
             return List.of();
         }
 
         List<TransactionLogEntry> entries = new ArrayList<>(Math.min(listTag.size(), MAX_SYNC_ENTRIES));
         for (int i = 0; i < listTag.size() && entries.size() < MAX_SYNC_ENTRIES; i++) {
-            CompoundTag entryTag = listTag.getCompound(i);
+            CompoundTag entryTag = listTag.getCompoundOrEmpty(i);
             entries.add(TransactionLogEntry.fromTag(entryTag, registries));
         }
         return List.copyOf(entries);

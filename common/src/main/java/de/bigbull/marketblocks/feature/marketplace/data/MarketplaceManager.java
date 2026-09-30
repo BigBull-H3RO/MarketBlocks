@@ -383,7 +383,7 @@ public final class MarketplaceManager {
     }
 
     public boolean canEdit(ServerPlayer player) {
-        return player != null && player.hasPermissions(2);
+        return player != null && player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER);
     }
 
     public boolean isGlobalEditModeEnabled() {
@@ -400,7 +400,7 @@ public final class MarketplaceManager {
     }
 
     public boolean isEditModeEnabled(net.minecraft.world.entity.player.Player player) {
-        if (player == null || !player.hasPermissions(2)) {
+        if (player == null || !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
             return false;
         }
         return isEditModeEnabled(player.getUUID());
@@ -808,12 +808,12 @@ public final class MarketplaceManager {
     }
 
     private ViewerSyncBatch collectSyncBatchForSourceLocked(ServerPlayer source, long gameTime) {
-        if (source == null || source.server == null || registryAccess == null) {
+        if (source == null || source.level() == null || source.level().getServer() == null || registryAccess == null) {
             return ViewerSyncBatch.empty();
         }
 
         List<ServerPlayer> otherOpenViewers = new ArrayList<>();
-        for (ServerPlayer player : source.server.getPlayerList().getPlayers()) {
+        for (ServerPlayer player : source.level().getServer().getPlayerList().getPlayers()) {
             if (player == source) {
                 continue;
             }

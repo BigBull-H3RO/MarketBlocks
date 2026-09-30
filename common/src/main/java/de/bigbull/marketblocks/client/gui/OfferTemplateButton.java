@@ -3,10 +3,10 @@ package de.bigbull.marketblocks.client.gui;
 import de.bigbull.marketblocks.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.ChatFormatting;
 
@@ -15,10 +15,10 @@ import net.minecraft.ChatFormatting;
  * Renders up to two payment items on the left, an arrow in the middle, and the result item on the right.
  */
 public class OfferTemplateButton extends Button {
-    private static final ResourceLocation TRADE_ARROW =
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow.png");
-    private static final ResourceLocation TRADE_ARROW_DISABLED =
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow_disabled.png");
+    private static final Identifier TRADE_ARROW =
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow.png");
+    private static final Identifier TRADE_ARROW_DISABLED =
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow_disabled.png");
 
     // --- Customizable positions for the discount numbers ---
     // Offsets for the old price (crossed out). 0, 0 means exact default item count position.
@@ -71,8 +71,9 @@ public class OfferTemplateButton extends Button {
     }
 
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.renderWidget(graphics, mouseX, mouseY, partialTick);
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderDefaultSprite(graphics);
+        this.renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
 
         if (!payment1.isEmpty()) {
             boolean hasDiscount1 = !originalPayment1.isEmpty() && payment1.getCount() != originalPayment1.getCount();
@@ -87,10 +88,10 @@ public class OfferTemplateButton extends Button {
         }
 
         boolean showDisabledArrow = !arrowActive || isLimitReached;
-        ResourceLocation arrowTexture = showDisabledArrow ? TRADE_ARROW_DISABLED : TRADE_ARROW;
+        Identifier arrowTexture = showDisabledArrow ? TRADE_ARROW_DISABLED : TRADE_ARROW;
         int arrowX = getX() + ARROW_X_OFFSET;
         int arrowY = getY() + ARROW_Y_OFFSET;
-        graphics.blit(RenderType::guiTextured, arrowTexture, arrowX, arrowY, 0.0F, 0.0F, 10, 9, 10, 9);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, arrowTexture, arrowX, arrowY, 0.0F, 0.0F, 10, 9, 10, 9);
 
         if (!result.isEmpty()) {
             int resultX = getX() + RESULT_X_OFFSET;
@@ -120,11 +121,8 @@ public class OfferTemplateButton extends Button {
             int newX = oldX + fontWidthOld + DISCOUNT_NEW_X_OFFSET;
             int newY = y + 9 + DISCOUNT_NEW_Y_OFFSET;
             
-            graphics.pose().pushPose();
-            graphics.pose().translate(0, 0, 200);
-            graphics.drawString(Minecraft.getInstance().font, oldText, oldX, oldY, 0xFFFFFF, true);
-            graphics.drawString(Minecraft.getInstance().font, newText, newX, newY, 0xFFFFFF, true);
-            graphics.pose().popPose();
+            graphics.drawString(Minecraft.getInstance().font, oldText, oldX, oldY, 0xFFFFFFFF, true);
+            graphics.drawString(Minecraft.getInstance().font, newText, newX, newY, 0xFFFFFFFF, true);
         } else {
             graphics.renderItemDecorations(Minecraft.getInstance().font, effective, x, y);
         }

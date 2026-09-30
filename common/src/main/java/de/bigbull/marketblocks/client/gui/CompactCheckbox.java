@@ -24,8 +24,8 @@ public class CompactCheckbox extends AbstractButton {
     private static final int COLOR_GREEN_DARK = 0xFF1F8B1F;
     private static final int COLOR_GREEN_DISABLED_BRIGHT = 0xFF1E6E1E;
     private static final int COLOR_GREEN_DISABLED_DARK = 0xFF103A10;
-    private static final int COLOR_LABEL = 0x404040;
-    private static final int COLOR_LABEL_DISABLED = 0x808080;
+    private static final int COLOR_LABEL = 0xFF404040;
+    private static final int COLOR_LABEL_DISABLED = 0xFF808080;
 
     private boolean selected;
     private final OnValueChange onValueChange;
@@ -135,7 +135,7 @@ public class CompactCheckbox extends AbstractButton {
     }
 
     @Override
-    public void onPress() {
+    public void onPress(net.minecraft.client.input.InputWithModifiers input) {
         this.selected = !this.selected;
         if (this.onValueChange != null) {
             this.onValueChange.onValueChange(this, this.selected);
@@ -143,7 +143,7 @@ public class CompactCheckbox extends AbstractButton {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         Component msg = getEffectiveMessage();
         int bx = getBoxX();
         int by = getBoxY();

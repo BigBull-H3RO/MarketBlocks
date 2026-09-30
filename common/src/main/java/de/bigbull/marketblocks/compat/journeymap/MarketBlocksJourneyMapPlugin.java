@@ -19,11 +19,12 @@ import journeymap.api.v2.common.waypoint.WaypointFactory;
 import journeymap.api.v2.client.display.MarkerOverlay;
 import journeymap.api.v2.client.model.MapImage;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings({"deprecation", "removal"})
 @JourneyMapPlugin(apiVersion = "2.0.0")
 public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
 
@@ -50,7 +51,7 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
         return Constants.MOD_ID;
     }
 
-    public boolean createWaypoint(String name, BlockPos pos, ResourceLocation dimension) {
+    public boolean createWaypoint(String name, BlockPos pos, Identifier dimension) {
         if (jmApi == null) {
             Constants.LOG.warn("Cannot create waypoint '{}' at {}: JourneyMap API not initialized.", name, pos);
             return false;
@@ -69,9 +70,9 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
             waypoint.setEnabled(true);
 
             try {
-                ResourceLocation icon = name.toLowerCase(Locale.ROOT).contains("marketplace")
-                        ? ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/marketplace.png")
-                        : ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/singleoffershop.png");
+                Identifier icon = name.toLowerCase(Locale.ROOT).contains("marketplace")
+                        ? Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/marketplace.png")
+                        : Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/singleoffershop.png");
                 waypoint.setIconResourceLoctaion(icon);
                 waypoint.setIconTextureSize(16, 16);
             } catch (Throwable ignored) {
@@ -93,7 +94,7 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
         if (activeMarkers.containsKey(pos)) return;
 
         try {
-            ResourceLocation iconLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/singleoffershop.png");
+            Identifier iconLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/singleoffershop.png");
             MapImage icon = new MapImage(iconLoc, 16, 16).setDisplayWidth(16).setDisplayHeight(16).centerAnchors();
             
             String shopName = shop.getSettingsManager().getGeneralSettings().shopName();
@@ -133,7 +134,7 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
             if (Minecraft.getInstance().level != null && 
                 globalPos.dimension().equals(Minecraft.getInstance().level.dimension())) {
                 try {
-                    ResourceLocation iconLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/marketplace.png");
+                    Identifier iconLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/marketplace.png");
                     MapImage icon = new MapImage(iconLoc, 16, 16).setDisplayWidth(16).setDisplayHeight(16).centerAnchors();
 
                     MarkerOverlay marker = new MarkerOverlay(Constants.MOD_ID, globalPos.pos(), icon);

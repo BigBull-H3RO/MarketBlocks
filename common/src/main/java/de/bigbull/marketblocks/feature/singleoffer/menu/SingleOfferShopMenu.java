@@ -261,7 +261,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     @Override
     public boolean canPlayerBuy() {
-        if (!player.level().isClientSide) {
+        if (!player.level().isClientSide()) {
             return blockEntity.canPlayerBuy(player);
         }
         return hasFlag(SingleOfferShopBlockEntity.CAN_BUY_FLAG);
@@ -269,7 +269,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
     @Override
     public boolean isClosed() {
-        if (!player.level().isClientSide) {
+        if (!player.level().isClientSide()) {
             return blockEntity.getGeneralSettings().isClosed();
         }
         return hasFlag(SingleOfferShopBlockEntity.CLOSED_FLAG);
@@ -396,14 +396,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
             boolean adminShop = blockEntity.isAdminShopEnabled();
             if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
-                if (!player.level().isClientSide) {
+                if (!player.level().isClientSide()) {
                     player.displayClientMessage(Component.translatable("gui.marketblocks.out_of_stock"), false);
                 }
                 return ItemStack.EMPTY;
             }
 
             if (!adminShop && blockEntity.isOutputSpaceMissing()) {
-                if (!player.level().isClientSide) {
+                if (!player.level().isClientSide()) {
                     player.displayClientMessage(Component.translatable("gui.marketblocks.output_full"), false);
                 }
                 return ItemStack.EMPTY;
@@ -506,7 +506,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
      */
     @Override
     public void clicked(int slotId, int button, ClickType type, Player player) {
-        boolean trackBuyerContext = !player.level().isClientSide
+        boolean trackBuyerContext = !player.level().isClientSide()
                 && slotId == OFFER_SLOT_INDEX
                 && (type == ClickType.PICKUP || type == ClickType.SWAP)
                 && blockEntity.hasOffer();
@@ -515,7 +515,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         }
 
         try {
-            if (!player.level().isClientSide
+            if (!player.level().isClientSide()
                     && slotId == OFFER_SLOT_INDEX
                     && (type == ClickType.PICKUP || type == ClickType.SWAP)
                     && blockEntity.hasOffer()) {
@@ -539,7 +539,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 if (slotId >= 0 && slotId < PAYMENT_SLOTS) {
                     return;
                 }
-                if (slotId == OFFER_SLOT_INDEX && !blockEntity.hasOffer()) {
+                if (slotId == OFFER_SLOT_INDEX) {
                     return;
                 }
             }
@@ -549,6 +549,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 blockEntity.clearPurchaseContext();
             }
         }
+    }
+
+    @Override
+    public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
+        if (slot != null && slot.index < TOTAL_SLOTS) {
+            return false;
+        }
+        return super.canTakeItemForPickAll(stack, slot);
     }
 
     @Override
@@ -648,14 +656,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
 
             boolean adminShop = blockEntity.isAdminShopEnabled();
             if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
-                if (!player.level().isClientSide) {
+                if (!player.level().isClientSide()) {
                     player.displayClientMessage(Component.translatable("gui.marketblocks.out_of_stock"), false);
                 }
                 return false;
             }
 
             if (!adminShop && blockEntity.isOutputSpaceMissing()) {
-                if (!player.level().isClientSide) {
+                if (!player.level().isClientSide()) {
                     player.displayClientMessage(Component.translatable("gui.marketblocks.output_full"), false);
                 }
                 return false;

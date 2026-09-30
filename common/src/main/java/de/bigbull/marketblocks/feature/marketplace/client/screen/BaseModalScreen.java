@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
 import java.util.List;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
@@ -63,7 +62,7 @@ public abstract class BaseModalScreen extends Screen {
     }
 
     @Override
-    protected void renderBlurredBackground() {
+    protected void renderBlurredBackground(GuiGraphics guiGraphics) {
     }
 
     @Override
@@ -81,18 +80,10 @@ public abstract class BaseModalScreen extends Screen {
     }
 
     private void renderDimLayer(GuiGraphics guiGraphics) {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.disableDepthTest();
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
         guiGraphics.fill(0, 0, this.width, this.height, 0x88000000);
-        guiGraphics.pose().popPose();
     }
 
     private void renderModalPanel(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 500.0F);
-
         renderPanelBackground(guiGraphics);
         for (net.minecraft.client.gui.components.events.GuiEventListener child : this.children()) {
             if (child instanceof Renderable renderable) {
@@ -100,9 +91,6 @@ public abstract class BaseModalScreen extends Screen {
             }
         }
         renderPanelForeground(guiGraphics, mouseX, mouseY, partialTick);
-
-        guiGraphics.pose().popPose();
-        RenderSystem.enableDepthTest();
     }
 
     private void renderParentBackdrop(GuiGraphics guiGraphics, float partialTick) {
@@ -122,7 +110,7 @@ public abstract class BaseModalScreen extends Screen {
                 0xFF2B2B2B);
         guiGraphics.renderOutline(this.panelLeft, this.panelTop, this.panelWidth, this.panelHeight, 0xFF555555);
         guiGraphics.drawString(this.font, this.title,
-                this.panelLeft + (this.panelWidth - this.font.width(this.title)) / 2, this.panelTop + 6, 0xFFFFFF,
+                this.panelLeft + (this.panelWidth - this.font.width(this.title)) / 2, this.panelTop + 6, 0xFFFFFFFF,
                 false);
     }
 
@@ -160,7 +148,7 @@ public abstract class BaseModalScreen extends Screen {
         if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + font.lineHeight) {
             List<net.minecraft.util.FormattedCharSequence> lines = font.split(Component.translatable(translationKey),
                     200);
-            guiGraphics.renderTooltip(this.font, lines, mouseX, mouseY);
+            guiGraphics.setTooltipForNextFrame(this.font, lines, mouseX, mouseY);
         }
     }
 }

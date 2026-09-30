@@ -21,6 +21,7 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.NotificationSettings
 import de.bigbull.marketblocks.feature.singleoffer.settings.OfferItemSettings;
 import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.HolderLookup;
@@ -38,7 +39,9 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import de.bigbull.marketblocks.platform.inventory.ICommonItemHandler;
@@ -387,7 +390,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
 
     public void sync() {
         setChanged();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             BlockState state = getBlockState();
             level.sendBlockUpdated(worldPosition, state, state, 3);
             level.updateNeighbourForOutputSignal(worldPosition, state.getBlock());
@@ -542,7 +545,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         Direction facing = getBlockState().getValue(BaseShopBlock.FACING);
         SideMode oldMode = getMode(absoluteDir);
         settingsManager.setIoSettings(settingsManager.getIoSettings().withMode(absoluteDir, facing, mode), sync);
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             if (mode == SideMode.INPUT || mode == SideMode.OUTPUT) {
                 lockAdjacentChest(absoluteDir);
             } else if (oldMode != SideMode.DISABLED) {
@@ -576,7 +579,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             updateOfferSlot(false);
         }
 
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             unlockAdjacentChests();
             lockAdjacentChests();
         }
@@ -585,13 +588,13 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         sync();
         updateNeighborCache();
 
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             updateShopDirectory();
         }
     }
 
     public void onAccessSettingsChanged() {
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             updateShopDirectory();
         }
     }
@@ -632,7 +635,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         GeneralSettings current = getGeneralSettings();
         setGeneralSettings(new GeneralSettings(name, current.emitRedstone(), current.purchaseXpFeedbackSound(),
                 current.isClosed(), current.shopCategory()), sync);
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             updateShopDirectory();
         }
     }
@@ -737,7 +740,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             return false;
         }
         // Client reads the synced boolean flag
-        if (level != null && level.isClientSide) {
+        if (level != null && level.isClientSide()) {
             return saleActiveClient;
         }
         // Server checks game time
@@ -764,7 +767,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         this.salePercent = salePercent;
         this.saleEndGameTick = durationTicks > 0 && level != null ? level.getGameTime() + durationTicks : 0L;
         setChanged();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
         updateShopDirectory();
@@ -847,7 +850,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         
         boolean currentOutOfStock = !isAdminShopEnabled() && !offerManager.hasResultItemInInput(false);
         if (currentOutOfStock != wasOutOfStock) {
-            if (level != null && !level.isClientSide) {
+            if (level != null && !level.isClientSide()) {
                 updateShopDirectory();
             }
         }
@@ -935,6 +938,19 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             }
         }
     }
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        super.preRemoveSideEffects(pos, state);
+        if (this.level != null) {
+            this.dropContents(this.level, pos);
+            this.unlockAdjacentChests();
+            if (this.level instanceof ServerLevel serverLevel) {
+                ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
+                GlobalPos globalPos = GlobalPos.of(serverLevel.dimension(), pos);
+                data.unregisterShop(globalPos);
+            }
+        }
+    }
 
     public void dropContents(Level level, BlockPos pos) {
         dropItems(level, pos, inputHandler);
@@ -962,7 +978,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public static void tick(Level level, BlockPos pos, BlockState state, SingleOfferShopBlockEntity be) {
         if (be.needsPostLoadInit) {
             be.needsPostLoadInit = false;
-            if (level.isClientSide) {
+            if (level.isClientSide()) {
                 de.bigbull.marketblocks.compat.journeymap.JourneyMapCompat.addShopMarker(be);
                 return;
             } else {
@@ -978,7 +994,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
             }
         }
 
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return;
         }
 
@@ -1031,79 +1047,72 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        loadOffer(tag, registries);
-        loadHandlers(tag, registries);
-        settingsManager.load(tag);
-        visualManager.load(tag);
+    @SuppressWarnings("deprecation")
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        HolderLookup.Provider registries = input.lookup();
+        loadOffer(input);
+        loadHandlers(input, registries);
+        settingsManager.load(input);
+        visualManager.load(input);
 
-        if (tag.contains(NBT_TOTAL_SALES)) {
-            totalSales = tag.getInt(NBT_TOTAL_SALES);
-        }
+        totalSales = input.getIntOr(NBT_TOTAL_SALES, 0);
+        shopId = input.getStringOr(NBT_SHOP_ID, "");
 
-        if (tag.contains(NBT_SHOP_ID)) {
-            shopId = tag.getString(NBT_SHOP_ID);
-        }
-
-        if (tag.contains(NBT_SALE_PERCENT)) {
-            salePercent = tag.getDouble(NBT_SALE_PERCENT);
-            saleEndGameTick = tag.getLong(NBT_SALE_END_TIMESTAMP);
-        } else {
-            salePercent = null;
-            saleEndGameTick = 0L;
-        }
+        salePercent = input.read(NBT_SALE_PERCENT, com.mojang.serialization.Codec.DOUBLE).orElse(null);
+        saleEndGameTick = input.getLongOr(NBT_SALE_END_TIMESTAMP, 0L);
 
         tickCounter = 0;
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        saveHandlers(tag, registries);
-        saveOffer(tag, registries);
-        settingsManager.save(tag);
-        visualManager.save(tag);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        HolderLookup.Provider registries = this.level != null ? this.level.registryAccess() : null;
+        if (registries != null) {
+            saveHandlers(output, registries);
+        }
+        saveOffer(output);
+        settingsManager.save(output);
+        visualManager.save(output);
 
-        tag.putInt(NBT_TOTAL_SALES, totalSales);
+        output.putInt(NBT_TOTAL_SALES, totalSales);
 
         if (shopId != null && !shopId.isEmpty()) {
-            tag.putString(NBT_SHOP_ID, shopId);
+            output.putString(NBT_SHOP_ID, shopId);
         }
 
         if (salePercent != null) {
-            tag.putDouble(NBT_SALE_PERCENT, salePercent);
-            tag.putLong(NBT_SALE_END_TIMESTAMP, saleEndGameTick);
+            output.putDouble(NBT_SALE_PERCENT, salePercent);
+            output.putLong(NBT_SALE_END_TIMESTAMP, saleEndGameTick);
         }
     }
 
-    private void loadHandlers(CompoundTag tag, HolderLookup.Provider registries) {
+    private void loadHandlers(ValueInput input, HolderLookup.Provider registries) {
         handlerMap.forEach((name, handler) -> {
-            if (tag.contains(name)) {
-                handler.deserializeNBT(registries, tag.getCompound(name));
-            }
+            input.read(name, CompoundTag.CODEC).ifPresent(c -> handler.deserializeNBT(registries, c));
         });
     }
 
-    private void saveHandlers(CompoundTag tag, HolderLookup.Provider registries) {
-        handlerMap.forEach((name, handler) -> tag.put(name, handler.serializeNBT(registries)));
+    private void saveHandlers(ValueOutput output, HolderLookup.Provider registries) {
+        handlerMap.forEach((name, handler) -> output.store(name, CompoundTag.CODEC, handler.serializeNBT(registries)));
     }
 
-    private void loadOffer(CompoundTag tag, HolderLookup.Provider registries) {
-        offerPayment1 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT1));
-        offerPayment2 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT2));
-        offerResult = ItemStack.parseOptional(registries, tag.getCompound(KEY_RESULT));
-        hasOffer = tag.getBoolean(NBT_HAS_OFFER);
+    private void loadOffer(ValueInput input) {
+        offerPayment1 = input.read(KEY_PAYMENT1, ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY);
+        offerPayment2 = input.read(KEY_PAYMENT2, ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY);
+        offerResult = input.read(KEY_RESULT, ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY);
+        hasOffer = input.getBooleanOr(NBT_HAS_OFFER, false);
     }
 
-    private void saveOffer(CompoundTag tag, HolderLookup.Provider registries) {
+    private void saveOffer(ValueOutput output) {
         if (!offerPayment1.isEmpty())
-            tag.put(KEY_PAYMENT1, offerPayment1.save(registries));
+            output.store(KEY_PAYMENT1, ItemStack.OPTIONAL_CODEC, offerPayment1);
         if (!offerPayment2.isEmpty())
-            tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
+            output.store(KEY_PAYMENT2, ItemStack.OPTIONAL_CODEC, offerPayment2);
         if (!offerResult.isEmpty())
-            tag.put(KEY_RESULT, offerResult.save(registries));
-        tag.putBoolean(NBT_HAS_OFFER, hasOffer);
+            output.store(KEY_RESULT, ItemStack.OPTIONAL_CODEC, offerResult);
+        output.putBoolean(NBT_HAS_OFFER, hasOffer);
     }
 
     @Override
@@ -1125,11 +1134,11 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
         tag.putBoolean(NBT_HAS_OFFER, hasOffer);
         if (hasOffer) {
             if (!offerPayment1.isEmpty())
-                tag.put(KEY_PAYMENT1, offerPayment1.save(registries));
+                tag.store(KEY_PAYMENT1, ItemStack.OPTIONAL_CODEC, registries.createSerializationContext(NbtOps.INSTANCE), offerPayment1);
             if (!offerPayment2.isEmpty())
-                tag.put(KEY_PAYMENT2, offerPayment2.save(registries));
+                tag.store(KEY_PAYMENT2, ItemStack.OPTIONAL_CODEC, registries.createSerializationContext(NbtOps.INSTANCE), offerPayment2);
             if (!offerResult.isEmpty())
-                tag.put(KEY_RESULT, offerResult.save(registries));
+                tag.store(KEY_RESULT, ItemStack.OPTIONAL_CODEC, registries.createSerializationContext(NbtOps.INSTANCE), offerResult);
         }
 
         settingsManager.save(tag);
@@ -1149,28 +1158,19 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
+        offerPayment1 = tag.read(KEY_PAYMENT1, ItemStack.OPTIONAL_CODEC, registries.createSerializationContext(NbtOps.INSTANCE)).orElse(ItemStack.EMPTY);
+        offerPayment2 = tag.read(KEY_PAYMENT2, ItemStack.OPTIONAL_CODEC, registries.createSerializationContext(NbtOps.INSTANCE)).orElse(ItemStack.EMPTY);
+        offerResult = tag.read(KEY_RESULT, ItemStack.OPTIONAL_CODEC, registries.createSerializationContext(NbtOps.INSTANCE)).orElse(ItemStack.EMPTY);
+        hasOffer = tag.getBooleanOr(NBT_HAS_OFFER, false);
 
-        offerPayment1 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT1));
-        offerPayment2 = ItemStack.parseOptional(registries, tag.getCompound(KEY_PAYMENT2));
-        offerResult = ItemStack.parseOptional(registries, tag.getCompound(KEY_RESULT));
-        hasOffer = tag.getBoolean(NBT_HAS_OFFER);
-
-        if (tag.contains(NBT_SALE_PERCENT)) {
-            salePercent = tag.getDouble(NBT_SALE_PERCENT);
-            saleEndGameTick = tag.getLong(NBT_SALE_END_TIMESTAMP);
-            saleActiveClient = tag.getBoolean("SaleActive");
-        } else {
-            salePercent = null;
-            saleEndGameTick = 0L;
-            saleActiveClient = false;
-        }
+        salePercent = tag.read(NBT_SALE_PERCENT, com.mojang.serialization.Codec.DOUBLE).orElse(null);
+        saleEndGameTick = tag.getLongOr(NBT_SALE_END_TIMESTAMP, 0L);
+        saleActiveClient = tag.getBooleanOr("SaleActive", false);
 
         settingsManager.load(tag);
         visualManager.load(tag);
 
-        if (tag.contains(NBT_SHOP_ID)) {
-            shopId = tag.getString(NBT_SHOP_ID);
-        }
+        shopId = tag.getStringOr(NBT_SHOP_ID, "");
 
         updateOfferSlot();
         visualManager.refreshPaymentFeedbackSnapshot(paymentHandler);
@@ -1225,7 +1225,7 @@ public class SingleOfferShopBlockEntity extends BlockEntity implements MenuProvi
     public void incrementTotalSales(int amount) {
         this.totalSales += amount;
         setChanged();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             updateShopDirectory();
         }
     }

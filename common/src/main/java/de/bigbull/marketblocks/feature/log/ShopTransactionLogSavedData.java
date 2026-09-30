@@ -2,10 +2,6 @@ package de.bigbull.marketblocks.feature.log;
 
 import de.bigbull.marketblocks.Constants;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -18,88 +14,51 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedDataType;
+
 /**
  * Central transaction-log storage for all shop types.
  * Persisted as SavedData (world/data/*.dat), not inside chunk NBT.
  */
 public final class ShopTransactionLogSavedData extends SavedData {
     private static final String NBT_SHOPS = "Shops";
-    private static final String NBT_KEY = "Key";
-    private static final String NBT_ENTRIES = "Entries";
 
     public static final String SINGLE_OFFER_SHOP_TYPE = "single_offer_shop";
     public static final int DEFAULT_MAX_ENTRIES_PER_SHOP = 100;
     public static final String DATA_NAME = Constants.MOD_ID + "_shop_logs";
 
-    public static final SavedData.Factory<ShopTransactionLogSavedData> FACTORY =
-            new SavedData.Factory<>(ShopTransactionLogSavedData::new, ShopTransactionLogSavedData::load, null);
+    public static final Codec<ShopTransactionLogSavedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.unboundedMap(Codec.STRING, TransactionLogEntry.CODEC.listOf())
+                    .optionalFieldOf(NBT_SHOPS, Map.of())
+                    .forGetter(data -> {
+                        Map<String, List<TransactionLogEntry>> map = new HashMap<>();
+                        data.logsByShop.forEach((k, v) -> map.put(k, new ArrayList<>(v)));
+                        return map;
+                    })
+    ).apply(instance, map -> {
+        ShopTransactionLogSavedData data = new ShopTransactionLogSavedData();
+        map.forEach((k, v) -> data.logsByShop.put(k, new ArrayDeque<>(v)));
+        return data;
+    }));
+
+    public static final SavedDataType<ShopTransactionLogSavedData> TYPE = new SavedDataType<>(
+            DATA_NAME,
+            ShopTransactionLogSavedData::new,
+            CODEC,
+            DataFixTypes.SAVED_DATA_COMMAND_STORAGE
+    );
 
     private final Map<String, ArrayDeque<TransactionLogEntry>> logsByShop = new HashMap<>();
 
     public ShopTransactionLogSavedData() {
     }
 
-    private static ShopTransactionLogSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
-        ShopTransactionLogSavedData data = new ShopTransactionLogSavedData();
-        if (!tag.contains(NBT_SHOPS, Tag.TAG_LIST)) {
-            return data;
-        }
-
-        ListTag shops = tag.getList(NBT_SHOPS, Tag.TAG_COMPOUND);
-        for (int i = 0; i < shops.size(); i++) {
-            CompoundTag shopTag = shops.getCompound(i);
-            String key = shopTag.getString(NBT_KEY);
-            if (key == null || key.isBlank()) {
-                continue;
-            }
-
-            ArrayDeque<TransactionLogEntry> deque = new ArrayDeque<>();
-            ListTag entriesTag = shopTag.getList(NBT_ENTRIES, Tag.TAG_COMPOUND);
-            for (int j = 0; j < entriesTag.size(); j++) {
-                try {
-                    TransactionLogEntry entry = TransactionLogEntry.fromTag(entriesTag.getCompound(j), registries);
-                    deque.addLast(entry);
-                } catch (Exception e) {
-                    Constants.LOG.error("Failed to load transaction log entry for shop {}", key, e);
-                }
-            }
-
-            if (!deque.isEmpty()) {
-                data.logsByShop.put(key, deque);
-            }
-        }
-        return data;
-    }
-
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
-        ListTag shops = new ListTag();
-        logsByShop.forEach((key, deque) -> {
-            if (deque == null || deque.isEmpty()) {
-                return;
-            }
-
-            CompoundTag shopTag = new CompoundTag();
-            shopTag.putString(NBT_KEY, key);
-            ListTag entriesTag = new ListTag();
-            for (TransactionLogEntry entry : deque) {
-                try {
-                    entriesTag.add(entry.toTag(registries));
-                } catch (Exception e) {
-                    Constants.LOG.error("Failed to save transaction log entry for shop {}", key, e);
-                }
-            }
-            shopTag.put(NBT_ENTRIES, entriesTag);
-            shops.add(shopTag);
-        });
-
-        tag.put(NBT_SHOPS, shops);
-        return tag;
-    }
-
     public static ShopTransactionLogSavedData get(ServerLevel level) {
         ServerLevel overworld = level.getServer().overworld();
-        return overworld.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        return overworld.getDataStorage().computeIfAbsent(TYPE);
     }
 
     public List<TransactionLogEntry> getEntries(String shopType, ResourceKey<Level> dimension, BlockPos pos, int limit) {
@@ -157,7 +116,7 @@ public final class ShopTransactionLogSavedData extends SavedData {
 
     private static String shopKey(String shopType, ResourceKey<Level> dimension, BlockPos pos) {
         String normalizedShopType = normalizeShopType(shopType);
-        return normalizedShopType + "|" + dimension.location() + "|" + pos.asLong();
+        return normalizedShopType + "|" + dimension.identifier() + "|" + pos.asLong();
     }
 
     private static String normalizeShopType(String shopType) {

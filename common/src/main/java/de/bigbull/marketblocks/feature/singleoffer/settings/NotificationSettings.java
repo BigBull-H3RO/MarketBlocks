@@ -48,10 +48,10 @@ public record NotificationSettings(
     public static NotificationSettings load(CompoundTag tag) {
         if (tag == null || tag.isEmpty()) return DEFAULT;
         return new NotificationSettings(
-                tag.contains(KEY_NOTIFY_ON_PURCHASE) ? tag.getBoolean(KEY_NOTIFY_ON_PURCHASE) : DEFAULT.notifyOnPurchase(),
-                tag.contains(KEY_NOTIFY_ON_OUT_OF_STOCK) ? tag.getBoolean(KEY_NOTIFY_ON_OUT_OF_STOCK) : DEFAULT.notifyOnOutOfStock(),
-                tag.contains(KEY_NOTIFY_ON_OUTPUT_FULL) ? tag.getBoolean(KEY_NOTIFY_ON_OUTPUT_FULL) : DEFAULT.notifyOnOutputFull(),
-                tag.contains(KEY_NOTIFY_CO_OWNERS) ? tag.getBoolean(KEY_NOTIFY_CO_OWNERS) : DEFAULT.notifyCoOwners()
+                tag.getBooleanOr(KEY_NOTIFY_ON_PURCHASE, DEFAULT.notifyOnPurchase()),
+                tag.getBooleanOr(KEY_NOTIFY_ON_OUT_OF_STOCK, DEFAULT.notifyOnOutOfStock()),
+                tag.getBooleanOr(KEY_NOTIFY_ON_OUTPUT_FULL, DEFAULT.notifyOnOutputFull()),
+                tag.getBooleanOr(KEY_NOTIFY_CO_OWNERS, DEFAULT.notifyCoOwners())
         );
     }
 

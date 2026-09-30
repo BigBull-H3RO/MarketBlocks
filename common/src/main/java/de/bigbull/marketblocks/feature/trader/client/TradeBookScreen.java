@@ -1,19 +1,21 @@
 package de.bigbull.marketblocks.feature.trader.client;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +41,7 @@ import de.bigbull.marketblocks.feature.trader.client.tradebook.elements.TopSelle
 import de.bigbull.marketblocks.feature.trader.client.tradebook.elements.TrendElement;
 
 public class TradeBookScreen extends Screen {
-    public static final ResourceLocation BOOK_LOCATION = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    public static final Identifier BOOK_LOCATION = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/tradebook/twoside_book.png");
 
     private static final int IMAGE_WIDTH = 280;
@@ -271,27 +273,28 @@ public class TradeBookScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (super.keyPressed(event)) {
             return true;
         } else {
-            switch (keyCode) {
-                case 266:
-                    this.backButton.onPress();
-                    return true;
-                case 267:
-                    this.forwardButton.onPress();
-                    return true;
-                default:
-                    return false;
-            }
+            return switch (event.key()) {
+                case 266 -> {
+                    this.backButton.onPress(event);
+                    yield true;
+                }
+                case 267 -> {
+                    this.forwardButton.onPress(event);
+                    yield true;
+                }
+                default -> false;
+            };
         }
     }
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderTransparentBackground(guiGraphics);
-        guiGraphics.blit(RenderType::guiTextured, BOOK_LOCATION, (this.width - IMAGE_WIDTH) / 2, 2, 121.0f, 0.0f, IMAGE_WIDTH, IMAGE_HEIGHT, 512, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, BOOK_LOCATION, (this.width - IMAGE_WIDTH) / 2, 2, 121.0f, 0.0f, IMAGE_WIDTH, IMAGE_HEIGHT, 512, 256);
     }
 
     @Override
@@ -353,7 +356,7 @@ public class TradeBookScreen extends Screen {
             int sectionWidth = this.font.width(sectionLabel);
             int headerX = textX + (TradeBookLayoutUtils.TEXT_WIDTH - sectionWidth) / 2;
             int headerY = topPos + 14;
-            guiGraphics.drawString(this.font, sectionLabel, headerX, headerY, 0x383838, false);
+            guiGraphics.drawString(this.font, sectionLabel, headerX, headerY, 0xFF383838, false);
             int lineY = headerY + 10;
             guiGraphics.fill(textX + 2, lineY, textX + TradeBookLayoutUtils.TEXT_WIDTH - 2, lineY + 1, 0x44000000);
         }
@@ -361,8 +364,8 @@ public class TradeBookScreen extends Screen {
 
     private void renderPage(GuiGraphics guiGraphics, int pageIndex, int textX, int textY, int mouseX, int mouseY, TradeBookRenderContext context) {
         float scale = this.pageScales.getOrDefault(pageIndex, TradeBookLayoutUtils.TEXT_SCALE);
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().scale(scale, scale, 1.0f);
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().scale(scale, scale);
 
         int scaledTextX = (int) (textX / scale);
         int scaledTextY = (int) (textY / scale);
@@ -397,13 +400,13 @@ public class TradeBookScreen extends Screen {
                 return true;
             });
 
-            guiGraphics.drawString(this.font, line, scaledTextX, lineY, 0, false);
+            guiGraphics.drawString(this.font, line, scaledTextX, lineY, 0xFF000000, false);
 
             int lineHeight = 9;
             int extraHeight = getLineExtraHeight(line);
             lineY += lineHeight + extraHeight;
         }
-        guiGraphics.pose().popPose();
+        guiGraphics.pose().popMatrix();
 
         Style style = this.getClickedStyleForPage(mouseX, mouseY, pageIndex, textX, textY);
         if (style != null) {
@@ -448,16 +451,38 @@ public class TradeBookScreen extends Screen {
             int totalLineHeight = lineHeight + extraHeight;
 
             if (scaledRelY >= currentY && scaledRelY < currentY + totalLineHeight) {
-                return this.font.getSplitter().componentStyleAtWidth(line, (int) scaledRelX);
+                return findStyleAtWidth(line, (int) scaledRelX);
             }
             currentY += totalLineHeight;
         }
         return null;
     }
 
+    /**
+     * Finds the Style at a given pixel X position within a FormattedCharSequence.
+     * Replacement for the removed StringSplitter.componentStyleAtWidth.
+     */
+    @Nullable
+    private Style findStyleAtWidth(FormattedCharSequence sequence, int targetX) {
+        final Style[] foundStyle = {null};
+        final float[] currentX = {0.0f};
+        sequence.accept((index, style, codePoint) -> {
+            float charWidth = this.font.getSplitter().stringWidth(FormattedCharSequence.codepoint(codePoint, style));
+            currentX[0] += charWidth;
+            if (currentX[0] > targetX) {
+                foundStyle[0] = style;
+                return false;
+            }
+            return true;
+        });
+        return foundStyle[0];
+    }
+
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() == 0) {
+            double mouseX = event.x();
+            double mouseY = event.y();
             for (InteractiveZone zone : this.activeZones) {
                 if (zone.contains(mouseX, mouseY) && zone.getOnClick() != null) {
                     zone.getOnClick().run();
@@ -466,11 +491,11 @@ public class TradeBookScreen extends Screen {
             }
 
             Style style = this.getClickedComponentStyleAt(mouseX, mouseY);
-            if (style != null && this.handleComponentClicked(style)) {
+            if (style != null && style.getClickEvent() != null && this.handleClickEvent(style.getClickEvent())) {
                 return true;
             }
         }
-        boolean result = super.mouseClicked(mouseX, mouseY, button);
+        boolean result = super.mouseClicked(event, doubleClick);
         if (result) {
             this.setFocused(null);
             if (this.forwardButton != null)
@@ -481,31 +506,30 @@ public class TradeBookScreen extends Screen {
         return result;
     }
 
-    @Override
-    public boolean handleComponentClicked(Style style) {
-        ClickEvent clickevent = style.getClickEvent();
+    protected boolean handleClickEvent(@Nullable ClickEvent clickevent) {
         if (clickevent == null) {
             return false;
-        } else if (clickevent.getAction() == ClickEvent.Action.CHANGE_PAGE) {
-            String s = clickevent.getValue();
-            try {
-                int logicalIndex = Integer.parseInt(s) - 1;
+        }
+        switch (clickevent) {
+            case ClickEvent.ChangePage(int page) -> {
+                int logicalIndex = page - 1;
                 if (this.logicalToPhysical.containsKey(logicalIndex)) {
                     int physicalIndex = this.logicalToPhysical.get(logicalIndex);
                     this.currentPage = (physicalIndex / 2) * 2;
                     this.updateButtonVisibility();
                     return true;
                 }
-            } catch (Exception exception) {
                 return false;
             }
-            return false;
-        } else {
-            boolean flag = super.handleComponentClicked(style);
-            if (flag && clickevent.getAction() == ClickEvent.Action.RUN_COMMAND) {
+            case ClickEvent.RunCommand runCommand -> {
+                Screen.defaultHandleGameClickEvent(clickevent, this.minecraft, this);
                 this.onClose();
+                return true;
             }
-            return flag;
+            default -> {
+                Screen.defaultHandleGameClickEvent(clickevent, this.minecraft, this);
+                return true;
+            }
         }
     }
 

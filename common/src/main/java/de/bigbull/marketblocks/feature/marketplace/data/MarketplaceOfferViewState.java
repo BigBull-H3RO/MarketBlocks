@@ -52,11 +52,11 @@ public record MarketplaceOfferViewState(
             return empty();
         }
         return new MarketplaceOfferViewState(
-                tag.getInt(MAX_PURCHASABLE_KEY),
-                tag.contains(REMAINING_DAILY_KEY) ? Optional.of(tag.getInt(REMAINING_DAILY_KEY)) : Optional.empty(),
-                tag.contains(REMAINING_STOCK_KEY) ? Optional.of(tag.getInt(REMAINING_STOCK_KEY)) : Optional.empty(),
-                tag.contains(RESTOCK_SECONDS_KEY) ? Optional.of(tag.getInt(RESTOCK_SECONDS_KEY)) : Optional.empty(),
-                tag.contains(PRICE_MULTIPLIER_KEY) ? tag.getDouble(PRICE_MULTIPLIER_KEY) : 1.0d
+                tag.getIntOr(MAX_PURCHASABLE_KEY, 0),
+                tag.getInt(REMAINING_DAILY_KEY),
+                tag.getInt(REMAINING_STOCK_KEY),
+                tag.getInt(RESTOCK_SECONDS_KEY),
+                tag.getDoubleOr(PRICE_MULTIPLIER_KEY, 1.0d)
         );
     }
 }

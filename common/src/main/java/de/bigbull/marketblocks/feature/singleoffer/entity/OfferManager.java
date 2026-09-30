@@ -660,7 +660,7 @@ public class OfferManager {
 
 private @Nullable BuyerIdentity resolveBuyerIdentity(@Nullable Player directBuyer) {
         if (directBuyer != null) {
-            return new BuyerIdentity(directBuyer.getUUID(), directBuyer.getGameProfile().getName());
+            return new BuyerIdentity(directBuyer.getUUID(), directBuyer.getGameProfile().name());
         }
         if (shopEntity.getAccessManager().purchaseContextBuyerId != null) {
             return new BuyerIdentity(shopEntity.getAccessManager().purchaseContextBuyerId,

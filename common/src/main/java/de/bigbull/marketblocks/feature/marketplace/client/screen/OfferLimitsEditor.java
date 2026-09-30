@@ -116,11 +116,11 @@ public class OfferLimitsEditor extends BaseModalScreen {
         int labelX = panelLeft + LABEL_X_OFFSET;
         int rowStartY = panelTop + LABEL_START_Y_OFFSET;
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.daily"),
-                labelX, rowStartY, 0xCFCFCF, false);
+                labelX, rowStartY, 0xFFCFCFCF, false);
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.stock"),
-                labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
+                labelX, rowStartY + ROW_SPACING, 0xFFCFCFCF, false);
         guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.restock"),
-                labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
+                labelX, rowStartY + (ROW_SPACING * 2), 0xFFCFCFCF, false);
 
         renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY,
                 "gui.marketblocks.marketplace.editor.limits.daily.tooltip");

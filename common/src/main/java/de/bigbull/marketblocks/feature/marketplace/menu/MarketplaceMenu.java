@@ -18,6 +18,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
@@ -352,7 +353,7 @@ public class MarketplaceMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        if (!player.level().isClientSide) {
+        if (!player.level().isClientSide()) {
             clearTemplate(player);
         }
     }
@@ -429,6 +430,22 @@ public class MarketplaceMenu extends AbstractContainerMenu {
 
         slot.onTake(player, newStack);
         return originalStack;
+    }
+
+    @Override
+    public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
+        if (slot != null && slot.index < TEMPLATE_SLOTS) {
+            return false;
+        }
+        return super.canTakeItemForPickAll(stack, slot);
+    }
+
+    @Override
+    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        if (clickType == ClickType.PICKUP_ALL && slotId >= 0 && slotId < TEMPLATE_SLOTS) {
+            return;
+        }
+        super.clicked(slotId, button, clickType, player);
     }
 
     @Override

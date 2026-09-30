@@ -4,10 +4,11 @@ import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 
@@ -16,17 +17,17 @@ import java.util.function.Consumer;
  * Toggles between Disabled, Input, and Output states for a specific block face.
  */
 public class SideModeButton extends Button {
-    private static final ResourceLocation BUTTON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier BUTTON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "sidemode/button");
-    private static final ResourceLocation HIGHLIGHTED = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier HIGHLIGHTED = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "sidemode/button_highlighted");
-    private static final ResourceLocation SELECTED = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier SELECTED = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "sidemode/button_selected");
-    public static final ResourceLocation INPUT_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    public static final Identifier INPUT_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "sidemode/input_icon");
-    public static final ResourceLocation OUTPUT_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    public static final Identifier OUTPUT_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "sidemode/output_icon");
-    public static final ResourceLocation DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    public static final Identifier DISABLED_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "sidemode/disabled_icon");
 
     private final Component sideName;
@@ -71,42 +72,32 @@ public class SideModeButton extends Button {
     }
 
     @Override
-    public void onPress() {
-        // Not used, handled in mouseClicked
-    }
-
-    @Override
-    public void onClick(double mouseX, double mouseY) {
-        // Handled in mouseClicked
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0 || button == 1) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (event.button() == 0 || event.button() == 1) {
             isPressing = false;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.active || !this.visible) {
             return false;
         }
 
-        if (this.isMouseOver(mouseX, mouseY)) {
+        if (this.isMouseOver(event.x(), event.y())) {
             this.playDownSound(Minecraft.getInstance().getSoundManager());
             isPressing = true;
             pressTicks = 4;
 
-            if (button == 0) { // Left click -> Next mode
+            if (event.button() == 0) { // Left click -> Next mode
                 mode = mode.next();
                 updateTooltip();
                 if (onModeChanged != null) {
                     onModeChanged.accept(mode);
                 }
                 return true;
-            } else if (button == 1) { // Right click -> Previous mode
+            } else if (event.button() == 1) { // Right click -> Previous mode
                 mode = mode.previous();
                 updateTooltip();
                 if (onModeChanged != null) {
@@ -119,8 +110,8 @@ public class SideModeButton extends Button {
     }
 
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        ResourceLocation background;
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        Identifier background;
         if (!this.active) {
             background = BUTTON;
         } else if (isPressing || pressTicks > 0) {
@@ -135,9 +126,9 @@ public class SideModeButton extends Button {
             pressTicks--;
         }
 
-        graphics.blitSprite(RenderType::guiTextured, background, getX(), getY(), getWidth(), getHeight());
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, background, getX(), getY(), getWidth(), getHeight());
 
-        ResourceLocation icon = switch (mode) {
+        Identifier icon = switch (mode) {
             case DISABLED -> DISABLED_ICON;
             case INPUT -> INPUT_ICON;
             case OUTPUT -> OUTPUT_ICON;
@@ -145,6 +136,6 @@ public class SideModeButton extends Button {
 
         int iconX = getX() + (getWidth() - 16) / 2;
         int iconY = getY() + (getHeight() - 16) / 2;
-        graphics.blitSprite(RenderType::guiTextured, icon, iconX, iconY, 16, 16);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, icon, iconX, iconY, 16, 16);
     }
 }

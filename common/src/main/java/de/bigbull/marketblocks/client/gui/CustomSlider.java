@@ -5,6 +5,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +40,7 @@ public class CustomSlider extends AbstractWidget {
     public static final int BADGE_BG = 0xFF383838;
     public static final int BADGE_BORDER = 0xFF1C1C1C;
     public static final int BADGE_TEXT = 0xFFFFFFFF;
-    public static final int LABEL_COLOR = 0x303030;
+    public static final int LABEL_COLOR = 0xFF303030;
 
     protected final float min;
     protected final float max;
@@ -133,14 +135,14 @@ public class CustomSlider extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (this.active && this.visible) {
-            if (this.isValidClickButton(button)) {
-                boolean flag = this.isMouseOver(mouseX, mouseY);
+            if (this.isValidClickButton(event.buttonInfo())) {
+                boolean flag = this.isMouseOver(event.x(), event.y());
                 if (flag) {
                     this.playDownSound(Minecraft.getInstance().getSoundManager());
                     this.isDragging = true;
-                    updateFromMouse(mouseX);
+                    updateFromMouse(event.x());
                     return true;
                 }
             }
@@ -148,34 +150,33 @@ public class CustomSlider extends AbstractWidget {
         return false;
     }
 
-
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (this.visible && this.active && this.isDragging && button == 0) {
-            updateFromMouse(mouseX);
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (this.visible && this.active && this.isDragging && event.button() == 0) {
+            updateFromMouse(event.x());
             return true;
         }
         return false;
     }
 
     @Override
-    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
+    protected void onDrag(MouseButtonEvent event, double dragX, double dragY) {
         if (this.visible && this.active && this.isDragging) {
-            updateFromMouse(mouseX);
+            updateFromMouse(event.x());
         }
     }
 
     @Override
-    public void onRelease(double mouseX, double mouseY) {
+    public void onRelease(MouseButtonEvent event) {
         this.isDragging = false;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (event.button() == 0) {
             this.isDragging = false;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     private void updateFromMouse(double mouseX) {
@@ -224,20 +225,20 @@ public class CustomSlider extends AbstractWidget {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (!this.active || !this.visible) {
             return false;
         }
-        if (keyCode == 263) { // LEFT
+        if (event.key() == 263) { // LEFT
             float delta = this.step > 0 ? this.step : (this.max - this.min) / 20.0f;
             setValue(this.currentValue - delta);
             return true;
-        } else if (keyCode == 262) { // RIGHT
+        } else if (event.key() == 262) { // RIGHT
             float delta = this.step > 0 ? this.step : (this.max - this.min) / 20.0f;
             setValue(this.currentValue + delta);
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
@@ -266,7 +267,7 @@ public class CustomSlider extends AbstractWidget {
 
             // Label
             if (this.prefix != null && !this.prefix.getString().isEmpty()) {
-                int curLabelColor = this.active ? this.labelColor : 0x808080;
+                int curLabelColor = this.active ? this.labelColor : 0xFF808080;
                 graphics.drawString(font, GuiConstants.compact(this.prefix), x, headerY, curLabelColor, false);
             }
 
@@ -297,7 +298,7 @@ public class CustomSlider extends AbstractWidget {
                 // Text
                 graphics.drawString(font, valText, badgeX + 3, badgeY + 1, badgeText, false);
             } else {
-                int curLabelColor = this.active ? this.labelColor : 0x808080;
+                int curLabelColor = this.active ? this.labelColor : 0xFF808080;
                 graphics.drawString(font, valText, x + w - valWidth, headerY, curLabelColor, false);
             }
         }

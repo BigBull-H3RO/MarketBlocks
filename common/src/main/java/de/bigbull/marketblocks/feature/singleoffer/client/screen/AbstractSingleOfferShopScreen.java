@@ -18,7 +18,7 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -41,25 +41,25 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         return this.topPos;
     }
     protected static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "button"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "button_disabled"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "button_highlighted"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "button_selected"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "button"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "button_disabled"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "button_highlighted"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "button_selected"));
 
     protected static final WidgetSprites TAB_BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "tab_button/tab"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "tab_button/tab"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "tab_button/tab"), // Hover is identical to
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "tab_button/tab"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "tab_button/tab"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "tab_button/tab"), // Hover is identical to
                                                                                          // unselected
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "tab_button/tab_selected"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "tab_button/tab_selected"));
 
-    private static final ResourceLocation OFFERS_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier OFFERS_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/singleoffer/home.png");
-    private static final ResourceLocation INVENTORY_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier INVENTORY_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/singleoffer/inventory.png");
-    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier SETTINGS_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/settings.png");
-    private static final ResourceLocation LOG_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier LOG_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/log.png");
 
     // Layout configuration for the right side tabs
@@ -157,16 +157,16 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
         for (IconButton tab : sideTabs) {
-            if (tab.mouseClicked(mouseX, mouseY, button)) {
+            if (tab.mouseClicked(event, doubleClick)) {
                 return true;
             }
-            if (tab.visible && tab.isMouseOver(mouseX, mouseY)) {
+            if (tab.visible && tab.isMouseOver(event.x(), event.y())) {
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     /**
@@ -221,7 +221,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
             }
             Component ownerText = Component.translatable("gui.marketblocks.owner", names);
             int ownerWidth = font.width(ownerText);
-            guiGraphics.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0x404040, false);
+            guiGraphics.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0xFF404040, false);
         }
     }
 

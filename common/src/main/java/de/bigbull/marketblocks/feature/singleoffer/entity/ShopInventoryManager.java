@@ -100,7 +100,7 @@ public class ShopInventoryManager {
 
     public void pullFromInputChest(CommonItemStackHandler inputHandler) {
         Level level = blockEntity.getLevel();
-        if (level == null || level.isClientSide) return;
+        if (level == null || level.isClientSide()) return;
         if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) return;
         for (Direction dir : DIRECTIONS) {
             if (blockEntity.getMode(dir) == SideMode.INPUT) {
@@ -114,7 +114,7 @@ public class ShopInventoryManager {
 
     public void pushToOutputChest(CommonItemStackHandler outputHandler) {
         Level level = blockEntity.getLevel();
-        if (level == null || level.isClientSide) return;
+        if (level == null || level.isClientSide()) return;
         if (!SingleOfferConfig.ENABLE_CHEST_EXTENSION.get()) return;
         for (Direction dir : DIRECTIONS) {
             if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
@@ -188,7 +188,7 @@ public class ShopInventoryManager {
         }
         list.add(outputSimulationHandler);
 
-        if (SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+        if (SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide()) {
             for (Direction dir : DIRECTIONS) {
                 if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
                     ICommonItemHandler neighbor = getValidNeighborHandler(dir);
@@ -239,7 +239,7 @@ public class ShopInventoryManager {
 
     public void updateOutputFullness() {
         Level level = blockEntity.getLevel();
-        if (level == null || level.isClientSide) return;
+        if (level == null || level.isClientSide()) return;
 
         int total = 0;
         int filled = 0;
@@ -291,7 +291,7 @@ public class ShopInventoryManager {
             ItemStack chunk = stack.copy();
             chunk.setCount((int) Math.min(total, maxStack));
             ItemStack remainder = CommonItemHandlerHelper.insertItem(blockEntity.getOutputHandler(), chunk, false);
-            if (!remainder.isEmpty() && SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+            if (!remainder.isEmpty() && SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide()) {
                 for (Direction dir : DIRECTIONS) {
                     if (blockEntity.getMode(dir) == SideMode.OUTPUT) {
                         ICommonItemHandler neighbor = getValidNeighborHandler(dir);
@@ -325,7 +325,7 @@ public class ShopInventoryManager {
             }
         }
 
-        if (SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && remaining > 0 && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide) {
+        if (SingleOfferConfig.ENABLE_CHEST_EXTENSION.get() && remaining > 0 && blockEntity.getLevel() != null && !blockEntity.getLevel().isClientSide()) {
             for (Direction dir : DIRECTIONS) {
                 if (blockEntity.getMode(dir) != SideMode.INPUT) continue;
                 ICommonItemHandler neighbour = getValidNeighborHandler(dir);

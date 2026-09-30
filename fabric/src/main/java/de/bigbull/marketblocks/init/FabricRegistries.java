@@ -25,7 +25,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -55,21 +55,21 @@ public final class FabricRegistries {
 
     public static void init() {
         // Blocks
-        ResourceLocation tradeStandId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand");
+        Identifier tradeStandId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand");
         ResourceKey<Block> tradeStandKey = ResourceKey.create(Registries.BLOCK, tradeStandId);
         Block tradeStand = Registry.register(BuiltInRegistries.BLOCK,
                 tradeStandKey,
                 new TradeStandBlock(tradeStandProperties().setId(tradeStandKey)));
         RegistriesInit.TRADE_STAND_BLOCK = () -> tradeStand;
 
-        ResourceLocation tradeStandTopId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand_top");
+        Identifier tradeStandTopId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "trade_stand_top");
         ResourceKey<Block> tradeStandTopKey = ResourceKey.create(Registries.BLOCK, tradeStandTopId);
         Block tradeStandTop = Registry.register(BuiltInRegistries.BLOCK,
                 tradeStandTopKey,
                 new TradeStandTopBlock(tradeStandProperties().sound(SoundType.GLASS).setId(tradeStandTopKey)));
         RegistriesInit.TRADE_STAND_BLOCK_TOP = () -> tradeStandTop;
 
-        ResourceLocation marketCrateId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketcrate");
+        Identifier marketCrateId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketcrate");
         ResourceKey<Block> marketCrateKey = ResourceKey.create(Registries.BLOCK, marketCrateId);
         Block marketCrate = Registry.register(BuiltInRegistries.BLOCK,
                 marketCrateKey,
@@ -97,7 +97,7 @@ public final class FabricRegistries {
         RegistriesInit.MARKETCRATE_ITEM = () -> marketCrateItem;
 
         // Items
-        ResourceLocation tradeBookId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trade_book");
+        Identifier tradeBookId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "trade_book");
         ResourceKey<Item> tradeBookKey = ResourceKey.create(Registries.ITEM, tradeBookId);
         Item tradeBook = Registry.register(BuiltInRegistries.ITEM,
                 tradeBookKey,
@@ -105,7 +105,7 @@ public final class FabricRegistries {
         RegistriesInit.TRADE_BOOK = () -> tradeBook;
 
         // Entity Types
-        ResourceLocation shopBuyerId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer");
+        Identifier shopBuyerId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer");
         ResourceKey<EntityType<?>> shopBuyerKey = ResourceKey.create(Registries.ENTITY_TYPE, shopBuyerId);
         EntityType<ShopBuyerEntity> shopBuyer = Registry.register(BuiltInRegistries.ENTITY_TYPE,
                 shopBuyerKey,
@@ -116,22 +116,22 @@ public final class FabricRegistries {
         RegistriesInit.SHOP_BUYER = () -> shopBuyer;
 
         // Spawn Egg
-        ResourceLocation spawnEggId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer_spawn_egg");
+        Identifier spawnEggId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer_spawn_egg");
         ResourceKey<Item> spawnEggKey = ResourceKey.create(Registries.ITEM, spawnEggId);
         Item spawnEgg = Registry.register(BuiltInRegistries.ITEM,
                 spawnEggKey,
-                new SpawnEggItem(shopBuyer, new Item.Properties().setId(spawnEggKey)));
+                new SpawnEggItem(new Item.Properties().setId(spawnEggKey).spawnEgg(shopBuyer)));
         RegistriesInit.SHOP_BUYER_SPAWN_EGG = () -> spawnEgg;
 
         // Block Entities
         BlockEntityType<SingleOfferShopBlockEntity> shopBe = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_shop"),
+                Identifier.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_shop"),
                 FabricBlockEntityTypeBuilder.create(SingleOfferShopBlockEntity::new, tradeStand, marketCrate).build());
         RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY = () -> shopBe;
 
         // Menus
         MenuType<SingleOfferShopMenu> singleOfferMenu = Registry.register(BuiltInRegistries.MENU,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_shop_menu"),
+                Identifier.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_shop_menu"),
                 new ExtendedScreenHandlerType<>((syncId, inv, data) -> {
                     RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(data.bytes()), inv.player.registryAccess());
                     return new SingleOfferShopMenu(syncId, inv, buf);
@@ -139,7 +139,7 @@ public final class FabricRegistries {
         RegistriesInit.SINGLE_OFFER_SHOP_MENU = () -> singleOfferMenu;
 
         MenuType<MarketplaceMenu> mktMenu = Registry.register(BuiltInRegistries.MENU,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_menu"),
+                Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_menu"),
                 new ExtendedScreenHandlerType<>((syncId, inv, data) -> {
                     RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(data.bytes()), inv.player.registryAccess());
                     return new MarketplaceMenu(syncId, inv, buf);
@@ -148,37 +148,37 @@ public final class FabricRegistries {
 
         // Sounds
         SoundEvent fallSound = Registry.register(BuiltInRegistries.SOUND_EVENT,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "visual_npc_fall"),
-                SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "visual_npc_fall")));
+                Identifier.fromNamespaceAndPath(Constants.MOD_ID, "visual_npc_fall"),
+                SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "visual_npc_fall")));
         RegistriesInit.VISUAL_NPC_FALL_SOUND = () -> fallSound;
 
         // Triggers
-        ShopSellTrigger t1 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_sell"), new ShopSellTrigger());
+        ShopSellTrigger t1 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_sell"), new ShopSellTrigger());
         RegistriesInit.SHOP_SELL_TRIGGER = () -> t1;
-        ShopNpcTrigger t2 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_npc"), new ShopNpcTrigger());
+        ShopNpcTrigger t2 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_npc"), new ShopNpcTrigger());
         RegistriesInit.SHOP_NPC_TRIGGER = () -> t2;
-        ShopCoOwnerTrigger t3 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_co_owner"), new ShopCoOwnerTrigger());
+        ShopCoOwnerTrigger t3 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_co_owner"), new ShopCoOwnerTrigger());
         RegistriesInit.SHOP_CO_OWNER_TRIGGER = () -> t3;
-        ShopOutOfStockTrigger t4 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_out_of_stock"), new ShopOutOfStockTrigger());
+        ShopOutOfStockTrigger t4 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_out_of_stock"), new ShopOutOfStockTrigger());
         RegistriesInit.SHOP_OUT_OF_STOCK_TRIGGER = () -> t4;
-        ShopWholesalerTrigger t5 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_wholesaler"), new ShopWholesalerTrigger());
+        ShopWholesalerTrigger t5 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_wholesaler"), new ShopWholesalerTrigger());
         RegistriesInit.SHOP_WHOLESALER_TRIGGER = () -> t5;
-        MarketplaceOpenTrigger t6 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_open"), new MarketplaceOpenTrigger());
+        MarketplaceOpenTrigger t6 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_open"), new MarketplaceOpenTrigger());
         RegistriesInit.MARKETPLACE_OPEN_TRIGGER = () -> t6;
-        ShopNpcCustomizeTrigger t7 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_npc_customize"), new ShopNpcCustomizeTrigger());
+        ShopNpcCustomizeTrigger t7 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_npc_customize"), new ShopNpcCustomizeTrigger());
         RegistriesInit.SHOP_NPC_CUSTOMIZE_TRIGGER = () -> t7;
-        ShopRedstoneTrigger t8 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_redstone"), new ShopRedstoneTrigger());
+        ShopRedstoneTrigger t8 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_redstone"), new ShopRedstoneTrigger());
         RegistriesInit.SHOP_REDSTONE_TRIGGER = () -> t8;
-        ShopAutoIoTrigger t9 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_auto_io"), new ShopAutoIoTrigger());
+        ShopAutoIoTrigger t9 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_auto_io"), new ShopAutoIoTrigger());
         RegistriesInit.SHOP_AUTO_IO_TRIGGER = () -> t9;
-        ShopAdminModeTrigger t10 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_admin_mode"), new ShopAdminModeTrigger());
+        ShopAdminModeTrigger t10 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_admin_mode"), new ShopAdminModeTrigger());
         RegistriesInit.SHOP_ADMIN_MODE_TRIGGER = () -> t10;
-        MarketplaceBuyTrigger t11 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_buy"), new MarketplaceBuyTrigger());
+        MarketplaceBuyTrigger t11 = Registry.register(BuiltInRegistries.TRIGGER_TYPES, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_buy"), new MarketplaceBuyTrigger());
         RegistriesInit.MARKETPLACE_BUY_TRIGGER = () -> t11;
 
         // Creative Tab
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketblocks_tab"),
+                Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketblocks_tab"),
                 FabricItemGroup.builder()
                         .title(Component.translatable("itemGroup.marketblocks"))
                         .icon(() -> new ItemStack(tradeStand))

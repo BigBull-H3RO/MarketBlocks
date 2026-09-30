@@ -20,6 +20,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -127,7 +128,7 @@ public class TradeStandBlock extends BaseShopBlock {
             return InteractionResult.FAIL;
         }
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SingleOfferShopBlockEntity shop && !shop.isOwner(player)) {
                 return InteractionResult.FAIL;
@@ -143,7 +144,7 @@ public class TradeStandBlock extends BaseShopBlock {
                     SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
-        return level.isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
 
     public static InteractionResult tryDisableShowcase(Level level, BlockPos pos, BlockState state, Player player) {
@@ -151,7 +152,7 @@ public class TradeStandBlock extends BaseShopBlock {
             return InteractionResult.PASS;
         }
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SingleOfferShopBlockEntity shop && !shop.isOwner(player)) {
                 return InteractionResult.FAIL;
@@ -170,7 +171,7 @@ public class TradeStandBlock extends BaseShopBlock {
                     SoundSource.BLOCKS, 1.0F, 1.0F);
         }
 
-        return level.isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+        return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
 
     private static @NotNull ItemEntity getItemEntity(Level level, BlockPos pos) {
@@ -187,24 +188,22 @@ public class TradeStandBlock extends BaseShopBlock {
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);
-        if (!level.isClientSide && !state.is(oldState.getBlock()) && state.getValue(HAS_SHOWCASE)) {
+        if (!level.isClientSide() && !state.is(oldState.getBlock()) && state.getValue(HAS_SHOWCASE)) {
             ensureTopBlock(level, pos);
         }
     }
 
     @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock())) {
-            BlockPos topPos = pos.above();
-            if (level.getBlockState(topPos).is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
-                level.setBlock(topPos, Blocks.AIR.defaultBlockState(), 3);
-            }
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        BlockPos topPos = pos.above();
+        if (level.getBlockState(topPos).is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+            level.setBlock(topPos, Blocks.AIR.defaultBlockState(), 3);
         }
-        super.onRemove(state, level, pos, newState, movedByPiston);
+        super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
     }
 
     public static void ensureTopBlock(Level level, BlockPos basePos) {
-        if (level.isClientSide)
+        if (level.isClientSide())
             return;
 
         BlockState baseState = level.getBlockState(basePos);

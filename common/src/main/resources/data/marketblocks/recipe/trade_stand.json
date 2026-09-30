@@ -2,21 +2,11 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "#": {
-      "tag": "minecraft:planks"
-    },
-    "B": {
-      "item": "minecraft:stone_bricks"
-    },
-    "D": {
-      "item": "minecraft:smooth_stone_slab"
-    },
-    "E": {
-      "item": "minecraft:emerald"
-    },
-    "S": {
-      "tag": "minecraft:signs"
-    }
+    "#": "#minecraft:planks",
+    "B": "minecraft:stone_bricks",
+    "D": "minecraft:smooth_stone_slab",
+    "E": "minecraft:emerald",
+    "S": "#minecraft:signs"
   },
   "pattern": [
     "#D#",

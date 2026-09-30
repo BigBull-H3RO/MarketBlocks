@@ -32,7 +32,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -172,7 +172,7 @@ public final class MarketBlocksCommandEvents {
                         throws CommandSyntaxException {
                 ServerPlayer player = context.getSource().getPlayerOrException();
 
-                if (!Config.ALLOW_NON_OP_TELEPORT.get() && !player.hasPermissions(2)) {
+                if (!Config.ALLOW_NON_OP_TELEPORT.get() && !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
                         player.sendSystemMessage(
                                         Component.translatable("command.marketblocks.internal.tp.no_permission")
                                                         .withStyle(ChatFormatting.RED));
@@ -185,8 +185,8 @@ public final class MarketBlocksCommandEvents {
                 double z = DoubleArgumentType.getDouble(context, "z");
 
                 ResourceKey<Level> worldKey = ResourceKey.create(Registries.DIMENSION,
-                                ResourceLocation.parse(dim));
-                ServerLevel targetLevel = player.getServer().getLevel(worldKey);
+                                Identifier.parse(dim));
+                ServerLevel targetLevel = player.level().getServer().getLevel(worldKey);
 
                 if (targetLevel == null) {
                         player.sendSystemMessage(

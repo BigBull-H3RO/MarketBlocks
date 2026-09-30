@@ -15,10 +15,10 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewStat
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -48,12 +48,12 @@ public final class MarketplaceOverlayRenderer {
             Component noPagesText = Component.translatable("gui.marketblocks.marketplace.no_pages");
             int textX = context.previewX() - 118;
             int textY = context.previewY() + 55;
-            guiGraphics.drawWordWrap(context.font(), noPagesText, textX, textY, 200, 0x555555);
+            guiGraphics.drawWordWrap(context.font(), noPagesText, textX, textY, 200, 0xFF555555);
         } else if (context.visibleOffers().isEmpty()) {
             Component noOffersText = Component.translatable("gui.marketblocks.marketplace.no_offers");
             int textX = context.listStartX() + (context.listWidth() - context.font().width(noOffersText)) / 2;
             int textY = context.listStartY() + context.listHeight() / 2 - 4;
-            guiGraphics.drawString(context.font(), noOffersText, textX, textY, 0x555555, false);
+            guiGraphics.drawString(context.font(), noOffersText, textX, textY, 0xFF555555, false);
         }
     }
 
@@ -74,7 +74,7 @@ public final class MarketplaceOverlayRenderer {
         guiGraphics.disableScissor();
     }
 
-    private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier OUT_OF_STOCK_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/out_of_stock.png");
     private static final int STATUS_ICON_X = 182;
     private static final int STATUS_ICON_Y = 76;
@@ -104,14 +104,15 @@ public final class MarketplaceOverlayRenderer {
         if (viewState.maxPurchasable() <= 0) {
             int slotIconX = context.leftPos() + STATUS_ICON_X;
             int slotIconY = context.topPos() + STATUS_ICON_Y;
-            guiGraphics.blit(RenderType::guiTextured, OUT_OF_STOCK_ICON, slotIconX, slotIconY, 0.0F, 0.0F, STATUS_ICON_WIDTH, STATUS_ICON_HEIGHT,
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, OUT_OF_STOCK_ICON, slotIconX, slotIconY, 0.0F, 0.0F, STATUS_ICON_WIDTH, STATUS_ICON_HEIGHT,
                     STATUS_ICON_WIDTH, STATUS_ICON_HEIGHT);
         }
 
         // 2. Render dynamic status indicators in compact 2-row grid below trade slots
         List<StatusItem> items = buildStatusItems(context, offer, viewState);
         for (StatusItem item : items) {
-            guiGraphics.drawString(context.font(), item.text(), item.x(), item.y(), item.color(), false);
+            int color = (item.color() & 0xFF000000) == 0 ? (0xFF000000 | item.color()) : item.color();
+            guiGraphics.drawString(context.font(), item.text(), item.x(), item.y(), color, false);
         }
     }
 
@@ -133,7 +134,7 @@ public final class MarketplaceOverlayRenderer {
             int slotIconY = context.topPos() + STATUS_ICON_Y;
             if (context.mouseX() >= slotIconX && context.mouseX() <= slotIconX + STATUS_ICON_WIDTH
                     && context.mouseY() >= slotIconY && context.mouseY() <= slotIconY + STATUS_ICON_HEIGHT) {
-                guiGraphics.renderTooltip(context.font(), buildUnavailableOfferTooltip(context, viewState),
+                guiGraphics.setTooltipForNextFrame(context.font(), buildUnavailableOfferTooltip(context, viewState),
                         context.mouseX(), context.mouseY());
             }
 
@@ -141,7 +142,7 @@ public final class MarketplaceOverlayRenderer {
             int previewArrowY = context.previewY() + OfferTemplateButton.ARROW_Y_OFFSET;
             if (context.mouseX() >= previewArrowX - 1 && context.mouseX() <= previewArrowX + 11
                     && context.mouseY() >= previewArrowY - 1 && context.mouseY() <= previewArrowY + 10) {
-                guiGraphics.renderTooltip(context.font(), buildUnavailableOfferTooltip(context, viewState),
+                guiGraphics.setTooltipForNextFrame(context.font(), buildUnavailableOfferTooltip(context, viewState),
                         context.mouseX(), context.mouseY());
             }
         }
@@ -150,7 +151,7 @@ public final class MarketplaceOverlayRenderer {
         List<StatusItem> items = buildStatusItems(context, offer, viewState);
         for (StatusItem item : items) {
             if (isPointWithinStatusItem(context, item)) {
-                guiGraphics.renderTooltip(context.font(), item.tooltip(), context.mouseX(), context.mouseY());
+                guiGraphics.setTooltipForNextFrame(context.font(), item.tooltip(), context.mouseX(), context.mouseY());
             }
         }
     }
@@ -183,7 +184,7 @@ public final class MarketplaceOverlayRenderer {
                     "gui.marketblocks.marketplace.status.price_short",
                     String.format(Locale.ROOT, "%.2f", viewState.priceMultiplier()));
             Component priceTooltip = Component.translatable("gui.marketblocks.marketplace.tooltip.price_multiplier");
-            priceItem = new StatusItem(priceText, 0x404040, priceTooltip, 0, 0);
+            priceItem = new StatusItem(priceText, 0xFF404040, priceTooltip, 0, 0);
         }
 
         StatusItem dailyItem = null;
@@ -194,7 +195,7 @@ public final class MarketplaceOverlayRenderer {
             Component dailyTooltip = remainingDaily == 0
                     ? Component.translatable("gui.marketblocks.marketplace.tooltip.remaining_daily_empty")
                     : Component.translatable("gui.marketblocks.marketplace.tooltip.remaining_daily");
-            int dailyColor = remainingDaily == 0 ? 0xAA3333 : 0x404040;
+            int dailyColor = remainingDaily == 0 ? 0xFFAA3333 : 0xFF404040;
             dailyItem = new StatusItem(dailyText, dailyColor, dailyTooltip, 0, 0);
         }
 
@@ -206,7 +207,7 @@ public final class MarketplaceOverlayRenderer {
             Component stockTooltip = remainingStock == 0
                     ? Component.translatable("gui.marketblocks.marketplace.tooltip.remaining_stock_empty")
                     : Component.translatable("gui.marketblocks.marketplace.tooltip.remaining_stock");
-            int stockColor = remainingStock == 0 ? 0xAA3333 : 0x404040;
+            int stockColor = remainingStock == 0 ? 0xFFAA3333 : 0xFF404040;
             stockItem = new StatusItem(stockText, stockColor, stockTooltip, 0, 0);
         }
 
@@ -221,7 +222,7 @@ public final class MarketplaceOverlayRenderer {
             Component restockTooltip = restockSeconds > 0
                     ? Component.translatable("gui.marketblocks.marketplace.tooltip.restock_in")
                     : Component.translatable("gui.marketblocks.marketplace.tooltip.restock_ready");
-            int restockColor = restockSeconds > 0 ? 0x406080 : 0x2E8B57;
+            int restockColor = restockSeconds > 0 ? 0xFF406080 : 0xFF2E8B57;
             restockItem = new StatusItem(restockText, restockColor, restockTooltip, 0, 0);
         }
 
@@ -347,13 +348,13 @@ public final class MarketplaceOverlayRenderer {
                 && mouseY <= arrowY + 10;
 
         if (mouseX >= p1X && mouseX <= p1X + 16 && !p1.isEmpty()) {
-            graphics.renderTooltip(context.font(), p1, mouseX, mouseY);
+            graphics.setTooltipForNextFrame(context.font(), p1, mouseX, mouseY);
         } else if (mouseX >= p2X && mouseX <= p2X + 16 && !p2.isEmpty()) {
-            graphics.renderTooltip(context.font(), p2, mouseX, mouseY);
+            graphics.setTooltipForNextFrame(context.font(), p2, mouseX, mouseY);
         } else if (mouseX >= resultX && mouseX <= resultX + 16 && !result.isEmpty()) {
-            graphics.renderTooltip(context.font(), result, mouseX, mouseY);
+            graphics.setTooltipForNextFrame(context.font(), result, mouseX, mouseY);
         } else if (hoveringArrow && viewState.maxPurchasable() <= 0) {
-            graphics.renderTooltip(context.font(), buildUnavailableOfferTooltip(context, viewState), mouseX, mouseY);
+            graphics.setTooltipForNextFrame(context.font(), buildUnavailableOfferTooltip(context, viewState), mouseX, mouseY);
         }
     }
 
@@ -392,10 +393,10 @@ public final class MarketplaceOverlayRenderer {
             List<MarketplaceOffer> visibleOffers,
             UUID selectedOfferId,
             WidgetSprites buttonSprites,
-            ResourceLocation arrowIcon,
+            Identifier arrowIcon,
             Function<UUID, MarketplaceOffer> offerLookup,
             Function<List<ItemStack>, ItemStack[]> paymentNormalizer,
-            Function<MarketplaceOfferViewState, ResourceLocation> unavailableIconResolver,
+            Function<MarketplaceOfferViewState, Identifier> unavailableIconResolver,
             Function<MarketplaceOfferViewState, Optional<Integer>> displayRestockSecondsResolver) {
         int listStartX() {
             return leftPos + listXOffset;

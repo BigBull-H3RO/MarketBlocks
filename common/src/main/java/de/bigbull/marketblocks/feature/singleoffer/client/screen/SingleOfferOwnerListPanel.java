@@ -8,12 +8,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 
@@ -59,9 +59,9 @@ public class SingleOfferOwnerListPanel {
     private static final int ROW_WIDTH = 145;
     private static final int CHECKBOX_X_OFFSET = 143;
 
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation
+    private static final Identifier SCROLLER_SPRITE = Identifier
             .withDefaultNamespace("container/villager/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation
+    private static final Identifier SCROLLER_DISABLED_SPRITE = Identifier
             .withDefaultNamespace("container/villager/scroller_disabled");
 
     private static final int SCROLLER_TRACK_X_OFFSET = 158;
@@ -156,9 +156,9 @@ public class SingleOfferOwnerListPanel {
         if (isOwnerScrollActive()) {
             int barFull = Math.max(0, SCROLLER_TRACK_HEIGHT - SCROLLER_HEIGHT);
             int knobY = trackY + (int) (ownerScrollOffs * (float) barFull);
-            graphics.blitSprite(RenderType::guiTextured, SCROLLER_SPRITE, trackX, knobY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_SPRITE, trackX, knobY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
         } else {
-            graphics.blitSprite(RenderType::guiTextured, SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_TRACK_WIDTH, SCROLLER_HEIGHT);
         }
 
         // 3. Empty State (centered in content area to the left of the scrollbar)
@@ -166,7 +166,7 @@ public class SingleOfferOwnerListPanel {
         if (noPlayers) {
             Component info = Component.translatable("gui.marketblocks.no_players_available");
             int textW = font.width(info);
-            graphics.drawString(font, info, insetX + 1 + (contentW - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0x808080, false);
+            graphics.drawString(font, info, insetX + 1 + (contentW - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0xFF808080, false);
             return;
         }
 
@@ -207,11 +207,11 @@ public class SingleOfferOwnerListPanel {
 
             int textColor;
             if (limitReached && !selected) {
-                textColor = 0x666666;
+                textColor = 0xFF666666;
             } else if (selected) {
-                textColor = 0xFFFFFF;
+                textColor = 0xFFFFFFFF;
             } else {
-                textColor = 0xCCCCCC;
+                textColor = 0xFFCCCCCC;
             }
             graphics.drawString(font, displayName, textX, textY, textColor, false);
         }
@@ -220,7 +220,7 @@ public class SingleOfferOwnerListPanel {
     private void renderPlayerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(id, name);
-        PlayerSkin skin = client.getSkinManager().getInsecureSkin(profile);
+        PlayerSkin skin = client.getSkinManager().createLookup(profile, false).get();
         PlayerFaceRenderer.draw(graphics, skin, x, y, 8);
     }
 
@@ -368,7 +368,7 @@ public class SingleOfferOwnerListPanel {
         if (connection != null) {
             PlayerInfo info = connection.getPlayerInfo(id);
             if (info != null) {
-                return info.getProfile().getName();
+                return info.getProfile().name();
             }
         }
         return stored.getOrDefault(id, "");
@@ -400,7 +400,7 @@ public class SingleOfferOwnerListPanel {
         if (Minecraft.getInstance().getConnection() != null) {
             Collection<PlayerInfo> players = Minecraft.getInstance().getConnection().getOnlinePlayers();
             for (PlayerInfo info : players) {
-                UUID id = info.getProfile().getId();
+                UUID id = info.getProfile().id();
                 if (id.equals(accessDraft.ownerId())) {
                     continue;
                 }

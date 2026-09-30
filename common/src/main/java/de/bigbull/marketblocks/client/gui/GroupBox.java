@@ -14,7 +14,7 @@ public final class GroupBox {
     public static final int DEFAULT_BORDER_COLOR = 0xFF555555;      // Medium-dark border line
     public static final int DEFAULT_BORDER_HIGHLIGHT = 0xFFFFFFFF;  // Lower/right highlight for etched style
     public static final int DEFAULT_BG_COLOR = 0xFFC6C6C6;          // Vanilla container gray background
-    public static final int DEFAULT_TITLE_COLOR = 0x303030;         // Dark gray text color
+    public static final int DEFAULT_TITLE_COLOR = 0xFF303030;         // Dark gray text color
     public static final int DEFAULT_TITLE_INDENT = 6;               // Distance from left edge to title start
     public static final int DEFAULT_TITLE_PADDING = 3;              // Gap before and after title text
     public static final int DEFAULT_CORNER_RADIUS = 2;              // Subtle 1px diagonal corner rounding (radius 2)
@@ -108,7 +108,8 @@ public final class GroupBox {
             graphics.fill(cutStart, textY, cutEnd, textY + font.lineHeight, bgColor);
 
             // Draw title
-            graphics.drawString(font, styledTitle, textX, textY, titleColor, false);
+            int effectiveTitleColor = (titleColor & 0xFF000000) == 0 ? (0xFF000000 | titleColor) : titleColor;
+            graphics.drawString(font, styledTitle, textX, textY, effectiveTitleColor, false);
         }
 
         // Draw rounded corner pixels
@@ -195,6 +196,7 @@ public final class GroupBox {
         graphics.fill(cutStart, textY, cutEnd, textY + font.lineHeight, bgColor);
 
         // Draw title
-        graphics.drawString(font, styledTitle, textX, textY, titleColor, false);
+        int effectiveTitleColor = (titleColor & 0xFF000000) == 0 ? (0xFF000000 | titleColor) : titleColor;
+        graphics.drawString(font, styledTitle, textX, textY, effectiveTitleColor, false);
     }
 }

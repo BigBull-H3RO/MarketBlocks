@@ -12,14 +12,19 @@ import de.bigbull.marketblocks.feature.singleoffer.settings.VillagerSettings;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacement;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
+import de.bigbull.marketblocks.feature.singleoffer.client.render.SingleOfferShopRenderState;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.entity.npc.VillagerData;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.VillagerData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.particles.ParticleTypes;
@@ -54,7 +59,7 @@ public final class VisualShopNpcRenderer {
         return ANIMATION_STATES.computeIfAbsent(host, h -> new ShopNpcAnimationState());
     }
 
-    public static void render(IVisualShopNPC host, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    public static void extract(IVisualShopNPC host, SingleOfferShopRenderState renderState, float partialTick) {
         Level level = host.getVisualLevel();
         if (level == null) {
             return;
@@ -101,11 +106,16 @@ public final class VisualShopNpcRenderer {
 
         BlockPos shopPos = host.getVisualShopPos();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        BlockPos npcBlockPos = BlockPos.containing(spawnPos.x, spawnPos.y + animationYOffset, spawnPos.z);
+        int packedLight = LevelRenderer.getLightColor(level, npcBlockPos);
 
         if (settings.usePlayerSkin()) {
             String skinName = settings.playerSkinName();
             RemotePlayer player = state.getOrCreateRenderPlayer(level, skinName == null ? "" : skinName);
-            player.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+            player.setPos(spawnPos.x, spawnPos.y + animationYOffset, spawnPos.z);
+            player.xo = spawnPos.x;
+            player.yo = spawnPos.y + animationYOffset;
+            player.zo = spawnPos.z;
             player.setYRot(bodyYaw);
             player.yBodyRot = bodyYaw;
             player.yBodyRotO = bodyYaw;
@@ -123,25 +133,21 @@ public final class VisualShopNpcRenderer {
                 player.setCustomName(null);
             }
 
-            dispatcher.setRenderShadow(false);
-
-            dispatcher.render(
-                    player,
-                    spawnPos.x - shopPos.getX(),
-                    spawnPos.y - shopPos.getY() + animationYOffset,
-                    spawnPos.z - shopPos.getZ(),
-                    partialTick,
-                    poseStack,
-                    bufferSource,
-                    packedLight
-            );
-
-            dispatcher.setRenderShadow(true);
+            EntityRenderState entityRenderState = dispatcher.extractEntity(player, partialTick);
+            entityRenderState.shadowRadius = 0.0F;
+            entityRenderState.lightCoords = packedLight;
+            renderState.npcRenderState = entityRenderState;
+            renderState.npcX = spawnPos.x - shopPos.getX();
+            renderState.npcY = spawnPos.y - shopPos.getY() + animationYOffset;
+            renderState.npcZ = spawnPos.z - shopPos.getZ();
         } else {
             Villager villager = state.getOrCreateRenderVillager(level);
-            VillagerData data = villager.getVillagerData().setProfession(settings.profession().toVillagerProfession());
+            VillagerData data = villager.getVillagerData().withProfession(BuiltInRegistries.VILLAGER_PROFESSION.wrapAsHolder(settings.profession().toVillagerProfession()));
             villager.setVillagerData(data);
-            villager.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+            villager.setPos(spawnPos.x, spawnPos.y + animationYOffset, spawnPos.z);
+            villager.xo = spawnPos.x;
+            villager.yo = spawnPos.y + animationYOffset;
+            villager.zo = spawnPos.z;
             villager.setYRot(bodyYaw);
             villager.yBodyRot = bodyYaw;
             villager.yBodyRotO = bodyYaw;
@@ -158,16 +164,21 @@ public final class VisualShopNpcRenderer {
                 villager.setCustomNameVisible(false);
                 villager.setCustomName(null);
             }
-            dispatcher.render(
-                    villager,
-                    spawnPos.x - shopPos.getX(),
-                    spawnPos.y - shopPos.getY() + animationYOffset,
-                    spawnPos.z - shopPos.getZ(),
-                    partialTick,
-                    poseStack,
-                    bufferSource,
-                    packedLight
-            );
+
+            EntityRenderState entityRenderState = dispatcher.extractEntity(villager, partialTick);
+            entityRenderState.shadowRadius = 0.0F;
+            entityRenderState.lightCoords = packedLight;
+            renderState.npcRenderState = entityRenderState;
+            renderState.npcX = spawnPos.x - shopPos.getX();
+            renderState.npcY = spawnPos.y - shopPos.getY() + animationYOffset;
+            renderState.npcZ = spawnPos.z - shopPos.getZ();
+        }
+    }
+
+    public static void submit(SingleOfferShopRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState cameraState) {
+        if (state.npcRenderState != null) {
+            EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+            dispatcher.submit(state.npcRenderState, cameraState, state.npcX, state.npcY, state.npcZ, poseStack, collector);
         }
     }
 

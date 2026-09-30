@@ -58,7 +58,7 @@ public class StatusToggleButton extends AbstractButton {
     }
 
     @Override
-    public void onPress() {
+    public void onPress(net.minecraft.client.input.InputWithModifiers input) {
         this.paused = !this.paused;
         updateTooltip();
         if (this.onStatusChange != null) {
@@ -67,7 +67,7 @@ public class StatusToggleButton extends AbstractButton {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         int x = getX();
         int y = getY();
         int w = getWidth();

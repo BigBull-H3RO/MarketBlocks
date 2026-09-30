@@ -1,9 +1,6 @@
 package de.bigbull.marketblocks.feature.singleoffer.client.render;
 
-import net.minecraft.client.renderer.texture.OverlayTexture;
-
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.ClientConfig;
@@ -17,53 +14,58 @@ import de.bigbull.marketblocks.feature.visual.render.VisualShopNpcRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.ShieldItem;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 
 import java.util.Random;
-
-import org.joml.Matrix4f;
 
 /**
  * Custom BlockEntityRenderer for the {@link SingleOfferShopBlockEntity}.
  * Renders the floating or crate-bound items of the shop offer, the payment
- * items on the front,
- * the transaction arrows, and the item count texts.
+ * items on the front, the transaction arrows, and the item count texts.
  */
-public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity> {
-    private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<SingleOfferShopBlockEntity, SingleOfferShopRenderState> {
+    private static final Identifier TRADE_ARROW = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/trade_arrow.png");
-    private final ItemRenderer itemRenderer;
     private final ItemModelResolver itemModelResolver;
-    private final ItemStackRenderState renderState = new ItemStackRenderState();
+    private final Font font;
 
     public SingleOfferShopBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
-        this.itemRenderer = context.getItemRenderer();
-        this.itemModelResolver = context.getItemModelResolver();
+        this.itemModelResolver = context.itemModelResolver();
+        this.font = context.font();
     }
 
     @Override
-    public boolean shouldRenderOffScreen(SingleOfferShopBlockEntity blockEntity) {
+    public SingleOfferShopRenderState createRenderState() {
+        return new SingleOfferShopRenderState();
+    }
+
+    @Override
+    public boolean shouldRenderOffScreen() {
         return true;
     }
 
@@ -79,50 +81,118 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
     }
 
     @Override
-    public void render(SingleOfferShopBlockEntity blockEntity, float partialTick, PoseStack poseStack,
-            MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-        if (blockEntity.getLevel() == null) {
+    public void extractRenderState(SingleOfferShopBlockEntity blockEntity, SingleOfferShopRenderState state,
+                                   float partialTick, Vec3 cameraPos,
+                                   @Nullable ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+        BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTick, cameraPos, crumblingOverlay);
+        state.clear();
+
+        Level level = blockEntity.getLevel();
+        if (level == null) {
             return;
         }
 
-        MultiBufferSource defaultBufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        state.blockEntity = blockEntity;
+        state.partialTick = partialTick;
+        state.gameTime = level.getGameTime();
 
-        VisualShopNpcRenderer.render(blockEntity, partialTick, poseStack, defaultBufferSource, packedLight);
+        VisualShopNpcRenderer.extract(blockEntity, state, partialTick);
 
-        if (!blockEntity.hasOffer() || !ClientConfig.ENABLE_SHOP_ITEM_RENDERING.get()) {
+        state.hasOffer = blockEntity.hasOffer();
+        if (!state.hasOffer || !ClientConfig.ENABLE_SHOP_ITEM_RENDERING.get()) {
             return;
         }
 
         ShopRenderConfig config = ShopRenderConfig.TRADE_STAND_DEFAULT;
-        if (blockEntity.getBlockState().getBlock() instanceof BaseShopBlock shopBlock) {
-            config = shopBlock.getRenderConfig(blockEntity.getBlockState());
+        if (state.blockState != null && state.blockState.getBlock() instanceof BaseShopBlock shopBlock) {
+            config = shopBlock.getRenderConfig(state.blockState);
         }
+        state.renderConfig = config;
 
-        ItemRenderer itemRenderer = this.itemRenderer;
-        Font font = Minecraft.getInstance().font;
-        Direction dir = blockEntity.getBlockState().getValue(BaseShopBlock.FACING);
+        Direction dir = state.blockState != null && state.blockState.hasProperty(BaseShopBlock.FACING)
+                ? state.blockState.getValue(BaseShopBlock.FACING)
+                : Direction.NORTH;
+        state.facing = dir;
 
         ItemStack result = blockEntity.getOfferResult();
+        state.result = result;
         OfferItemSettings offerSettings = blockEntity.getOfferItemSettings();
-        boolean renderOfferItem = offerSettings.visible();
-
-        int actualPackedLightFront = offerSettings.fullbright() ? LightTexture.FULL_BRIGHT : packedLight;
+        state.offerSettings = offerSettings;
+        state.actualPackedLightFront = offerSettings.fullbright() ? LightTexture.FULL_BRIGHT : state.lightCoords;
+        state.renderOfferItem = offerSettings.visible();
 
         if (!result.isEmpty()) {
             ShopRenderConfig.SlotRenderConfig offerItem = config.getOfferItem();
-            this.itemModelResolver.updateForTopItem(this.renderState, result, ItemDisplayContext.FIXED, false, blockEntity.getLevel(), null, 0);
-            boolean isOffer3D = this.renderState.isGui3d();
-            float finalOfferScale = getFinalOfferScale(isOffer3D, offerItem, result) * offerSettings.scale();
+            this.itemModelResolver.updateForTopItem(state.offerItemRenderState, result, ItemDisplayContext.FIXED, level, null, 0);
+            state.isOffer3D = state.offerItemRenderState.usesBlockLight();
+            state.finalOfferScale = getFinalOfferScale(state.isOffer3D, offerItem, result) * offerSettings.scale();
 
-            if (renderOfferItem) {
+            if (!config.isOfferItemFloating()) {
+                state.displayCount = offerSettings.dynamicFillLevel()
+                        ? calculateDynamicOfferItemDisplayCount(blockEntity, result, offerSettings)
+                        : (offerSettings.count() > 0 ? offerSettings.count() : config.getOfferItemDisplayCount());
+            }
+        }
 
+        state.payment1 = blockEntity.getOfferPayment1();
+        state.payment2 = blockEntity.getOfferPayment2();
+
+        state.showFrontOffer = config.isShowFrontOffer();
+        if (state.showFrontOffer && !result.isEmpty()) {
+            extractPaymentItem(state.frontOfferRenderState, result, config.getFrontOfferItem());
+        }
+
+        state.showTradeArrow = config.isShowTradeArrow();
+
+        if (!state.payment1.isEmpty()) {
+            extractPaymentItem(state.payment1RenderState, state.payment1, config.getPayment1Item());
+        }
+        if (!state.payment2.isEmpty()) {
+            extractPaymentItem(state.payment2RenderState, state.payment2, config.getPayment2Item());
+        }
+    }
+
+    private void extractPaymentItem(ItemStackRenderState renderState, ItemStack stack,
+                                    ShopRenderConfig.SlotRenderConfig itemConfig) {
+        this.itemModelResolver.updateForTopItem(renderState, stack, ItemDisplayContext.FIXED, null, null, 0);
+        boolean is3D = renderState.usesBlockLight();
+        if (!is3D) {
+            renderState.clear();
+            this.itemModelResolver.updateForTopItem(renderState, stack, ItemDisplayContext.GUI, null, null, 0);
+        }
+    }
+
+    @Override
+    public void submit(SingleOfferShopRenderState state, PoseStack poseStack, SubmitNodeCollector collector,
+                       CameraRenderState cameraState) {
+        VisualShopNpcRenderer.submit(state, poseStack, collector, cameraState);
+
+        if (!state.hasOffer || !ClientConfig.ENABLE_SHOP_ITEM_RENDERING.get()) {
+            return;
+        }
+
+        ShopRenderConfig config = state.renderConfig != null ? state.renderConfig : ShopRenderConfig.TRADE_STAND_DEFAULT;
+        Direction dir = state.facing;
+        ItemStack result = state.result;
+        OfferItemSettings offerSettings = state.offerSettings;
+        if (offerSettings == null) {
+            return;
+        }
+
+        int actualPackedLightFront = state.actualPackedLightFront;
+
+        if (!result.isEmpty()) {
+            ShopRenderConfig.SlotRenderConfig offerItem = config.getOfferItem();
+            float finalOfferScale = state.finalOfferScale;
+
+            if (state.renderOfferItem && !state.offerItemRenderState.isEmpty()) {
                 if (config.isOfferItemFloating()) {
                     poseStack.pushPose();
 
                     float heightOffset = offerSettings.heightOffset();
                     float bobbingOffset = 0.0f;
                     if (offerSettings.bobbing()) {
-                        float bobTime = (blockEntity.getLevel().getGameTime() + partialTick) * 0.08f;
+                        float bobTime = (state.gameTime + state.partialTick) * 0.08f;
                         bobbingOffset = Mth.sin(bobTime) * 0.085f;
                     }
 
@@ -130,21 +200,18 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
                     float speed = offerSettings.speed();
                     if (speed > 0) {
-                        float time = (blockEntity.getLevel().getGameTime() + partialTick) * (speed * 5.0f);
+                        float time = (state.gameTime + state.partialTick) * (speed * 5.0f);
                         poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
                     }
 
                     applySlotRotation(poseStack, offerItem);
                     poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                    itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront, packedOverlay,
-                            poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
+                    state.offerItemRenderState.submit(poseStack, collector, actualPackedLightFront, OverlayTexture.NO_OVERLAY, 0);
                     poseStack.popPose();
                 } else {
-                    int displayCount = offerSettings.dynamicFillLevel()
-                            ? calculateDynamicOfferItemDisplayCount(blockEntity, result, offerSettings)
-                            : (offerSettings.count() > 0 ? offerSettings.count() : config.getOfferItemDisplayCount());
+                    int displayCount = state.displayCount;
 
-                    long seed = blockEntity.getBlockPos().asLong();
+                    long seed = state.blockPos != null ? state.blockPos.asLong() : 0L;
                     Random rand = new Random(seed);
 
                     float heightOffset = offerSettings.heightOffset();
@@ -154,10 +221,13 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                     float baseRotation = offerSettings.rotation();
 
                     CrateLayoutMode layoutMode = offerSettings.layoutMode();
-                    if (layoutMode == null)
+                    if (layoutMode == null) {
                         layoutMode = CrateLayoutMode.SCATTERED;
+                    }
 
-                    ShopVisualType visualType = ShopVisualType.from(blockEntity.getBlockState().getBlock());
+                    ShopVisualType visualType = state.blockState != null
+                            ? ShopVisualType.from(state.blockState.getBlock())
+                            : ShopVisualType.TRADE_STAND;
 
                     if (visualType.isMarketCrate()) {
                         poseStack.pushPose();
@@ -186,11 +256,11 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                         float itemScale = isBlock
                                 ? (finalOfferScale * boostBlock * baseScaleBlock)
                                 : (isTool ? (finalOfferScale * boostTool * baseScaleTool)
-                                        : (finalOfferScale * boostFlat * baseScaleFlat));
+                                : (finalOfferScale * boostFlat * baseScaleFlat));
 
                         float layerHeight = isBlock ? (itemScale * 0.55f) : (itemScale * 0.08f);
 
-                        float radius = isBlock ? (itemScale * 0.20f) : (isTool ? itemScale * 0.25f : itemScale * 0.25f);
+                        float radius = isBlock ? (itemScale * 0.20f) : itemScale * 0.25f;
                         float maxOffsetX = Math.max(0.01f, 0.418f - radius);
                         float maxOffsetZ = Math.max(0.01f, 0.4285f - radius);
 
@@ -202,16 +272,15 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                         for (int i = 0; i < displayCount; i++) {
                             poseStack.pushPose();
 
-                            float currentHeightOffset = 0f;
+                            float currentHeightOffset;
                             if (layoutMode == CrateLayoutMode.SCATTERED) {
                                 currentHeightOffset = renderCrateItemLoose(poseStack, rand, i, layerHeight, maxOffsetX,
                                         maxOffsetZ, itemScale, baseRotation, chaosRotation, baselineY, isBlock,
                                         spacingY);
-                            } else if (layoutMode == CrateLayoutMode.STACKED) {
+                            } else {
                                 currentHeightOffset = renderCrateItemStacked(poseStack, i, displayCount, layerHeight,
                                         maxOffsetX, maxOffsetZ, itemScale, effectiveSpacingXZ, spacingY, baseRotation,
-                                        baselineY,
-                                        isBlock);
+                                        baselineY, isBlock);
                             }
 
                             if (currentHeightOffset > maxHeightLimit) {
@@ -220,11 +289,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                             }
 
                             poseStack.scale(itemScale, itemScale, itemScale);
-
-                            itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront,
-                                    packedOverlay,
-                                    poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
-
+                            state.offerItemRenderState.submit(poseStack, collector, actualPackedLightFront, OverlayTexture.NO_OVERLAY, 0);
                             poseStack.popPose();
                         }
                         poseStack.popPose();
@@ -246,7 +311,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                                 int z = i / gridSize;
                                 offsetX = (x - (gridSize - 1) / 2.0) * spacingXZ;
                                 offsetZ = (z - (gridSize - 1) / 2.0) * spacingXZ;
-                            } else if (layoutMode == CrateLayoutMode.SCATTERED) {
+                            } else {
                                 offsetX = (rand.nextDouble() - 0.5) * spacingXZ * 2;
                                 offsetZ = (rand.nextDouble() - 0.5) * spacingXZ * 2;
                             }
@@ -255,44 +320,36 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
                             applySlotRotation(poseStack, offerItem);
                             poseStack.scale(finalOfferScale, finalOfferScale, finalOfferScale);
-                            itemRenderer.renderStatic(result, ItemDisplayContext.FIXED, actualPackedLightFront,
-                                    packedOverlay,
-                                    poseStack, defaultBufferSource, blockEntity.getLevel(), 0);
+                            state.offerItemRenderState.submit(poseStack, collector, actualPackedLightFront, OverlayTexture.NO_OVERLAY, 0);
                             poseStack.popPose();
                         }
                     }
                 }
             }
 
-            renderCountText(font, poseStack, defaultBufferSource, actualPackedLightFront,
+            renderCountText(this.font, poseStack, collector, actualPackedLightFront,
                     result.getCount(), config.getOfferCountText(), dir);
         }
 
-        ItemStack payment1 = blockEntity.getOfferPayment1();
-        ItemStack payment2 = blockEntity.getOfferPayment2();
-
-        if (config.isShowFrontOffer() && !result.isEmpty()) {
-            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, actualPackedLightFront, packedOverlay,
-                    result, dir, config.getFrontOfferItem(), null);
+        if (state.showFrontOffer && !result.isEmpty() && !state.frontOfferRenderState.isEmpty()) {
+            renderPaymentItem(state, state.frontOfferRenderState, result, dir, config.getFrontOfferItem(), null, poseStack, collector);
         }
 
-        if (config.isShowTradeArrow()) {
-            renderTradeArrow(poseStack, defaultBufferSource, actualPackedLightFront, dir, config.getTradeArrow());
+        if (state.showTradeArrow) {
+            renderTradeArrow(poseStack, collector, actualPackedLightFront, dir, config.getTradeArrow());
         }
 
-        if (!payment1.isEmpty()) {
-            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, actualPackedLightFront, packedOverlay,
-                    payment1, dir, config.getPayment1Item(), config.getPayment1CountText());
+        if (!state.payment1.isEmpty() && !state.payment1RenderState.isEmpty()) {
+            renderPaymentItem(state, state.payment1RenderState, state.payment1, dir, config.getPayment1Item(), config.getPayment1CountText(), poseStack, collector);
         }
-        if (!payment2.isEmpty()) {
-            renderPaymentItem(itemRenderer, font, poseStack, defaultBufferSource, actualPackedLightFront, packedOverlay,
-                    payment2, dir, config.getPayment2Item(), config.getPayment2CountText());
+        if (!state.payment2.isEmpty() && !state.payment2RenderState.isEmpty()) {
+            renderPaymentItem(state, state.payment2RenderState, state.payment2, dir, config.getPayment2Item(), config.getPayment2CountText(), poseStack, collector);
         }
     }
 
     private float renderCrateItemLoose(PoseStack poseStack, Random rand, int index, float layerHeight, float maxOffsetX,
-            float maxOffsetZ, float itemScale, float baseRotation, float chaosRotation, float baselineY,
-            boolean isBlock, float spacingY) {
+                                       float maxOffsetZ, float itemScale, float baseRotation, float chaosRotation, float baselineY,
+                                       boolean isBlock, float spacingY) {
         float rx = (rand.nextFloat() * 2.0f - 1.0f) * maxOffsetX;
         float rz = (rand.nextFloat() * 2.0f - 1.0f) * maxOffsetZ;
 
@@ -320,8 +377,8 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
     }
 
     private float renderCrateItemStacked(PoseStack poseStack, int index, int displayCount, float layerHeight,
-            float maxOffsetX, float maxOffsetZ, float itemScale, float spacingXZ, float spacingY, float baseRotation,
-            float baselineY, boolean isBlock) {
+                                         float maxOffsetX, float maxOffsetZ, float itemScale, float spacingXZ, float spacingY, float baseRotation,
+                                         float baselineY, boolean isBlock) {
         float stepX = itemScale * (1.0f + spacingXZ);
         float stepZ = itemScale * (1.0f + spacingXZ);
         float verticalSpacing = layerHeight * (1.0f + spacingY);
@@ -358,7 +415,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
     }
 
     private static float getFinalOfferScale(boolean isOffer3D, ShopRenderConfig.SlotRenderConfig offerItem,
-            ItemStack result) {
+                                            ItemStack result) {
         float finalOfferScale = offerItem.scale();
 
         if (!isOffer3D) {
@@ -372,7 +429,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
     }
 
     private static int calculateDynamicOfferItemDisplayCount(SingleOfferShopBlockEntity blockEntity, ItemStack result,
-            OfferItemSettings offerSettings) {
+                                                            OfferItemSettings offerSettings) {
         if (result.isEmpty()) {
             return 0;
         }
@@ -400,13 +457,14 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         return Math.max(1, (int) Math.ceil(fillRatio * offerSettings.count()));
     }
 
-    private void renderPaymentItem(ItemRenderer itemRenderer, Font font, PoseStack poseStack,
-            MultiBufferSource bufferSource, int packedLight, int packedOverlay,
-            ItemStack stack, Direction dir,
-            ShopRenderConfig.SlotRenderConfig itemConfig,
-            ShopRenderConfig.SlotRenderConfig countConfig) {
-        if (stack.isEmpty())
+    private void renderPaymentItem(SingleOfferShopRenderState state, ItemStackRenderState itemRenderState,
+                                   ItemStack stack, Direction dir,
+                                   ShopRenderConfig.SlotRenderConfig itemConfig,
+                                   ShopRenderConfig.SlotRenderConfig countConfig,
+                                   PoseStack poseStack, SubmitNodeCollector collector) {
+        if (stack.isEmpty() || itemRenderState.isEmpty()) {
             return;
+        }
 
         Direction right = dir.getClockWise();
         double sideOffset = itemConfig.x() - 0.5D;
@@ -418,31 +476,27 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
         applySlotRotation(poseStack, itemConfig);
 
-        this.itemModelResolver.updateForTopItem(this.renderState, stack, ItemDisplayContext.FIXED, false, null, null, 0);
-        boolean is3D = this.renderState.isGui3d();
-        ItemDisplayContext displayContext = is3D ? ItemDisplayContext.FIXED : ItemDisplayContext.GUI;
-
-        if (is3D)
+        boolean is3D = itemRenderState.usesBlockLight();
+        if (is3D) {
             poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+        }
 
         float finalPaymentScale = itemConfig.scale();
-        if (is3D)
+        if (is3D) {
             finalPaymentScale *= 1.3f;
+        }
 
         poseStack.scale(finalPaymentScale, finalPaymentScale, finalPaymentScale);
-
-        itemRenderer.renderStatic(stack, displayContext, packedLight, packedOverlay,
-                poseStack, bufferSource, null, 0);
+        itemRenderState.submit(poseStack, collector, state.actualPackedLightFront, OverlayTexture.NO_OVERLAY, 0);
         poseStack.popPose();
 
         if (countConfig != null) {
-            renderCountText(font, poseStack, bufferSource, packedLight, stack.getCount(), countConfig, dir);
+            renderCountText(this.font, poseStack, collector, state.actualPackedLightFront, stack.getCount(), countConfig, dir);
         }
     }
 
-    private void renderTradeArrow(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
-            Direction dir, ShopRenderConfig.SlotRenderConfig arrowConfig) {
-
+    private void renderTradeArrow(PoseStack poseStack, SubmitNodeCollector collector, int packedLight,
+                                  Direction dir, ShopRenderConfig.SlotRenderConfig arrowConfig) {
         Direction right = dir.getClockWise();
         double sideOffset = arrowConfig.x() - 0.5D;
         double x = 0.5D + dir.getStepX() * arrowConfig.z() + right.getStepX() * sideOffset;
@@ -456,31 +510,31 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         float scale = arrowConfig.scale();
         poseStack.scale(scale, -scale, scale);
 
-        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.entityCutout(TRADE_ARROW));
-        Matrix4f matrix4f = poseStack.last().pose();
-
         float halfW = 0.5f;
         float halfH = 0.5f;
 
-        vertexConsumer.addVertex(matrix4f, -halfW, -halfH, 0).setColor(255, 255, 255, 255).setUv(0.0F, 0.0F)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
-                .setNormal(poseStack.last(), 0, 0, 1);
-        vertexConsumer.addVertex(matrix4f, -halfW, halfH, 0).setColor(255, 255, 255, 255).setUv(0.0F, 1.0F)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
-                .setNormal(poseStack.last(), 0, 0, 1);
-        vertexConsumer.addVertex(matrix4f, halfW, halfH, 0).setColor(255, 255, 255, 255).setUv(1.0F, 1.0F)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
-                .setNormal(poseStack.last(), 0, 0, 1);
-        vertexConsumer.addVertex(matrix4f, halfW, -halfH, 0).setColor(255, 255, 255, 255).setUv(1.0F, 0.0F)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
-                .setNormal(poseStack.last(), 0, 0, 1);
+        collector.submitCustomGeometry(poseStack, RenderTypes.entityCutout(TRADE_ARROW), (pose, vertexConsumer) -> {
+            Matrix4f matrix4f = pose.pose();
+            vertexConsumer.addVertex(matrix4f, -halfW, -halfH, 0).setColor(255, 255, 255, 255).setUv(0.0F, 0.0F)
+                    .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                    .setNormal(pose, 0, 0, 1);
+            vertexConsumer.addVertex(matrix4f, -halfW, halfH, 0).setColor(255, 255, 255, 255).setUv(0.0F, 1.0F)
+                    .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                    .setNormal(pose, 0, 0, 1);
+            vertexConsumer.addVertex(matrix4f, halfW, halfH, 0).setColor(255, 255, 255, 255).setUv(1.0F, 1.0F)
+                    .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                    .setNormal(pose, 0, 0, 1);
+            vertexConsumer.addVertex(matrix4f, halfW, -halfH, 0).setColor(255, 255, 255, 255).setUv(1.0F, 0.0F)
+                    .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                    .setNormal(pose, 0, 0, 1);
+        });
 
         poseStack.popPose();
     }
 
-    private void renderCountText(Font font, PoseStack poseStack, MultiBufferSource bufferSource,
-            int packedLight, int count,
-            ShopRenderConfig.SlotRenderConfig countConfig, Direction dir) {
+    private void renderCountText(Font font, PoseStack poseStack, SubmitNodeCollector collector,
+                                 int packedLight, int count,
+                                 ShopRenderConfig.SlotRenderConfig countConfig, Direction dir) {
         Direction right = dir.getClockWise();
         double sideOffset = countConfig.x() - 0.5D;
         double x = 0.5D + dir.getStepX() * countConfig.z() + right.getStepX() * sideOffset;
@@ -495,8 +549,18 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         String text = "x" + count;
         int width = font.width(text);
 
-        font.drawInBatch(text, -width / 2f, 0, 0xFFFFFF, false,
-                poseStack.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
+        collector.submitText(
+                poseStack,
+                -width / 2f,
+                0,
+                Component.literal(text).getVisualOrderText(),
+                false,
+                Font.DisplayMode.NORMAL,
+                packedLight,
+                0xFFFFFFFF,
+                0,
+                0
+        );
 
         poseStack.popPose();
     }
@@ -512,9 +576,8 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
     private static boolean isToolOrWeapon(ItemStack stack) {
         Item item = stack.getItem();
-        return item instanceof DiggerItem || item instanceof SwordItem || item instanceof TridentItem ||
-                item instanceof ProjectileWeaponItem || item instanceof ShieldItem || item instanceof MaceItem ||
-                stack.has(DataComponents.TOOL);
+        return stack.has(DataComponents.TOOL) || stack.has(DataComponents.WEAPON) ||
+                item instanceof ProjectileWeaponItem || item instanceof ShieldItem ||
+                item instanceof TridentItem || item instanceof MaceItem;
     }
-
 }

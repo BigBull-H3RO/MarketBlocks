@@ -36,9 +36,9 @@ public final class MarketBlocksInteractionEvents {
             return;
 
         BlockPos pos = event.getPos();
-        GlobalPos globalPos = GlobalPos.of(player.serverLevel().dimension(), pos);
+        GlobalPos globalPos = GlobalPos.of(player.level().dimension(), pos);
 
-        boolean isLinked = MarketplaceLinkSavedData.get(player.serverLevel()).isLinked(globalPos);
+        boolean isLinked = MarketplaceLinkSavedData.get(player.level()).isLinked(globalPos);
 
         if (isLinked) {
             MarketplaceManager.get().openShop(player);
@@ -64,17 +64,17 @@ public final class MarketBlocksInteractionEvents {
                 }
             }
         }
-        GlobalPos globalPos = GlobalPos.of(player.serverLevel().dimension(), pos);
+        GlobalPos globalPos = GlobalPos.of(player.level().dimension(), pos);
 
-        boolean isLinked = MarketplaceLinkSavedData.get(player.serverLevel()).isLinked(globalPos);
+        boolean isLinked = MarketplaceLinkSavedData.get(player.level()).isLinked(globalPos);
 
         if (isLinked) {
-            if (!player.hasPermissions(2)) {
+            if (!player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
                 player.sendSystemMessage(Component.translatable("command.marketblocks.break.denied"));
                 event.setCanceled(true);
             } else {
-                MarketplaceLinkSavedData.get(player.serverLevel()).removeLink(globalPos);
-                MarketplaceLinkSavedData.get(player.serverLevel()).syncToAll(player.getServer());
+                MarketplaceLinkSavedData.get(player.level()).removeLink(globalPos);
+                MarketplaceLinkSavedData.get(player.level()).syncToAll(player.level().getServer());
                 player.sendSystemMessage(Component.translatable("command.marketblocks.break.unlinked"));
             }
         }

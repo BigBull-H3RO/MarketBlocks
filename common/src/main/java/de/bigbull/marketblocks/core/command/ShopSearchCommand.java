@@ -132,7 +132,7 @@ public final class ShopSearchCommand {
                 MutableComponent text = Component
                         .translatable("command.marketblocks.shoplist.entry", status, shopName, owner)
                         .withStyle(
-                                style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverText)));
+                                style -> style.withHoverEvent(new HoverEvent.ShowText(hoverText)));
 
                 CommandUtils.appendWaypointsAndTp(source, text, shop.pos(), waypointName);
                 source.sendSuccess(() -> text, false);
@@ -141,11 +141,11 @@ public final class ShopSearchCommand {
                 MarketplaceLinkSavedData.LinkInfo info = marketplaces.get(mpIndex);
                 GlobalPos pos = info.blockPos;
                 String name = info.name != null && !info.name.isEmpty() ? info.name
-                        : pos.dimension().location().toString();
+                        : pos.dimension().identifier().toString();
 
                 MutableComponent text = Component
                         .translatable("command.marketblocks.marketplacelist.entry", (i + 1), name)
-                        .withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                        .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(
                                 Component.translatable("menu.marketblocks.marketplace"))));
 
                 CommandUtils.appendWaypointsAndTp(source, text, pos, name);

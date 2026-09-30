@@ -174,20 +174,20 @@ public class OfferPricingEditor extends BaseModalScreen {
 
                 guiGraphics.drawString(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.label"),
-                                labelX, rowStartY, 0xCFCFCF, false);
+                                labelX, rowStartY, 0xFFCFCFCF, false);
                 guiGraphics.drawString(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.base"),
-                                labelX, rowStartY + ROW_SPACING, 0xCFCFCF, false);
+                                labelX, rowStartY + ROW_SPACING, 0xFFCFCFCF, false);
                 guiGraphics.drawString(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.min"),
-                                labelX, rowStartY + (ROW_SPACING * 2), 0xCFCFCF, false);
+                                labelX, rowStartY + (ROW_SPACING * 2), 0xFFCFCFCF, false);
                 guiGraphics.drawString(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.max"),
-                                labelX, rowStartY + (ROW_SPACING * 3), 0xCFCFCF, false);
+                                labelX, rowStartY + (ROW_SPACING * 3), 0xFFCFCFCF, false);
                 guiGraphics.drawString(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.volatility"),
                                 labelX,
-                                rowStartY + (ROW_SPACING * 4), 0xCFCFCF, false);
+                                rowStartY + (ROW_SPACING * 4), 0xFFCFCFCF, false);
 
                 renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY,
                                 "gui.marketblocks.marketplace.editor.pricing.label.tooltip");

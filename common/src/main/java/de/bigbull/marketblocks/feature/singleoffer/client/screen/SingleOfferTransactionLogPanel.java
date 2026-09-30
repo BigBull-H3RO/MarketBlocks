@@ -4,16 +4,16 @@ import com.mojang.authlib.GameProfile;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
 import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
@@ -28,16 +28,16 @@ import java.util.UUID;
  */
 public class SingleOfferTransactionLogPanel {
 
-    private static final ResourceLocation TRADE_ARROW_ICON = ResourceLocation
+    private static final Identifier TRADE_ARROW_ICON = Identifier
             .fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow.png");
-    private static final ResourceLocation MOVE_RIGHT_MINI_ICON = ResourceLocation
+    private static final Identifier MOVE_RIGHT_MINI_ICON = Identifier
             .fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/move_right_mini.png");
-    private static final ResourceLocation MOVE_DOWN_MINI_ICON = ResourceLocation
+    private static final Identifier MOVE_DOWN_MINI_ICON = Identifier
             .fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/move_down_mini.png");
 
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation
+    private static final Identifier SCROLLER_SPRITE = Identifier
             .withDefaultNamespace("container/villager/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation
+    private static final Identifier SCROLLER_DISABLED_SPRITE = Identifier
             .withDefaultNamespace("container/villager/scroller_disabled");
 
     // Container dimensions (fills the tab area cleanly without extra GroupBox)
@@ -97,9 +97,9 @@ public class SingleOfferTransactionLogPanel {
             int travel = Math.max(1, trackH - SCROLLER_HEIGHT);
             float progress = (float) scrollPixelOffset / (float) maxScroll;
             int knobY = trackY + (int) (progress * travel);
-            graphics.blitSprite(RenderType::guiTextured, SCROLLER_SPRITE, trackX, knobY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_SPRITE, trackX, knobY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
         } else {
-            graphics.blitSprite(RenderType::guiTextured, SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_DISABLED_SPRITE, trackX, trackY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
         }
 
         // 4. Empty State
@@ -109,7 +109,7 @@ public class SingleOfferTransactionLogPanel {
             int contentW = (trackX - 1) - (containerX + 1);
             int textX = containerX + 1 + (contentW - tw) / 2;
             int textY = containerY + (CONTAINER_HEIGHT - font.lineHeight) / 2;
-            graphics.drawString(font, empty, textX, textY, 0x808080, false);
+            graphics.drawString(font, empty, textX, textY, 0xFF808080, false);
             return;
         }
 
@@ -155,15 +155,15 @@ public class SingleOfferTransactionLogPanel {
         renderPlayerHead(graphics, entry.buyerUuid(), entry.buyerName(), headX, headY);
 
         // Chevron icon
-        ResourceLocation expandIcon = isExpanded ? MOVE_DOWN_MINI_ICON : MOVE_RIGHT_MINI_ICON;
+        Identifier expandIcon = isExpanded ? MOVE_DOWN_MINI_ICON : MOVE_RIGHT_MINI_ICON;
         int expandX = x + ROW_WIDTH - 14;
         int expandY = y + 4;
-        graphics.blit(RenderType::guiTextured, expandIcon, expandX, expandY, 0.0F, 0.0F, 12, 12, 18, 18, 18, 18);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, expandIcon, expandX, expandY, 0.0F, 0.0F, 12, 12, 18, 18, 18, 18);
 
         // Relative Time
         Component timeText = formatRelativeTime(entry.epochSecond());
         int timeX = expandX - 4 - font.width(timeText);
-        graphics.drawString(font, timeText, timeX, textY, 0x888888, false);
+        graphics.drawString(font, timeText, timeX, textY, 0xFF888888, false);
 
         // Buyer Name
         int nameX = headX + 8 + 4;
@@ -172,7 +172,7 @@ public class SingleOfferTransactionLogPanel {
         if (maxNameWidth > 0 && font.width(buyerName) > maxNameWidth) {
             buyerName = font.plainSubstrByWidth(buyerName, maxNameWidth - font.width("...")) + "...";
         }
-        graphics.drawString(font, buyerName, nameX, textY, rowHovered ? 0xFFFFFF : 0xE0E0E0, false);
+        graphics.drawString(font, buyerName, nameX, textY, rowHovered ? 0xFFFFFFFF : 0xFFE0E0E0, false);
 
         // Expanded preview box
         if (isExpanded) {
@@ -207,7 +207,7 @@ public class SingleOfferTransactionLogPanel {
                 int repW = font.width(repeatLabel);
                 int repX = offerFrameX - 8 - repW;
                 int repY = offerFrameY + (offerFrameH - font.lineHeight) / 2 + 1;
-                graphics.drawString(font, repeatLabel, repX, repY, 0xFFAA00, false);
+                graphics.drawString(font, repeatLabel, repX, repY, 0xFFFFAA00, false);
             }
 
             // Paid item 1 (no extra background box)
@@ -224,11 +224,11 @@ public class SingleOfferTransactionLogPanel {
 
             if (paid1.isEmpty() && paid2.isEmpty()) {
                 Component none = Component.translatable("gui.marketblocks.log.none");
-                graphics.drawString(font, none, slot1X, itemY + 4, 0x666666, false);
+                graphics.drawString(font, none, slot1X, itemY + 4, 0xFF666666, false);
             }
 
             // Trade arrow
-            graphics.blit(RenderType::guiTextured, TRADE_ARROW_ICON, arrowX, arrowY, 0.0F, 0.0F, 10, 9, 10, 9);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, TRADE_ARROW_ICON, arrowX, arrowY, 0.0F, 0.0F, 10, 9, 10, 9);
 
             // Bought item (no extra background box)
             if (!bought.isEmpty()) {
@@ -244,7 +244,7 @@ public class SingleOfferTransactionLogPanel {
         }
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(id, name != null ? name : "");
-        PlayerSkin skin = client.getSkinManager().getInsecureSkin(profile);
+        PlayerSkin skin = client.getSkinManager().createLookup(profile, false).get();
         PlayerFaceRenderer.draw(graphics, skin, x, y, 8);
     }
 
@@ -280,7 +280,7 @@ public class SingleOfferTransactionLogPanel {
         if (entry.paidStacks().size() > 0) {
             ItemStack paid1 = entry.paidStacks().get(0);
             if (!paid1.isEmpty() && mouseX >= slot1X && mouseX < slot1X + 16) {
-                graphics.renderTooltip(font, paid1, mouseX, mouseY);
+                graphics.setTooltipForNextFrame(font, paid1, mouseX, mouseY);
                 return;
             }
         }
@@ -288,7 +288,7 @@ public class SingleOfferTransactionLogPanel {
         if (entry.paidStacks().size() > 1) {
             ItemStack paid2 = entry.paidStacks().get(1);
             if (!paid2.isEmpty() && mouseX >= slot2X && mouseX < slot2X + 16) {
-                graphics.renderTooltip(font, paid2, mouseX, mouseY);
+                graphics.setTooltipForNextFrame(font, paid2, mouseX, mouseY);
                 return;
             }
         }
@@ -296,7 +296,7 @@ public class SingleOfferTransactionLogPanel {
         if (!entry.boughtStacks().isEmpty()) {
             ItemStack bought = entry.boughtStacks().get(0);
             if (!bought.isEmpty() && mouseX >= boughtX && mouseX < boughtX + 16) {
-                graphics.renderTooltip(font, bought, mouseX, mouseY);
+                graphics.setTooltipForNextFrame(font, bought, mouseX, mouseY);
                 return;
             }
         }
@@ -306,7 +306,7 @@ public class SingleOfferTransactionLogPanel {
             int repW = font.width(repeatLabel);
             int repX = offerFrameX - 8 - repW;
             if (mouseX >= repX && mouseX < repX + repW) {
-                graphics.renderTooltip(font, Component.translatable("gui.marketblocks.log.repeat_tooltip", entry.aggregationCount()), mouseX, mouseY);
+                graphics.setTooltipForNextFrame(font, Component.translatable("gui.marketblocks.log.repeat_tooltip", entry.aggregationCount()), mouseX, mouseY);
             }
         }
     }

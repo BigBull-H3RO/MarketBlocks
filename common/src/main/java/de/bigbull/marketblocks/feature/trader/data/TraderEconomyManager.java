@@ -6,7 +6,7 @@ import com.google.gson.*;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.TraderConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -164,7 +164,7 @@ public class TraderEconomyManager {
         baseValues.clear();
         JsonObject obj = GSON.fromJson(Files.readString(file), JsonObject.class);
         for (String key : obj.keySet()) {
-            Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(key));
+            Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(key));
             if (item != Items.AIR) {
                 baseValues.put(item, obj.get(key).getAsDouble());
             }
@@ -218,7 +218,7 @@ public class TraderEconomyManager {
         blacklist.clear();
         JsonArray arr = GSON.fromJson(Files.readString(file), JsonArray.class);
         for (JsonElement el : arr) {
-            Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(el.getAsString()));
+            Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(el.getAsString()));
             if (item != Items.AIR) {
                 blacklist.add(item);
             }

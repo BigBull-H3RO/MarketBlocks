@@ -11,7 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -25,7 +25,7 @@ import de.bigbull.marketblocks.platform.network.PacketContext;
 public record SwitchTabPacket(BlockPos pos, ShopTab tab) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<SwitchTabPacket> TYPE = new CustomPacketPayload.Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "switch_tab"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "switch_tab"));
 
     private static final StreamCodec<ByteBuf, ShopTab> TAB_CODEC = ByteBufCodecs.VAR_INT.map(
             ShopTab::fromId,

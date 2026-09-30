@@ -2,12 +2,13 @@ package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Pixel-precise miniature arrow stepper button using vanilla Minecraft button
@@ -17,9 +18,9 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class MiniArrowButton extends AbstractWidget {
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.withDefaultNamespace("widget/button"),
-            ResourceLocation.withDefaultNamespace("widget/button_disabled"),
-            ResourceLocation.withDefaultNamespace("widget/button_highlighted"));
+            Identifier.withDefaultNamespace("widget/button"),
+            Identifier.withDefaultNamespace("widget/button_disabled"),
+            Identifier.withDefaultNamespace("widget/button_highlighted"));
     private static final int ARROW_COLOR = 0xFFFFFFFF;
     private static final int ARROW_COLOR_DISABLED = 0xFFA0A0A0;
     private static final int ARROW_SHADOW = 0xFF181818;
@@ -55,12 +56,12 @@ public class MiniArrowButton extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.active && this.visible && this.isValidClickButton(button)) {
-            if (this.isMouseOver(mouseX, mouseY)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (this.active && this.visible && this.isValidClickButton(event.buttonInfo())) {
+            if (this.isMouseOver(event.x(), event.y())) {
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 if (this.stepperMode) {
-                    if (mouseY < getY() + (getHeight() / 2.0)) {
+                    if (event.y() < getY() + (getHeight() / 2.0)) {
                         if (this.onUp != null) {
                             this.onUp.run();
                         }
@@ -105,17 +106,17 @@ public class MiniArrowButton extends AbstractWidget {
         int btnH = (h + 1) / 2;
         int btn2Y = y + h - btnH;
 
-        ResourceLocation upSprite = BUTTON_SPRITES.get(this.active, upHovered);
-        ResourceLocation downSprite = BUTTON_SPRITES.get(this.active, downHovered);
+        Identifier upSprite = BUTTON_SPRITES.get(this.active, upHovered);
+        Identifier downSprite = BUTTON_SPRITES.get(this.active, downHovered);
 
         // Draw non-hovered button first so the hovered button's highlight renders
         // cleanly on top
         if (downHovered) {
-            graphics.blitSprite(RenderType::guiTextured, upSprite, x, y, w, btnH);
-            graphics.blitSprite(RenderType::guiTextured, downSprite, x, btn2Y, w, btnH);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, upSprite, x, y, w, btnH);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, downSprite, x, btn2Y, w, btnH);
         } else {
-            graphics.blitSprite(RenderType::guiTextured, downSprite, x, btn2Y, w, btnH);
-            graphics.blitSprite(RenderType::guiTextured, upSprite, x, y, w, btnH);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, downSprite, x, btn2Y, w, btnH);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, upSprite, x, y, w, btnH);
         }
 
         // Arrows
@@ -137,8 +138,8 @@ public class MiniArrowButton extends AbstractWidget {
 
     private void renderSingle(GuiGraphics graphics, int x, int y, int w, int h) {
         boolean hovered = this.active && this.isHovered();
-        ResourceLocation sprite = BUTTON_SPRITES.get(this.active, hovered);
-        graphics.blitSprite(RenderType::guiTextured, sprite, x, y, w, h);
+        Identifier sprite = BUTTON_SPRITES.get(this.active, hovered);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, w, h);
 
         int arrow = !this.active ? ARROW_COLOR_DISABLED : ARROW_COLOR;
         int cx = x + (w / 2);

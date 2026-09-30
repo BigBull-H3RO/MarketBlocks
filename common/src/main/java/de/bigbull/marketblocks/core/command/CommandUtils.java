@@ -35,7 +35,7 @@ public final class CommandUtils {
     public static void appendWaypointsAndTp(CommandSourceStack source, MutableComponent text, GlobalPos pos,
             String name) {
         if (source.getEntity() instanceof ServerPlayer player
-                && (player.hasPermissions(2) || Config.ALLOW_NON_OP_TELEPORT.get())) {
+                && (player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) || Config.ALLOW_NON_OP_TELEPORT.get())) {
             Vec3 tpPos = calculateTeleportPos(pos, source.getServer());
             final double finalTpX = tpPos.x;
             final double finalTpY = tpPos.y;
@@ -44,10 +44,10 @@ public final class CommandUtils {
             text.append(Component.literal(" ")
                     .append(Component.translatable("command.marketblocks.list.tp").withStyle(ChatFormatting.GRAY))
                     .withStyle(style -> style
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                            .withClickEvent(new ClickEvent.RunCommand(
                                     String.format(Locale.US, "/marketblocks internal tp \"%s\" %.2f %.2f %.2f",
-                                            pos.dimension().location(), finalTpX, finalTpY, finalTpZ)))
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                            pos.dimension().identifier(), finalTpX, finalTpY, finalTpZ)))
+                            .withHoverEvent(new HoverEvent.ShowText(
                                     Component.translatable("command.marketblocks.list.click_to_teleport")))));
         }
 
@@ -55,11 +55,11 @@ public final class CommandUtils {
         text.append(Component.literal(" ")
                 .append(Component.translatable("command.marketblocks.list.waypoint").withStyle(ChatFormatting.AQUA))
                 .withStyle(style -> style
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                        .withClickEvent(new ClickEvent.RunCommand(
                                 String.format(Locale.US, "/marketblocks internal waypoint %d %d %d \"%s\" %s", pos.pos().getX(),
-                                        pos.pos().getY(), pos.pos().getZ(), pos.dimension().location(),
+                                        pos.pos().getY(), pos.pos().getZ(), pos.dimension().identifier(),
                                         finalName.isEmpty() ? "Waypoint" : finalName.replace(" ", "_"))))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                        .withHoverEvent(new HoverEvent.ShowText(
                                 Component.translatable("command.marketblocks.list.click_to_waypoint")))));
     }
 
@@ -75,23 +75,23 @@ public final class CommandUtils {
         if (page > 1 && page < totalPages) {
             footer.append(Component.literal("======== ").withStyle(ChatFormatting.DARK_GRAY));
             footer.append(Component.translatable("command.marketblocks.list.prev").withStyle(
-                    style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, baseCmd + (page - 1))))
+                    style -> style.withClickEvent(new ClickEvent.RunCommand(baseCmd + (page - 1))))
                     .withStyle(ChatFormatting.YELLOW));
             footer.append(Component.literal(" | ").withStyle(ChatFormatting.DARK_GRAY));
             footer.append(Component.translatable("command.marketblocks.list.next").withStyle(
-                    style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, baseCmd + (page + 1))))
+                    style -> style.withClickEvent(new ClickEvent.RunCommand(baseCmd + (page + 1))))
                     .withStyle(ChatFormatting.YELLOW));
             footer.append(Component.literal(" ========").withStyle(ChatFormatting.DARK_GRAY));
         } else if (page > 1) {
             footer.append(Component.literal("============= ").withStyle(ChatFormatting.DARK_GRAY));
             footer.append(Component.translatable("command.marketblocks.list.prev").withStyle(
-                    style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, baseCmd + (page - 1))))
+                    style -> style.withClickEvent(new ClickEvent.RunCommand(baseCmd + (page - 1))))
                     .withStyle(ChatFormatting.YELLOW));
             footer.append(Component.literal(" =============").withStyle(ChatFormatting.DARK_GRAY));
         } else if (page < totalPages) {
             footer.append(Component.literal("============= ").withStyle(ChatFormatting.DARK_GRAY));
             footer.append(Component.translatable("command.marketblocks.list.next").withStyle(
-                    style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, baseCmd + (page + 1))))
+                    style -> style.withClickEvent(new ClickEvent.RunCommand(baseCmd + (page + 1))))
                     .withStyle(ChatFormatting.YELLOW));
             footer.append(Component.literal(" =============").withStyle(ChatFormatting.DARK_GRAY));
         }

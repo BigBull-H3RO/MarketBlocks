@@ -6,7 +6,7 @@ import de.bigbull.marketblocks.platform.network.PacketContext;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +21,7 @@ import java.util.Map;
 public record ConfigSyncPacket(Map<String, Map<String, String>> configs) implements CustomPacketPayload {
 
     public static final Type<ConfigSyncPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "config_sync"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "config_sync"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ConfigSyncPacket> CODEC = new StreamCodec<>() {
         @Override

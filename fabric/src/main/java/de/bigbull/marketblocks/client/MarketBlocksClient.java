@@ -19,25 +19,30 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import de.bigbull.marketblocks.platform.Services;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.RenderType;
+import de.bigbull.marketblocks.Constants;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.resources.Identifier;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.entity.player.Player;
 import org.lwjgl.glfw.GLFW;
 
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.screens.MenuScreens;
+
 public class MarketBlocksClient implements ClientModInitializer {
+
+    public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketblocks"));
 
     public static final KeyMapping OPEN_MARKETPLACE = new KeyMapping(
             "key.marketblocks.open_marketplace",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_O,
-            "key.categories.marketblocks");
+            CATEGORY);
 
     @Override
     public void onInitializeClient() {
@@ -50,11 +55,11 @@ public class MarketBlocksClient implements ClientModInitializer {
 
         // Renderers
         BlockEntityRenderers.register(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntityRenderer::new);
-        EntityRendererRegistry.register(RegistriesInit.SHOP_BUYER.get(), ShopBuyerRenderer::new);
+        EntityRenderers.register(RegistriesInit.SHOP_BUYER.get(), ShopBuyerRenderer::new);
 
         // Render layers
-        BlockRenderLayerMap.INSTANCE.putBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), RenderType.cutout());
+        BlockRenderLayerMap.putBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), ChunkSectionLayer.CUTOUT);
+        BlockRenderLayerMap.putBlock(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), ChunkSectionLayer.CUTOUT);
 
         // Keybindings
         KeyBindingHelper.registerKeyBinding(OPEN_MARKETPLACE);

@@ -1,14 +1,16 @@
 package de.bigbull.marketblocks.feature.notification;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.bigbull.marketblocks.Constants;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -24,13 +26,34 @@ public class PendingNotificationsSavedData extends SavedData {
     private final Map<UUID, Set<BlockPos>> outOfStockShops = new HashMap<>();
     private final Map<UUID, Set<BlockPos>> outputFullShops = new HashMap<>();
 
+    public static final Codec<Set<BlockPos>> BLOCK_POS_SET_CODEC = BlockPos.CODEC.listOf().<Set<BlockPos>>xmap(HashSet::new, ArrayList::new);
+
+    public static final Codec<PendingNotificationsSavedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.unboundedMap(UUIDUtil.STRING_CODEC, BLOCK_POS_SET_CODEC)
+                    .optionalFieldOf("OutOfStock", Map.of())
+                    .forGetter(data -> data.outOfStockShops),
+            Codec.unboundedMap(UUIDUtil.STRING_CODEC, BLOCK_POS_SET_CODEC)
+                    .optionalFieldOf("OutputFull", Map.of())
+                    .forGetter(data -> data.outputFullShops)
+    ).apply(instance, (outOfStock, outputFull) -> {
+        PendingNotificationsSavedData data = new PendingNotificationsSavedData();
+        data.outOfStockShops.putAll(outOfStock);
+        data.outputFullShops.putAll(outputFull);
+        return data;
+    }));
+
+    public static final SavedDataType<PendingNotificationsSavedData> TYPE = new SavedDataType<>(
+            DATA_NAME,
+            PendingNotificationsSavedData::new,
+            CODEC,
+            DataFixTypes.SAVED_DATA_COMMAND_STORAGE
+    );
+
     public PendingNotificationsSavedData() {
     }
 
     public static PendingNotificationsSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                new SavedData.Factory<>(PendingNotificationsSavedData::new, PendingNotificationsSavedData::load, null),
-                DATA_NAME);
+        return level.getServer().overworld().getDataStorage().computeIfAbsent(TYPE);
     }
 
     public void addOutOfStock(UUID player, BlockPos pos) {
@@ -55,57 +78,5 @@ public class PendingNotificationsSavedData extends SavedData {
         if (pos != null)
             setDirty();
         return pos == null ? Set.of() : pos;
-    }
-
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
-        tag.put("OutOfStock", saveMap(outOfStockShops));
-        tag.put("OutputFull", saveMap(outputFullShops));
-        return tag;
-    }
-
-    public static PendingNotificationsSavedData load(CompoundTag tag, HolderLookup.Provider provider) {
-        PendingNotificationsSavedData data = new PendingNotificationsSavedData();
-        loadMap(tag, "OutOfStock", data.outOfStockShops);
-        loadMap(tag, "OutputFull", data.outputFullShops);
-        return data;
-    }
-
-    private static ListTag saveMap(Map<UUID, Set<BlockPos>> map) {
-        ListTag list = new ListTag();
-        for (Map.Entry<UUID, Set<BlockPos>> entry : map.entrySet()) {
-            CompoundTag entryTag = new CompoundTag();
-            entryTag.putUUID("UUID", entry.getKey());
-            ListTag posList = new ListTag();
-            for (BlockPos pos : entry.getValue()) {
-                CompoundTag posTag = new CompoundTag();
-                posTag.putInt("X", pos.getX());
-                posTag.putInt("Y", pos.getY());
-                posTag.putInt("Z", pos.getZ());
-                posList.add(posTag);
-            }
-            entryTag.put("Positions", posList);
-            list.add(entryTag);
-        }
-        return list;
-    }
-
-    private static void loadMap(CompoundTag parentTag, String key, Map<UUID, Set<BlockPos>> map) {
-        if (!parentTag.contains(key, Tag.TAG_LIST))
-            return;
-        ListTag list = parentTag.getList(key, Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++) {
-            CompoundTag entryTag = list.getCompound(i);
-            if (entryTag.hasUUID("UUID")) {
-                UUID uuid = entryTag.getUUID("UUID");
-                Set<BlockPos> posSet = new HashSet<>();
-                ListTag posList = entryTag.getList("Positions", Tag.TAG_COMPOUND);
-                for (int j = 0; j < posList.size(); j++) {
-                    CompoundTag posTag = posList.getCompound(j);
-                    posSet.add(new BlockPos(posTag.getInt("X"), posTag.getInt("Y"), posTag.getInt("Z")));
-                }
-                map.put(uuid, posSet);
-            }
-        }
     }
 }

@@ -25,7 +25,7 @@ public class ShopRedstoneManager {
     }
 
     public void triggerRedstonePulse() {
-        if (shop.getLevel() == null || shop.getLevel().isClientSide || !shop.isEmitRedstone()) {
+        if (shop.getLevel() == null || shop.getLevel().isClientSide() || !shop.isEmitRedstone()) {
             return;
         }
         BlockState state = shop.getLevel().getBlockState(shop.getBlockPos());

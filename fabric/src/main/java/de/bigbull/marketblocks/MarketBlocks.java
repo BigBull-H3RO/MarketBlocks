@@ -80,8 +80,8 @@ public class MarketBlocks implements ModInitializer {
 
             // Synchronize server configurations to the connected player
             TomlConfigManager.syncToPlayer(player);
-            MarketplaceLinkSavedData.get(player.serverLevel()).syncToPlayer(player);
-            PendingNotificationsSavedData data = PendingNotificationsSavedData.get(player.serverLevel());
+            MarketplaceLinkSavedData.get(player.level()).syncToPlayer(player);
+            PendingNotificationsSavedData data = PendingNotificationsSavedData.get(player.level());
             Set<BlockPos> emptyShops = data.getAndClearOutOfStock(player.getUUID());
             Set<BlockPos> fullShops = data.getAndClearOutputFull(player.getUUID());
 
@@ -134,7 +134,7 @@ public class MarketBlocks implements ModInitializer {
                 if (held.getItem() instanceof AxeItem) {
                     InteractionResult res = TradeStandBlock.tryDisableShowcase(world, basePos, baseState, player);
                     if (res != InteractionResult.PASS) {
-                        if (res == InteractionResult.FAIL && !world.isClientSide) {
+                        if (res == InteractionResult.FAIL && !world.isClientSide()) {
                             player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
                         }
                         return res;
@@ -142,7 +142,7 @@ public class MarketBlocks implements ModInitializer {
                 } else if (held.is(Items.GLASS)) {
                     InteractionResult res = TradeStandBlock.tryEnableShowcase(world, basePos, baseState, player, held);
                     if (res != InteractionResult.PASS) {
-                        if (res == InteractionResult.FAIL && !world.isClientSide) {
+                        if (res == InteractionResult.FAIL && !world.isClientSide()) {
                             player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
                         }
                         return res;
@@ -150,12 +150,12 @@ public class MarketBlocks implements ModInitializer {
                 }
             }
 
-            if (world.isClientSide) return InteractionResult.PASS;
+            if (world.isClientSide()) return InteractionResult.PASS;
             if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
 
-            GlobalPos globalPos = GlobalPos.of(serverPlayer.serverLevel().dimension(), pos);
+            GlobalPos globalPos = GlobalPos.of(serverPlayer.level().dimension(), pos);
 
-            if (MarketplaceLinkSavedData.get(serverPlayer.serverLevel()).isLinked(globalPos)) {
+            if (MarketplaceLinkSavedData.get(serverPlayer.level()).isLinked(globalPos)) {
                 MarketplaceManager.get().openShop(serverPlayer);
                 return InteractionResult.SUCCESS;
             }
@@ -165,7 +165,7 @@ public class MarketBlocks implements ModInitializer {
                 for (Direction dir : Direction.values()) {
                     BlockPos shopPos = pos.relative(dir);
                     if (world.getBlockEntity(shopPos) instanceof SingleOfferShopBlockEntity shop) {
-                        if (!shop.getOwners().contains(player.getUUID()) && !player.hasPermissions(2)) {
+                        if (!shop.getOwners().contains(player.getUUID()) && !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
                             player.displayClientMessage(Component.translatable("message.marketblocks.chest.locked"), true);
                             return InteractionResult.FAIL;
                         }
@@ -176,7 +176,7 @@ public class MarketBlocks implements ModInitializer {
         });
 
         PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
-            if (world.isClientSide) return true;
+            if (world.isClientSide()) return true;
             if (!(player instanceof ServerPlayer serverPlayer)) return true;
 
             if (state.getBlock() instanceof BaseShopBlock || state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
@@ -185,15 +185,15 @@ public class MarketBlocks implements ModInitializer {
                 }
             }
 
-            GlobalPos globalPos = GlobalPos.of(serverPlayer.serverLevel().dimension(), pos);
-            MarketplaceLinkSavedData linkData = MarketplaceLinkSavedData.get(serverPlayer.serverLevel());
+            GlobalPos globalPos = GlobalPos.of(serverPlayer.level().dimension(), pos);
+            MarketplaceLinkSavedData linkData = MarketplaceLinkSavedData.get(serverPlayer.level());
             if (linkData.isLinked(globalPos)) {
-                if (!player.hasPermissions(2)) {
+                if (!player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
                     player.displayClientMessage(Component.translatable("command.marketblocks.break.denied"), false);
                     return false;
                 } else {
                     linkData.removeLink(globalPos);
-                    linkData.syncToAll(serverPlayer.getServer());
+                    linkData.syncToAll(serverPlayer.level().getServer());
                     player.displayClientMessage(Component.translatable("command.marketblocks.break.unlinked"), false);
                 }
             }
@@ -202,7 +202,7 @@ public class MarketBlocks implements ModInitializer {
                 for (Direction dir : Direction.values()) {
                     BlockPos shopPos = pos.relative(dir);
                     if (world.getBlockEntity(shopPos) instanceof SingleOfferShopBlockEntity shop) {
-                        if (!shop.getOwners().contains(player.getUUID()) && !player.hasPermissions(2)) {
+                        if (!shop.getOwners().contains(player.getUUID()) && !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
                             player.displayClientMessage(Component.translatable("message.marketblocks.chest.locked"), true);
                             return false;
                         }

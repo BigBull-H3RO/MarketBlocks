@@ -58,9 +58,9 @@ public class CompactNumberBox extends EditBox {
         // 4. Render text & blinking cursor with 4px left padding and vertical centering (vanilla EditBox formula: (h - 8) / 2)
         int textYOffset = (h - 8) / 2;
         int textXOffset = 4;
-        graphics.pose().pushPose();
-        graphics.pose().translate(textXOffset, textYOffset, 0);
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(textXOffset, textYOffset);
         super.renderWidget(graphics, mouseX, mouseY, partialTick);
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
     }
 }

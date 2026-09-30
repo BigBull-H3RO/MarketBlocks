@@ -34,6 +34,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -121,7 +122,7 @@ public final class MarketplaceAdminCommand {
         public static LiteralArgumentBuilder<CommandSourceStack> build(
                         SuggestionProvider<CommandSourceStack> linkSuggestions) {
                 return Commands.literal("admin")
-                                .requires(source -> source.hasPermission(2))
+                                .requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                                 .then(Commands.literal("editmode")
                                                 .executes(context -> {
                                                         if (context.getSource()
@@ -528,7 +529,7 @@ public final class MarketplaceAdminCommand {
                 HitResult hit = player.pick(5.0D, 0.0F, false);
                 if (hit.getType() == HitResult.Type.BLOCK) {
                         BlockPos pos = ((BlockHitResult) hit).getBlockPos();
-                        GlobalPos globalPos = GlobalPos.of(player.serverLevel().dimension(), pos);
+                        GlobalPos globalPos = GlobalPos.of(player.level().dimension(), pos);
 
                         Vec3 finalTpPos = tpPos;
                         Float finalTpYaw = null;
@@ -539,10 +540,10 @@ public final class MarketplaceAdminCommand {
                                 finalTpPitch = 0.0f;
                         }
 
-                        if (MarketplaceLinkSavedData.get(player.serverLevel()).addLink(globalPos, name, finalTpPos,
+                        if (MarketplaceLinkSavedData.get(player.level()).addLink(globalPos, name, finalTpPos,
                                         finalTpYaw,
                                         finalTpPitch)) {
-                                MarketplaceLinkSavedData.get(player.serverLevel()).syncToAll(player.getServer());
+                                MarketplaceLinkSavedData.get(player.level()).syncToAll(player.level().getServer());
                                 player.sendSystemMessage(Component.translatable("command.marketblocks.link.success"));
                         } else {
                                 player.sendSystemMessage(
@@ -561,9 +562,9 @@ public final class MarketplaceAdminCommand {
                 HitResult hit = player.pick(5.0D, 0.0F, false);
                 if (hit.getType() == HitResult.Type.BLOCK) {
                         BlockPos pos = ((BlockHitResult) hit).getBlockPos();
-                        GlobalPos globalPos = GlobalPos.of(player.serverLevel().dimension(), pos);
-                        if (MarketplaceLinkSavedData.get(player.serverLevel()).removeLink(globalPos)) {
-                                MarketplaceLinkSavedData.get(player.serverLevel()).syncToAll(player.getServer());
+                        GlobalPos globalPos = GlobalPos.of(player.level().dimension(), pos);
+                        if (MarketplaceLinkSavedData.get(player.level()).removeLink(globalPos)) {
+                                MarketplaceLinkSavedData.get(player.level()).syncToAll(player.level().getServer());
                                 player.sendSystemMessage(Component.translatable("command.marketblocks.unlink.success"));
                         } else {
                                 player.sendSystemMessage(

@@ -2,13 +2,11 @@ package de.bigbull.marketblocks.feature.singleoffer.block;
 
 import de.bigbull.marketblocks.platform.Services;
 
-import de.bigbull.marketblocks.core.data.ShopDirectorySavedData;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.menu.SingleOfferShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -127,12 +125,12 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     }
 
     @Override
-    public boolean hasAnalogOutputSignal(BlockState state) {
+    protected boolean hasAnalogOutputSignal(BlockState state) {
         return false;
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+    protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
         return 0;
     }
 
@@ -161,7 +159,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, @Nullable Orientation orientation,
             boolean isMoving) {
         super.neighborChanged(state, level, pos, block, orientation, isMoving);
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
+        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
             shopEntity.updateNeighborCache();
         }
     }
@@ -196,7 +194,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             return InteractionResult.PASS;
         }
 
-        if (level.isClientSide)
+        if (level.isClientSide())
             return InteractionResult.SUCCESS;
 
         if (!(level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity)) {
@@ -244,7 +242,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
         boolean isOwner = shop.isOwner(player);
         boolean isAdminShop = shop.isAdminShopEnabled();
-        boolean hasAdminBypass = player.hasPermissions(2) && player.isCreative();
+        boolean hasAdminBypass = player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && player.isCreative();
 
         // Admin Shop: require OP + Creative + Sneaking so admins don't accidentally
         // delete server shops
@@ -319,27 +317,12 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        if (!level.isClientSide && !canPlayerDestroy(level, pos, player, false)) {
+        if (!level.isClientSide() && !canPlayerDestroy(level, pos, player, false)) {
             return state;
         }
         return super.playerWillDestroy(level, pos, state, player);
     }
 
-    @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock())) {
-            if (level.getBlockEntity(pos) instanceof SingleOfferShopBlockEntity shopEntity) {
-                shopEntity.dropContents(level, pos);
-                shopEntity.unlockAdjacentChests();
-                if (level instanceof ServerLevel serverLevel) {
-                    ShopDirectorySavedData data = ShopDirectorySavedData.get(serverLevel);
-                    GlobalPos globalPos = GlobalPos.of(serverLevel.dimension(), pos);
-                    data.unregisterShop(globalPos);
-                }
-            }
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
-    }
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {

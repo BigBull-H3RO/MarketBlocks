@@ -7,7 +7,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import de.bigbull.marketblocks.platform.network.PacketContext;
@@ -19,7 +19,7 @@ import de.bigbull.marketblocks.platform.network.PacketContext;
 public record AutoFillPaymentPacket(BlockPos pos) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<AutoFillPaymentPacket> TYPE = new CustomPacketPayload.Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "auto_fill_payment"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "auto_fill_payment"));
 
     public static final StreamCodec<ByteBuf, AutoFillPaymentPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,

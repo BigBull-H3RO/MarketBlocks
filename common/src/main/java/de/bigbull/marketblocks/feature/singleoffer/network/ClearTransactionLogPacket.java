@@ -9,7 +9,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import de.bigbull.marketblocks.platform.network.PacketContext;
@@ -21,7 +21,7 @@ import java.util.List;
  */
 public record ClearTransactionLogPacket(BlockPos pos) implements CustomPacketPayload {
     public static final Type<ClearTransactionLogPacket> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_clear_transaction_log"));
+            new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_clear_transaction_log"));
 
     public static final StreamCodec<ByteBuf, ClearTransactionLogPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,

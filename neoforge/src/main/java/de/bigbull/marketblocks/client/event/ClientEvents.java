@@ -8,7 +8,8 @@ import de.bigbull.marketblocks.feature.marketplace.client.screen.MarketplaceScre
 import de.bigbull.marketblocks.feature.singleoffer.client.screen.SingleOfferShopScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -20,23 +21,30 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * Main client-side event handler for MarketBlocks.
- * Responsible for registering screens, block entity renderers, keybindings, and
- * setting up
- * client-specific block properties like render layers during the FML client
- * setup phase.
+ * Responsible for registering screens, block entity renderers, and keybindings.
  */
 @EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class ClientEvents {
+    private static final KeyMapping.Category CATEGORY = new KeyMapping.Category(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketblocks"));
     private static final KeyMapping OPEN_MARKETPLACE = new KeyMapping(
             "key.marketblocks.open_marketplace",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_O,
-            "key.categories.marketblocks");
+            CATEGORY);
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(RegistriesInit.SINGLE_OFFER_SHOP_MENU.get(), SingleOfferShopScreen::new);
         event.register(RegistriesInit.MARKETPLACE_MENU.get(), MarketplaceScreen::new);
+    }
+
+    @SuppressWarnings("deprecation")
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK.get(), ChunkSectionLayer.CUTOUT);
+            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), ChunkSectionLayer.CUTOUT);
+        });
     }
 
     @SubscribeEvent
@@ -49,16 +57,8 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
+        event.registerCategory(CATEGORY);
         event.register(OPEN_MARKETPLACE);
-    }
-
-    @SuppressWarnings("deprecation")
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), RenderType.cutout());
-        });
     }
 
     public static KeyMapping getOpenMarketplaceKey() {

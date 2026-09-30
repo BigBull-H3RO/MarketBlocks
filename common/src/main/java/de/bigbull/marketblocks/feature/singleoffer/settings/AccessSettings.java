@@ -6,7 +6,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.core.UUIDUtil;
-import net.minecraft.nbt.Tag;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -110,7 +109,7 @@ public record AccessSettings(
         CompoundTag tag = new CompoundTag();
         tag.putBoolean(KEY_ADMIN_SHOP, adminShopEnabled);
         if (ownerId != null) {
-            tag.putUUID(KEY_OWNER_ID, ownerId);
+            tag.store(KEY_OWNER_ID, UUIDUtil.CODEC, ownerId);
         }
         tag.putString(KEY_OWNER_NAME, ownerName);
 
@@ -118,7 +117,7 @@ public record AccessSettings(
             ListTag list = new ListTag();
             for (Map.Entry<UUID, String> entry : additionalOwners.entrySet()) {
                 CompoundTag ownerTag = new CompoundTag();
-                ownerTag.putUUID(KEY_ADDITIONAL_OWNER_ID, entry.getKey());
+                ownerTag.store(KEY_ADDITIONAL_OWNER_ID, UUIDUtil.CODEC, entry.getKey());
                 ownerTag.putString(KEY_ADDITIONAL_OWNER_NAME, entry.getValue());
                 list.add(ownerTag);
             }
@@ -130,7 +129,7 @@ public record AccessSettings(
             ListTag list = new ListTag();
             for (Map.Entry<UUID, String> entry : accessList.entrySet()) {
                 CompoundTag accessTag = new CompoundTag();
-                accessTag.putUUID(KEY_ACCESS_PLAYER_ID, entry.getKey());
+                accessTag.store(KEY_ACCESS_PLAYER_ID, UUIDUtil.CODEC, entry.getKey());
                 accessTag.putString(KEY_ACCESS_PLAYER_NAME, entry.getValue());
                 list.add(accessTag);
             }
@@ -142,38 +141,35 @@ public record AccessSettings(
     public static AccessSettings load(CompoundTag tag) {
         if (tag == null) return DEFAULT;
 
-        boolean adminShopEnabled = tag.getBoolean(KEY_ADMIN_SHOP);
-        UUID ownerId = tag.contains(KEY_OWNER_ID) ? tag.getUUID(KEY_OWNER_ID) : null;
-        String ownerName = tag.getString(KEY_OWNER_NAME);
+        boolean adminShopEnabled = tag.getBooleanOr(KEY_ADMIN_SHOP, false);
+        UUID ownerId = tag.read(KEY_OWNER_ID, UUIDUtil.CODEC).orElse(null);
+        String ownerName = tag.getStringOr(KEY_OWNER_NAME, "");
 
         Map<UUID, String> additionalOwners = new HashMap<>();
-        if (tag.contains(KEY_ADDITIONAL_OWNERS, Tag.TAG_LIST)) {
-            ListTag list = tag.getList(KEY_ADDITIONAL_OWNERS, Tag.TAG_COMPOUND);
-            for (int i = 0; i < list.size(); i++) {
-                CompoundTag ownerTag = list.getCompound(i);
-                if (ownerTag.hasUUID(KEY_ADDITIONAL_OWNER_ID)) {
-                    additionalOwners.put(ownerTag.getUUID(KEY_ADDITIONAL_OWNER_ID), ownerTag.getString(KEY_ADDITIONAL_OWNER_NAME));
-                }
-            }
+        ListTag ownerList = tag.getListOrEmpty(KEY_ADDITIONAL_OWNERS);
+        for (int i = 0; i < ownerList.size(); i++) {
+            CompoundTag ownerTag = ownerList.getCompoundOrEmpty(i);
+            ownerTag.read(KEY_ADDITIONAL_OWNER_ID, UUIDUtil.CODEC).ifPresent(uuid -> {
+                additionalOwners.put(uuid, ownerTag.getStringOr(KEY_ADDITIONAL_OWNER_NAME, ""));
+            });
         }
 
         AccessMode accessMode = AccessMode.WHITELIST;
-        if (tag.contains(KEY_ACCESS_MODE)) {
+        String modeStr = tag.getStringOr(KEY_ACCESS_MODE, "");
+        if (!modeStr.isEmpty()) {
             try {
-                accessMode = AccessMode.valueOf(tag.getString(KEY_ACCESS_MODE));
-            } catch (IllegalArgumentException e) {
+                accessMode = AccessMode.valueOf(modeStr);
+            } catch (IllegalArgumentException ignored) {
             }
         }
 
         Map<UUID, String> accessList = new HashMap<>();
-        if (tag.contains(KEY_ACCESS_LIST, Tag.TAG_LIST)) {
-            ListTag list = tag.getList(KEY_ACCESS_LIST, Tag.TAG_COMPOUND);
-            for (int i = 0; i < list.size(); i++) {
-                CompoundTag accessTag = list.getCompound(i);
-                if (accessTag.hasUUID(KEY_ACCESS_PLAYER_ID)) {
-                    accessList.put(accessTag.getUUID(KEY_ACCESS_PLAYER_ID), accessTag.getString(KEY_ACCESS_PLAYER_NAME));
-                }
-            }
+        ListTag accessListTag = tag.getListOrEmpty(KEY_ACCESS_LIST);
+        for (int i = 0; i < accessListTag.size(); i++) {
+            CompoundTag accessTag = accessListTag.getCompoundOrEmpty(i);
+            accessTag.read(KEY_ACCESS_PLAYER_ID, UUIDUtil.CODEC).ifPresent(uuid -> {
+                accessList.put(uuid, accessTag.getStringOr(KEY_ACCESS_PLAYER_NAME, ""));
+            });
         }
 
         return new AccessSettings(adminShopEnabled, ownerId, ownerName, additionalOwners, accessMode, accessList);

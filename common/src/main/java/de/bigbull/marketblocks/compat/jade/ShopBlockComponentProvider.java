@@ -1,19 +1,18 @@
 package de.bigbull.marketblocks.compat.jade;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.ChatFormatting;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.ITooltip;
 import snownee.jade.api.config.IPluginConfig;
-import snownee.jade.api.ui.IElementHelper;
+import snownee.jade.api.ui.JadeUI;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 
-import net.minecraft.world.phys.Vec2;
 import snownee.jade.api.IServerDataProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -22,7 +21,7 @@ import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandTopBlock;
 public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
-    public static final ResourceLocation SHOP_INFO = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    public static final Identifier SHOP_INFO = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "shop_info");
 
     @Override
@@ -62,12 +61,10 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
                 ItemStack p2 = shop.getOfferPayment2();
 
                 if (!result.isEmpty() && (!p1.isEmpty() || !p2.isEmpty())) {
-                    IElementHelper elements = IElementHelper.get();
-
                     tooltip.add(Component.translatable("marketblocks.jade.selling").withStyle(ChatFormatting.YELLOW));
 
                     // Selling Item
-                    tooltip.append(elements.item(result, 1f).translate(new Vec2(0, -4)));
+                    tooltip.append(JadeUI.item(result, 1f).offset(0, -4));
                     tooltip.append(Component.literal(" "));
                     tooltip.append(result.getHoverName());
 
@@ -75,34 +72,32 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
 
                     // Payment 1
                     if (!p1.isEmpty()) {
-                        tooltip.append(elements.item(p1, 1f).translate(new Vec2(0, -4)));
+                        tooltip.append(JadeUI.item(p1, 1f).offset(0, -4));
                         tooltip.append(Component.literal(" "));
                     }
 
                     // Payment 2
                     if (!p2.isEmpty()) {
-                        tooltip.append(elements.text(Component.literal("+ ").withStyle(ChatFormatting.GRAY)).translate(new Vec2(0, 1)));
-                        tooltip.append(elements.item(p2, 1f).translate(new Vec2(0, -4)));
+                        tooltip.append(JadeUI.text(Component.literal("+ ").withStyle(ChatFormatting.GRAY)).offset(0, 1));
+                        tooltip.append(JadeUI.item(p2, 1f).offset(0, -4));
                         tooltip.append(Component.literal(" "));
                     }
                 }
 
                 // Out of stock warning (if not admin shop)
                 if (!shop.isAdminShopEnabled()) {
-                    if (accessor.getServerData().contains("HasStock")) {
-                        boolean hasStock = accessor.getServerData().getBoolean("HasStock");
+                    accessor.getServerData().getBoolean("HasStock").ifPresent(hasStock -> {
                         if (!hasStock) {
                             tooltip.add(Component.translatable("marketblocks.jade.out_of_stock")
                                     .withStyle(ChatFormatting.RED));
                         }
-                    }
-                    if (accessor.getServerData().contains("OutputFull")) {
-                        boolean outputFull = accessor.getServerData().getBoolean("OutputFull");
+                    });
+                    accessor.getServerData().getBoolean("OutputFull").ifPresent(outputFull -> {
                         if (outputFull) {
                             tooltip.add(Component.translatable("marketblocks.jade.output_full")
                                     .withStyle(ChatFormatting.RED));
                         }
-                    }
+                    });
                 }
             }
         }
@@ -126,7 +121,7 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
     }
 
     @Override
-    public ResourceLocation getUid() {
+    public Identifier getUid() {
         return SHOP_INFO;
     }
 }

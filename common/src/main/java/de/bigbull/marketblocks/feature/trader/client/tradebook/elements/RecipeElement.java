@@ -1,8 +1,8 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import de.bigbull.marketblocks.Constants;
@@ -13,9 +13,9 @@ import de.bigbull.marketblocks.feature.trader.client.tradebook.TradeBookRenderCo
 
 public class RecipeElement implements ITradeBookElement {
 
-    private static final ResourceLocation CRAFTING_GRID = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/tradebook/crafting_grid.png");
-    private static final ResourceLocation CRAFTING_ARROW = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/tradebook/crafting_arrow.png");
-    private static final ResourceLocation CRAFTING_RESULT = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/tradebook/crafting_result.png");
+    private static final Identifier CRAFTING_GRID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/tradebook/crafting_grid.png");
+    private static final Identifier CRAFTING_ARROW = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/tradebook/crafting_arrow.png");
+    private static final Identifier CRAFTING_RESULT = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/tradebook/crafting_result.png");
 
     @Override
     public boolean canHandle(String insertion) {
@@ -32,15 +32,15 @@ public class RecipeElement implements ITradeBookElement {
         String recipeId = insertion.substring(7);
         int baseY = y + 4;
 
-        graphics.pose().pushPose();
+        graphics.pose().pushMatrix();
 
-        graphics.pose().translate(x - 3, baseY, 0);
+        graphics.pose().translate(x - 3, baseY);
         float inverseScale = 1.0f / TradeBookLayoutUtils.TEXT_SCALE;
-        graphics.pose().scale(inverseScale, inverseScale, 1.0f);
+        graphics.pose().scale(inverseScale, inverseScale);
 
-        graphics.blit(RenderType::guiTextured, CRAFTING_GRID, 0, 0, 0.0F, 0.0F, 64, 64, 64, 64);
-        graphics.blit(RenderType::guiTextured, CRAFTING_ARROW, 68, 24, 0.0F, 0.0F, 16, 16, 16, 16);
-        graphics.blit(RenderType::guiTextured, CRAFTING_RESULT, 88, 16, 0.0F, 0.0F, 32, 32, 32, 32);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_GRID, 0, 0, 0.0F, 0.0F, 64, 64, 64, 64);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_ARROW, 68, 24, 0.0F, 0.0F, 16, 16, 16, 16);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_RESULT, 88, 16, 0.0F, 0.0F, 32, 32, 32, 32);
 
         double localMouseX = ((mouseX / scale) - (x - 3)) / inverseScale;
         double localMouseY = ((mouseY / scale) - baseY) / inverseScale;
@@ -98,7 +98,7 @@ public class RecipeElement implements ITradeBookElement {
             renderSlot(graphics, result, 96, 24, localMouseX, localMouseY, mouseX, mouseY, context);
         }
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
     }
 
     private void renderSlot(GuiGraphics graphics, ItemStack stack, int x, int y,
@@ -108,7 +108,7 @@ public class RecipeElement implements ITradeBookElement {
         graphics.renderItem(stack, x, y);
         if (localMouseX >= x && localMouseX < x + 16 && localMouseY >= y && localMouseY < y + 16) {
             context.setNextHoveredObject("recipe_" + stack.getItem().toString());
-            context.addTooltip(() -> graphics.renderTooltip(context.getFont(), stack, mouseX, mouseY));
+            context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), stack, mouseX, mouseY));
         }
     }
 }

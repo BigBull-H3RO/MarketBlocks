@@ -20,7 +20,9 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewStat
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -31,7 +33,7 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -59,7 +61,7 @@ import java.util.function.Consumer;
  **/
 public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> {
     private static final int BACKDROP_MOUSE_OFFSCREEN = -10000;
-    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier BACKGROUND_TEXTURE = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/marketplace.png");
     private static final int STATUS_LINE_HEIGHT = 12;
     private static final int RIGHT_SIDE_GAP = 2;
@@ -77,9 +79,9 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private static final int SCROLLER_WIDTH = 6;
     private static final int SCROLLER_HEIGHT = 27;
     private static final int SCROLLER_BOTTOM_INSET = 7;
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation
+    private static final Identifier SCROLLER_SPRITE = Identifier
             .withDefaultNamespace("container/villager/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation
+    private static final Identifier SCROLLER_DISABLED_SPRITE = Identifier
             .withDefaultNamespace("container/villager/scroller_disabled");
 
     private static final int PREVIEW_X_OFFSET = 144;
@@ -87,36 +89,36 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
 
     private static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "button"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "button_disabled"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "button_highlighted"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "button_selected"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "button"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "button_disabled"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "button_highlighted"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "button_selected"));
 
-    private static final ResourceLocation ADD_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier ADD_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/create.png");
-    private static final ResourceLocation DELETE_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier DELETE_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/delete.png");
-    private static final ResourceLocation SETTINGS_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier SETTINGS_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/settings.png");
-    private static final ResourceLocation ADD_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier ADD_PAGE_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/marketplace/add_page.png");
-    private static final ResourceLocation DELETE_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier DELETE_PAGE_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/marketplace/delete_page.png");
-    private static final ResourceLocation RENAME_PAGE_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier RENAME_PAGE_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/marketplace/rename_page.png");
-    private static final ResourceLocation MOVE_UP_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier MOVE_UP_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/move_up_mini.png");
-    private static final ResourceLocation MOVE_DOWN_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier MOVE_DOWN_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/move_down_mini.png");
-    private static final ResourceLocation LIMITS_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier LIMITS_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/edit_limits.png");
-    private static final ResourceLocation PRICING_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier PRICING_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/edit_pricing.png");
-    private static final ResourceLocation ARROW_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier ARROW_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/trade_arrow.png");
-    private static final ResourceLocation OUT_OF_STOCK_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID,
+    private static final Identifier OUT_OF_STOCK_ICON = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
             "textures/gui/icon/out_of_stock.png");
-    private static final ResourceLocation TRADE_ARROW_DISABLED_ICON = ResourceLocation.fromNamespaceAndPath(
+    private static final Identifier TRADE_ARROW_DISABLED_ICON = Identifier.fromNamespaceAndPath(
             Constants.MOD_ID,
             "textures/gui/icon/trade_arrow_disabled.png");
 
@@ -506,7 +508,6 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         this.renderTooltip(guiGraphics, mouseX, mouseY);
         overlayRenderer.renderTooltips(guiGraphics, createOverlayContext(mouseX, mouseY, false));
         pageSidebar.renderDelayedTooltip(createPageSidebarContext(), guiGraphics, mouseX, mouseY);
-        guiGraphics.flush();
     }
 
     /**
@@ -525,14 +526,11 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     }
 
     private void renderForegroundWidgets(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 200.0F);
         for (AbstractWidget widget : foregroundWidgets) {
             if (widget.visible) {
                 widget.render(guiGraphics, mouseX, mouseY, partialTick);
             }
         }
-        guiGraphics.pose().popPose();
     }
 
     private void renderStaticOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean suppressInteractions) {
@@ -571,7 +569,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
                 this::getDisplayRestockSeconds);
     }
 
-    private ResourceLocation getUnavailableStateIcon(MarketplaceOfferViewState viewState) {
+    private Identifier getUnavailableStateIcon(MarketplaceOfferViewState viewState) {
         if (viewState.remainingDailyPurchases().isPresent() && viewState.remainingDailyPurchases().get() <= 0) {
             return TRADE_ARROW_DISABLED_ICON;
         }
@@ -668,7 +666,10 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0 && isScrollBarActive() && isWithinScroller(mouseX, mouseY)) {
             isDragging = true;
             return true;
@@ -676,7 +677,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         if (trySelectOfferAt(mouseX, mouseY)) {
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     private void updateScrollLimits() {
@@ -704,11 +705,11 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
-        guiGraphics.blit(RenderType::guiTextured, BACKGROUND_TEXTURE, i, j, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, i, j, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
 
         if (isLocalEditMode) {
             guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 166,
-                    topPos + 6, 0xFF5555, false);
+                    topPos + 6, 0xFFFF5555, false);
         }
 
         renderStaticOverlay(guiGraphics, mouseX, mouseY, false);
@@ -721,14 +722,14 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         int maxScroll = Math.max(0, visibleOffers.size() - maxVisibleRows);
 
         if (maxScroll <= 0) {
-            guiGraphics.blitSprite(RenderType::guiTextured, SCROLLER_DISABLED_SPRITE, scrollerX, scrollerY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_DISABLED_SPRITE, scrollerX, scrollerY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
             return;
         }
 
         float progress = (float) scrollOffset / (float) maxScroll;
         int handleTravel = Math.max(0, scrollerH - SCROLLER_HEIGHT);
         int handleY = scrollerY + Mth.floor(progress * handleTravel);
-        guiGraphics.blitSprite(RenderType::guiTextured, SCROLLER_SPRITE, scrollerX, handleY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_SPRITE, scrollerX, handleY, SCROLLER_WIDTH, SCROLLER_HEIGHT);
     }
 
     private boolean isScrollBarActive() {
@@ -750,7 +751,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseY = event.y();
         if (isDragging && isScrollBarActive()) {
             int scrollerY = scrollerY();
             int handleTravel = scrollerHeight() - SCROLLER_HEIGHT;
@@ -764,14 +766,14 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
             updateScrollOffset(newOffset);
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0)
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (event.button() == 0)
             isDragging = false;
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     /**
@@ -915,14 +917,14 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
             this.input.setMaxLength(64);
             this.input.setValue(initialValue);
             this.input.setResponder(ignored -> updateConfirmState());
-            addRenderableWidget(input);
+            this.addRenderableWidget(input);
             this.confirmButton = Button.builder(CommonComponents.GUI_OK, ignored -> confirmInput())
                     .bounds(this.panelLeft + 18, this.panelTop + 56, 96, 20).build();
-            addRenderableWidget(confirmButton);
-            addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, ignored -> this.onClose())
+            this.addRenderableWidget(confirmButton);
+            this.addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, ignored -> this.onClose())
                     .bounds(this.panelLeft + PANEL_WIDTH - 114, this.panelTop + 56, 96, 20).build());
             updateConfirmState();
-            setInitialFocus(input);
+            this.setInitialFocus(input);
         }
 
         private void updateConfirmState() {
@@ -945,7 +947,8 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
 
         @Override
-        public boolean keyPressed(int k, int s, int m) {
+        public boolean keyPressed(KeyEvent event) {
+            int k = event.key();
             if (k == 257 || k == 335) {
                 if (confirmButton != null && confirmButton.active) {
                     confirmInput();
@@ -953,7 +956,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
                 }
                 return false;
             }
-            return super.keyPressed(k, s, m);
+            return super.keyPressed(event);
         }
     }
 }

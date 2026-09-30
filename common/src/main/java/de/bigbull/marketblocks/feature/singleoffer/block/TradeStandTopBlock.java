@@ -64,7 +64,7 @@ public class TradeStandTopBlock extends Block {
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);
-        if (!level.isClientSide && !state.canSurvive(level, pos)) {
+        if (!level.isClientSide() && !state.canSurvive(level, pos)) {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         }
     }
@@ -73,7 +73,7 @@ public class TradeStandTopBlock extends Block {
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, @Nullable Orientation orientation,
             boolean isMoving) {
         super.neighborChanged(state, level, pos, block, orientation, isMoving);
-        if (!level.isClientSide && !state.canSurvive(level, pos)) {
+        if (!level.isClientSide() && !state.canSurvive(level, pos)) {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         }
     }

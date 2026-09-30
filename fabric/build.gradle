@@ -11,12 +11,13 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     // Compatibilities (Soft dependencies)
-    compileOnly "mezz.jei:jei-1.21.4-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-1.21.11-common-api:${jei_version}"
     compileOnly "maven.modrinth:jade:${jade_version}+neoforge"
     compileOnly "info.journeymap:journeymap-api-common:${journeymap_api_version}"
 }
 
 loom {
+    enableModProvidedJavadoc.set(false)
     def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
     if (aw.exists()) {
         accessWidenerPath.set(aw)

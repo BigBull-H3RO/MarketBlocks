@@ -53,7 +53,7 @@ public class AdminModeToggleButton extends AbstractButton {
     }
 
     @Override
-    public void onPress() {
+    public void onPress(net.minecraft.client.input.InputWithModifiers input) {
         this.adminMode = !this.adminMode;
         if (this.onToggle != null) {
             this.onToggle.onToggle(this, this.adminMode);
@@ -61,7 +61,7 @@ public class AdminModeToggleButton extends AbstractButton {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         int x = getX();
         int y = getY();
         int w = getWidth();

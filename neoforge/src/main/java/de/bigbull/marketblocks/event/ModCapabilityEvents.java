@@ -11,7 +11,7 @@ public class ModCapabilityEvents {
     @SubscribeEvent
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(
-                Capabilities.ItemHandler.BLOCK,
+                Capabilities.Item.BLOCK,
                 RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(),
                 (be, side) -> {
                     if (side == null)

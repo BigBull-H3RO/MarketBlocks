@@ -147,7 +147,7 @@ public class ShopBuyerSpawner {
             if (spawnPos != null) {
                 ShopBuyerEntity entity = RegistriesInit.SHOP_BUYER.get().create(level, EntitySpawnReason.NATURAL);
                 if (entity != null) {
-                    entity.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+                    entity.snapTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
                     entity.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), EntitySpawnReason.NATURAL, null);
                     level.addFreshEntity(entity);
 

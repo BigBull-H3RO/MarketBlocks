@@ -48,26 +48,26 @@ public class TopSellerElement implements ITradeBookElement {
         };
 
         float rankScale = isTopThree ? 1.4f : 1.0f;
-        graphics.pose().pushPose();
+        graphics.pose().pushMatrix();
         int yOffset = isTopThree ? -2 : 0;
-        graphics.pose().translate(startX, startY + yOffset, 0);
-        graphics.pose().scale(rankScale, rankScale, 1.0f);
-        graphics.drawString(context.getFont(), rankPrefix, 0, 0, isTopThree ? 0xFFAA00 : 0x0000AA, false);
-        graphics.pose().popPose();
+        graphics.pose().translate(startX, startY + yOffset);
+        graphics.pose().scale(rankScale, rankScale);
+        graphics.drawString(context.getFont(), rankPrefix, 0, 0, isTopThree ? 0xFFFFAA00 : 0xFF0000AA, false);
+        graphics.pose().popMatrix();
 
         int rankWidth = (int) (context.getFont().width(rankPrefix) * rankScale);
 
         TradeBookLayoutUtils.renderPlayerHead(graphics, playerUuid, playerNameFull, startX + rankWidth + 2, startY - 1, scale, 8, false);
 
         String displayName = TradeBookLayoutUtils.truncate(playerNameFull, 12);
-        graphics.drawString(context.getFont(), displayName, startX + rankWidth + 14, startY, isTopThree ? 0xFFAA00 : 0x0000AA, false);
+        graphics.drawString(context.getFont(), displayName, startX + rankWidth + 14, startY, isTopThree ? 0xFFFFAA00 : 0xFF0000AA, false);
 
         Component statsComp = Component.translatable("gui.marketblocks.trade_book.shops.player_stats", shops, sales);
 
         int rightMargin = startX + (int) (TradeBookLayoutUtils.TEXT_WIDTH / scale);
         int salesWidth = context.getFont().width(sales);
         int salesX = rightMargin - salesWidth;
-        graphics.drawString(context.getFont(), sales, salesX, startY, 0x555555, false);
+        graphics.drawString(context.getFont(), sales, salesX, startY, 0xFF555555, false);
 
         int salesIconWidth = 10;
         int salesIconX = salesX - salesIconWidth;
@@ -76,7 +76,7 @@ public class TopSellerElement implements ITradeBookElement {
         int spacer = 5;
         int shopsWidth = context.getFont().width(shops);
         int shopsX = salesIconX - spacer - shopsWidth;
-        graphics.drawString(context.getFont(), shops, shopsX, startY, 0x555555, false);
+        graphics.drawString(context.getFont(), shops, shopsX, startY, 0xFF555555, false);
 
         int shopsIconWidth = 10;
         int shopsIconX = shopsX - shopsIconWidth;
@@ -87,7 +87,7 @@ public class TopSellerElement implements ITradeBookElement {
 
         if (scaledMouseX >= shopsIconX && scaledMouseX <= rightMargin && scaledMouseY >= startY && scaledMouseY <= startY + 12) {
             context.setNextHoveredObject("stats_" + playerNameFull);
-            context.addTooltip(() -> graphics.renderTooltip(context.getFont(), statsComp, mouseX, mouseY));
+            context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), statsComp, mouseX, mouseY));
         }
 
         if (startY < 170) {

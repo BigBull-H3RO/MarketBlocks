@@ -4,7 +4,7 @@ import de.bigbull.marketblocks.Constants;
 
 import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Settings subcategories for the single-offer shop.
@@ -19,12 +19,12 @@ public enum SettingsCategory {
     ACCESS("gui.marketblocks.settings.category.access", "textures/gui/icon/singleoffer/padlock.png", null);
 
     private final String translationKey;
-    private final ResourceLocation icon;
+    private final Identifier icon;
     private final de.bigbull.marketblocks.core.config.toml.TomlConfigValue.BooleanValue configToggle;
 
     SettingsCategory(String translationKey, String iconPath, de.bigbull.marketblocks.core.config.toml.TomlConfigValue.BooleanValue configToggle) {
         this.translationKey = translationKey;
-        this.icon = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, iconPath);
+        this.icon = Identifier.fromNamespaceAndPath(Constants.MOD_ID, iconPath);
         this.configToggle = configToggle;
     }
 
@@ -40,7 +40,7 @@ public enum SettingsCategory {
         return Component.translatable(translationKey + ".title");
     }
 
-    public ResourceLocation icon() {
+    public Identifier icon() {
         return icon;
     }
 }

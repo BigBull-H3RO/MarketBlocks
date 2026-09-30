@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import de.bigbull.marketblocks.platform.network.PacketContext;
@@ -19,7 +19,7 @@ import de.bigbull.marketblocks.platform.network.PacketContext;
 public record UpdateRedstoneSettingPacket(BlockPos pos, boolean enabled) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<UpdateRedstoneSettingPacket> TYPE = new CustomPacketPayload.Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "update_redstone_setting"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "update_redstone_setting"));
 
     public static final StreamCodec<ByteBuf, UpdateRedstoneSettingPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,

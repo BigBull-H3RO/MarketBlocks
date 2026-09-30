@@ -1,26 +1,26 @@
 package de.bigbull.marketblocks.core.data;
 
-import java.util.Iterator;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.MinecraftServer;
-
-import net.minecraft.core.GlobalPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.phys.Vec3;
-import de.bigbull.marketblocks.network.NetworkHandler;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.bigbull.marketblocks.feature.marketplace.network.LinkedBlocksSyncPacket;
-import java.util.ArrayList;
+import de.bigbull.marketblocks.network.NetworkHandler;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Manages the persistence of physical blocks that are linked to the Marketplace.
@@ -29,6 +29,7 @@ import java.util.Map;
  * Data is stored globally in the overworld to ensure it persists regardless of the dimension it's accessed from.
  */
 public class MarketplaceLinkSavedData extends SavedData {
+    public static final String DATA_NAME = "marketblocks_marketplace_links";
 
     public static class LinkInfo {
         public final GlobalPos blockPos;
@@ -46,13 +47,44 @@ public class MarketplaceLinkSavedData extends SavedData {
         }
     }
 
+    public static final Codec<LinkInfo> LINK_INFO_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            GlobalPos.CODEC.fieldOf("BlockPos").forGetter(info -> info.blockPos),
+            Codec.STRING.optionalFieldOf("Name").forGetter(info -> Optional.ofNullable(info.name)),
+            Codec.DOUBLE.optionalFieldOf("TpX").forGetter(info -> info.tpPos != null ? Optional.of(info.tpPos.x) : Optional.empty()),
+            Codec.DOUBLE.optionalFieldOf("TpY").forGetter(info -> info.tpPos != null ? Optional.of(info.tpPos.y) : Optional.empty()),
+            Codec.DOUBLE.optionalFieldOf("TpZ").forGetter(info -> info.tpPos != null ? Optional.of(info.tpPos.z) : Optional.empty()),
+            Codec.FLOAT.optionalFieldOf("TpYaw").forGetter(info -> Optional.ofNullable(info.tpYaw)),
+            Codec.FLOAT.optionalFieldOf("TpPitch").forGetter(info -> Optional.ofNullable(info.tpPitch))
+    ).apply(instance, (pos, name, tpx, tpy, tpz, yaw, pitch) -> {
+        Vec3 tp = (tpx.isPresent() && tpy.isPresent() && tpz.isPresent()) ? new Vec3(tpx.get(), tpy.get(), tpz.get()) : null;
+        return new LinkInfo(pos, name.orElse(null), tp, yaw.orElse(null), pitch.orElse(null));
+    }));
+
+    public static final Codec<MarketplaceLinkSavedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            LINK_INFO_CODEC.listOf().optionalFieldOf("LinkedBlocks", List.of())
+                    .forGetter(data -> new ArrayList<>(data.linkedBlocks.values()))
+    ).apply(instance, list -> {
+        MarketplaceLinkSavedData data = new MarketplaceLinkSavedData();
+        for (LinkInfo info : list) {
+            data.linkedBlocks.put(info.blockPos, info);
+        }
+        return data;
+    }));
+
+    public static final SavedDataType<MarketplaceLinkSavedData> TYPE = new SavedDataType<>(
+            DATA_NAME,
+            MarketplaceLinkSavedData::new,
+            CODEC,
+            DataFixTypes.SAVED_DATA_COMMAND_STORAGE
+    );
+
     private final Map<GlobalPos, LinkInfo> linkedBlocks = new HashMap<>();
 
+    public MarketplaceLinkSavedData() {
+    }
+
     public static MarketplaceLinkSavedData get(ServerLevel level) {
-        return level.getServer().overworld().getDataStorage().computeIfAbsent(
-                new SavedData.Factory<>(MarketplaceLinkSavedData::new, MarketplaceLinkSavedData::load, null),
-                "marketblocks_marketplace_links"
-        );
+        return level.getServer().overworld().getDataStorage().computeIfAbsent(TYPE);
     }
 
     public boolean isLinked(GlobalPos pos) {
@@ -110,60 +142,4 @@ public class MarketplaceLinkSavedData extends SavedData {
     public void syncToPlayer(ServerPlayer player) {
         NetworkHandler.sendToPlayer(player, new LinkedBlocksSyncPacket(new ArrayList<>(linkedBlocks.keySet())));
     }
-
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
-        ListTag list = new ListTag();
-        for (LinkInfo info : linkedBlocks.values()) {
-            CompoundTag itemTag = new CompoundTag();
-            GlobalPos.CODEC.encodeStart(NbtOps.INSTANCE, info.blockPos).result().ifPresent(posTag -> {
-                itemTag.put("BlockPos", posTag);
-            });
-            if (info.name != null) {
-                itemTag.putString("Name", info.name);
-            }
-            if (info.tpPos != null) {
-                itemTag.putDouble("TpX", info.tpPos.x);
-                itemTag.putDouble("TpY", info.tpPos.y);
-                itemTag.putDouble("TpZ", info.tpPos.z);
-            }
-            if (info.tpYaw != null) {
-                itemTag.putFloat("TpYaw", info.tpYaw);
-            }
-            if (info.tpPitch != null) {
-                itemTag.putFloat("TpPitch", info.tpPitch);
-            }
-            list.add(itemTag);
-        }
-        tag.put("LinkedBlocks", list);
-        return tag;
-    }
-
-    public static MarketplaceLinkSavedData load(CompoundTag tag, HolderLookup.Provider provider) {
-        MarketplaceLinkSavedData data = new MarketplaceLinkSavedData();
-        ListTag list = tag.getList("LinkedBlocks", Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++) {
-            CompoundTag itemTag = list.getCompound(i);
-            if (itemTag.contains("BlockPos")) {
-                GlobalPos.CODEC.parse(NbtOps.INSTANCE, itemTag.get("BlockPos")).result().ifPresent(pos -> {
-                    String name = itemTag.contains("Name") ? itemTag.getString("Name") : null;
-                    Vec3 tpPos = null;
-                    Float tpYaw = null;
-                    Float tpPitch = null;
-                    if (itemTag.contains("TpX")) {
-                        tpPos = new Vec3(itemTag.getDouble("TpX"), itemTag.getDouble("TpY"), itemTag.getDouble("TpZ"));
-                    }
-                    if (itemTag.contains("TpYaw")) {
-                        tpYaw = itemTag.getFloat("TpYaw");
-                    }
-                    if (itemTag.contains("TpPitch")) {
-                        tpPitch = itemTag.getFloat("TpPitch");
-                    }
-                    data.linkedBlocks.put(pos, new LinkInfo(pos, name, tpPos, tpYaw, tpPitch));
-                });
-            }
-        }
-        return data;
-    }
 }
-

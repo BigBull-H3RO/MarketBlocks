@@ -26,7 +26,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import de.bigbull.marketblocks.platform.network.PacketContext;
@@ -44,7 +44,7 @@ public record UpdateSettingsPacket(
         AccessSettings accessSettings,
         NotificationSettings notificationSettings) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<UpdateSettingsPacket> TYPE = new CustomPacketPayload.Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "update_side_config"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "update_side_config"));
 
     public static final StreamCodec<ByteBuf, UpdateSettingsPacket> CODEC = StreamCodec.of(
             (buf, packet) -> {
@@ -100,7 +100,7 @@ public record UpdateSettingsPacket(
                 AccessSettings incomingAccess = packet.accessSettings();
                 AccessSettings existingAccess = blockEntity.getSettingsManager().getAccessSettings();
                 boolean isPrimaryOwner = blockEntity.getAccessManager().isPrimaryOwner(player);
-                boolean isAdminMode = player.hasPermissions(2) && MarketplaceManager.get().isEditModeEnabled(player);
+                boolean isAdminMode = player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && MarketplaceManager.get().isEditModeEnabled(player);
 
                 boolean newAdminShopEnabled = existingAccess.adminShopEnabled();
                 if (isAdminMode) {

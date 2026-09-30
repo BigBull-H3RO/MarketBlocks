@@ -6,7 +6,7 @@ import de.bigbull.marketblocks.Constants;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
@@ -28,15 +28,6 @@ public record TransactionLogEntry(
         int aggregationCount,
         PurchaseKind purchaseKind
 ) {
-    private static final String NBT_TIME = "Time";
-    private static final String NBT_BUYER_UUID = "BuyerUuid";
-    private static final String NBT_BUYER_NAME = "BuyerName";
-    private static final String NBT_PAID_STACKS = "PaidStacks";
-    private static final String NBT_BOUGHT_STACKS = "BoughtStacks";
-    private static final String NBT_AGGREGATION_COUNT = "AggregationCount";
-    private static final String NBT_PURCHASE_KIND = "PurchaseKind";
-    private static final String NBT_REAL_COUNT = "RealCount";
-
     private static final UUID UNKNOWN_BUYER_UUID = new UUID(0L, 0L);
     private static final int MAX_NAME_LENGTH = 64;
     private static final int MAX_STACKS_PER_SIDE = 12;
@@ -114,26 +105,15 @@ public record TransactionLogEntry(
     }
 
     public CompoundTag toTag(HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        tag.putLong(NBT_TIME, epochSecond);
-        tag.putUUID(NBT_BUYER_UUID, buyerUuid);
-        tag.putString(NBT_BUYER_NAME, buyerName);
-        tag.put(NBT_PAID_STACKS, toStackListTag(paidStacks, registries));
-        tag.put(NBT_BOUGHT_STACKS, toStackListTag(boughtStacks, registries));
-        tag.putInt(NBT_AGGREGATION_COUNT, aggregationCount);
-        tag.putString(NBT_PURCHASE_KIND, purchaseKind.serializedName());
-        return tag;
+        Tag tag = CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), this)
+                .getOrThrow(IllegalStateException::new);
+        return tag instanceof CompoundTag compound ? compound : new CompoundTag();
     }
 
     public static TransactionLogEntry fromTag(CompoundTag tag, HolderLookup.Provider registries) {
-        long time = Math.max(0L, tag.getLong(NBT_TIME));
-        UUID uuid = tag.hasUUID(NBT_BUYER_UUID) ? tag.getUUID(NBT_BUYER_UUID) : UNKNOWN_BUYER_UUID;
-        String name = tag.getString(NBT_BUYER_NAME);
-        List<ItemStack> paid = fromStackListTag(tag.getList(NBT_PAID_STACKS, Tag.TAG_COMPOUND), registries);
-        List<ItemStack> bought = fromStackListTag(tag.getList(NBT_BOUGHT_STACKS, Tag.TAG_COMPOUND), registries);
-        int count = tag.contains(NBT_AGGREGATION_COUNT, Tag.TAG_INT) ? tag.getInt(NBT_AGGREGATION_COUNT) : 1;
-        PurchaseKind kind = PurchaseKind.fromSerializedName(tag.getString(NBT_PURCHASE_KIND));
-        return new TransactionLogEntry(time, uuid, name, paid, bought, count, kind);
+        return CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE), tag)
+                .resultOrPartial(err -> Constants.LOG.error("Failed to parse transaction log entry: {}", err))
+                .orElseGet(() -> new TransactionLogEntry(0L, UNKNOWN_BUYER_UUID, "", List.of(), List.of(), 1, PurchaseKind.SINGLE));
     }
 
     public enum PurchaseKind {
@@ -177,45 +157,6 @@ public record TransactionLogEntry(
         return normalized.length() > MAX_NAME_LENGTH ? normalized.substring(0, MAX_NAME_LENGTH) : normalized;
     }
 
-    private static ListTag toStackListTag(List<ItemStack> stacks, HolderLookup.Provider registries) {
-        ListTag listTag = new ListTag();
-        for (ItemStack stack : sanitizeStacks(stacks)) {
-            int realCount = stack.getCount();
-            try {
-                Tag rawTag = stack.copyWithCount(1).save(registries);
-                if (rawTag instanceof CompoundTag compound) {
-                    compound.putInt(NBT_REAL_COUNT, realCount);
-                    listTag.add(compound);
-                }
-            } catch (Exception e) {
-                Constants.LOG.error("Failed to serialize transaction log stack: {}", stack, e);
-            }
-        }
-        return listTag;
-    }
-
-    private static List<ItemStack> fromStackListTag(ListTag listTag, HolderLookup.Provider registries) {
-        if (listTag == null || listTag.isEmpty()) return List.of();
-        List<ItemStack> loaded = new ArrayList<>(Math.min(listTag.size(), MAX_STACKS_PER_SIDE));
-        for (int i = 0; i < listTag.size() && loaded.size() < MAX_STACKS_PER_SIDE; i++) {
-            CompoundTag compound = listTag.getCompound(i);
-            try {
-                if (!compound.contains(NBT_REAL_COUNT, Tag.TAG_INT)) {
-                    continue;
-                }
-                ItemStack stack = ItemStack.parseOptional(registries, compound);
-                if (!stack.isEmpty()) {
-                    stack.setCount(compound.getInt(NBT_REAL_COUNT));
-                    if (stack.getCount() > 0) {
-                        loaded.add(stack);
-                    }
-                }
-            } catch (Exception e) {
-                Constants.LOG.error("Failed to deserialize transaction log stack", e);
-            }
-        }
-        return loaded.isEmpty() ? List.of() : List.copyOf(loaded);
-    }
 
     private static List<ItemStack> sanitizeStacks(List<ItemStack> stacks) {
         if (stacks == null || stacks.isEmpty()) return List.of();

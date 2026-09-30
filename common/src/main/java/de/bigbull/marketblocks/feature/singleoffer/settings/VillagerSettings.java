@@ -84,14 +84,14 @@ public record VillagerSettings(
     public static VillagerSettings load(CompoundTag tag) {
         if (tag == null) return DEFAULT;
         return new VillagerSettings(
-                tag.getBoolean(KEY_NPC_ENABLED),
-                tag.getString(KEY_NPC_NAME),
-                VillagerVisualProfession.fromSerialized(tag.getString(KEY_PROFESSION)),
-                !tag.contains(KEY_PURCHASE_PARTICLES) || tag.getBoolean(KEY_PURCHASE_PARTICLES),
-                !tag.contains(KEY_PURCHASE_SOUNDS) || tag.getBoolean(KEY_PURCHASE_SOUNDS),
-                !tag.contains(KEY_PAYMENT_SLOT_SOUNDS) || tag.getBoolean(KEY_PAYMENT_SLOT_SOUNDS),
-                tag.getBoolean(KEY_USE_PLAYER_SKIN),
-                tag.getString(KEY_PLAYER_SKIN_NAME)
+                tag.getBooleanOr(KEY_NPC_ENABLED, DEFAULT.npcEnabled()),
+                tag.getStringOr(KEY_NPC_NAME, DEFAULT.npcName()),
+                VillagerVisualProfession.fromSerialized(tag.getStringOr(KEY_PROFESSION, DEFAULT.profession().serializedName())),
+                tag.getBooleanOr(KEY_PURCHASE_PARTICLES, DEFAULT.purchaseParticlesEnabled()),
+                tag.getBooleanOr(KEY_PURCHASE_SOUNDS, DEFAULT.purchaseSoundsEnabled()),
+                tag.getBooleanOr(KEY_PAYMENT_SLOT_SOUNDS, DEFAULT.paymentSlotSoundsEnabled()),
+                tag.getBooleanOr(KEY_USE_PLAYER_SKIN, DEFAULT.usePlayerSkin()),
+                tag.getStringOr(KEY_PLAYER_SKIN_NAME, DEFAULT.playerSkinName())
         );
     }
 

@@ -14,7 +14,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
 import java.util.HashMap;
@@ -30,7 +30,7 @@ public record MarketplaceSyncPacket(CompoundTag payload, CompoundTag offerViewSt
     private static final String STATE_KEY = "state";
 
     public static final Type<MarketplaceSyncPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_sync"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_sync"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceSyncPacket> CODEC = new StreamCodec<>() {
         @Override
@@ -91,16 +91,16 @@ public record MarketplaceSyncPacket(CompoundTag payload, CompoundTag offerViewSt
 
     public static Map<UUID, MarketplaceOfferViewState> decodeOfferViewStates(CompoundTag root) {
         Map<UUID, MarketplaceOfferViewState> states = new HashMap<>();
-        if (root == null || !root.contains(ENTRIES_KEY, Tag.TAG_LIST)) {
+        if (root == null || !root.contains(ENTRIES_KEY)) {
             return states;
         }
-        ListTag list = root.getList(ENTRIES_KEY, Tag.TAG_COMPOUND);
+        ListTag list = root.getListOrEmpty(ENTRIES_KEY);
         for (Tag tag : list) {
-            if (!(tag instanceof CompoundTag entry) || !entry.contains(STATE_KEY, Tag.TAG_COMPOUND)) {
+            if (!(tag instanceof CompoundTag entry) || !entry.contains(STATE_KEY)) {
                 continue;
             }
             UUIDUtil.CODEC.parse(NbtOps.INSTANCE, entry.get(OFFER_ID_KEY)).result().ifPresent(offerId ->
-                    states.put(offerId, MarketplaceOfferViewState.fromTag(entry.getCompound(STATE_KEY))));
+                    states.put(offerId, MarketplaceOfferViewState.fromTag(entry.getCompoundOrEmpty(STATE_KEY))));
         }
         return states;
     }

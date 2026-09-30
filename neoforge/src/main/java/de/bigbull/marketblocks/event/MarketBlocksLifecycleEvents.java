@@ -10,7 +10,7 @@ import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
@@ -45,8 +45,8 @@ public final class MarketBlocksLifecycleEvents {
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddServerReloadListenersEvent event) {
-        event.addListener(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "trader_economy"),
-                (barrier, resourceManager, backgroundExecutor,
+        event.addListener(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "trader_economy"),
+                (sharedState, backgroundExecutor, barrier,
                 gameExecutor) -> barrier.wait(null).thenRunAsync(() -> {
                     MarketplaceManager.get().reload();
                     TraderEconomyManager.get().load();
@@ -68,8 +68,8 @@ public final class MarketBlocksLifecycleEvents {
     @SubscribeEvent
     public static void handlePlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            MarketplaceLinkSavedData.get(player.serverLevel()).syncToPlayer(player);
-            PendingNotificationsSavedData data = PendingNotificationsSavedData.get(player.serverLevel());
+            MarketplaceLinkSavedData.get(player.level()).syncToPlayer(player);
+            PendingNotificationsSavedData data = PendingNotificationsSavedData.get(player.level());
             Set<BlockPos> emptyShops = data.getAndClearOutOfStock(player.getUUID());
             Set<BlockPos> fullShops = data.getAndClearOutputFull(player.getUUID());
 

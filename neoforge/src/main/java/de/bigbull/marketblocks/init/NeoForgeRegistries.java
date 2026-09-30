@@ -17,7 +17,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -65,14 +65,14 @@ public final class NeoForgeRegistries {
 
     public static void init() {
         // Blocks
-        DeferredBlock<Block> tradeStand = BLOCKS.registerBlock("trade_stand", TradeStandBlock::new, tradeStandProperties());
+        DeferredBlock<Block> tradeStand = BLOCKS.registerBlock("trade_stand", TradeStandBlock::new, NeoForgeRegistries::tradeStandProperties);
         RegistriesInit.TRADE_STAND_BLOCK = tradeStand;
 
-        DeferredBlock<Block> tradeStandTop = BLOCKS.registerBlock("trade_stand_top", TradeStandTopBlock::new, tradeStandProperties().sound(SoundType.GLASS));
+        DeferredBlock<Block> tradeStandTop = BLOCKS.registerBlock("trade_stand_top", TradeStandTopBlock::new, () -> tradeStandProperties().sound(SoundType.GLASS));
         RegistriesInit.TRADE_STAND_BLOCK_TOP = tradeStandTop;
 
         DeferredBlock<Block> marketCrate = BLOCKS.registerBlock("marketcrate", MarketCrateBlock::new,
-                BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
+                () -> BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
                         .noOcclusion()
                         .mapColor(MapColor.WOOD)
                         .instrument(NoteBlockInstrument.BASS)
@@ -89,11 +89,11 @@ public final class NeoForgeRegistries {
         RegistriesInit.MARKETCRATE_ITEM = () -> marketCrateItem.get();
 
         // Items
-        DeferredItem<Item> tradeBook = ITEMS.registerItem("trade_book", TradeBookItem::new, new Item.Properties().stacksTo(1));
+        DeferredItem<Item> tradeBook = ITEMS.registerItem("trade_book", TradeBookItem::new, () -> new Item.Properties().stacksTo(1));
         RegistriesInit.TRADE_BOOK = tradeBook;
 
         // Entity Types
-        ResourceKey<EntityType<?>> shopBuyerKey = ResourceKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer"));
+        ResourceKey<EntityType<?>> shopBuyerKey = ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer"));
         DeferredHolder<EntityType<?>, EntityType<ShopBuyerEntity>> shopBuyer = ENTITY_TYPES.register("shop_buyer",
                 () -> EntityType.Builder.of(ShopBuyerEntity::new, MobCategory.CREATURE)
                         .sized(0.6F, 1.95F)
@@ -103,7 +103,7 @@ public final class NeoForgeRegistries {
 
         // Spawn Egg
         DeferredItem<Item> spawnEgg = ITEMS.registerItem("shop_buyer_spawn_egg",
-                props -> new SpawnEggItem(shopBuyer.get(), props));
+                props -> new SpawnEggItem(props.spawnEgg(shopBuyer.get())));
         RegistriesInit.SHOP_BUYER_SPAWN_EGG = spawnEgg;
 
         // Block Entities
@@ -122,7 +122,7 @@ public final class NeoForgeRegistries {
 
         // Sounds
         DeferredHolder<SoundEvent, SoundEvent> fallSound = SOUND_EVENTS.register("visual_npc_fall",
-                () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "visual_npc_fall")));
+                () -> SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "visual_npc_fall")));
         RegistriesInit.VISUAL_NPC_FALL_SOUND = fallSound;
 
         // Triggers

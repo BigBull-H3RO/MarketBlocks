@@ -4,22 +4,20 @@ import net.minecraft.world.entity.player.Player;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.SkullBlockEntity;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.Minecraft;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
-import net.minecraft.Util;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Client-only runtime state for BER-based visual NPC animations.
@@ -202,10 +200,10 @@ public class ShopNpcAnimationState {
 
             if (Minecraft.getInstance().getConnection() != null) {
                 for (PlayerInfo info : Minecraft.getInstance().getConnection().getOnlinePlayers()) {
-                    if (parsedUuid != null && info.getProfile().getId().equals(parsedUuid)) {
+                    if (parsedUuid != null && info.getProfile().id().equals(parsedUuid)) {
                         profile = info.getProfile();
                         break;
-                    } else if (input.equalsIgnoreCase(info.getProfile().getName())) {
+                    } else if (input.equalsIgnoreCase(info.getProfile().name())) {
                         profile = info.getProfile();
                         break;
                     }
@@ -215,22 +213,22 @@ public class ShopNpcAnimationState {
             if (profile == null) {
                 if (parsedUuid != null) {
                     profile = new GameProfile(parsedUuid, "");
-                    final UUID asyncUuid = parsedUuid;
-                    CompletableFuture.supplyAsync(() -> {
-                        var result = Minecraft.getInstance().getMinecraftSessionService().fetchProfile(asyncUuid, false);
-                        return result != null ? result.profile() : null;
-                    }, Util.backgroundExecutor()).thenAcceptAsync(filledProfile -> {
-                        if (filledProfile != null && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
-                            this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, filledProfile);
-                        }
-                    }, Minecraft.getInstance());
+                    ResolvableProfile.createUnresolved(parsedUuid)
+                            .resolveProfile(Minecraft.getInstance().services().profileResolver())
+                            .thenAcceptAsync(filledProfile -> {
+                                if (filledProfile != null && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
+                                    this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, filledProfile);
+                                }
+                            }, Minecraft.getInstance());
                 } else {
                     profile = new GameProfile(UUIDUtil.createOfflinePlayerUUID(input), input);
-                    SkullBlockEntity.fetchGameProfile(input).thenAcceptAsync(optProfile -> {
-                        if (optProfile.isPresent() && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
-                            this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, optProfile.get());
-                        }
-                    }, Minecraft.getInstance());
+                    ResolvableProfile.createUnresolved(input)
+                            .resolveProfile(Minecraft.getInstance().services().profileResolver())
+                            .thenAcceptAsync(filledProfile -> {
+                                if (filledProfile != null && input.equals(this.lastPlayerSkinInput) && this.cachedRenderPlayer != null && this.cachedRenderPlayer.level() == level) {
+                                    this.cachedRenderPlayer = createCustomSkinPlayer((ClientLevel) level, filledProfile);
+                                }
+                            }, Minecraft.getInstance());
                 }
             }
 
@@ -243,7 +241,7 @@ public class ShopNpcAnimationState {
         RemotePlayer player = new RemotePlayer(level, profile) {
             @Override
             public PlayerSkin getSkin() {
-                return Minecraft.getInstance().getSkinManager().getInsecureSkin(this.getGameProfile());
+                return Minecraft.getInstance().getSkinManager().createLookup(this.getGameProfile(), false).get();
             }
 
             @Override

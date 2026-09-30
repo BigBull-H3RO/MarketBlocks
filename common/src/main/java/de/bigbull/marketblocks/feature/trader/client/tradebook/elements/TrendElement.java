@@ -28,11 +28,12 @@ public class TrendElement implements ITradeBookElement {
         String itemName = parts[2];
         String percentText = parts[3] + "%";
         int color = Integer.parseInt(parts[4]);
+        color = (color & 0xFF000000) == 0 ? (0xFF000000 | color) : color;
         long roundBase = Long.parseLong(parts[5]);
         long roundCurrent = Long.parseLong(parts[6]);
 
         graphics.drawString(context.getFont(), sign, startX, startY, color, false);
-        graphics.drawString(context.getFont(), itemName + ":", startX + 10, startY, 0x000000, false);
+        graphics.drawString(context.getFont(), itemName + ":", startX + 10, startY, 0xFF000000, false);
 
         int percentWidth = context.getFont().width(percentText);
         int rightX = startX + (int) (TradeBookLayoutUtils.TEXT_WIDTH / scale) - percentWidth;
@@ -42,7 +43,7 @@ public class TrendElement implements ITradeBookElement {
         int scaledY = (int) (startY * scale);
         int scaledW = (int) (percentWidth * scale);
         context.addActiveZone(new InteractiveZone(scaledX, scaledY, scaledW, 9, () -> {
-            context.addTooltip(() -> graphics.renderTooltip(context.getFont(), Component.translatable("gui.marketblocks.trade_book.trends.hover", roundBase, roundCurrent), mouseX, mouseY));
+            context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), Component.translatable("gui.marketblocks.trade_book.trends.hover", roundBase, roundCurrent), mouseX, mouseY));
         }, null));
     }
 }

@@ -23,7 +23,7 @@ import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacementResult;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -31,7 +31,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,12 +52,12 @@ public final class SingleOfferSettingsSections {
     private static WidgetSprites getSettingsTabSprites(int index, int total) {
         String suffix = (index == 0) ? "1" : "2";
         return new WidgetSprites(
-                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix),
-                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix),
-                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix), // Hover
+                Identifier.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix),
+                Identifier.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix),
+                Identifier.withDefaultNamespace("container/creative_inventory/tab_top_unselected_" + suffix), // Hover
                                                                                                                     // equals
                                                                                                                     // unselected
-                ResourceLocation.withDefaultNamespace("container/creative_inventory/tab_top_selected_" + suffix));
+                Identifier.withDefaultNamespace("container/creative_inventory/tab_top_selected_" + suffix));
     }
 
     private SingleOfferSettingsSections() {
@@ -190,7 +190,7 @@ public final class SingleOfferSettingsSections {
      */
     public static void renderGeneralBg(GuiGraphics graphics, Font font, int leftPos, int topPos) {
         Component statusLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.general.status_label"));
-        graphics.drawString(font, statusLabel, leftPos + 150 - font.width(statusLabel), topPos + 8, 0x404040, false);
+        graphics.drawString(font, statusLabel, leftPos + 150 - font.width(statusLabel), topPos + 8, 0xFF404040, false);
 
         // GroupBox 1: Shop-Profil (h = 46, ends at 69)
         GroupBox.render(graphics, font,
@@ -198,7 +198,7 @@ public final class SingleOfferSettingsSections {
                 leftPos + 7, topPos + 23, 162, 46);
 
         Component nameLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.general.shop_name_label"));
-        graphics.drawString(font, nameLabel, leftPos + 12, topPos + 33, 0x404040, false);
+        graphics.drawString(font, nameLabel, leftPos + 12, topPos + 33, 0xFF404040, false);
 
         // GroupBox 2: Funktionen & Signale (starts at 75, exact 6px gap, h = 40)
         GroupBox.render(graphics, font,
@@ -336,12 +336,12 @@ public final class SingleOfferSettingsSections {
      * Renders background group boxes, labels, and schematic cross/legend for the I/O tab.
      */
     public static void renderIoBg(GuiGraphics graphics, Font font, int leftPos, int topPos, boolean enabled) {
-        int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0x808080;
+        int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0xFF808080;
         int groupBorderColor = enabled ? GroupBox.DEFAULT_BORDER_COLOR : 0xFF888888;
 
         // Header Status Label: "I/O:"
         Component statusLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.io.status_label"));
-        graphics.drawString(font, statusLabel, leftPos + 130 - font.width(statusLabel), topPos + 8, 0x404040, false);
+        graphics.drawString(font, statusLabel, leftPos + 130 - font.width(statusLabel), topPos + 8, 0xFF404040, false);
 
         // GroupBox 1: BLOCK-SEITEN / TRICHTER (y = 23, h = 62)
         int b1Y = topPos + 23;
@@ -359,7 +359,7 @@ public final class SingleOfferSettingsSections {
         graphics.renderOutline(cx + 4, cy + 4, 8, 8, 0xFF9A6F3C);
 
         // Micro labels around cross in compact 6px font (vertically centered on line with buttons)
-        int microColor = enabled ? 0x404040 : 0x888888;
+        int microColor = enabled ? 0xFF404040 : 0xFF888888;
         Component hLbl = GuiConstants.compact(Component.translatable("gui.marketblocks.side.back.letter"));
         Component lLbl = GuiConstants.compact(Component.translatable("gui.marketblocks.side.left.letter"));
         Component rLbl = GuiConstants.compact(Component.translatable("gui.marketblocks.side.right.letter"));
@@ -379,21 +379,21 @@ public final class SingleOfferSettingsSections {
         int legY = b1Y + 16;
 
         // Row 1: EINGANG (Green)
-        graphics.blitSprite(RenderType::guiTextured, SideModeButton.INPUT_ICON, legX, legY, 11, 11);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SideModeButton.INPUT_ICON, legX, legY, 11, 11);
         Component inText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.input"));
-        graphics.drawString(font, inText, legX + 14, legY + 2, enabled ? 0x008800 : 0x808080, false);
+        graphics.drawString(font, inText, legX + 14, legY + 2, enabled ? 0xFF008800 : 0xFF808080, false);
 
         // Row 2: AUSGANG (Red)
         legY += 14;
-        graphics.blitSprite(RenderType::guiTextured, SideModeButton.OUTPUT_ICON, legX, legY, 11, 11);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SideModeButton.OUTPUT_ICON, legX, legY, 11, 11);
         Component outText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.output"));
-        graphics.drawString(font, outText, legX + 14, legY + 2, enabled ? 0xBC0000 : 0x808080, false);
+        graphics.drawString(font, outText, legX + 14, legY + 2, enabled ? 0xFFBC0000 : 0xFF808080, false);
 
         // Row 3: DEAKTIVIERT (Dark grey)
         legY += 14;
-        graphics.blitSprite(RenderType::guiTextured, SideModeButton.DISABLED_ICON, legX, legY, 11, 11);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SideModeButton.DISABLED_ICON, legX, legY, 11, 11);
         Component disText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.disabled"));
-        graphics.drawString(font, disText, legX + 14, legY + 2, enabled ? 0x505050 : 0x808080, false);
+        graphics.drawString(font, disText, legX + 14, legY + 2, enabled ? 0xFF505050 : 0xFF808080, false);
 
         // GroupBox 2: AUTOMATISIERUNG & REDSTONE (y = 91, h = 45, 6px gap)
         int b2Y = b1Y + 62 + 6;
@@ -622,16 +622,16 @@ public final class SingleOfferSettingsSections {
 
     public static void renderVillagerBg(GuiGraphics graphics, Font font, int leftPos, int topPos, boolean enabled,
             boolean canSpawn) {
-        int labelColor = enabled ? 0x404040 : 0x808080;
-        int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0x808080;
+        int labelColor = enabled ? 0xFF404040 : 0xFF808080;
+        int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0xFF808080;
         int groupBorderColor = enabled ? GroupBox.DEFAULT_BORDER_COLOR : 0xFF888888;
 
         Component npcLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.npc_short"));
         int labelX = leftPos + 130 - font.width(npcLabel);
         if (!canSpawn) {
-            graphics.drawString(font, "!", labelX - 6, topPos + 7, 0xCC3333, false);
+            graphics.drawString(font, "!", labelX - 6, topPos + 7, 0xFFCC3333, false);
         }
-        graphics.drawString(font, npcLabel, labelX, topPos + 8, !canSpawn ? 0x993333 : 0x404040, false);
+        graphics.drawString(font, npcLabel, labelX, topPos + 8, !canSpawn ? 0xFF993333 : 0xFF404040, false);
 
         // GroupBox 1: Erscheinungsbild (y = 23, h = 62, ends at 85)
         GroupBox.render(graphics, font,
@@ -655,12 +655,12 @@ public final class SingleOfferSettingsSections {
      */
     public static void renderVisualsBg(GuiGraphics graphics, Font font, ShopVisualType visualType, int leftPos,
             int topPos, boolean enabled) {
-        int labelColor = enabled ? 0x404040 : 0x808080;
-        int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0x808080;
+        int labelColor = enabled ? 0xFF404040 : 0xFF808080;
+        int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0xFF808080;
         int groupBorderColor = enabled ? GroupBox.DEFAULT_BORDER_COLOR : 0xFF888888;
 
         Component displayLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.display"));
-        graphics.drawString(font, displayLabel, leftPos + 130 - font.width(displayLabel), topPos + 8, 0x404040, false);
+        graphics.drawString(font, displayLabel, leftPos + 130 - font.width(displayLabel), topPos + 8, 0xFF404040, false);
 
         switch (visualType) {
             case MARKET_CRATE -> {
@@ -1176,7 +1176,7 @@ public final class SingleOfferSettingsSections {
             int tw = font.width(counter);
             int textX = badgeX + (badgeW - tw) / 2;
             int textY = badgeY + (badgeH - font.lineHeight) / 2 + 1;
-            int textColor = selectedOwnersCount >= maxOwners ? 0xFFAA00 : 0x55FF55;
+            int textColor = selectedOwnersCount >= maxOwners ? 0xFFFFAA00 : 0xFF55FF55;
             graphics.drawString(font, counter, textX, textY, textColor, false);
         }
 
@@ -1210,7 +1210,7 @@ public final class SingleOfferSettingsSections {
         }
 
         @Override
-        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             int bg = isHoveredOrFocused() ? 0xFF2F2F2F : 0xFF222222;
             int border = isHoveredOrFocused() ? 0xFF555555 : 0xFF373737;
 

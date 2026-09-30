@@ -1,14 +1,14 @@
 package de.bigbull.marketblocks.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.BooleanSupplier;
 
@@ -19,9 +19,9 @@ import java.util.function.BooleanSupplier;
  */
 public class IconButton extends Button {
     private final WidgetSprites sprites;
-    private final ResourceLocation icon;
-    private final ResourceLocation activeIcon;
-    private ResourceLocation disabledIcon;
+    private final Identifier icon;
+    private final Identifier activeIcon;
+    private Identifier disabledIcon;
     private final BooleanSupplier selectedSupplier;
     private final Component tooltipMessage;
     private boolean flipBackgroundHorizontal = false;
@@ -38,20 +38,20 @@ public class IconButton extends Button {
     private int selectedIconOffsetX = 0;
     private int selectedIconOffsetY = 0;
 
-    public IconButton(int x, int y, int width, int height, WidgetSprites sprites, ResourceLocation icon,
+    public IconButton(int x, int y, int width, int height, WidgetSprites sprites, Identifier icon,
             Button.OnPress onPress,
             Component tooltip, BooleanSupplier selectedSupplier) {
         this(x, y, width, height, sprites, icon, null, onPress, tooltip, selectedSupplier);
     }
 
-    public IconButton(int x, int y, int width, int height, WidgetSprites sprites, ResourceLocation icon,
-            ResourceLocation activeIcon,
+    public IconButton(int x, int y, int width, int height, WidgetSprites sprites, Identifier icon,
+            Identifier activeIcon,
             Button.OnPress onPress, Component tooltip, BooleanSupplier selectedSupplier) {
         this(x, y, width, height, sprites, icon, activeIcon, null, onPress, tooltip, selectedSupplier);
     }
 
-    public IconButton(int x, int y, int width, int height, WidgetSprites sprites, ResourceLocation icon,
-            ResourceLocation activeIcon, ResourceLocation disabledIcon,
+    public IconButton(int x, int y, int width, int height, WidgetSprites sprites, Identifier icon,
+            Identifier activeIcon, Identifier disabledIcon,
             Button.OnPress onPress, Component tooltip, BooleanSupplier selectedSupplier) {
         super(x, y, width, height, Component.empty(), onPress, DEFAULT_NARRATION);
         this.sprites = sprites;
@@ -65,7 +65,7 @@ public class IconButton extends Button {
         }
     }
 
-    public IconButton withDisabledIcon(ResourceLocation disabledIcon) {
+    public IconButton withDisabledIcon(Identifier disabledIcon) {
         this.disabledIcon = disabledIcon;
         return this;
     }
@@ -118,11 +118,11 @@ public class IconButton extends Button {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
+    public void onClick(MouseButtonEvent event, boolean isDoubleClick) {
         if ((isSelected() && !allowClickWhenSelected) || !this.active) {
             return;
         }
-        super.onClick(mouseX, mouseY);
+        super.onClick(event, isDoubleClick);
     }
 
     public IconButton withIconOffset(int x, int y) {
@@ -132,9 +132,9 @@ public class IconButton extends Button {
     }
 
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         boolean selected = isSelected();
-        ResourceLocation background;
+        Identifier background;
         if (!this.active) {
             background = sprites.get(false, false);
         } else if (selected) {
@@ -151,21 +151,19 @@ public class IconButton extends Button {
         int offY = customBgOffsetY;
 
         if (this.flipBackgroundHorizontal) {
-            graphics.pose().pushPose();
-            graphics.pose().translate(getX() + getWidth() / 2.0F, 0, 0);
-            graphics.pose().scale(-1.0F, 1.0F, 1.0F);
-            graphics.pose().translate(-(getX() + getWidth() / 2.0F), 0, 0);
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(getX() + getWidth() / 2.0F, 0);
+            graphics.pose().scale(-1.0F, 1.0F);
+            graphics.pose().translate(-(getX() + getWidth() / 2.0F), 0);
 
-            RenderSystem.disableCull();
-            graphics.blitSprite(RenderType::guiTextured, background, getX() + offX, getY() + offY, renderWidth, renderHeight);
-            RenderSystem.enableCull();
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, background, getX() + offX, getY() + offY, renderWidth, renderHeight);
 
-            graphics.pose().popPose();
+            graphics.pose().popMatrix();
         } else {
-            graphics.blitSprite(RenderType::guiTextured, background, getX() + offX, getY() + offY, renderWidth, renderHeight);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, background, getX() + offX, getY() + offY, renderWidth, renderHeight);
         }
 
-        ResourceLocation iconToRender;
+        Identifier iconToRender;
         boolean tintIcon = false;
         if (!this.active) {
             if (this.disabledIcon != null) {
@@ -180,7 +178,6 @@ public class IconButton extends Button {
             iconToRender = icon;
         }
 
-        RenderSystem.setShaderTexture(0, iconToRender);
         int iconSize = Math.min(18, Math.min(getWidth(), getHeight()));
         int currentIconOffsetX = selected ? selectedIconOffsetX : iconOffsetX;
         int currentIconOffsetY = selected ? selectedIconOffsetY : iconOffsetY;
@@ -188,6 +185,6 @@ public class IconButton extends Button {
         int iconY = getY() + (getHeight() - iconSize) / 2 + currentIconOffsetY;
 
         int iconColor = tintIcon ? 0xB28C8C8C : -1;
-        graphics.blit(RenderType::guiTextured, iconToRender, iconX, iconY, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize, iconColor);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, iconToRender, iconX, iconY, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize, iconColor);
     }
 }

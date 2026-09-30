@@ -164,7 +164,7 @@ public class ShopSettingsManager {
     public void setGeneralSettings(GeneralSettings settings, boolean sync) {
         this.generalSettings = settings == null ? GeneralSettings.DEFAULT : settings;
         this.settingsVersion++;
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide())
             return;
         blockEntity.setChanged();
         if (sync)
@@ -195,7 +195,7 @@ public class ShopSettingsManager {
         VillagerSettings previous = this.villagerSettings;
         this.villagerSettings = settings == null ? VillagerSettings.DEFAULT : settings;
         this.settingsVersion++;
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide())
             return;
         if (previous.npcEnabled() != this.villagerSettings.npcEnabled()) {
             blockEntity.triggerNpcAnimationEvent(this.villagerSettings.npcEnabled() ? VisualNpcAnimationEvent.SPAWN
@@ -213,7 +213,7 @@ public class ShopSettingsManager {
     public void setOfferItemSettings(OfferItemSettings settings, boolean sync) {
         this.offerItemSettings = settings == null ? OfferItemSettings.DEFAULT : settings;
         this.settingsVersion++;
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide())
             return;
         blockEntity.setChanged();
         if (sync)
@@ -227,7 +227,7 @@ public class ShopSettingsManager {
     public void setIoSettings(IoSettings settings, boolean sync) {
         this.ioSettings = settings == null ? createDefaultIoSettings(isMarketCrate) : settings;
         this.settingsVersion++;
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide())
             return;
 
         blockEntity.setChanged();
@@ -249,7 +249,7 @@ public class ShopSettingsManager {
     public void setAccessSettings(AccessSettings settings, boolean sync) {
         this.accessSettings = settings == null ? AccessSettings.DEFAULT : settings;
         this.settingsVersion++;
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide())
             return;
         blockEntity.setChanged();
         if (sync)
@@ -267,7 +267,7 @@ public class ShopSettingsManager {
     public void setNotificationSettings(NotificationSettings settings, boolean sync) {
         this.notificationSettings = settings == null ? NotificationSettings.DEFAULT : settings;
         this.settingsVersion++;
-        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide)
+        if (blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide())
             return;
         blockEntity.setChanged();
         if (sync)
@@ -301,40 +301,73 @@ public class ShopSettingsManager {
         tag.putBoolean("OutputFull", outputFull);
     }
 
-    public void load(CompoundTag tag) {
-        if (tag.contains(KEY_GENERAL)) {
-            generalSettings = GeneralSettings.load(tag.getCompound(KEY_GENERAL));
-        } else {
-            generalSettings = createDefaultGeneralSettings(isMarketCrate);
-        }
-        if (tag.contains(KEY_VILLAGER)) {
-            villagerSettings = VillagerSettings.load(tag.getCompound(KEY_VILLAGER));
-        } else {
-            villagerSettings = createDefaultVillagerSettings(isMarketCrate);
-        }
-        if (tag.contains(KEY_OFFER_ITEM)) {
-            offerItemSettings = OfferItemSettings.load(tag.getCompound(KEY_OFFER_ITEM));
-        } else {
-            offerItemSettings = createDefaultOfferItemSettings(isMarketCrate);
-        }
-        if (tag.contains(KEY_IO)) {
-            ioSettings = IoSettings.load(tag.getCompound(KEY_IO));
-        } else {
-            ioSettings = createDefaultIoSettings(isMarketCrate);
-        }
-        if (tag.contains(KEY_ACCESS)) {
-            accessSettings = AccessSettings.load(tag.getCompound(KEY_ACCESS));
-        } else {
-            accessSettings = AccessSettings.DEFAULT;
-        }
-        if (tag.contains("Notification")) {
-            notificationSettings = NotificationSettings.load(tag.getCompound("Notification"));
-        } else {
-            notificationSettings = createDefaultNotificationSettings(isMarketCrate);
-        }
+    public void save(net.minecraft.world.level.storage.ValueOutput output) {
+        output.store(KEY_GENERAL, CompoundTag.CODEC, generalSettings.save());
+        output.store(KEY_VILLAGER, CompoundTag.CODEC, villagerSettings.save());
+        output.store(KEY_OFFER_ITEM, CompoundTag.CODEC, offerItemSettings.save());
+        output.store(KEY_IO, CompoundTag.CODEC, ioSettings.save());
+        output.store(KEY_ACCESS, CompoundTag.CODEC, accessSettings.save());
+        output.store("Notification", CompoundTag.CODEC, notificationSettings.save());
 
-        outputAlmostFull = tag.getBoolean("OutputWarning");
-        outputFull = tag.getBoolean("OutputFull");
+        if (SingleOfferConfig.ENABLE_OUTPUT_WARNING.get()) {
+            output.putBoolean("OutputWarning", outputAlmostFull);
+        }
+        output.putBoolean("OutputFull", outputFull);
+    }
+
+    public void load(net.minecraft.world.level.storage.ValueInput input) {
+        generalSettings = input.read(KEY_GENERAL, CompoundTag.CODEC)
+                .map(GeneralSettings::load)
+                .orElseGet(() -> createDefaultGeneralSettings(isMarketCrate));
+        villagerSettings = input.read(KEY_VILLAGER, CompoundTag.CODEC)
+                .map(VillagerSettings::load)
+                .orElseGet(() -> createDefaultVillagerSettings(isMarketCrate));
+        offerItemSettings = input.read(KEY_OFFER_ITEM, CompoundTag.CODEC)
+                .map(OfferItemSettings::load)
+                .orElseGet(() -> createDefaultOfferItemSettings(isMarketCrate));
+        ioSettings = input.read(KEY_IO, CompoundTag.CODEC)
+                .map(IoSettings::load)
+                .orElseGet(() -> createDefaultIoSettings(isMarketCrate));
+        accessSettings = input.read(KEY_ACCESS, CompoundTag.CODEC)
+                .map(AccessSettings::load)
+                .orElse(AccessSettings.DEFAULT);
+        notificationSettings = input.read("Notification", CompoundTag.CODEC)
+                .map(NotificationSettings::load)
+                .orElseGet(() -> createDefaultNotificationSettings(isMarketCrate));
+
+        outputAlmostFull = input.getBooleanOr("OutputWarning", false);
+        outputFull = input.getBooleanOr("OutputFull", false);
+        this.settingsVersion++;
+    }
+
+    public void load(CompoundTag tag) {
+        tag.getCompound(KEY_GENERAL).ifPresentOrElse(
+                c -> generalSettings = GeneralSettings.load(c),
+                () -> generalSettings = createDefaultGeneralSettings(isMarketCrate)
+        );
+        tag.getCompound(KEY_VILLAGER).ifPresentOrElse(
+                c -> villagerSettings = VillagerSettings.load(c),
+                () -> villagerSettings = createDefaultVillagerSettings(isMarketCrate)
+        );
+        tag.getCompound(KEY_OFFER_ITEM).ifPresentOrElse(
+                c -> offerItemSettings = OfferItemSettings.load(c),
+                () -> offerItemSettings = createDefaultOfferItemSettings(isMarketCrate)
+        );
+        tag.getCompound(KEY_IO).ifPresentOrElse(
+                c -> ioSettings = IoSettings.load(c),
+                () -> ioSettings = createDefaultIoSettings(isMarketCrate)
+        );
+        tag.getCompound(KEY_ACCESS).ifPresentOrElse(
+                c -> accessSettings = AccessSettings.load(c),
+                () -> accessSettings = AccessSettings.DEFAULT
+        );
+        tag.getCompound("Notification").ifPresentOrElse(
+                c -> notificationSettings = NotificationSettings.load(c),
+                () -> notificationSettings = createDefaultNotificationSettings(isMarketCrate)
+        );
+
+        outputAlmostFull = tag.getBooleanOr("OutputWarning", false);
+        outputFull = tag.getBooleanOr("OutputFull", false);
         this.settingsVersion++;
     }
 }

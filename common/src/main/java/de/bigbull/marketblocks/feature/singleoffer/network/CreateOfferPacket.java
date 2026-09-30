@@ -12,7 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -30,7 +30,7 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
         implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<CreateOfferPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "create_offer"));
+            new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "create_offer"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, CreateOfferPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
@@ -68,7 +68,7 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                         && (shopEntity.getOwnerId() == null || shopEntity.isOwner(player))) {
                     // Validate shop limit on server before creating offer
                     if (!shopEntity.hasOffer() && !player.isCreative()
-                            && !(player.hasPermissions(2) && MarketplaceManager.get().isEditModeEnabled(player))) {
+                            && !(player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && MarketplaceManager.get().isEditModeEnabled(player))) {
                         int maxShops = SingleOfferConfig.MAX_SHOPS_PER_PLAYER.get();
                         if (maxShops >= 0 && level instanceof ServerLevel serverLevel) {
                             long activeShops = ShopDirectorySavedData.get(serverLevel).getShops().stream()

@@ -1,19 +1,19 @@
 package de.bigbull.marketblocks.feature.trader.data;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.bigbull.marketblocks.Constants;
-
 import de.bigbull.marketblocks.core.config.TraderConfig;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,13 +26,42 @@ public class NpcEconomySavedData extends SavedData {
     private final Map<Item, Double> itemSaturation = new HashMap<>();
     private long lastDecayGameTime = 0L;
 
+    private record ItemSaturationEntry(Item item, double saturation) {
+        public static final Codec<ItemSaturationEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                BuiltInRegistries.ITEM.byNameCodec().fieldOf("Item").forGetter(ItemSaturationEntry::item),
+                Codec.DOUBLE.fieldOf("Saturation").forGetter(ItemSaturationEntry::saturation)
+        ).apply(instance, ItemSaturationEntry::new));
+    }
+
+    public static final Codec<NpcEconomySavedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            ItemSaturationEntry.CODEC.listOf().optionalFieldOf("SaturationPool", List.of())
+                    .forGetter(data -> {
+                        List<ItemSaturationEntry> list = new ArrayList<>();
+                        data.itemSaturation.forEach((k, v) -> list.add(new ItemSaturationEntry(k, v)));
+                        return list;
+                    }),
+            Codec.LONG.optionalFieldOf("LastDecayGameTime", 0L).forGetter(data -> data.lastDecayGameTime)
+    ).apply(instance, (entries, lastDecay) -> {
+        NpcEconomySavedData data = new NpcEconomySavedData();
+        for (ItemSaturationEntry entry : entries) {
+            data.itemSaturation.put(entry.item(), entry.saturation());
+        }
+        data.lastDecayGameTime = lastDecay;
+        return data;
+    }));
+
+    public static final SavedDataType<NpcEconomySavedData> TYPE = new SavedDataType<>(
+            DATA_NAME,
+            NpcEconomySavedData::new,
+            CODEC,
+            DataFixTypes.SAVED_DATA_COMMAND_STORAGE
+    );
+
     public NpcEconomySavedData() {
     }
 
     public static NpcEconomySavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                new SavedData.Factory<>(NpcEconomySavedData::new, NpcEconomySavedData::load, null),
-                DATA_NAME);
+        return level.getServer().overworld().getDataStorage().computeIfAbsent(TYPE);
     }
 
     /**
@@ -110,41 +139,5 @@ public class NpcEconomySavedData extends SavedData {
         double newVal = Math.min(maxSaturation, itemSaturation.getOrDefault(item, 0.0) + extraSaturation);
         itemSaturation.put(item, newVal);
         setDirty();
-    }
-
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
-        ListTag list = new ListTag();
-        for (Map.Entry<Item, Double> entry : itemSaturation.entrySet()) {
-            CompoundTag entryTag = new CompoundTag();
-            ResourceLocation key = BuiltInRegistries.ITEM.getKey(entry.getKey());
-            entryTag.putString("Item", key.toString());
-            entryTag.putDouble("Saturation", entry.getValue());
-            list.add(entryTag);
-        }
-        tag.put("SaturationPool", list);
-        tag.putLong("LastDecayGameTime", lastDecayGameTime);
-        return tag;
-    }
-
-    public static NpcEconomySavedData load(CompoundTag tag, HolderLookup.Provider provider) {
-        NpcEconomySavedData data = new NpcEconomySavedData();
-        if (tag.contains("SaturationPool", Tag.TAG_LIST)) {
-            ListTag list = tag.getList("SaturationPool", Tag.TAG_COMPOUND);
-            for (int i = 0; i < list.size(); i++) {
-                CompoundTag entryTag = list.getCompound(i);
-                if (entryTag.contains("Item", Tag.TAG_STRING)) {
-                    ResourceLocation key = ResourceLocation.tryParse(entryTag.getString("Item"));
-                    if (key != null && BuiltInRegistries.ITEM.containsKey(key)) {
-                        Item item = BuiltInRegistries.ITEM.getValue(key);
-                        data.itemSaturation.put(item, entryTag.getDouble("Saturation"));
-                    }
-                }
-            }
-        }
-        if (tag.contains("LastDecayGameTime")) {
-            data.lastDecayGameTime = tag.getLong("LastDecayGameTime");
-        }
-        return data;
     }
 }

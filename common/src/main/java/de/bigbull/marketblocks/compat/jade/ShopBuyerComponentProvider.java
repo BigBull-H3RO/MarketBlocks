@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.compat.jade;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.ChatFormatting;
 import snownee.jade.api.EntityAccessor;
 import snownee.jade.api.IEntityComponentProvider;
@@ -16,7 +16,7 @@ import net.minecraft.nbt.CompoundTag;
 public enum ShopBuyerComponentProvider implements IEntityComponentProvider, IServerDataProvider<EntityAccessor> {
     INSTANCE;
 
-    public static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer_info");
+    public static final Identifier UID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_buyer_info");
 
     @Override
     public void appendTooltip(ITooltip tooltip, EntityAccessor accessor, IPluginConfig config) {
@@ -24,10 +24,9 @@ public enum ShopBuyerComponentProvider implements IEntityComponentProvider, ISer
             return;
         }
         if (accessor.getEntity() instanceof ShopBuyerEntity) {
-            if (accessor.getServerData().contains("Budget")) {
-                int budget = accessor.getServerData().getInt("Budget");
+            accessor.getServerData().getInt("Budget").ifPresent(budget -> {
                 tooltip.add(Component.translatable("marketblocks.jade.trader.budget", budget).withStyle(ChatFormatting.GOLD));
-            }
+            });
         }
     }
 
@@ -42,7 +41,7 @@ public enum ShopBuyerComponentProvider implements IEntityComponentProvider, ISer
     }
 
     @Override
-    public ResourceLocation getUid() {
+    public Identifier getUid() {
         return UID;
     }
 }

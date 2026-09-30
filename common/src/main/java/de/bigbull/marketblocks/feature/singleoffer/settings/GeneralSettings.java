@@ -58,11 +58,11 @@ public record GeneralSettings(
         if (tag == null)
             return DEFAULT;
         return new GeneralSettings(
-                tag.getString(KEY_SHOP_NAME),
-                tag.getBoolean(KEY_EMIT_REDSTONE),
-                !tag.contains(KEY_PURCHASE_XP_FEEDBACK_SOUND) || tag.getBoolean(KEY_PURCHASE_XP_FEEDBACK_SOUND),
-                tag.getBoolean(KEY_IS_CLOSED),
-                tag.contains(KEY_SHOP_CATEGORY) ? ShopCategory.fromId(tag.getString(KEY_SHOP_CATEGORY)) : ShopCategory.NONE);
+                tag.getStringOr(KEY_SHOP_NAME, DEFAULT.shopName()),
+                tag.getBooleanOr(KEY_EMIT_REDSTONE, DEFAULT.emitRedstone()),
+                tag.getBooleanOr(KEY_PURCHASE_XP_FEEDBACK_SOUND, DEFAULT.purchaseXpFeedbackSound()),
+                tag.getBooleanOr(KEY_IS_CLOSED, DEFAULT.isClosed()),
+                tag.getString(KEY_SHOP_CATEGORY).map(ShopCategory::fromId).orElse(ShopCategory.NONE));
     }
 
     private static String sanitizeName(String raw) {

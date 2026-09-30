@@ -2,21 +2,11 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "#": {
-      "tag": "minecraft:planks"
-    },
-    "B": {
-      "item": "minecraft:barrel"
-    },
-    "C": {
-      "item": "minecraft:chest"
-    },
-    "E": {
-      "item": "minecraft:emerald"
-    },
-    "S": {
-      "tag": "minecraft:signs"
-    }
+    "#": "#minecraft:planks",
+    "B": "minecraft:barrel",
+    "C": "minecraft:chest",
+    "E": "minecraft:emerald",
+    "S": "#minecraft:signs"
   },
   "pattern": [
     "#E#",

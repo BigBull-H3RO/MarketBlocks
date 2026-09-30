@@ -6,7 +6,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.LodestoneTracker;
@@ -50,7 +50,7 @@ public class MiscIconElement implements ITradeBookElement {
                     int cz = Integer.parseInt(parts[4]);
                     String dim = parts[5];
                     if (parts.length > 6) dim += ":" + parts[6];
-                    GlobalPos globalPos = GlobalPos.of(ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(dim)), new BlockPos(cx, cy, cz));
+                    GlobalPos globalPos = GlobalPos.of(ResourceKey.create(Registries.DIMENSION, Identifier.parse(dim)), new BlockPos(cx, cy, cz));
                     compass.set(DataComponents.LODESTONE_TRACKER, new LodestoneTracker(java.util.Optional.of(globalPos), true));
                 } catch (Exception ignored) {}
             }

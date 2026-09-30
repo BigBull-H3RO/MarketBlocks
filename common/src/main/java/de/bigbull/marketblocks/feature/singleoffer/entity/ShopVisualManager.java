@@ -32,11 +32,19 @@ public class ShopVisualManager {
     }
 
     public void load(CompoundTag tag) {
-        this.visualAnimationNonce = tag.getInt(NBT_VISUAL_ANIMATION_NONCE);
-        this.visualAnimationEvent = tag.getByte(NBT_VISUAL_ANIMATION_EVENT);
-        this.visualPurchaseCounter = tag.getInt(NBT_VISUAL_PURCHASE_COUNTER);
-        this.visualPaymentSuccessCounter = tag.getInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER);
-        this.visualPaymentFailCounter = tag.getInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER);
+        this.visualAnimationNonce = tag.getIntOr(NBT_VISUAL_ANIMATION_NONCE, 0);
+        this.visualAnimationEvent = tag.getByteOr(NBT_VISUAL_ANIMATION_EVENT, (byte) 0);
+        this.visualPurchaseCounter = tag.getIntOr(NBT_VISUAL_PURCHASE_COUNTER, 0);
+        this.visualPaymentSuccessCounter = tag.getIntOr(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, 0);
+        this.visualPaymentFailCounter = tag.getIntOr(NBT_VISUAL_PAYMENT_FAIL_COUNTER, 0);
+    }
+
+    public void load(net.minecraft.world.level.storage.ValueInput input) {
+        this.visualAnimationNonce = input.getIntOr(NBT_VISUAL_ANIMATION_NONCE, 0);
+        this.visualAnimationEvent = input.getByteOr(NBT_VISUAL_ANIMATION_EVENT, (byte) 0);
+        this.visualPurchaseCounter = input.getIntOr(NBT_VISUAL_PURCHASE_COUNTER, 0);
+        this.visualPaymentSuccessCounter = input.getIntOr(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, 0);
+        this.visualPaymentFailCounter = input.getIntOr(NBT_VISUAL_PAYMENT_FAIL_COUNTER, 0);
     }
 
     public void save(CompoundTag tag) {
@@ -45,6 +53,14 @@ public class ShopVisualManager {
         tag.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
         tag.putInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, visualPaymentSuccessCounter);
         tag.putInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER, visualPaymentFailCounter);
+    }
+
+    public void save(net.minecraft.world.level.storage.ValueOutput output) {
+        output.putInt(NBT_VISUAL_ANIMATION_NONCE, visualAnimationNonce);
+        output.putByte(NBT_VISUAL_ANIMATION_EVENT, visualAnimationEvent);
+        output.putInt(NBT_VISUAL_PURCHASE_COUNTER, visualPurchaseCounter);
+        output.putInt(NBT_VISUAL_PAYMENT_SUCCESS_COUNTER, visualPaymentSuccessCounter);
+        output.putInt(NBT_VISUAL_PAYMENT_FAIL_COUNTER, visualPaymentFailCounter);
     }
 
     public int getVisualAnimationNonce() {
@@ -105,7 +121,7 @@ public class ShopVisualManager {
         paymentFeedbackSnapshot[slot] = current.copy();
 
         Level level = blockEntity.getLevel();
-        if (level == null || level.isClientSide || !blockEntity.hasOffer() || !blockEntity.getVillagerSettings().paymentSlotSoundsEnabled()) {
+        if (level == null || level.isClientSide() || !blockEntity.hasOffer() || !blockEntity.getVillagerSettings().paymentSlotSoundsEnabled()) {
             return;
         }
 

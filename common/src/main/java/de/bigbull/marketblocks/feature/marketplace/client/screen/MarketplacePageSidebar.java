@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -226,7 +226,7 @@ public final class MarketplacePageSidebar {
         }
 
         if (Util.getMillis() - hoveredSinceMs >= TOOLTIP_DELAY_MS) {
-            guiGraphics.renderTooltip(context.font(), currentlyHovered.fullLabel(), mouseX, mouseY);
+            guiGraphics.setTooltipForNextFrame(context.font(), currentlyHovered.fullLabel(), mouseX, mouseY);
         }
     }
 

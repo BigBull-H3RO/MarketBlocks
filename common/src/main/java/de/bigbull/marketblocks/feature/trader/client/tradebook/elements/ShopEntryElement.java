@@ -5,7 +5,7 @@ import java.util.UUID;
 import de.bigbull.marketblocks.feature.trader.network.TeleportRequestPacket;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -14,7 +14,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.core.component.DataComponents;
 import de.bigbull.marketblocks.feature.trader.client.tradebook.ITradeBookElement;
 import de.bigbull.marketblocks.feature.trader.client.tradebook.InteractiveZone;
@@ -62,11 +62,11 @@ public class ShopEntryElement implements ITradeBookElement {
 
         // Render Icon / Status
         String statusIcon = isClosed ? "§c✖" : "§a✔";
-        graphics.drawString(context.getFont(), statusIcon, startX, startY, 0, false);
+        graphics.drawString(context.getFont(), statusIcon, startX, startY, 0xFF000000, false);
 
         // Render Shop Name
         String shopName = TradeBookLayoutUtils.truncate(shopNameFull, 18);
-        graphics.drawString(context.getFont(), shopName, startX + 12, startY, 0xFFAA00, false);
+        graphics.drawString(context.getFont(), shopName, startX + 12, startY, 0xFFFFAA00, false);
 
         if (shopNameFull.length() > 18) {
             int nameWidth = context.getFont().width(shopName);
@@ -76,7 +76,7 @@ public class ShopEntryElement implements ITradeBookElement {
             int scaledH = (int) (9 * scale);
             context.addActiveZone(new InteractiveZone(scaledX + (int) (12 * scale), scaledY, scaledW, scaledH, () -> {
                 context.setNextHoveredObject("shop_name_" + shopNameFull);
-                context.addTooltip(() -> graphics.renderTooltip(context.getFont(), Component.literal(shopNameFull),
+                context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), Component.literal(shopNameFull),
                         mouseX, mouseY));
             }, null));
         }
@@ -84,7 +84,7 @@ public class ShopEntryElement implements ITradeBookElement {
         // Render Sales
         String salesText = "Sales: " + compactSales;
         TradeBookLayoutUtils.drawRightAlignedString(graphics, context, salesText, startX, startY,
-                (int) (TradeBookLayoutUtils.TEXT_WIDTH / scale), 0x555555, false);
+                (int) (TradeBookLayoutUtils.TEXT_WIDTH / scale), 0xFF555555, false);
 
         int currentY = startY + 18;
 
@@ -96,7 +96,7 @@ public class ShopEntryElement implements ITradeBookElement {
             int headScreenY = (int) ((currentY + 2) * scale);
             context.addActiveZone(new InteractiveZone(headScreenX - 1, headScreenY - 1, 12, 12, () -> {
                 context.setNextHoveredObject("owner_head_" + ownerFull + "_" + shopId);
-                context.addTooltip(() -> graphics.renderTooltip(context.getFont(),
+                context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(),
                         Component.translatable("gui.marketblocks.owner", ownerFull), mouseX, mouseY));
             }, null));
         }
@@ -117,13 +117,13 @@ public class ShopEntryElement implements ITradeBookElement {
             int offerX = startX + 30;
             int frameX = offerX - 3;
             int frameY = currentY - 5;
-            graphics.blit(RenderType::guiTextured, TradeBookLayoutUtils.OFFER_GUI, frameX, frameY, 0.0F, 2.0F, 96, 28, 96, 32);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, TradeBookLayoutUtils.OFFER_GUI, frameX, frameY, 0.0F, 2.0F, 96, 28, 96, 32);
 
             String noOfferStr = Component.translatable("gui.marketblocks.trade_book.active.no_offer").getString();
             int noOfferWidth = context.getFont().width(noOfferStr);
             int noOfferX = frameX + (96 - noOfferWidth) / 2; // Centered inside the frame
 
-            graphics.drawString(context.getFont(), noOfferStr, noOfferX, currentY + 6, 0xAAAAAA, false);
+            graphics.drawString(context.getFont(), noOfferStr, noOfferX, currentY + 6, 0xFFAAAAAA, false);
 
             renderCompass(graphics, startX, currentY, px, py, pz, dim, scale);
             currentY += 21;
@@ -136,7 +136,7 @@ public class ShopEntryElement implements ITradeBookElement {
         int coordsX = startX + ((int) (TradeBookLayoutUtils.TEXT_WIDTH / scale) - coordsWidth) / 2;
 
         if (canTeleport) {
-            graphics.drawString(context.getFont(), coords, coordsX, currentY, 0x5555FF, false);
+            graphics.drawString(context.getFont(), coords, coordsX, currentY, 0xFF5555FF, false);
 
             int scaledX = (int) (coordsX * scale);
             int scaledY = (int) (currentY * scale);
@@ -145,13 +145,13 @@ public class ShopEntryElement implements ITradeBookElement {
 
             context.addActiveZone(new InteractiveZone(scaledX, scaledY, scaledW, scaledH, () -> {
                 context.setNextHoveredObject("tp_" + px + "_" + py + "_" + pz);
-                context.addTooltip(() -> graphics.renderTooltip(context.getFont(),
+                context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(),
                         Component.translatable("gui.marketblocks.trade_book.active.hover_tp"), mouseX, mouseY));
             }, () -> {
                 NetworkHandler.sendToServer(new TeleportRequestPacket(shopId));
             }));
         } else {
-            graphics.drawString(context.getFont(), coords, coordsX, currentY, 0x555555, false);
+            graphics.drawString(context.getFont(), coords, coordsX, currentY, 0xFF555555, false);
         }
 
         if (currentY < 170) {
@@ -165,7 +165,7 @@ public class ShopEntryElement implements ITradeBookElement {
             float scale) {
         ItemStack compass = new ItemStack(Items.COMPASS);
         try {
-            GlobalPos globalPos = GlobalPos.of(ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(dim)),
+            GlobalPos globalPos = GlobalPos.of(ResourceKey.create(Registries.DIMENSION, Identifier.parse(dim)),
                     new BlockPos(px, py, pz));
             compass.set(DataComponents.LODESTONE_TRACKER, new LodestoneTracker(java.util.Optional.of(globalPos), true));
         } catch (Exception ignored) {

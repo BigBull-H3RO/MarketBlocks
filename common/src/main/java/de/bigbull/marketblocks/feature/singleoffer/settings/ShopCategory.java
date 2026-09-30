@@ -1,5 +1,7 @@
 package de.bigbull.marketblocks.feature.singleoffer.settings;
 
+import com.mojang.serialization.Codec;
+
 /**
  * Represents the classification category of a SingleOfferShop.
  * Used for filtering shops in the shop directory and search commands.
@@ -12,6 +14,8 @@ public enum ShopCategory {
     FOOD_POTIONS("food_potions"),
     VALUABLES("valuables"),
     MISC("misc");
+
+    public static final Codec<ShopCategory> CODEC = Codec.STRING.xmap(ShopCategory::fromId, ShopCategory::getId);
 
     private final String id;
 

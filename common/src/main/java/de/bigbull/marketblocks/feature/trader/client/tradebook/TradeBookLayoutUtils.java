@@ -4,22 +4,22 @@ import java.util.UUID;
 import com.mojang.authlib.GameProfile;
 import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.trader.network.TradeBookOpenPacket.ShopOfferData;
 
 public class TradeBookLayoutUtils {
-    public static final ResourceLocation OFFER_GUI = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/tradebook/offer_gui.png");
-    private static final ResourceLocation TRADE_ARROW = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow.png");
-    private static final ResourceLocation TRADE_ARROW_DISABLED = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow_disabled.png");
+    public static final Identifier OFFER_GUI = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/tradebook/offer_gui.png");
+    private static final Identifier TRADE_ARROW = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow.png");
+    private static final Identifier TRADE_ARROW_DISABLED = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icon/trade_arrow_disabled.png");
 
     public static final int TEXT_WIDTH = 114;
     public static final float TEXT_SCALE = 0.75f;
@@ -34,12 +34,12 @@ public class TradeBookLayoutUtils {
 
     public static void renderPlayerHead(GuiGraphics graphics, UUID id, String username, int x, int y, float scale, int size, boolean withBorder) {
         GameProfile profile = new GameProfile(id != null ? id : Util.NIL_UUID, username != null ? username : "");
-        PlayerSkin skin = Minecraft.getInstance().getSkinManager().getInsecureSkin(profile);
+        PlayerSkin skin = Minecraft.getInstance().getSkinManager().createLookup(profile, false).get();
 
-        graphics.pose().pushPose();
+        graphics.pose().pushMatrix();
         float inverseScale = 1.0f / scale;
-        graphics.pose().translate(x, y - 1, 0);
-        graphics.pose().scale(inverseScale, inverseScale, 1.0f);
+        graphics.pose().translate(x, y - 1);
+        graphics.pose().scale(inverseScale, inverseScale);
 
         if (withBorder) {
             graphics.fill(-1, -1, size + 1, size + 1, 0xFF2A2A2A);
@@ -48,27 +48,29 @@ public class TradeBookLayoutUtils {
 
         PlayerFaceRenderer.draw(graphics, skin, 0, 0, size);
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
     }
 
     public static void renderScaledIcon(GuiGraphics graphics, ItemStack stack, int x, int y, float scale) {
-        graphics.pose().pushPose();
-        graphics.pose().translate(x, y - 1, 0);
-        graphics.pose().scale(scale, scale, 1.0f);
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x, y - 1);
+        graphics.pose().scale(scale, scale);
         graphics.renderItem(stack, 0, 0);
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
     }
 
     public static void drawCenteredString(GuiGraphics graphics, TradeBookRenderContext context, String text, int startX, int currentY, int areaWidth, int color, boolean dropShadow) {
         int width = context.getFont().width(text);
         int x = startX + (areaWidth - width) / 2;
-        graphics.drawString(context.getFont(), text, x, currentY, color, dropShadow);
+        int effectiveColor = (color & 0xFF000000) == 0 ? (0xFF000000 | color) : color;
+        graphics.drawString(context.getFont(), text, x, currentY, effectiveColor, dropShadow);
     }
 
     public static void drawRightAlignedString(GuiGraphics graphics, TradeBookRenderContext context, String text, int startX, int currentY, int areaWidth, int color, boolean dropShadow) {
         int width = context.getFont().width(text);
         int x = startX + areaWidth - width;
-        graphics.drawString(context.getFont(), text, x, currentY, color, dropShadow);
+        int effectiveColor = (color & 0xFF000000) == 0 ? (0xFF000000 | color) : color;
+        graphics.drawString(context.getFont(), text, x, currentY, effectiveColor, dropShadow);
     }
 
     public static String truncate(String text, int maxLength) {
@@ -80,7 +82,7 @@ public class TradeBookLayoutUtils {
 
     public static void renderInlineOffer(GuiGraphics graphics, ShopOfferData offer, int x, int y, String status, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
         int itemY = y - 5;
-        graphics.blit(RenderType::guiTextured, OFFER_GUI, x - 3, itemY - 6, 0.0f, 2.0f, 96, 28, 96, 32);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, OFFER_GUI, x - 3, itemY - 6, 0.0f, 2.0f, 96, 28, 96, 32);
 
         int p1x = x + OfferTemplateButton.PAYMENT_1_X_OFFSET;
         int p2x = x + OfferTemplateButton.PAYMENT_2_X_OFFSET;
@@ -96,8 +98,8 @@ public class TradeBookLayoutUtils {
             graphics.renderItemDecorations(context.getFont(), offer.payment2(), p2x, itemY);
         }
 
-        ResourceLocation arrowTexture = status.equals("OK") ? TRADE_ARROW : TRADE_ARROW_DISABLED;
-        graphics.blit(RenderType::guiTextured, arrowTexture, arrX, itemY + 4, 0.0f, 0.0f, 10, 9, 10, 9);
+        Identifier arrowTexture = status.equals("OK") ? TRADE_ARROW : TRADE_ARROW_DISABLED;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, arrowTexture, arrX, itemY + 4, 0.0f, 0.0f, 10, 9, 10, 9);
 
         if (!offer.result().isEmpty()) {
             graphics.renderItem(offer.result(), resX, itemY);
@@ -111,15 +113,15 @@ public class TradeBookLayoutUtils {
         if (scaledMouseX >= p1x && scaledMouseX < p1x + 16 && scaledMouseY >= itemY && scaledMouseY < itemY + 16
                 && !offer.payment1().isEmpty()) {
             context.setNextHoveredObject("item_" + offer.payment1().getItem().toString());
-            context.addTooltip(() -> graphics.renderTooltip(context.getFont(), offer.payment1(), mouseX, mouseY));
+            context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), offer.payment1(), mouseX, mouseY));
         } else if (scaledMouseX >= p2x && scaledMouseX < p2x + 16 && scaledMouseY >= itemY && scaledMouseY < itemY + 16
                 && !offer.payment2().isEmpty()) {
             context.setNextHoveredObject("item_" + offer.payment2().getItem().toString());
-            context.addTooltip(() -> graphics.renderTooltip(context.getFont(), offer.payment2(), mouseX, mouseY));
+            context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), offer.payment2(), mouseX, mouseY));
         } else if (scaledMouseX >= resX && scaledMouseX < resX + 16 && scaledMouseY >= itemY
                 && scaledMouseY < itemY + 16 && !offer.result().isEmpty()) {
             context.setNextHoveredObject("item_" + offer.result().getItem().toString());
-            context.addTooltip(() -> graphics.renderTooltip(context.getFont(), offer.result(), mouseX, mouseY));
+            context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), offer.result(), mouseX, mouseY));
         } else if (!status.equals("OK") && scaledMouseX >= arrX && scaledMouseX < arrX + 10 && scaledMouseY >= itemY + 4
                 && scaledMouseY < itemY + 13) {
             context.setNextHoveredObject("status_" + status);
@@ -128,7 +130,7 @@ public class TradeBookLayoutUtils {
                             .withStyle(ChatFormatting.RED)
                     : Component.translatable("gui.marketblocks.trade_book.status.output_full")
                             .withStyle(ChatFormatting.RED);
-            context.addTooltip(() -> graphics.renderTooltip(context.getFont(), tooltip, mouseX, mouseY));
+            context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), tooltip, mouseX, mouseY));
         }
     }
 }

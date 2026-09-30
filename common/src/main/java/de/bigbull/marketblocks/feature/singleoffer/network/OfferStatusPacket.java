@@ -8,7 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
@@ -32,7 +32,7 @@ import de.bigbull.marketblocks.platform.network.PacketContext;
 public record OfferStatusPacket(BlockPos pos, boolean hasOffer) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<OfferStatusPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "offer_status"));
+            new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "offer_status"));
 
     public static final StreamCodec<ByteBuf, OfferStatusPacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,

@@ -6,14 +6,14 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public record LinkedBlocksSyncPacket(List<GlobalPos> linkedBlocks) implements CustomPacketPayload {
-    public static final Type<LinkedBlocksSyncPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "linked_blocks_sync"));
+    public static final Type<LinkedBlocksSyncPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "linked_blocks_sync"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, LinkedBlocksSyncPacket> CODEC = StreamCodec.ofMember(
             LinkedBlocksSyncPacket::write,

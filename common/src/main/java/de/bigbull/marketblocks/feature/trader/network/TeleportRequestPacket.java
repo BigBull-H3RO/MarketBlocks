@@ -9,7 +9,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -26,7 +26,7 @@ import java.util.Set;
  */
 public record TeleportRequestPacket(String shopId) implements CustomPacketPayload {
     public static final Type<TeleportRequestPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "teleport_request"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "teleport_request"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, TeleportRequestPacket> CODEC = StreamCodec.composite(
             ByteBufCodecs.STRING_UTF8, TeleportRequestPacket::shopId,
@@ -47,16 +47,16 @@ public record TeleportRequestPacket(String shopId) implements CustomPacketPayloa
             if (!(context.player() instanceof ServerPlayer player)) return;
 
             // Permission check: must be OP or config must allow non-OP teleport
-            if (!Config.ALLOW_NON_OP_TELEPORT.get() && !player.hasPermissions(2)) {
+            if (!Config.ALLOW_NON_OP_TELEPORT.get() && !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
                 return;
             }
 
-            ShopDirectorySavedData shopData = ShopDirectorySavedData.get(player.serverLevel());
+            ShopDirectorySavedData shopData = ShopDirectorySavedData.get(player.level());
             ShopDirectorySavedData.ShopEntry shop = shopData.getShopById(packet.shopId());
             
             if (shop == null) return;
             
-            ServerLevel targetLevel = player.getServer().getLevel(shop.pos().dimension());
+            ServerLevel targetLevel = player.level().getServer().getLevel(shop.pos().dimension());
             if (targetLevel == null) return;
 
             BlockPos shopPos = shop.pos().pos();
@@ -67,7 +67,7 @@ public record TeleportRequestPacket(String shopId) implements CustomPacketPayloa
                 return;
             }
 
-            if (shop.isClosed() && !player.getUUID().equals(shop.ownerUUID()) && !player.hasPermissions(2)) {
+            if (shop.isClosed() && !player.getUUID().equals(shop.ownerUUID()) && !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
                 return;
             }
 

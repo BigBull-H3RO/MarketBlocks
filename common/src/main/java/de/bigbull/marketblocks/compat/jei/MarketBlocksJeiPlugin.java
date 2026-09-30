@@ -8,17 +8,17 @@ import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 @JeiPlugin
 public class MarketBlocksJeiPlugin implements IModPlugin {
-    private static final ResourceLocation PLUGIN_UID =
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "jei_plugin");
+    private static final Identifier PLUGIN_UID =
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "jei_plugin");
 
     @Override
-    public ResourceLocation getPluginUid() {
+    public Identifier getPluginUid() {
         return PLUGIN_UID;
     }
 

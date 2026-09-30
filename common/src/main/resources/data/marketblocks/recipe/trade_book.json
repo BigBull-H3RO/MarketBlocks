@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "minecraft:book"
-    },
-    {
-      "item": "minecraft:emerald"
-    }
+    "minecraft:book",
+    "minecraft:emerald"
   ],
   "result": {
     "count": 1,

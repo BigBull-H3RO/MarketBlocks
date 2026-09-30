@@ -131,20 +131,19 @@ public record OfferItemSettings(
         if (tag == null)
             return DEFAULT;
         return new OfferItemSettings(
-                !tag.contains(KEY_VISIBLE) || tag.getBoolean(KEY_VISIBLE),
-                tag.getBoolean(KEY_FULLBRIGHT),
-                tag.contains(KEY_SCALE) ? tag.getFloat(KEY_SCALE) : DEFAULT_SCALE,
-                tag.contains(KEY_SPEED) ? tag.getFloat(KEY_SPEED) : DEFAULT_SPEED,
-                tag.contains(KEY_HEIGHT) ? tag.getFloat(KEY_HEIGHT) : DEFAULT_HEIGHT,
-                !tag.contains(KEY_BOBBING) || tag.getBoolean(KEY_BOBBING),
-                tag.contains(KEY_COUNT) ? tag.getInt(KEY_COUNT) : DEFAULT_COUNT,
-                tag.contains(KEY_ROTATION) ? tag.getFloat(KEY_ROTATION) : DEFAULT_ROTATION,
-                tag.contains(KEY_LAYOUT_MODE) ? CrateLayoutMode.fromSerialized(tag.getString(KEY_LAYOUT_MODE))
-                        : DEFAULT_LAYOUT_MODE,
-                tag.contains(KEY_SPACING_XZ) ? tag.getFloat(KEY_SPACING_XZ) : DEFAULT_SPACING_XZ,
-                tag.contains(KEY_SPACING_Y) ? tag.getFloat(KEY_SPACING_Y) : DEFAULT_SPACING_Y,
-                tag.contains(KEY_CHAOS_ROTATION) ? tag.getFloat(KEY_CHAOS_ROTATION) : DEFAULT_CHAOS_ROTATION,
-                tag.contains(KEY_DYNAMIC_FILL_LEVEL) && tag.getBoolean(KEY_DYNAMIC_FILL_LEVEL));
+                tag.getBooleanOr(KEY_VISIBLE, true),
+                tag.getBooleanOr(KEY_FULLBRIGHT, false),
+                tag.getFloatOr(KEY_SCALE, DEFAULT_SCALE),
+                tag.getFloatOr(KEY_SPEED, DEFAULT_SPEED),
+                tag.getFloatOr(KEY_HEIGHT, DEFAULT_HEIGHT),
+                tag.getBooleanOr(KEY_BOBBING, true),
+                tag.getIntOr(KEY_COUNT, DEFAULT_COUNT),
+                tag.getFloatOr(KEY_ROTATION, DEFAULT_ROTATION),
+                tag.getString(KEY_LAYOUT_MODE).map(CrateLayoutMode::fromSerialized).orElse(DEFAULT_LAYOUT_MODE),
+                tag.getFloatOr(KEY_SPACING_XZ, DEFAULT_SPACING_XZ),
+                tag.getFloatOr(KEY_SPACING_Y, DEFAULT_SPACING_Y),
+                tag.getFloatOr(KEY_CHAOS_ROTATION, DEFAULT_CHAOS_ROTATION),
+                tag.getBooleanOr(KEY_DYNAMIC_FILL_LEVEL, false));
     }
 
     private static float clampFinite(float value, float min, float max, float fallback) {

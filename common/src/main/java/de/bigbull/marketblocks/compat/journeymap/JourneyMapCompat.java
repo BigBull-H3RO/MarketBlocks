@@ -6,7 +6,7 @@ import net.minecraft.core.GlobalPos;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import de.bigbull.marketblocks.platform.Services;
 
 public class JourneyMapCompat {
@@ -16,8 +16,8 @@ public class JourneyMapCompat {
                 Class<?> pluginClass = Class.forName("de.bigbull.marketblocks.compat.journeymap.MarketBlocksJourneyMapPlugin");
                 Object instance = pluginClass.getMethod("getInstance").invoke(null);
                 if (instance != null) {
-                    ResourceLocation dimLoc = ResourceLocation.parse(dimensionStr);
-                    Object result = pluginClass.getMethod("createWaypoint", String.class, BlockPos.class, ResourceLocation.class)
+                    Identifier dimLoc = Identifier.parse(dimensionStr);
+                    Object result = pluginClass.getMethod("createWaypoint", String.class, BlockPos.class, Identifier.class)
                             .invoke(instance, name, pos, dimLoc);
                     return Boolean.TRUE.equals(result);
                 }

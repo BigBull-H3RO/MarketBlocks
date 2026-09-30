@@ -6,7 +6,7 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
@@ -16,7 +16,7 @@ import de.bigbull.marketblocks.platform.network.PacketContext;
  */
 public record MarketplaceOpenRequestPacket() implements CustomPacketPayload {
     public static final Type<MarketplaceOpenRequestPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_open_request"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_open_request"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceOpenRequestPacket> CODEC = StreamCodec.unit(new MarketplaceOpenRequestPacket());
 

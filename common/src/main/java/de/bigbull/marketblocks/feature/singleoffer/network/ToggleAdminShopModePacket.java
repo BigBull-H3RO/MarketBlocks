@@ -11,7 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import de.bigbull.marketblocks.platform.network.PacketContext;
@@ -23,7 +23,7 @@ import de.bigbull.marketblocks.platform.network.PacketContext;
  */
 public record ToggleAdminShopModePacket(BlockPos pos, boolean enabled) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<ToggleAdminShopModePacket> TYPE = new CustomPacketPayload.Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "toggle_admin_shop_mode"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "toggle_admin_shop_mode"));
 
     public static final StreamCodec<ByteBuf, ToggleAdminShopModePacket> CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,
@@ -42,7 +42,7 @@ public record ToggleAdminShopModePacket(BlockPos pos, boolean enabled) implement
             if (!(context.player() instanceof ServerPlayer player)) {
                 return;
             }
-            if (!player.hasPermissions(2)) {
+            if (!player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
                 return;
             }
             if (!MarketplaceManager.get().isEditModeEnabled(player)) {
@@ -61,8 +61,8 @@ public record ToggleAdminShopModePacket(BlockPos pos, boolean enabled) implement
             if (packet.enabled()) {
                 RegistriesInit.SHOP_ADMIN_MODE_TRIGGER.get().trigger(player);
             }
-            if (packet.enabled() && player.getServer() != null) {
-                for (ServerPlayer onlinePlayer : player.getServer().getPlayerList().getPlayers()) {
+            if (packet.enabled() && player.level().getServer() != null) {
+                for (ServerPlayer onlinePlayer : player.level().getServer().getPlayerList().getPlayers()) {
                     if (onlinePlayer.containerMenu instanceof SingleOfferShopMenu menu
                             && menu.getBlockEntity() == blockEntity
                             && menu.getActiveTab() == ShopTab.INVENTORY) {

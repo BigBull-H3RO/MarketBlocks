@@ -6,7 +6,7 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
 
 public record MarketplaceDeleteOfferPacket(UUID offerId) implements CustomPacketPayload {
     public static final Type<MarketplaceDeleteOfferPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_delete_offer"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_delete_offer"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceDeleteOfferPacket> CODEC = StreamCodec.composite(
             UUIDUtil.STREAM_CODEC,

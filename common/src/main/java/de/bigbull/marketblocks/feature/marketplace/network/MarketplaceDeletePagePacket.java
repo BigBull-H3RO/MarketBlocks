@@ -6,13 +6,13 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 
 public record MarketplaceDeletePagePacket(String pageName) implements CustomPacketPayload {
     public static final Type<MarketplaceDeletePagePacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_delete_page"));
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_delete_page"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, MarketplaceDeletePagePacket> CODEC = StreamCodec.composite(
             ByteBufCodecs.stringUtf8(MarketplaceManager.MAX_PAGE_NAME_LENGTH),

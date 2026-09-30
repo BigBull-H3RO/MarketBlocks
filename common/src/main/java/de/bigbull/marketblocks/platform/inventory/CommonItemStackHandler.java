@@ -4,6 +4,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
@@ -114,10 +115,13 @@ public class CommonItemStackHandler implements ICommonItemHandler {
     public CompoundTag serializeNBT(HolderLookup.Provider registries) {
         ListTag nbtTagList = new ListTag();
         for (int i = 0; i < stacks.size(); i++) {
-            if (!stacks.get(i).isEmpty()) {
-                CompoundTag itemTag = new CompoundTag();
-                itemTag.putInt("Slot", i);
-                nbtTagList.add(stacks.get(i).save(registries, itemTag));
+            ItemStack stack = stacks.get(i);
+            if (!stack.isEmpty()) {
+                Tag itemTag = ItemStack.CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), stack).getOrThrow();
+                if (itemTag instanceof CompoundTag compoundTag) {
+                    compoundTag.putInt("Slot", i);
+                    nbtTagList.add(compoundTag);
+                }
             }
         }
         CompoundTag nbt = new CompoundTag();
@@ -127,16 +131,17 @@ public class CommonItemStackHandler implements ICommonItemHandler {
     }
 
     public void deserializeNBT(HolderLookup.Provider registries, CompoundTag nbt) {
-        setSize(nbt.contains("Size", Tag.TAG_INT) ? nbt.getInt("Size") : stacks.size());
+        setSize(nbt.getIntOr("Size", stacks.size()));
         for (int i = 0; i < stacks.size(); i++) {
             stacks.set(i, ItemStack.EMPTY);
         }
-        ListTag tagList = nbt.getList("Items", Tag.TAG_COMPOUND);
+        ListTag tagList = nbt.getListOrEmpty("Items");
         for (int i = 0; i < tagList.size(); i++) {
-            CompoundTag itemTags = tagList.getCompound(i);
-            int slot = itemTags.getInt("Slot");
+            CompoundTag itemTags = tagList.getCompoundOrEmpty(i);
+            int slot = itemTags.getIntOr("Slot", -1);
             if (slot >= 0 && slot < stacks.size()) {
-                ItemStack.parse(registries, itemTags).ifPresent(stack -> stacks.set(slot, stack));
+                ItemStack stack = ItemStack.CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE), itemTags).result().orElse(ItemStack.EMPTY);
+                stacks.set(slot, stack);
             }
         }
         onLoad();

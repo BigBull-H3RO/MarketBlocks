@@ -28,7 +28,7 @@ public class ShopAccessManager {
         shop.getSettingsManager().setAccessSettings(
                 shop.getSettingsManager().getAccessSettings().withOwner(player.getUUID(), player.getName().getString()),
                 true);
-        if (shop.getLevel() != null && !shop.getLevel().isClientSide) {
+        if (shop.getLevel() != null && !shop.getLevel().isClientSide()) {
             shop.updateShopDirectory();
         }
     }
@@ -76,7 +76,7 @@ public class ShopAccessManager {
 
     public boolean isOwner(Player player) {
         if (player == null) return false;
-        boolean adminEditMode = player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player);
+        boolean adminEditMode = player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player);
 
         // If it's an Admin Shop:
         // ONLY an OP player with active Edit Mode can manage/edit it!
@@ -102,7 +102,7 @@ public class ShopAccessManager {
     public boolean canPlayerBuy(Player player) {
         if (player == null)
             return !shop.getGeneralSettings().isClosed();
-        if (player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))
+        if (player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))
             return true;
         return canPlayerBuyByUUID(player.getUUID());
     }
@@ -129,7 +129,7 @@ public class ShopAccessManager {
 
     public boolean isPrimaryOwner(Player player) {
         if (player == null) return false;
-        boolean adminEditMode = player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player);
+        boolean adminEditMode = player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player);
 
         if (shop.isAdminShopEnabled()) {
             return adminEditMode;
@@ -157,12 +157,12 @@ public class ShopAccessManager {
     }
 
     public void beginPurchaseContext(@Nullable Player player) {
-        if (player == null || player.level().isClientSide) {
+        if (player == null || player.level().isClientSide()) {
             return;
         }
         purchaseContextPlayer = player;
         purchaseContextBuyerId = player.getUUID();
-        purchaseContextBuyerName = player.getGameProfile().getName();
+        purchaseContextBuyerName = player.getGameProfile().name();
     }
 
     public void clearPurchaseContext() {
@@ -197,9 +197,9 @@ public class ShopAccessManager {
                         flags |= SingleOfferShopBlockEntity.OWNER_FLAG;
                     if (isPrimaryOwner(player))
                         flags |= SingleOfferShopBlockEntity.PRIMARY_OWNER_FLAG;
-                    if (player != null && player.hasPermissions(2))
+                    if (player != null && player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
                         flags |= SingleOfferShopBlockEntity.OPERATOR_FLAG;
-                    if (player != null && player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))
+                    if (player != null && player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))
                         flags |= SingleOfferShopBlockEntity.GLOBAL_ADMIN_MODE_FLAG;
                     if (canPlayerBuy(player))
                         flags |= SingleOfferShopBlockEntity.CAN_BUY_FLAG;
@@ -208,7 +208,7 @@ public class ShopAccessManager {
                     if (canManageOffer(player))
                         flags |= SingleOfferShopBlockEntity.CAN_MANAGE_OFFER_FLAG;
                     if (!shop.hasOffer() && player != null && !player.isCreative()
-                            && !(player.hasPermissions(2) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))) {
+                            && !(player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && de.bigbull.marketblocks.feature.marketplace.data.MarketplaceManager.get().isEditModeEnabled(player))) {
                         int maxShops = de.bigbull.marketblocks.core.config.SingleOfferConfig.MAX_SHOPS_PER_PLAYER.get();
                         if (maxShops >= 0 && shop.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
                             long activeShops = de.bigbull.marketblocks.core.data.ShopDirectorySavedData.get(serverLevel).getShops().stream()

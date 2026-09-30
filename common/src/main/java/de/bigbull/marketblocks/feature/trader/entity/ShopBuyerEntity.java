@@ -1,15 +1,14 @@
 package de.bigbull.marketblocks.feature.trader.entity;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -199,91 +198,61 @@ public class ShopBuyerEntity extends PathfinderMob {
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag compound) {
-        super.addAdditionalSaveData(compound);
-        compound.putInt("Budget", this.budget);
-        compound.putInt("DespawnDelay", this.despawnDelay);
-        compound.putLong("NextShopSearchTime", this.nextShopSearchTime);
-        compound.putInt("ShopsToVisit", this.shopsToVisit);
-        compound.putInt("SuccessfulPurchases", this.successfulPurchases);
-        compound.putString("TraderRank", this.getTraderRank().name());
-        compound.putString("InterestCategory", this.getInterestCategory().name());
-        compound.putBoolean("IsRaging", this.isRaging);
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putInt("Budget", this.budget);
+        output.putInt("DespawnDelay", this.despawnDelay);
+        output.putLong("NextShopSearchTime", this.nextShopSearchTime);
+        output.putInt("ShopsToVisit", this.shopsToVisit);
+        output.putInt("SuccessfulPurchases", this.successfulPurchases);
+        output.putString("TraderRank", this.getTraderRank().name());
+        output.putString("InterestCategory", this.getInterestCategory().name());
+        output.putBoolean("IsRaging", this.isRaging);
         if (this.angryTargetUUID != null) {
-            compound.putUUID("AngryTargetUUID", this.angryTargetUUID);
+            output.store("AngryTargetUUID", UUIDUtil.CODEC, this.angryTargetUUID);
         }
         if (this.targetShop != null) {
-            compound.put("TargetShop", NbtUtils.writeBlockPos(this.targetShop));
+            output.store("TargetShop", BlockPos.CODEC, this.targetShop);
         }
 
         // Persist visited shops
         if (!this.visitedShops.isEmpty()) {
-            ListTag visitedList = new ListTag();
-            for (BlockPos pos : this.visitedShops) {
-                CompoundTag posTag = new CompoundTag();
-                posTag.putInt("X", pos.getX());
-                posTag.putInt("Y", pos.getY());
-                posTag.putInt("Z", pos.getZ());
-                visitedList.add(posTag);
-            }
-            compound.put("VisitedShops", visitedList);
+            output.store("VisitedShops", BlockPos.CODEC.listOf(), new ArrayList<>(this.visitedShops));
         }
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compound) {
-        super.readAdditionalSaveData(compound);
-        if (compound.contains("Budget")) {
-            this.budget = compound.getInt("Budget");
-        }
-        if (compound.contains("TraderRank")) {
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        this.budget = input.getIntOr("Budget", this.budget);
+        input.getString("TraderRank").ifPresent(rankStr -> {
             try {
-                this.setTraderRank(TraderRank.valueOf(compound.getString("TraderRank")));
+                this.setTraderRank(TraderRank.valueOf(rankStr));
             } catch (IllegalArgumentException e) {
                 this.setTraderRank(TraderRank.CITIZEN);
             }
-        }
-        if (compound.contains("InterestCategory")) {
+        });
+        input.getString("InterestCategory").ifPresent(catStr -> {
             try {
-                this.setInterestCategory(InterestCategory.valueOf(compound.getString("InterestCategory")));
+                this.setInterestCategory(InterestCategory.valueOf(catStr));
             } catch (IllegalArgumentException e) {
                 this.setInterestCategory(InterestCategory.GENERAL);
             }
+        });
+        this.despawnDelay = input.getIntOr("DespawnDelay", this.despawnDelay);
+        this.nextShopSearchTime = input.getLongOr("NextShopSearchTime", this.nextShopSearchTime);
+        this.shopsToVisit = input.getIntOr("ShopsToVisit", this.shopsToVisit);
+        this.successfulPurchases = input.getIntOr("SuccessfulPurchases", this.successfulPurchases);
+        this.isRaging = input.getBooleanOr("IsRaging", false);
+        if (this.isRaging) {
+            equipRageWeapon();
         }
-        if (compound.contains("DespawnDelay")) {
-            this.despawnDelay = compound.getInt("DespawnDelay");
-        }
-        if (compound.contains("NextShopSearchTime")) {
-            this.nextShopSearchTime = compound.getLong("NextShopSearchTime");
-        }
-        if (compound.contains("ShopsToVisit")) {
-            this.shopsToVisit = compound.getInt("ShopsToVisit");
-        }
-        if (compound.contains("SuccessfulPurchases")) {
-            this.successfulPurchases = compound.getInt("SuccessfulPurchases");
-        }
-        if (compound.contains("IsRaging")) {
-            this.isRaging = compound.getBoolean("IsRaging");
-            if (this.isRaging) {
-                equipRageWeapon();
-            }
-        }
-        if (compound.hasUUID("AngryTargetUUID")) {
-            this.angryTargetUUID = compound.getUUID("AngryTargetUUID");
-        }
-        NbtUtils.readBlockPos(compound, "TargetShop").ifPresent(pos -> this.targetShop = pos);
+        input.read("AngryTargetUUID", UUIDUtil.CODEC).ifPresent(uuid -> this.angryTargetUUID = uuid);
+        input.read("TargetShop", BlockPos.CODEC).ifPresent(pos -> this.targetShop = pos);
 
         // Load visited shops
         this.visitedShops.clear();
-        if (compound.contains("VisitedShops", Tag.TAG_LIST)) {
-            ListTag visitedList = compound.getList("VisitedShops", Tag.TAG_COMPOUND);
-            for (int i = 0; i < visitedList.size(); i++) {
-                CompoundTag posTag = visitedList.getCompound(i);
-                if (posTag.contains("X") && posTag.contains("Y") && posTag.contains("Z")) {
-                    this.visitedShops.add(new BlockPos(posTag.getInt("X"), posTag.getInt("Y"), posTag.getInt("Z")));
-                }
-            }
-        }
+        input.read("VisitedShops", BlockPos.CODEC.listOf()).ifPresent(this.visitedShops::addAll);
     }
 
     @Override
@@ -311,7 +280,7 @@ public class ShopBuyerEntity extends PathfinderMob {
     @Override
     public void tick() {
         super.tick();
-        if (!this.level().isClientSide) {
+        if (!this.level().isClientSide()) {
             if (!this.addedToSpawner && this.level() instanceof ServerLevel serverLevel) {
                 this.addedToSpawner = true;
                 ShopBuyerSpawner.onTraderAdded(serverLevel, this);
@@ -466,13 +435,13 @@ public class ShopBuyerEntity extends PathfinderMob {
 
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
-        if (!this.level().isClientSide) {
+        if (!this.level().isClientSide()) {
             long gameTime = this.level().getGameTime();
             UUID playerUuid = player.getUUID();
 
             // If already raging against this player, ignore peaceful interaction
             if (this.isRaging) {
-                return this.level().isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+                return this.level().isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
             }
 
             // Track clicks for Rage Mode Easter Egg trigger
@@ -486,14 +455,14 @@ public class ShopBuyerEntity extends PathfinderMob {
                 if (clicks.size() >= threshold) {
                     clicks.clear();
                     triggerRageMode(player);
-                    return this.level().isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+                    return this.level().isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
                 }
             }
 
             // Dialog cooldown (anti-spam): 30 ticks (1.5s) per player
             Long lastTime = lastDialogTimes.get(playerUuid);
             if (lastTime != null && (gameTime - lastTime) < 30) {
-                return this.level().isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+                return this.level().isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
             }
             lastDialogTimes.put(playerUuid, gameTime);
 
@@ -511,7 +480,7 @@ public class ShopBuyerEntity extends PathfinderMob {
             this.getLookControl().setLookAt(player, 30.0F, 30.0F);
             this.playSound(SoundEvents.WANDERING_TRADER_NO, this.getSoundVolume(), this.getVoicePitch());
         }
-        return this.level().isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+        return this.level().isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
 
     @Override
@@ -747,10 +716,10 @@ public class ShopBuyerEntity extends PathfinderMob {
                     }
                 }
                 if (isNightPotion) {
-                    return ShopBuyerEntity.this.level().isNight()
+                    return ShopBuyerEntity.this.level().isDarkOutside()
                             && !ShopBuyerEntity.this.hasEffect(MobEffects.INVISIBILITY);
                 } else {
-                    return ShopBuyerEntity.this.level().isDay()
+                    return ShopBuyerEntity.this.level().isBrightOutside()
                             && ShopBuyerEntity.this.hasEffect(MobEffects.INVISIBILITY);
                 }
             });

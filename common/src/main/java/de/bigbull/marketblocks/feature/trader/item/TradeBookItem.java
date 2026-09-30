@@ -56,7 +56,7 @@ public class TradeBookItem extends Item {
 
                 // Collect all shops (including those without offers, so "My Shops" can show
                 // them)
-                ShopDirectorySavedData shopData = ShopDirectorySavedData.get(player.serverLevel());
+                ShopDirectorySavedData shopData = ShopDirectorySavedData.get(player.level());
                 List<ShopDirectorySavedData.ShopEntry> allShops = shopData.getShops();
 
                 // Filter out closed shops for active listings and shops without offers
@@ -68,7 +68,7 @@ public class TradeBookItem extends Item {
                 // Leaderboard will be computed inside addShopLeaderboardPages
                 List<ShopDirectorySavedData.ShopEntry> leaderboardShops = new ArrayList<>(openShops);
 
-                boolean canTeleport = Config.ALLOW_NON_OP_TELEPORT.get() || player.hasPermissions(2);
+                boolean canTeleport = Config.ALLOW_NON_OP_TELEPORT.get() || player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER);
                 UUID playerUUID = player.getUUID();
 
                 // === Section 1: My Shops (personal stats) ===
@@ -158,16 +158,13 @@ public class TradeBookItem extends Item {
                 return Component.translatable(textKey)
                                 .withStyle(style -> style.withColor(color)
                                                 .withUnderlined(true)
-                                                .withClickEvent(new ClickEvent(ClickEvent.Action.CHANGE_PAGE,
-                                                                String.valueOf(pageNum)))
-                                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                                .withClickEvent(new ClickEvent.ChangePage(pageNum))
+                                                .withHoverEvent(new HoverEvent.ShowText(
                                                                 Component.translatable(tooltipKey))))
                                 .append(Component.literal(" [" + pageNum + "]")
                                                 .withStyle(s -> s.withColor(ChatFormatting.GRAY)
                                                                 .withUnderlined(false)
-                                                                .withClickEvent(new ClickEvent(
-                                                                                ClickEvent.Action.CHANGE_PAGE,
-                                                                                String.valueOf(pageNum)))
+                                                                .withClickEvent(new ClickEvent.ChangePage(pageNum))
                                                                 .withInsertion("SPACING:4")))
                                 .append(Component.literal("\n"));
         }
@@ -253,7 +250,7 @@ public class TradeBookItem extends Item {
                 }
 
                 net.minecraft.core.BlockPos pos = shop.pos().pos();
-                String dim = shop.pos().dimension().location().toString();
+                String dim = shop.pos().dimension().identifier().toString();
 
                 // Format:
                 // SHOP_ENTRY||prefix||shopNameFull||ownerFull||compactSales||isClosed||offerId||finalStatus||x||y||z||dim||canTeleport||shopId||ownerUUID
@@ -421,7 +418,7 @@ public class TradeBookItem extends Item {
         // ==========================================
 
         private void addNpcTrendsPages(List<Component> pages, ServerPlayer player) {
-                NpcEconomySavedData economyData = NpcEconomySavedData.get(player.serverLevel());
+                NpcEconomySavedData economyData = NpcEconomySavedData.get(player.level());
                 Map<Item, Double> baseValues = TraderEconomyManager.get().getBaseValues();
 
                 // Include base-value items AND any items with active saturation (recipe-scanned items)
@@ -435,7 +432,7 @@ public class TradeBookItem extends Item {
                 List<Item> changedItems = new ArrayList<>();
 
                 for (Item item : allItems) {
-                        double mult = economyData.getDemandMultiplier(item, player.serverLevel());
+                        double mult = economyData.getDemandMultiplier(item, player.level());
                         multiplierCache.put(item, mult);
                         int percent = (int) Math.round(mult * 100);
                         if (percent != 100) {
@@ -482,7 +479,7 @@ public class TradeBookItem extends Item {
                                         baseVal = baseValObj;
                                 } else {
                                         Double evaluated = TraderEconomyManager.get().evaluateItem(
-                                                        item, player.serverLevel().recipeAccess(), player.serverLevel());
+                                                        item, player.level().recipeAccess(), player.level());
                                         baseVal = evaluated != null ? evaluated : 0.0;
                                 }
                                 double currentVal = baseVal * mult;
