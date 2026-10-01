@@ -13,7 +13,7 @@ import de.bigbull.marketblocks.feature.visual.npc.VisualNpcAnimationEvent;
 import de.bigbull.marketblocks.feature.visual.npc.VisualNpcPlacement;
 import net.minecraft.client.Minecraft;
 import de.bigbull.marketblocks.feature.singleoffer.client.render.SingleOfferShopRenderState;
-import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
@@ -107,7 +107,7 @@ public final class VisualShopNpcRenderer {
         BlockPos shopPos = host.getVisualShopPos();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         BlockPos npcBlockPos = BlockPos.containing(spawnPos.x, spawnPos.y + animationYOffset, spawnPos.z);
-        int packedLight = LevelRenderer.getLightCoords(level, npcBlockPos);
+        int packedLight = LightCoordsUtil.getLightCoords(level, npcBlockPos);
 
         if (settings.usePlayerSkin()) {
             String skinName = settings.playerSkinName();

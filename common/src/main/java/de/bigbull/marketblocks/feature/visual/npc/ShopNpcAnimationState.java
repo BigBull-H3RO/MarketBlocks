@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.visual.npc;
 import net.minecraft.world.entity.player.Player;
 
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.level.Level;
@@ -18,11 +18,22 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Client-only runtime state for BER-based visual NPC animations.
  */
 public class ShopNpcAnimationState {
+    private static final AtomicInteger NEXT_DUMMY_ID = new AtomicInteger(-1000);
+
+    private static int getNextDummyId() {
+        int id = NEXT_DUMMY_ID.decrementAndGet();
+        if (id == 0) {
+            id = NEXT_DUMMY_ID.decrementAndGet();
+        }
+        return id;
+    }
+
     private int lastAnimationNonce = -1;
     private boolean animationNonceInitialized = false;
     private long spawnAnimationStartTick = -1L;
@@ -172,7 +183,8 @@ public class ShopNpcAnimationState {
 
     public Villager getOrCreateRenderVillager(Level level) {
         if (cachedRenderVillager == null || cachedRenderVillager.level() != level) {
-            cachedRenderVillager = new Villager(EntityType.VILLAGER, level);
+            cachedRenderVillager = new Villager(EntityTypes.VILLAGER, level);
+            cachedRenderVillager.setId(getNextDummyId());
             cachedRenderVillager.noPhysics = true;
         }
         return cachedRenderVillager;
@@ -269,6 +281,7 @@ public class ShopNpcAnimationState {
                 return super.hasCustomName() ? this.getCustomName() : Component.empty();
             }
         };
+        player.setId(getNextDummyId());
         player.noPhysics = true;
         return player;
     }

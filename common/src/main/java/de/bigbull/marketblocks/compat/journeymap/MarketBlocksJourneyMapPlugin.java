@@ -13,7 +13,7 @@ import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import journeymap.api.v2.client.IClientAPI;
 import journeymap.api.v2.client.IClientPlugin;
-import journeymap.api.v2.client.JourneyMapPlugin;
+import journeymap.api.v2.common.JourneyMapPlugin;
 import journeymap.api.v2.common.waypoint.Waypoint;
 import journeymap.api.v2.common.waypoint.WaypointFactory;
 import journeymap.api.v2.client.display.MarkerOverlay;
@@ -24,7 +24,6 @@ import net.minecraft.resources.Identifier;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings({"deprecation", "removal"})
 @JourneyMapPlugin(apiVersion = "2.0.0")
 public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
 
@@ -59,7 +58,7 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
 
         try {
             ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimension);
-            Waypoint waypoint = WaypointFactory.createClientWaypoint(
+            Waypoint waypoint = WaypointFactory.createWaypoint(
                     Constants.MOD_ID,
                     pos,
                     name,
@@ -73,7 +72,7 @@ public class MarketBlocksJourneyMapPlugin implements IClientPlugin {
                 Identifier icon = name.toLowerCase(Locale.ROOT).contains("marketplace")
                         ? Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/marketplace.png")
                         : Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/journeymap/singleoffershop.png");
-                waypoint.setIconResourceLoctaion(icon);
+                waypoint.setIconIdentifier(icon);
                 waypoint.setIconTextureSize(16, 16);
             } catch (Throwable ignored) {
             }

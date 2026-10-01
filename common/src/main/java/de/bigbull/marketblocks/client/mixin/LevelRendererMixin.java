@@ -3,7 +3,6 @@ package de.bigbull.marketblocks.client.mixin;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandTopBlock;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,11 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(LevelRenderer.class)
+@Mixin(ClientLevel.class)
 public abstract class LevelRendererMixin {
-
-    @Shadow
-    private ClientLevel level;
 
     @Shadow
     public abstract void destroyBlockProgress(int breakerId, BlockPos pos, int progress);
@@ -27,14 +23,15 @@ public abstract class LevelRendererMixin {
 
     @Inject(method = "destroyBlockProgress", at = @At("HEAD"))
     private void marketblocks$mirrorDestroyProgress(int breakerId, BlockPos pos, int progress, CallbackInfo ci) {
-        if (marketblocks$IS_MIRRORING.get() || this.level == null) {
+        if (marketblocks$IS_MIRRORING.get()) {
             return;
         }
 
         try {
             marketblocks$IS_MIRRORING.set(true);
 
-            BlockState state = this.level.getBlockState(pos);
+            ClientLevel level = (ClientLevel) (Object) this;
+            BlockState state = level.getBlockState(pos);
             BlockPos targetPos = null;
 
             if (state.getBlock() instanceof TradeStandBlock) {

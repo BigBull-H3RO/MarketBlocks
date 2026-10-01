@@ -1215,13 +1215,13 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             p1 = norm.getFirst();
             p2 = norm.getSecond();
             if (result.isEmpty()) {
-                minecraft.gui.getChat().addClientSystemMessage(
+                minecraft.gui.hud.getChat().addClientSystemMessage(
                         Component.translatable("gui.marketblocks.error.no_result_item").withStyle(ChatFormatting.RED));
                 playSound(SoundEvents.ITEM_BREAK);
                 return;
             }
             if (p1.isEmpty() && p2.isEmpty()) {
-                minecraft.gui.getChat().addClientSystemMessage(Component.translatable("gui.marketblocks.error.no_payment_items")
+                minecraft.gui.hud.getChat().addClientSystemMessage(Component.translatable("gui.marketblocks.error.no_payment_items")
                         .withStyle(ChatFormatting.RED));
                 playSound(SoundEvents.ITEM_BREAK);
                 return;

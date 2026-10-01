@@ -445,13 +445,13 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     private void openOfferLimitsEditor(MarketplaceOffer offer) {
         if (minecraft != null) {
-            minecraft.setScreen(new OfferLimitsEditor(this, offer.id(), offer.limits()));
+            minecraft.gui.setScreen(new OfferLimitsEditor(this, offer.id(), offer.limits()));
         }
     }
 
     private void openOfferPricingEditor(MarketplaceOffer offer) {
         if (minecraft != null) {
-            minecraft.setScreen(new OfferPricingEditor(this, offer.id(), offer.pricing()));
+            minecraft.gui.setScreen(new OfferPricingEditor(this, offer.id(), offer.pricing()));
         }
     }
 
@@ -495,7 +495,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     private void openTextInput(Component title, String initial, boolean allowEmpty, Consumer<String> onConfirm) {
         if (minecraft != null) {
-            minecraft.setScreen(new TextInputScreen(this, title, initial, allowEmpty, onConfirm));
+            minecraft.gui.setScreen(new TextInputScreen(this, title, initial, allowEmpty, onConfirm));
         }
     }
 

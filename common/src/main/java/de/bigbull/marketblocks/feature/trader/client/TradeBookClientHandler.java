@@ -10,6 +10,6 @@ import de.bigbull.marketblocks.feature.trader.network.TradeBookOpenPacket.ShopOf
 
 public class TradeBookClientHandler {
     public static void openScreen(List<Component> pages, Map<String, ShopOfferData> offers) {
-        Minecraft.getInstance().setScreen(new TradeBookScreen(pages, offers));
+        Minecraft.getInstance().gui.setScreen(new TradeBookScreen(pages, offers));
     }
 }
