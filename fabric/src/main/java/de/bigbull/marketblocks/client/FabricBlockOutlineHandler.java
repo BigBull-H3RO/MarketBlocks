@@ -11,7 +11,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.ShapeRenderer;
-import net.minecraft.client.renderer.state.level.BlockOutlineRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.ARGB;
@@ -26,9 +25,11 @@ import org.joml.AxisAngle4f;
 import org.joml.Quaternionf;
 
 /**
- * Custom hover outline for the tall shop (Trade Stand) and market crate on Fabric.
+ * Custom hover outline for the tall shop (Trade Stand) and market crate on
+ * Fabric.
  * Matches 1:1 with NeoForge's BlockOutlineHandler.
- * Base shape is always shown. Showcase shape is shown only if the top block exists.
+ * Base shape is always shown. Showcase shape is shown only if the top block
+ * exists.
  */
 public class FabricBlockOutlineHandler {
     private static final VoxelShape BASE_OUTLINE = Block.box(0, 0, 0, 16, 11, 16);
@@ -54,7 +55,8 @@ public class FabricBlockOutlineHandler {
                 return false;
             }
 
-            if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get()) || state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+            if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get())
+                    || state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
                 renderTradeStandOutline(context, level, pos, state);
                 return false;
             }
@@ -63,7 +65,8 @@ public class FabricBlockOutlineHandler {
         });
     }
 
-    private static void renderTradeStandOutline(LevelRenderContext context, Level level, BlockPos pos, BlockState state) {
+    private static void renderTradeStandOutline(LevelRenderContext context, Level level, BlockPos pos,
+            BlockState state) {
         BlockPos outlineOrigin;
         if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             outlineOrigin = pos;
@@ -80,7 +83,8 @@ public class FabricBlockOutlineHandler {
         Vec3 camPos = camera.position();
         PoseStack poseStack = context.poseStack();
         MultiBufferSource consumers = context.bufferSource();
-        if (consumers == null) return;
+        if (consumers == null)
+            return;
 
         BlockState baseState = level.getBlockState(outlineOrigin);
         boolean hasShowcase = TradeStandBlock.hasShowcase(baseState)
@@ -91,8 +95,7 @@ public class FabricBlockOutlineHandler {
         poseStack.translate(
                 outlineOrigin.getX() - camPos.x,
                 outlineOrigin.getY() - camPos.y,
-                outlineOrigin.getZ() - camPos.z
-        );
+                outlineOrigin.getZ() - camPos.z);
 
         boolean highContrast = Minecraft.getInstance().options.highContrastBlockOutline().get();
         if (highContrast) {
@@ -105,8 +108,7 @@ public class FabricBlockOutlineHandler {
                     0.0,
                     0.0,
                     -16777216,
-                    7.0F
-            );
+                    7.0F);
         }
 
         VertexConsumer consumer = consumers.getBuffer(RenderTypes.lines());
@@ -121,8 +123,7 @@ public class FabricBlockOutlineHandler {
                 0.0,
                 0.0,
                 color,
-                lineWidth
-        );
+                lineWidth);
 
         poseStack.popPose();
     }
@@ -132,7 +133,8 @@ public class FabricBlockOutlineHandler {
         Vec3 camPos = camera.position();
         PoseStack poseStack = context.poseStack();
         MultiBufferSource consumers = context.bufferSource();
-        if (consumers == null) return;
+        if (consumers == null)
+            return;
 
         Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
                 ? state.getValue(BlockStateProperties.HORIZONTAL_FACING)
@@ -163,8 +165,7 @@ public class FabricBlockOutlineHandler {
         poseStack.translate(
                 pos.getX() - camPos.x,
                 pos.getY() - camPos.y,
-                pos.getZ() - camPos.z
-        );
+                pos.getZ() - camPos.z);
 
         poseStack.pushPose();
         poseStack.translate(0.5, 0.5, 0.5);
@@ -177,8 +178,7 @@ public class FabricBlockOutlineHandler {
 
         ShapeRenderer.renderShape(
                 poseStack, consumer, CRATE_BASE_OUTLINE,
-                0.0, 0.0, 0.0, color, lineWidth
-        );
+                0.0, 0.0, 0.0, color, lineWidth);
 
         renderSlantedBasket(poseStack, consumer, color, lineWidth);
 
@@ -190,12 +190,10 @@ public class FabricBlockOutlineHandler {
 
         ShapeRenderer.renderShape(
                 poseStack, consumer, CRATE_LID_OUTLINE,
-                0.0, 0.0, 0.0, color, lineWidth
-        );
+                0.0, 0.0, 0.0, color, lineWidth);
         ShapeRenderer.renderShape(
                 poseStack, consumer, CRATE_LID_INNER_OUTLINE,
-                0.0, 0.0, 0.0, color, lineWidth
-        );
+                0.0, 0.0, 0.0, color, lineWidth);
 
         poseStack.popPose();
         poseStack.popPose();
@@ -203,11 +201,11 @@ public class FabricBlockOutlineHandler {
     }
 
     private static void renderSlantedBasket(PoseStack poseStack, VertexConsumer consumer, int color, float lineWidth) {
-        float minX = 1/16f, maxX = 15/16f;
-        float minZ = 1/16f, maxZ = 15/16f;
-        float yBottom = 8/16f;
-        float yFrontTop = 10/16f;
-        float yBackTop = 15/16f;
+        float minX = 1 / 16f, maxX = 15 / 16f;
+        float minZ = 1 / 16f, maxZ = 15 / 16f;
+        float yBottom = 8 / 16f;
+        float yFrontTop = 10 / 16f;
+        float yBackTop = 15 / 16f;
 
         drawLine(poseStack, consumer, minX, yBottom, minZ, maxX, yBottom, minZ, color, lineWidth);
         drawLine(poseStack, consumer, maxX, yBottom, minZ, maxX, yBottom, maxZ, color, lineWidth);
@@ -225,7 +223,8 @@ public class FabricBlockOutlineHandler {
         drawLine(poseStack, consumer, maxX, yFrontTop, minZ, maxX, yBackTop, maxZ, color, lineWidth);
     }
 
-    private static void drawLine(PoseStack poseStack, VertexConsumer consumer, float x1, float y1, float z1, float x2, float y2, float z2, int color, float lineWidth) {
+    private static void drawLine(PoseStack poseStack, VertexConsumer consumer, float x1, float y1, float z1, float x2,
+            float y2, float z2, int color, float lineWidth) {
         PoseStack.Pose pose = poseStack.last();
         org.joml.Matrix4f matrix4f = pose.pose();
 
@@ -234,7 +233,9 @@ public class FabricBlockOutlineHandler {
         float dz = z2 - z1;
         float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (len > 0) {
-            dx /= len; dy /= len; dz /= len;
+            dx /= len;
+            dy /= len;
+            dz /= len;
         }
 
         consumer.addVertex(matrix4f, x1, y1, z1).setColor(color).setNormal(pose, dx, dy, dz).setLineWidth(lineWidth);

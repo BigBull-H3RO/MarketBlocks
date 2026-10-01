@@ -10,7 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.state.level.BlockOutlineRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -60,7 +59,8 @@ public class BlockOutlineHandler {
 
         if (state.is(RegistriesInit.MARKETCRATE_BLOCK.get())) {
             event.addCustomRenderer((renderState, bufferSource, poseStack, translucent, levelRenderState) -> {
-                if (translucent) return true;
+                if (translucent)
+                    return true;
                 renderMarketCrateOutline(bufferSource, poseStack, pos, state, levelRenderState);
                 return true;
             });
@@ -69,7 +69,8 @@ public class BlockOutlineHandler {
 
         if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get()) || state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
             event.addCustomRenderer((renderState, bufferSource, poseStack, translucent, levelRenderState) -> {
-                if (translucent) return true;
+                if (translucent)
+                    return true;
                 renderTradeStandOutline(bufferSource, poseStack, level, pos, state, levelRenderState);
                 return true;
             });
