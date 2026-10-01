@@ -2,10 +2,12 @@ package de.bigbull.marketblocks.core.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.marketplace.network.LinkedBlocksSyncPacket;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,7 +31,7 @@ import java.util.Optional;
  * Data is stored globally in the overworld to ensure it persists regardless of the dimension it's accessed from.
  */
 public class MarketplaceLinkSavedData extends SavedData {
-    public static final String DATA_NAME = "marketblocks_marketplace_links";
+    public static final Identifier DATA_NAME = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_links");
 
     public static class LinkInfo {
         public final GlobalPos blockPos;

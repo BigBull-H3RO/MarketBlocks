@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.marketplace.client.screen;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
 import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -124,10 +124,10 @@ public final class MarketplacePageSidebar {
         Component pageIndicator = Component.literal((currentSidebarPage + 1) + "/" + totalSidebarPages);
         AbstractWidget pageLabel = new AbstractWidget(labelX, navY, labelWidth, NAV_BUTTON_HEIGHT, pageIndicator) {
             @Override
-            protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            protected void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
                 // Slightly darker background between the two arrow buttons like JEI for better contrast
                 guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), NAV_BG_COLOR);
-                guiGraphics.drawCenteredString(context.font(), getMessage(), getX() + getWidth() / 2, getY() + (getHeight() - 8) / 2, 0xFFFFFFFF);
+                guiGraphics.centeredText(context.font(), getMessage(), getX() + getWidth() / 2, getY() + (getHeight() - 8) / 2, 0xFFFFFFFF);
             }
 
             @Override
@@ -205,7 +205,7 @@ public final class MarketplacePageSidebar {
         return List.of(new Rect2i(clampedX, 0, width, screenHeight));
     }
 
-    public void renderDelayedTooltip(Context context, GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    public void renderDelayedTooltip(Context context, GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         TooltipTarget currentlyHovered = null;
         for (TooltipTarget target : tooltipTargets) {
             if (target.contains(mouseX, mouseY)) {

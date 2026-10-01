@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.marketplace.client.screen;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceUpdateOfferPricingPacket;
 import de.bigbull.marketblocks.feature.marketplace.data.DemandPricing;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -96,8 +96,20 @@ public class OfferPricingEditor extends BaseModalScreen {
 
         private EditBox createIntegerInput(int x, int y, int value) {
                 EditBox input = new EditBox(this.font, x, y, INPUT_WIDTH, INPUT_HEIGHT, Component.literal(""));
-                input.setFilter(OfferPricingEditor::isIntegerInput);
-                input.setValue(String.valueOf(value));
+                final String initialVal = String.valueOf(value);
+                final String[] lastValid = new String[] { initialVal };
+                final boolean[] reverting = new boolean[] { false };
+                input.setResponder(raw -> {
+                        if (reverting[0]) return;
+                        if (isIntegerInput(raw)) {
+                                lastValid[0] = raw;
+                        } else {
+                                reverting[0] = true;
+                                input.setValue(lastValid[0]);
+                                reverting[0] = false;
+                        }
+                });
+                input.setValue(initialVal);
                 this.addRenderableWidget(input);
                 return input;
         }
@@ -168,23 +180,23 @@ public class OfferPricingEditor extends BaseModalScreen {
         }
 
         @Override
-        protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        protected void renderPanelForeground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
                 int labelX = panelLeft + LABEL_X_OFFSET;
                 int rowStartY = panelTop + LABEL_START_Y_OFFSET;
 
-                guiGraphics.drawString(this.font,
+                guiGraphics.text(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.label"),
                                 labelX, rowStartY, 0xFFCFCFCF, false);
-                guiGraphics.drawString(this.font,
+                guiGraphics.text(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.base"),
                                 labelX, rowStartY + ROW_SPACING, 0xFFCFCFCF, false);
-                guiGraphics.drawString(this.font,
+                guiGraphics.text(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.min"),
                                 labelX, rowStartY + (ROW_SPACING * 2), 0xFFCFCFCF, false);
-                guiGraphics.drawString(this.font,
+                guiGraphics.text(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.max"),
                                 labelX, rowStartY + (ROW_SPACING * 3), 0xFFCFCFCF, false);
-                guiGraphics.drawString(this.font,
+                guiGraphics.text(this.font,
                                 Component.translatable("gui.marketblocks.marketplace.editor.pricing.volatility"),
                                 labelX,
                                 rowStartY + (ROW_SPACING * 4), 0xFFCFCFCF, false);

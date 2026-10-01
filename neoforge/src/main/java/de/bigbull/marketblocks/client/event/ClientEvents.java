@@ -7,13 +7,10 @@ import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.marketplace.client.screen.MarketplaceScreen;
 import de.bigbull.marketblocks.feature.singleoffer.client.screen.SingleOfferShopScreen;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -36,15 +33,6 @@ public class ClientEvents {
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(RegistriesInit.SINGLE_OFFER_SHOP_MENU.get(), SingleOfferShopScreen::new);
         event.register(RegistriesInit.MARKETPLACE_MENU.get(), MarketplaceScreen::new);
-    }
-
-    @SuppressWarnings("deprecation")
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK.get(), ChunkSectionLayer.CUTOUT);
-            ItemBlockRenderTypes.setRenderLayer(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), ChunkSectionLayer.CUTOUT);
-        });
     }
 
     @SubscribeEvent

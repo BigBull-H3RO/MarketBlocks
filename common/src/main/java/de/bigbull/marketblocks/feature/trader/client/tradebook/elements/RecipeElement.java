@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -28,7 +28,7 @@ public class RecipeElement implements ITradeBookElement {
     }
 
     @Override
-    public void render(GuiGraphics graphics, String insertion, int x, int y, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
+    public void render(GuiGraphicsExtractor graphics, String insertion, int x, int y, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
         String recipeId = insertion.substring(7);
         int baseY = y + 4;
 
@@ -101,11 +101,11 @@ public class RecipeElement implements ITradeBookElement {
         graphics.pose().popMatrix();
     }
 
-    private void renderSlot(GuiGraphics graphics, ItemStack stack, int x, int y,
+    private void renderSlot(GuiGraphicsExtractor graphics, ItemStack stack, int x, int y,
             double localMouseX, double localMouseY, int mouseX, int mouseY,
             TradeBookRenderContext context) {
         if (stack.isEmpty()) return;
-        graphics.renderItem(stack, x, y);
+        graphics.item(stack, x, y);
         if (localMouseX >= x && localMouseX < x + 16 && localMouseY >= y && localMouseY < y + 16) {
             context.setNextHoveredObject("recipe_" + stack.getItem().toString());
             context.addTooltip(() -> graphics.setTooltipForNextFrame(context.getFont(), stack, mouseX, mouseY));

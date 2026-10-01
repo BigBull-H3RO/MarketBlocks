@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.bigbull.marketblocks.Constants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -21,7 +22,7 @@ import java.util.UUID;
  * Saved data for tracking pending shop notifications such as out of stock or output full.
  */
 public class PendingNotificationsSavedData extends SavedData {
-    public static final String DATA_NAME = Constants.MOD_ID + "_pending_notifications";
+    public static final Identifier DATA_NAME = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "pending_notifications");
 
     private final Map<UUID, Set<BlockPos>> outOfStockShops = new HashMap<>();
     private final Map<UUID, Set<BlockPos>> outputFullShops = new HashMap<>();

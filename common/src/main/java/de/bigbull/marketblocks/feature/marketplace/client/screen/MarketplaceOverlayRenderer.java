@@ -14,7 +14,7 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewState;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceRuntimeMath;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
@@ -27,13 +27,13 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class MarketplaceOverlayRenderer {
 
-    public void render(GuiGraphics guiGraphics, Context context) {
+    public void render(GuiGraphicsExtractor guiGraphics, Context context) {
         renderEmptyState(guiGraphics, context);
         renderOfferRows(guiGraphics, context);
         renderSelectedOfferStatus(guiGraphics, context);
     }
 
-    public void renderTooltips(GuiGraphics guiGraphics, Context context) {
+    public void renderTooltips(GuiGraphicsExtractor guiGraphics, Context context) {
         if (context.suppressInteractions()) {
             return;
         }
@@ -43,21 +43,21 @@ public final class MarketplaceOverlayRenderer {
         renderSelectedOfferStatusTooltips(guiGraphics, context);
     }
 
-    private void renderEmptyState(GuiGraphics guiGraphics, Context context) {
+    private void renderEmptyState(GuiGraphicsExtractor guiGraphics, Context context) {
         if (!context.hasPages()) {
             Component noPagesText = Component.translatable("gui.marketblocks.marketplace.no_pages");
             int textX = context.previewX() - 118;
             int textY = context.previewY() + 55;
-            guiGraphics.drawWordWrap(context.font(), noPagesText, textX, textY, 200, 0xFF555555);
+            guiGraphics.textWithWordWrap(context.font(), noPagesText, textX, textY, 200, 0xFF555555);
         } else if (context.visibleOffers().isEmpty()) {
             Component noOffersText = Component.translatable("gui.marketblocks.marketplace.no_offers");
             int textX = context.listStartX() + (context.listWidth() - context.font().width(noOffersText)) / 2;
             int textY = context.listStartY() + context.listHeight() / 2 - 4;
-            guiGraphics.drawString(context.font(), noOffersText, textX, textY, 0xFF555555, false);
+            guiGraphics.text(context.font(), noOffersText, textX, textY, 0xFF555555, false);
         }
     }
 
-    private void renderOfferRows(GuiGraphics guiGraphics, Context context) {
+    private void renderOfferRows(GuiGraphicsExtractor guiGraphics, Context context) {
         int listStartX = context.listStartX();
         int listStartY = context.listStartY();
         guiGraphics.enableScissor(listStartX, listStartY, listStartX + context.listWidth() + 2,
@@ -87,7 +87,7 @@ public final class MarketplaceOverlayRenderer {
         }
     }
 
-    private void renderSelectedOfferStatus(GuiGraphics guiGraphics, Context context) {
+    private void renderSelectedOfferStatus(GuiGraphicsExtractor guiGraphics, Context context) {
         UUID selectedOfferId = context.selectedOfferId();
         if (selectedOfferId == null) {
             return;
@@ -112,11 +112,11 @@ public final class MarketplaceOverlayRenderer {
         List<StatusItem> items = buildStatusItems(context, offer, viewState);
         for (StatusItem item : items) {
             int color = (item.color() & 0xFF000000) == 0 ? (0xFF000000 | item.color()) : item.color();
-            guiGraphics.drawString(context.font(), item.text(), item.x(), item.y(), color, false);
+            guiGraphics.text(context.font(), item.text(), item.x(), item.y(), color, false);
         }
     }
 
-    private void renderSelectedOfferStatusTooltips(GuiGraphics guiGraphics, Context context) {
+    private void renderSelectedOfferStatusTooltips(GuiGraphicsExtractor guiGraphics, Context context) {
         UUID selectedOfferId = context.selectedOfferId();
         if (selectedOfferId == null) {
             return;
@@ -267,7 +267,7 @@ public final class MarketplaceOverlayRenderer {
         return items;
     }
 
-    private void renderOfferRow(GuiGraphics graphics, Context context, MarketplaceOffer offer, int x, int y,
+    private void renderOfferRow(GuiGraphicsExtractor graphics, Context context, MarketplaceOffer offer, int x, int y,
             boolean isSelected) {
         MarketplaceOfferViewState viewState = MarketplaceClientState.offerViewState(offer.id());
         ItemStack[] payments = context.paymentNormalizer().apply(offer.effectivePayments());
@@ -283,10 +283,10 @@ public final class MarketplaceOverlayRenderer {
         rowButton.update(p1, p2, origP1, origP2, offer.result(), offerAvailable, !offerAvailable);
         int renderMouseX = isSelected ? x + 1 : context.mouseX();
         int renderMouseY = isSelected ? y + 1 : context.mouseY();
-        rowButton.render(graphics, renderMouseX, renderMouseY, 0.0F);
+        rowButton.extractRenderState(graphics, renderMouseX, renderMouseY, 0.0F);
     }
 
-    private void renderHoveredRowTooltip(GuiGraphics graphics, Context context, int listStartX, int listStartY) {
+    private void renderHoveredRowTooltip(GuiGraphicsExtractor graphics, Context context, int listStartX, int listStartY) {
         if (context.suppressInteractions()) {
             return;
         }
@@ -338,7 +338,7 @@ public final class MarketplaceOverlayRenderer {
                 arrowY);
     }
 
-    private void renderRowTooltips(GuiGraphics graphics, Context context, ItemStack p1, ItemStack p2, ItemStack result,
+    private void renderRowTooltips(GuiGraphicsExtractor graphics, Context context, ItemStack p1, ItemStack p2, ItemStack result,
             MarketplaceOfferViewState viewState,
             int p1X, int p2X, int resultX, int arrowX, int arrowY) {
         int mouseX = context.mouseX();

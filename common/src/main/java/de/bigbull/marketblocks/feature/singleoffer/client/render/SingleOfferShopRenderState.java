@@ -8,9 +8,11 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class SingleOfferShopRenderState extends BlockEntityRenderState {
     public SingleOfferShopBlockEntity blockEntity;
+    public BlockState blockState;
     public float partialTick;
     public long gameTime;
     public Direction facing = Direction.NORTH;
@@ -50,6 +52,7 @@ public class SingleOfferShopRenderState extends BlockEntityRenderState {
 
     public void clear() {
         this.blockEntity = null;
+        this.blockState = null;
         this.result = ItemStack.EMPTY;
         this.payment1 = ItemStack.EMPTY;
         this.payment2 = ItemStack.EMPTY;

@@ -18,7 +18,7 @@ public class FabricNetwork {
     private static <T extends CustomPacketPayload> void registerServer(CustomPacketPayload.Type<T> type,
                                                                        net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, T> codec,
                                                                        BiConsumer<T, PacketContext> handler) {
-        PayloadTypeRegistry.playC2S().register(type, codec);
+        PayloadTypeRegistry.serverboundPlay().register(type, codec);
         ServerPlayNetworking.registerGlobalReceiver(type, (payload, context) -> {
             PacketContext packetCtx = new PacketContext() {
                 @Override
@@ -37,7 +37,7 @@ public class FabricNetwork {
 
     private static <T extends CustomPacketPayload> void registerClient(CustomPacketPayload.Type<T> type,
                                                                        net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, T> codec) {
-        PayloadTypeRegistry.playS2C().register(type, codec);
+        PayloadTypeRegistry.clientboundPlay().register(type, codec);
     }
 
     public static void init() {

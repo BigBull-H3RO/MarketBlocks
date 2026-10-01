@@ -6,8 +6,8 @@ import de.bigbull.marketblocks.core.config.SingleOfferConfig;
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -131,7 +131,7 @@ public class SingleOfferOwnerListPanel {
         this.noPlayers = ownerOrder.isEmpty();
     }
 
-    public void renderBackground(GuiGraphics graphics,
+    public void renderBackground(GuiGraphicsExtractor graphics,
             Font font,
             int leftPos,
             int topPos,
@@ -166,7 +166,7 @@ public class SingleOfferOwnerListPanel {
         if (noPlayers) {
             Component info = Component.translatable("gui.marketblocks.no_players_available");
             int textW = font.width(info);
-            graphics.drawString(font, info, insetX + 1 + (contentW - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0xFF808080, false);
+            graphics.text(font, info, insetX + 1 + (contentW - textW) / 2, insetY + (INSET_HEIGHT - font.lineHeight) / 2 + 1, 0xFF808080, false);
             return;
         }
 
@@ -213,15 +213,15 @@ public class SingleOfferOwnerListPanel {
             } else {
                 textColor = 0xFFCCCCCC;
             }
-            graphics.drawString(font, displayName, textX, textY, textColor, false);
+            graphics.text(font, displayName, textX, textY, textColor, false);
         }
     }
 
-    private void renderPlayerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
+    private void renderPlayerHead(GuiGraphicsExtractor graphics, UUID id, String name, int x, int y) {
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(id, name);
         PlayerSkin skin = client.getSkinManager().createLookup(profile, false).get();
-        PlayerFaceRenderer.draw(graphics, skin, x, y, 8);
+        PlayerFaceExtractor.extractRenderState(graphics, skin, x, y, 8);
     }
 
     public boolean onMouseClicked(double mouseX, double mouseY, int leftPos) {

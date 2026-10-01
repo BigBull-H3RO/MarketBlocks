@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.TraderConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.item.Item;
@@ -21,7 +22,7 @@ import java.util.Map;
  * Automatically handles time-based decay of saturation based on world game time.
  */
 public class NpcEconomySavedData extends SavedData {
-    public static final String DATA_NAME = Constants.MOD_ID + "_npc_economy";
+    public static final Identifier DATA_NAME = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "npc_economy");
 
     private final Map<Item, Double> itemSaturation = new HashMap<>();
     private long lastDecayGameTime = 0L;

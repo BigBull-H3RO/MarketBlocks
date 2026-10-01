@@ -24,7 +24,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -188,9 +188,9 @@ public final class SingleOfferSettingsSections {
     /**
      * Renders background group boxes and static labels for the General tab.
      */
-    public static void renderGeneralBg(GuiGraphics graphics, Font font, int leftPos, int topPos) {
+    public static void renderGeneralBg(GuiGraphicsExtractor graphics, Font font, int leftPos, int topPos) {
         Component statusLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.general.status_label"));
-        graphics.drawString(font, statusLabel, leftPos + 150 - font.width(statusLabel), topPos + 8, 0xFF404040, false);
+        graphics.text(font, statusLabel, leftPos + 150 - font.width(statusLabel), topPos + 8, 0xFF404040, false);
 
         // GroupBox 1: Shop-Profil (h = 46, ends at 69)
         GroupBox.render(graphics, font,
@@ -198,7 +198,7 @@ public final class SingleOfferSettingsSections {
                 leftPos + 7, topPos + 23, 162, 46);
 
         Component nameLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.general.shop_name_label"));
-        graphics.drawString(font, nameLabel, leftPos + 12, topPos + 33, 0xFF404040, false);
+        graphics.text(font, nameLabel, leftPos + 12, topPos + 33, 0xFF404040, false);
 
         // GroupBox 2: Funktionen & Signale (starts at 75, exact 6px gap, h = 40)
         GroupBox.render(graphics, font,
@@ -335,13 +335,13 @@ public final class SingleOfferSettingsSections {
     /**
      * Renders background group boxes, labels, and schematic cross/legend for the I/O tab.
      */
-    public static void renderIoBg(GuiGraphics graphics, Font font, int leftPos, int topPos, boolean enabled) {
+    public static void renderIoBg(GuiGraphicsExtractor graphics, Font font, int leftPos, int topPos, boolean enabled) {
         int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0xFF808080;
         int groupBorderColor = enabled ? GroupBox.DEFAULT_BORDER_COLOR : 0xFF888888;
 
         // Header Status Label: "I/O:"
         Component statusLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.io.status_label"));
-        graphics.drawString(font, statusLabel, leftPos + 130 - font.width(statusLabel), topPos + 8, 0xFF404040, false);
+        graphics.text(font, statusLabel, leftPos + 130 - font.width(statusLabel), topPos + 8, 0xFF404040, false);
 
         // GroupBox 1: BLOCK-SEITEN / TRICHTER (y = 23, h = 62)
         int b1Y = topPos + 23;
@@ -356,7 +356,7 @@ public final class SingleOfferSettingsSections {
         graphics.fill(cx, cy, cx + 16, cy + 16, 0xFF2A2A2A);
         graphics.fill(cx + 1, cy + 1, cx + 15, cy + 15, 0xFF181818);
         graphics.fill(cx + 3, cy + 3, cx + 13, cy + 13, 0xFF654321);
-        graphics.renderOutline(cx + 4, cy + 4, 8, 8, 0xFF9A6F3C);
+        graphics.outline(cx + 4, cy + 4, 8, 8, 0xFF9A6F3C);
 
         // Micro labels around cross in compact 6px font (vertically centered on line with buttons)
         int microColor = enabled ? 0xFF404040 : 0xFF888888;
@@ -366,13 +366,13 @@ public final class SingleOfferSettingsSections {
         Component uLbl = GuiConstants.compact(Component.translatable("gui.marketblocks.side.bottom.letter"));
 
         // H to the left of Top/Hinten button (cx - 2 - font.width(hLbl))
-        graphics.drawString(font, hLbl, cx - 2 - font.width(hLbl), cy - 17 + 4, microColor, false);
+        graphics.text(font, hLbl, cx - 2 - font.width(hLbl), cy - 17 + 4, microColor, false);
         // L to the left of Left/Links button
-        graphics.drawString(font, lLbl, cx - 17 - 2 - font.width(lLbl), cy + 4, microColor, false);
+        graphics.text(font, lLbl, cx - 17 - 2 - font.width(lLbl), cy + 4, microColor, false);
         // R to the right of Right/Rechts button
-        graphics.drawString(font, rLbl, cx + 17 + 16 + 2, cy + 4, microColor, false);
+        graphics.text(font, rLbl, cx + 17 + 16 + 2, cy + 4, microColor, false);
         // U to the left of Bottom/Unten button
-        graphics.drawString(font, uLbl, cx - 2 - font.width(uLbl), cy + 17 + 4, microColor, false);
+        graphics.text(font, uLbl, cx - 2 - font.width(uLbl), cy + 17 + 4, microColor, false);
 
         // Right side legend: shifted right to leftPos + 100
         int legX = leftPos + 100;
@@ -381,19 +381,19 @@ public final class SingleOfferSettingsSections {
         // Row 1: EINGANG (Green)
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SideModeButton.INPUT_ICON, legX, legY, 11, 11);
         Component inText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.input"));
-        graphics.drawString(font, inText, legX + 14, legY + 2, enabled ? 0xFF008800 : 0xFF808080, false);
+        graphics.text(font, inText, legX + 14, legY + 2, enabled ? 0xFF008800 : 0xFF808080, false);
 
         // Row 2: AUSGANG (Red)
         legY += 14;
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SideModeButton.OUTPUT_ICON, legX, legY, 11, 11);
         Component outText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.output"));
-        graphics.drawString(font, outText, legX + 14, legY + 2, enabled ? 0xFFBC0000 : 0xFF808080, false);
+        graphics.text(font, outText, legX + 14, legY + 2, enabled ? 0xFFBC0000 : 0xFF808080, false);
 
         // Row 3: DEAKTIVIERT (Dark grey)
         legY += 14;
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SideModeButton.DISABLED_ICON, legX, legY, 11, 11);
         Component disText = GuiConstants.compact(Component.translatable("gui.marketblocks.legend.disabled"));
-        graphics.drawString(font, disText, legX + 14, legY + 2, enabled ? 0xFF505050 : 0xFF808080, false);
+        graphics.text(font, disText, legX + 14, legY + 2, enabled ? 0xFF505050 : 0xFF808080, false);
 
         // GroupBox 2: AUTOMATISIERUNG & REDSTONE (y = 91, h = 45, 6px gap)
         int b2Y = b1Y + 62 + 6;
@@ -620,7 +620,7 @@ public final class SingleOfferSettingsSections {
         return new VillagerSectionWidgets(npcNameField, playerSkinNameField, professionButton);
     }
 
-    public static void renderVillagerBg(GuiGraphics graphics, Font font, int leftPos, int topPos, boolean enabled,
+    public static void renderVillagerBg(GuiGraphicsExtractor graphics, Font font, int leftPos, int topPos, boolean enabled,
             boolean canSpawn) {
         int labelColor = enabled ? 0xFF404040 : 0xFF808080;
         int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0xFF808080;
@@ -629,9 +629,9 @@ public final class SingleOfferSettingsSections {
         Component npcLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.npc_short"));
         int labelX = leftPos + 130 - font.width(npcLabel);
         if (!canSpawn) {
-            graphics.drawString(font, "!", labelX - 6, topPos + 7, 0xFFCC3333, false);
+            graphics.text(font, "!", labelX - 6, topPos + 7, 0xFFCC3333, false);
         }
-        graphics.drawString(font, npcLabel, labelX, topPos + 8, !canSpawn ? 0xFF993333 : 0xFF404040, false);
+        graphics.text(font, npcLabel, labelX, topPos + 8, !canSpawn ? 0xFF993333 : 0xFF404040, false);
 
         // GroupBox 1: Erscheinungsbild (y = 23, h = 62, ends at 85)
         GroupBox.render(graphics, font,
@@ -639,7 +639,7 @@ public final class SingleOfferSettingsSections {
                 leftPos + 7, topPos + 23, 162, 62, groupBorderColor, groupTitleColor, GroupBox.DEFAULT_BG_COLOR);
 
         Component nameLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.npc_name_label"));
-        graphics.drawString(font, nameLabel, leftPos + 12, topPos + 33, labelColor, false);
+        graphics.text(font, nameLabel, leftPos + 12, topPos + 33, labelColor, false);
 
         // GroupBox 2: Feedback & Effekte (starts at 91, exact 6px gap, h = 47, ends at 138)
         GroupBox.render(graphics, font,
@@ -653,14 +653,14 @@ public final class SingleOfferSettingsSections {
     /**
      * Renders background group boxes and static labels for the Visuals tab.
      */
-    public static void renderVisualsBg(GuiGraphics graphics, Font font, ShopVisualType visualType, int leftPos,
+    public static void renderVisualsBg(GuiGraphicsExtractor graphics, Font font, ShopVisualType visualType, int leftPos,
             int topPos, boolean enabled) {
         int labelColor = enabled ? 0xFF404040 : 0xFF808080;
         int groupTitleColor = enabled ? GroupBox.DEFAULT_TITLE_COLOR : 0xFF808080;
         int groupBorderColor = enabled ? GroupBox.DEFAULT_BORDER_COLOR : 0xFF888888;
 
         Component displayLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.display"));
-        graphics.drawString(font, displayLabel, leftPos + 130 - font.width(displayLabel), topPos + 8, 0xFF404040, false);
+        graphics.text(font, displayLabel, leftPos + 130 - font.width(displayLabel), topPos + 8, 0xFF404040, false);
 
         switch (visualType) {
             case MARKET_CRATE -> {
@@ -670,7 +670,7 @@ public final class SingleOfferSettingsSections {
 
                 Component countLabel = GuiConstants
                         .compact(Component.translatable("gui.marketblocks.visuals.count_short"));
-                graphics.drawString(font, countLabel, leftPos + 12, topPos + 51, labelColor, false);
+                graphics.text(font, countLabel, leftPos + 12, topPos + 51, labelColor, false);
 
                 GroupBox.render(graphics, font,
                         Component.translatable("gui.marketblocks.visuals.group.visuals_transformations"),
@@ -1073,11 +1073,10 @@ public final class SingleOfferSettingsSections {
         outputFullCheckbox.setTooltip(
                 Tooltip.create(Component.translatable("gui.marketblocks.notifications.output_full.tooltip")));
     }
-
-    /**
+    /**
      * Renders background group boxes for the Notifications tab.
      */
-    public static void renderNotificationsBg(GuiGraphics graphics, Font font, int leftPos, int topPos) {
+    public static void renderNotificationsBg(GuiGraphicsExtractor graphics, Font font, int leftPos, int topPos) {
         // GroupBox 1: Trade activity (y = 23, h = 40, ends at 63)
         GroupBox.render(graphics, font,
                 Component.translatable("gui.marketblocks.notifications.group.trade_activity"),
@@ -1152,7 +1151,7 @@ public final class SingleOfferSettingsSections {
     /**
      * Renders background group boxes and status counter for the Access tab.
      */
-    public static void renderAccessBg(GuiGraphics graphics, Font font, int leftPos, int topPos,
+    public static void renderAccessBg(GuiGraphicsExtractor graphics, Font font, int leftPos, int topPos,
             SingleOfferOwnerListPanel.ListMode listMode, AccessMode accessMode, int selectedOwnersCount, int maxOwners) {
         // GroupBox 1: VERWALTUNG (y = 23, h = 40, ends at 63)
         GroupBox.render(graphics, font,
@@ -1169,7 +1168,7 @@ public final class SingleOfferSettingsSections {
             graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, 0xFF222222);
             graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 1, 0xFF373737);
             graphics.fill(badgeX, badgeY + badgeH - 1, badgeX + badgeW, badgeY + badgeH, 0xFF373737);
-            graphics.fill(badgeX, badgeY, badgeX + 1, badgeY + badgeH, 0xFF373737);
+            graphics.fill(badgeX, badgeY + 1, badgeX + 1, badgeY + badgeH, 0xFF373737);
             graphics.fill(badgeX + badgeW - 1, badgeY, badgeX + badgeW, badgeY + badgeH, 0xFF373737);
 
             Component counter = Component.translatable("gui.marketblocks.access.counter", selectedOwnersCount, maxOwners);
@@ -1177,7 +1176,7 @@ public final class SingleOfferSettingsSections {
             int textX = badgeX + (badgeW - tw) / 2;
             int textY = badgeY + (badgeH - font.lineHeight) / 2 + 1;
             int textColor = selectedOwnersCount >= maxOwners ? 0xFFFFAA00 : 0xFF55FF55;
-            graphics.drawString(font, counter, textX, textY, textColor, false);
+            graphics.text(font, counter, textX, textY, textColor, false);
         }
 
         // GroupBox 2: SPIELERLISTE (starts at 69, exact 6px gap, h = 69, ends at 138)
@@ -1200,8 +1199,8 @@ public final class SingleOfferSettingsSections {
                 if (shopId != null && !shopId.isEmpty()) {
                     Minecraft.getInstance().keyboardHandler.setClipboard("#" + shopId);
                     if (Minecraft.getInstance().player != null) {
-                        Minecraft.getInstance().player.displayClientMessage(
-                                Component.translatable("gui.marketblocks.general.shop_id.copied", "#" + shopId), true);
+                        Minecraft.getInstance().player.sendOverlayMessage(
+                                Component.translatable("gui.marketblocks.general.shop_id.copied", "#" + shopId));
                     }
                 }
             }, DEFAULT_NARRATION);
@@ -1210,7 +1209,7 @@ public final class SingleOfferSettingsSections {
         }
 
         @Override
-        protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             int bg = isHoveredOrFocused() ? 0xFF2F2F2F : 0xFF222222;
             int border = isHoveredOrFocused() ? 0xFF555555 : 0xFF373737;
 
@@ -1226,7 +1225,7 @@ public final class SingleOfferSettingsSections {
             int textX = getX() + (width - tw) / 2;
             int textY = getY() + (height - font.lineHeight) / 2 + 1;
             int textColor = isHoveredOrFocused() ? 0xFFFFAA00 : 0xFFAAAAAA;
-            graphics.drawString(font, text, textX, textY, textColor, false);
+            graphics.text(font, text, textX, textY, textColor, false);
         }
     }
 }

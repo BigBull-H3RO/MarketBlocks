@@ -119,7 +119,7 @@ public class OfferManager {
         shopEntity.createOffer(slotCopies[0], slotCopies[1], slotCopies[RESULT_SLOT_INDEX]);
 
         if (player.level() instanceof ServerLevel serverLevel) {
-            NetworkHandler.sendToPlayersTrackingChunk(serverLevel, new ChunkPos(shopEntity.getBlockPos()),
+            NetworkHandler.sendToPlayersTrackingChunk(serverLevel, ChunkPos.containing(shopEntity.getBlockPos()),
                 new OfferStatusPacket(shopEntity.getBlockPos(), true));
         }
 

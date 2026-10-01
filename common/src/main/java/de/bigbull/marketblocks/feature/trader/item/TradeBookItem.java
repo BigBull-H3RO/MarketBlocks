@@ -467,7 +467,7 @@ public class TradeBookItem extends Item {
                                         sign = "▼";
                                 }
 
-                                String itemName = item.getName().getString();
+                                String itemName = item.getName(item.getDefaultInstance()).getString();
                                 if (itemName.length() > 14) {
                                         itemName = itemName.substring(0, 12) + "..";
                                 }

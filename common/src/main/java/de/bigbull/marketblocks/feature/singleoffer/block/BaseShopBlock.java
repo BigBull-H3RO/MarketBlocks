@@ -213,8 +213,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                             buf.writeUtf(shopEntity.getShopId());
                         });
             } else {
-                serverPlayer.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.no_offer"),
-                        true);
+                serverPlayer.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.no_offer"));
                 return InteractionResult.FAIL;
             }
         }
@@ -249,20 +248,18 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         if (isAdminShop) {
             if (!hasAdminBypass) {
                 if (notifyPlayer && player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_shop_protected"),
-                            true);
+                    sp.sendOverlayMessage(Component.translatable("message.marketblocks.shop.admin_shop_protected"));
                 }
                 return false;
             }
             if (!player.isShiftKeyDown()) {
                 if (notifyPlayer && player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_shop_break_hint"),
-                            true);
+                    sp.sendOverlayMessage(Component.translatable("message.marketblocks.shop.admin_shop_break_hint"));
                 }
                 return false;
             }
             if (notifyPlayer && player instanceof ServerPlayer sp) {
-                sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_bypassed"), true);
+                sp.sendOverlayMessage(Component.translatable("message.marketblocks.shop.admin_bypassed"));
             }
             return true;
         }
@@ -274,7 +271,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             if (isOwner) {
                 if (!player.isShiftKeyDown()) {
                     if (notifyPlayer && player instanceof ServerPlayer sp) {
-                        sp.displayClientMessage(Component.translatable("message.marketblocks.shop.owner_creative_break_hint"), true);
+                        sp.sendOverlayMessage(Component.translatable("message.marketblocks.shop.owner_creative_break_hint"));
                     }
                     return false;
                 }
@@ -284,20 +281,20 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             // Foreign creative player: must have OP + Sneak
             if (!hasAdminBypass) {
                 if (notifyPlayer && player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+                    sp.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"));
                 }
                 return false;
             }
 
             if (!player.isShiftKeyDown()) {
                 if (notifyPlayer && player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_break_hint"), true);
+                    sp.sendOverlayMessage(Component.translatable("message.marketblocks.shop.admin_break_hint"));
                 }
                 return false;
             }
 
             if (notifyPlayer && player instanceof ServerPlayer sp) {
-                sp.displayClientMessage(Component.translatable("message.marketblocks.shop.admin_bypassed"), true);
+                sp.sendOverlayMessage(Component.translatable("message.marketblocks.shop.admin_bypassed"));
             }
             return true;
         }
@@ -310,7 +307,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
 
         // Foreign survival player: cannot break
         if (notifyPlayer && player instanceof ServerPlayer sp) {
-            sp.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+            sp.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"));
         }
         return false;
     }

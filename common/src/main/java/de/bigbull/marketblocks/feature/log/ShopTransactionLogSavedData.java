@@ -2,6 +2,7 @@ package de.bigbull.marketblocks.feature.log;
 
 import de.bigbull.marketblocks.Constants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -28,7 +29,7 @@ public final class ShopTransactionLogSavedData extends SavedData {
 
     public static final String SINGLE_OFFER_SHOP_TYPE = "single_offer_shop";
     public static final int DEFAULT_MAX_ENTRIES_PER_SHOP = 100;
-    public static final String DATA_NAME = Constants.MOD_ID + "_shop_logs";
+    public static final Identifier DATA_NAME = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_logs");
 
     public static final Codec<ShopTransactionLogSavedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.unboundedMap(Codec.STRING, TransactionLogEntry.CODEC.listOf())

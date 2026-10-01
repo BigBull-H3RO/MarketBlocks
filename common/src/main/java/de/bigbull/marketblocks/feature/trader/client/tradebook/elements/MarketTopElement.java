@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import de.bigbull.marketblocks.feature.trader.client.tradebook.ITradeBookElement;
 import de.bigbull.marketblocks.feature.trader.client.tradebook.TradeBookLayoutUtils;
@@ -19,7 +19,7 @@ public class MarketTopElement implements ITradeBookElement {
     }
 
     @Override
-    public void render(GuiGraphics graphics, String insertion, int startX, int startY, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
+    public void render(GuiGraphicsExtractor graphics, String insertion, int startX, int startY, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
         String[] parts = insertion.split("\\|\\|");
         if (parts.length < 7) return;
 
@@ -43,17 +43,17 @@ public class MarketTopElement implements ITradeBookElement {
         int yOffset = isTopThree ? -2 : 0;
         graphics.pose().translate(startX, startY + yOffset);
         graphics.pose().scale(rankScale, rankScale);
-        graphics.drawString(context.getFont(), rankPrefix, 0, 0, isTopThree ? 0xFFFFAA00 : 0xFFAA00AA, false);
+        graphics.text(context.getFont(), rankPrefix, 0, 0, isTopThree ? 0xFFFFAA00 : 0xFFAA00AA, false);
         graphics.pose().popMatrix();
 
         int rankWidth = (int) (context.getFont().width(rankPrefix) * rankScale);
 
-        graphics.drawString(context.getFont(), itemName, startX + rankWidth + 4, startY, isTopThree ? 0xFFFFAA00 : 0xFFAA00AA, false);
+        graphics.text(context.getFont(), itemName, startX + rankWidth + 4, startY, isTopThree ? 0xFFFFAA00 : 0xFFAA00AA, false);
 
         Component salesComp = Component.translatable("gui.marketblocks.trade_book.marketplace.sales", lifetimePurchases);
         int salesWidth = context.getFont().width(salesComp);
         int rightX = startX + (int) (TradeBookLayoutUtils.TEXT_WIDTH / scale) - salesWidth;
-        graphics.drawString(context.getFont(), salesComp.getVisualOrderText(), rightX, startY, 0xFF000000, false);
+        graphics.text(context.getFont(), salesComp.getVisualOrderText(), rightX, startY, 0xFF000000, false);
 
         var offer = context.getOffers().get(offerId);
         if (offer != null) {
@@ -72,7 +72,7 @@ public class MarketTopElement implements ITradeBookElement {
                 String saleText = (salePercent < 0 ? "" : "+") + (int) salePercent + "%";
                 Component saleComp = Component.translatable("gui.marketblocks.trade_book.marketplace.sale_active", saleText);
                 int saleWidth = context.getFont().width(saleComp);
-                graphics.drawString(context.getFont(), saleComp.getVisualOrderText(), centerX - saleWidth / 2, offerY + 14, 0xFF55FF55, false);
+                graphics.text(context.getFont(), saleComp.getVisualOrderText(), centerX - saleWidth / 2, offerY + 14, 0xFF55FF55, false);
             }
         }
 

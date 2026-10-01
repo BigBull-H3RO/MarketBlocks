@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.client.gui;
 
 import de.bigbull.marketblocks.Constants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -71,9 +71,9 @@ public class OfferTemplateButton extends Button {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderDefaultSprite(graphics);
-        this.renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        this.extractDefaultSprite(graphics);
+        this.extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
 
         if (!payment1.isEmpty()) {
             boolean hasDiscount1 = !originalPayment1.isEmpty() && payment1.getCount() != originalPayment1.getCount();
@@ -96,15 +96,15 @@ public class OfferTemplateButton extends Button {
         if (!result.isEmpty()) {
             int resultX = getX() + RESULT_X_OFFSET;
             int resultY = getY() + RESULT_Y_OFFSET;
-            graphics.renderItem(result, resultX, resultY);
-            graphics.renderItemDecorations(Minecraft.getInstance().font, result, resultX, resultY);
+            graphics.item(result, resultX, resultY);
+            graphics.itemDecorations(Minecraft.getInstance().font, result, resultX, resultY);
         }
     }
 
-    private void renderPaymentItem(GuiGraphics graphics, ItemStack effective, ItemStack original, int x, int y) {
-        graphics.renderItem(effective, x, y);
+    private void renderPaymentItem(GuiGraphicsExtractor graphics, ItemStack effective, ItemStack original, int x, int y) {
+        graphics.item(effective, x, y);
         if (!original.isEmpty() && effective.getCount() != original.getCount()) {
-            graphics.renderItemDecorations(Minecraft.getInstance().font, effective, x, y, "");
+            graphics.itemDecorations(Minecraft.getInstance().font, effective, x, y, "");
 
             String oldStr = String.valueOf(original.getCount());
             String newStr = String.valueOf(effective.getCount());
@@ -121,10 +121,10 @@ public class OfferTemplateButton extends Button {
             int newX = oldX + fontWidthOld + DISCOUNT_NEW_X_OFFSET;
             int newY = y + 9 + DISCOUNT_NEW_Y_OFFSET;
             
-            graphics.drawString(Minecraft.getInstance().font, oldText, oldX, oldY, 0xFFFFFFFF, true);
-            graphics.drawString(Minecraft.getInstance().font, newText, newX, newY, 0xFFFFFFFF, true);
+            graphics.text(Minecraft.getInstance().font, oldText, oldX, oldY, 0xFFFFFFFF, true);
+            graphics.text(Minecraft.getInstance().font, newText, newX, newY, 0xFFFFFFFF, true);
         } else {
-            graphics.renderItemDecorations(Minecraft.getInstance().font, effective, x, y);
+            graphics.itemDecorations(Minecraft.getInstance().font, effective, x, y);
         }
     }
 }

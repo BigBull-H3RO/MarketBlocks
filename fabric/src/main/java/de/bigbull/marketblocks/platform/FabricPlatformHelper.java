@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.platform;
 
 import de.bigbull.marketblocks.platform.services.IPlatformHelper;
 import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -56,7 +56,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
         temp.readBytes(bytes);
         OpenMenuData data = new OpenMenuData(bytes);
 
-        player.openMenu(new ExtendedScreenHandlerFactory<OpenMenuData>() {
+        player.openMenu(new ExtendedMenuProvider<OpenMenuData>() {
             @Override
             public OpenMenuData getScreenOpeningData(ServerPlayer p) {
                 return data;

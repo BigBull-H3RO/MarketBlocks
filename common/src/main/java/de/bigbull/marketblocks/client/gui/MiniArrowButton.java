@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -80,7 +80,7 @@ public class MiniArrowButton extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         int x = getX();
         int y = getY();
         int w = getWidth();
@@ -93,7 +93,7 @@ public class MiniArrowButton extends AbstractWidget {
         }
     }
 
-    private void renderStepper(GuiGraphics graphics, int x, int y, int w, int h, int mouseX, int mouseY) {
+    private void renderStepper(GuiGraphicsExtractor graphics, int x, int y, int w, int h, int mouseX, int mouseY) {
         boolean mouseInWidget = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
         double midY = y + (h / 2.0);
         boolean upHovered = this.active && mouseInWidget && mouseY < midY;
@@ -136,7 +136,7 @@ public class MiniArrowButton extends AbstractWidget {
         graphics.fill(cx - 1, cy2 + 2, cx + 1, cy2 + 3, ARROW_SHADOW);
     }
 
-    private void renderSingle(GuiGraphics graphics, int x, int y, int w, int h) {
+    private void renderSingle(GuiGraphicsExtractor graphics, int x, int y, int w, int h) {
         boolean hovered = this.active && this.isHovered();
         Identifier sprite = BUTTON_SPRITES.get(this.active, hovered);
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, w, h);

@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public interface ITradeBookElement {
 
@@ -29,7 +29,7 @@ public interface ITradeBookElement {
 
     /**
      * Renders this element.
-     * @param graphics The GuiGraphics instance.
+     * @param graphics The GuiGraphicsExtractor instance.
      * @param insertion The insertion string containing the data.
      * @param x The scaled X coordinate where rendering should start.
      * @param y The scaled Y coordinate where rendering should start.
@@ -38,5 +38,5 @@ public interface ITradeBookElement {
      * @param scale The current scale factor of the page.
      * @param context The render context providing access to font, offers, tooltips, etc.
      */
-    void render(GuiGraphics graphics, String insertion, int x, int y, int mouseX, int mouseY, float scale, TradeBookRenderContext context);
+    void render(GuiGraphicsExtractor graphics, String insertion, int x, int y, int mouseX, int mouseY, float scale, TradeBookRenderContext context);
 }

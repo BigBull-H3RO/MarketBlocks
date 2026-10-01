@@ -472,11 +472,11 @@ public class ShopBuyerEntity extends PathfinderMob {
                     Component.translatable("entity.marketblocks.shop_buyer.rank." + getTraderRank().name().toLowerCase()),
                     Component.translatable("entity.marketblocks.shop_buyer.category." + getInterestCategory().name().toLowerCase())
             ).withStyle(ChatFormatting.GRAY);
-            player.displayClientMessage(rankInfo, false);
+            player.sendSystemMessage(rankInfo);
 
             int messageIndex = selectInteractMessage();
-            player.displayClientMessage(Component
-                    .translatable("message.marketblocks.shop_buyer.interact." + messageIndex), false);
+            player.sendSystemMessage(Component
+                    .translatable("message.marketblocks.shop_buyer.interact." + messageIndex));
             this.getLookControl().setLookAt(player, 30.0F, 30.0F);
             this.playSound(SoundEvents.WANDERING_TRADER_NO, this.getSoundVolume(), this.getVoicePitch());
         }
@@ -520,7 +520,7 @@ public class ShopBuyerEntity extends PathfinderMob {
 
         int msgIndex = 1 + this.random.nextInt(3);
         String nameStr = this.hasCustomName() ? this.getCustomName().getString() : Component.translatable("entity.marketblocks.shop_buyer").getString();
-        target.displayClientMessage(Component.translatable("message.marketblocks.shop_buyer.rage." + msgIndex, nameStr), false);
+        target.sendSystemMessage(Component.translatable("message.marketblocks.shop_buyer.rage." + msgIndex, nameStr));
     }
 
     public void triggerRevenge(Player player) {
@@ -531,7 +531,7 @@ public class ShopBuyerEntity extends PathfinderMob {
         equipRageWeapon();
 
         String nameStr = this.hasCustomName() ? this.getCustomName().getString() : Component.translatable("entity.marketblocks.shop_buyer").getString();
-        player.displayClientMessage(Component.translatable("message.marketblocks.shop_buyer.revenge", nameStr), false);
+        player.sendSystemMessage(Component.translatable("message.marketblocks.shop_buyer.revenge", nameStr));
     }
 
     public void calmDown() {

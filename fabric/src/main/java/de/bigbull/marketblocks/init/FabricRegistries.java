@@ -15,8 +15,8 @@ import de.bigbull.marketblocks.feature.trader.entity.ShopBuyerEntity;
 import de.bigbull.marketblocks.feature.trader.item.TradeBookItem;
 import de.bigbull.marketblocks.platform.FabricPlatformHelper;
 import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
@@ -132,7 +132,7 @@ public final class FabricRegistries {
         // Menus
         MenuType<SingleOfferShopMenu> singleOfferMenu = Registry.register(BuiltInRegistries.MENU,
                 Identifier.fromNamespaceAndPath(Constants.MOD_ID, "single_offer_shop_menu"),
-                new ExtendedScreenHandlerType<>((syncId, inv, data) -> {
+                new ExtendedMenuType<>((syncId, inv, data) -> {
                     RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(data.bytes()), inv.player.registryAccess());
                     return new SingleOfferShopMenu(syncId, inv, buf);
                 }, FabricPlatformHelper.OpenMenuData.STREAM_CODEC));
@@ -140,7 +140,7 @@ public final class FabricRegistries {
 
         MenuType<MarketplaceMenu> mktMenu = Registry.register(BuiltInRegistries.MENU,
                 Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketplace_menu"),
-                new ExtendedScreenHandlerType<>((syncId, inv, data) -> {
+                new ExtendedMenuType<>((syncId, inv, data) -> {
                     RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(data.bytes()), inv.player.registryAccess());
                     return new MarketplaceMenu(syncId, inv, buf);
                 }, FabricPlatformHelper.OpenMenuData.STREAM_CODEC));
@@ -179,7 +179,7 @@ public final class FabricRegistries {
         // Creative Tab
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
                 Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketblocks_tab"),
-                FabricItemGroup.builder()
+                FabricCreativeModeTab.builder()
                         .title(Component.translatable("itemGroup.marketblocks"))
                         .icon(() -> new ItemStack(tradeStand))
                         .displayItems((parameters, output) -> {

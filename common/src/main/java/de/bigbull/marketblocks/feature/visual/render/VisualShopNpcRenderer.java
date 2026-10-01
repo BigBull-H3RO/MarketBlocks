@@ -16,7 +16,7 @@ import de.bigbull.marketblocks.feature.singleoffer.client.render.SingleOfferShop
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
@@ -107,7 +107,7 @@ public final class VisualShopNpcRenderer {
         BlockPos shopPos = host.getVisualShopPos();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         BlockPos npcBlockPos = BlockPos.containing(spawnPos.x, spawnPos.y + animationYOffset, spawnPos.z);
-        int packedLight = LevelRenderer.getLightColor(level, npcBlockPos);
+        int packedLight = LevelRenderer.getLightCoords(level, npcBlockPos);
 
         if (settings.usePlayerSkin()) {
             String skinName = settings.playerSkinName();
@@ -234,11 +234,11 @@ public final class VisualShopNpcRenderer {
         if (placement.canSpawn() && settings.npcEnabled()) {
             if (settings.purchaseParticlesEnabled()) {
                 for (int i = 0; i < 10; i++) {
-                    double angle = (Math.PI * 2.0D * i / 10.0D) + level.random.nextDouble() * 0.45D;
-                    double radius = 0.62D + level.random.nextDouble() * 0.24D;
+                    double angle = (Math.PI * 2.0D * i / 10.0D) + level.getRandom().nextDouble() * 0.45D;
+                    double radius = 0.62D + level.getRandom().nextDouble() * 0.24D;
                     double px = placement.spawnPos().x + Math.cos(angle) * radius;
                     double pz = placement.spawnPos().z + Math.sin(angle) * radius;
-                    double py = placement.spawnPos().y + 0.25D + level.random.nextDouble() * 1.4D;
+                    double py = placement.spawnPos().y + 0.25D + level.getRandom().nextDouble() * 1.4D;
                     level.addParticle(
                             ParticleTypes.HAPPY_VILLAGER,
                             px,
@@ -357,12 +357,12 @@ public final class VisualShopNpcRenderer {
         for (int i = 0; i < 16; i++) {
             level.addParticle(
                     ParticleTypes.CLOUD,
-                    spawnPos.x + (level.random.nextDouble() - 0.5D) * 0.8D,
-                    spawnPos.y + 0.9D + level.random.nextDouble() * 0.5D,
-                    spawnPos.z + (level.random.nextDouble() - 0.5D) * 0.8D,
-                    (level.random.nextDouble() - 0.5D) * 0.04D,
+                    spawnPos.x + (level.getRandom().nextDouble() - 0.5D) * 0.8D,
+                    spawnPos.y + 0.9D + level.getRandom().nextDouble() * 0.5D,
+                    spawnPos.z + (level.getRandom().nextDouble() - 0.5D) * 0.8D,
+                    (level.getRandom().nextDouble() - 0.5D) * 0.04D,
                     0.05D,
-                    (level.random.nextDouble() - 0.5D) * 0.04D
+                    (level.getRandom().nextDouble() - 0.5D) * 0.04D
             );
         }
     }

@@ -18,7 +18,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
@@ -441,8 +441,8 @@ public class MarketplaceMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public void clicked(int slotId, int button, ClickType clickType, Player player) {
-        if (clickType == ClickType.PICKUP_ALL && slotId >= 0 && slotId < TEMPLATE_SLOTS) {
+    public void clicked(int slotId, int button, ContainerInput clickType, Player player) {
+        if (clickType == ContainerInput.PICKUP_ALL && slotId >= 0 && slotId < TEMPLATE_SLOTS) {
             return;
         }
         super.clicked(slotId, button, clickType, player);

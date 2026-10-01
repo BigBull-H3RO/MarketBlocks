@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
 import java.util.List;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -62,7 +62,17 @@ public abstract class BaseModalScreen extends Screen {
     }
 
     @Override
-    protected void renderBlurredBackground(GuiGraphics guiGraphics) {
+    protected void extractBlurredBackground(GuiGraphicsExtractor guiGraphics) {
+    }
+
+    @Override
+    public boolean isInGameUi() {
+        return true;
+    }
+
+    @Override
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // Modal dialogs render backdrop via renderParentBackdrop in extractRenderState
     }
 
     @Override
@@ -73,48 +83,48 @@ public abstract class BaseModalScreen extends Screen {
     }
 
     @Override
-    public final void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public final void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderParentBackdrop(guiGraphics, partialTick);
         renderDimLayer(guiGraphics);
         renderModalPanel(guiGraphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderDimLayer(GuiGraphics guiGraphics) {
+    private void renderDimLayer(GuiGraphicsExtractor guiGraphics) {
         guiGraphics.fill(0, 0, this.width, this.height, 0x88000000);
     }
 
-    private void renderModalPanel(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    private void renderModalPanel(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderPanelBackground(guiGraphics);
         for (net.minecraft.client.gui.components.events.GuiEventListener child : this.children()) {
             if (child instanceof Renderable renderable) {
-                renderable.render(guiGraphics, mouseX, mouseY, partialTick);
+                renderable.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
             }
         }
         renderPanelForeground(guiGraphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderParentBackdrop(GuiGraphics guiGraphics, float partialTick) {
+    private void renderParentBackdrop(GuiGraphicsExtractor guiGraphics, float partialTick) {
         if (this.parent instanceof MarketplaceScreen marketplaceScreen) {
             marketplaceScreen.renderModalBackdrop(guiGraphics, partialTick);
         } else if (this.parent != null) {
-            this.parent.render(guiGraphics, BACKGROUND_MOUSE_OFFSCREEN, BACKGROUND_MOUSE_OFFSCREEN, partialTick);
+            this.parent.extractRenderState(guiGraphics, BACKGROUND_MOUSE_OFFSCREEN, BACKGROUND_MOUSE_OFFSCREEN, partialTick);
         } else {
-            this.renderTransparentBackground(guiGraphics);
+            this.extractTransparentBackground(guiGraphics);
         }
     }
 
-    protected void renderPanelBackground(GuiGraphics guiGraphics) {
+    protected void renderPanelBackground(GuiGraphicsExtractor guiGraphics) {
         guiGraphics.fill(this.panelLeft, this.panelTop, this.panelLeft + this.panelWidth,
                 this.panelTop + this.panelHeight, 0xFF151515);
         guiGraphics.fill(this.panelLeft, this.panelTop, this.panelLeft + this.panelWidth, this.panelTop + 20,
                 0xFF2B2B2B);
-        guiGraphics.renderOutline(this.panelLeft, this.panelTop, this.panelWidth, this.panelHeight, 0xFF555555);
-        guiGraphics.drawString(this.font, this.title,
+        guiGraphics.outline(this.panelLeft, this.panelTop, this.panelWidth, this.panelHeight, 0xFF555555);
+        guiGraphics.text(this.font, this.title,
                 this.panelLeft + (this.panelWidth - this.font.width(this.title)) / 2, this.panelTop + 6, 0xFFFFFFFF,
                 false);
     }
 
-    protected abstract void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick);
+    protected abstract void renderPanelForeground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick);
 
     /**
      * Displays a short action-bar message on the local client player.
@@ -123,7 +133,7 @@ public abstract class BaseModalScreen extends Screen {
      */
     protected void notifyClient(Component message) {
         if (this.minecraft != null && this.minecraft.player != null) {
-            this.minecraft.player.displayClientMessage(message, true);
+            this.minecraft.player.sendOverlayMessage(message);
         }
     }
 
@@ -142,7 +152,7 @@ public abstract class BaseModalScreen extends Screen {
      * @param y              the y position of the label
      * @param translationKey the translation key for the tooltip text
      */
-    protected void renderTooltipIfHovered(GuiGraphics guiGraphics, int mouseX, int mouseY, int x, int y,
+    protected void renderTooltipIfHovered(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, int x, int y,
             String translationKey) {
         int w = 80;
         if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + font.lineHeight) {

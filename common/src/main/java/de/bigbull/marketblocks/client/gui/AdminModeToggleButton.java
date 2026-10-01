@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -61,7 +61,7 @@ public class AdminModeToggleButton extends AbstractButton {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         int x = getX();
         int y = getY();
         int w = getWidth();
@@ -84,7 +84,7 @@ public class AdminModeToggleButton extends AbstractButton {
         int textColor = this.adminMode ? COLOR_ACTIVE_ACCENT : COLOR_INACTIVE_TEXT;
         int textX = x + (w - font.width(label)) / 2;
         int textY = y + (h - font.lineHeight) / 2;
-        graphics.drawString(font, label, textX, textY, textColor, false);
+        graphics.text(font, label, textX, textY, textColor, false);
     }
 
     @Override

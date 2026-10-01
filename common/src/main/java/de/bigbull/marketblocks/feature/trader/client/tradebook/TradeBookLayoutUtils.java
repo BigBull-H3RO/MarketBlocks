@@ -6,8 +6,8 @@ import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.network.chat.Component;
@@ -24,15 +24,15 @@ public class TradeBookLayoutUtils {
     public static final int TEXT_WIDTH = 114;
     public static final float TEXT_SCALE = 0.75f;
 
-    public static void renderPlayerHead(GuiGraphics graphics, String username, int x, int y, float scale, int size) {
+    public static void renderPlayerHead(GuiGraphicsExtractor graphics, String username, int x, int y, float scale, int size) {
         renderPlayerHead(graphics, null, username, x, y, scale, size, false);
     }
 
-    public static void renderPlayerHead(GuiGraphics graphics, String username, int x, int y, float scale, int size, boolean withBorder) {
+    public static void renderPlayerHead(GuiGraphicsExtractor graphics, String username, int x, int y, float scale, int size, boolean withBorder) {
         renderPlayerHead(graphics, null, username, x, y, scale, size, withBorder);
     }
 
-    public static void renderPlayerHead(GuiGraphics graphics, UUID id, String username, int x, int y, float scale, int size, boolean withBorder) {
+    public static void renderPlayerHead(GuiGraphicsExtractor graphics, UUID id, String username, int x, int y, float scale, int size, boolean withBorder) {
         GameProfile profile = new GameProfile(id != null ? id : Util.NIL_UUID, username != null ? username : "");
         PlayerSkin skin = Minecraft.getInstance().getSkinManager().createLookup(profile, false).get();
 
@@ -46,31 +46,31 @@ public class TradeBookLayoutUtils {
             graphics.fill(0, 0, size, size, 0xFF181818);
         }
 
-        PlayerFaceRenderer.draw(graphics, skin, 0, 0, size);
+        PlayerFaceExtractor.extractRenderState(graphics, skin, 0, 0, size);
 
         graphics.pose().popMatrix();
     }
 
-    public static void renderScaledIcon(GuiGraphics graphics, ItemStack stack, int x, int y, float scale) {
+    public static void renderScaledIcon(GuiGraphicsExtractor graphics, ItemStack stack, int x, int y, float scale) {
         graphics.pose().pushMatrix();
         graphics.pose().translate(x, y - 1);
         graphics.pose().scale(scale, scale);
-        graphics.renderItem(stack, 0, 0);
+        graphics.item(stack, 0, 0);
         graphics.pose().popMatrix();
     }
 
-    public static void drawCenteredString(GuiGraphics graphics, TradeBookRenderContext context, String text, int startX, int currentY, int areaWidth, int color, boolean dropShadow) {
+    public static void drawCenteredString(GuiGraphicsExtractor graphics, TradeBookRenderContext context, String text, int startX, int currentY, int areaWidth, int color, boolean dropShadow) {
         int width = context.getFont().width(text);
         int x = startX + (areaWidth - width) / 2;
         int effectiveColor = (color & 0xFF000000) == 0 ? (0xFF000000 | color) : color;
-        graphics.drawString(context.getFont(), text, x, currentY, effectiveColor, dropShadow);
+        graphics.text(context.getFont(), text, x, currentY, effectiveColor, dropShadow);
     }
 
-    public static void drawRightAlignedString(GuiGraphics graphics, TradeBookRenderContext context, String text, int startX, int currentY, int areaWidth, int color, boolean dropShadow) {
+    public static void drawRightAlignedString(GuiGraphicsExtractor graphics, TradeBookRenderContext context, String text, int startX, int currentY, int areaWidth, int color, boolean dropShadow) {
         int width = context.getFont().width(text);
         int x = startX + areaWidth - width;
         int effectiveColor = (color & 0xFF000000) == 0 ? (0xFF000000 | color) : color;
-        graphics.drawString(context.getFont(), text, x, currentY, effectiveColor, dropShadow);
+        graphics.text(context.getFont(), text, x, currentY, effectiveColor, dropShadow);
     }
 
     public static String truncate(String text, int maxLength) {
@@ -80,7 +80,7 @@ public class TradeBookLayoutUtils {
         return text;
     }
 
-    public static void renderInlineOffer(GuiGraphics graphics, ShopOfferData offer, int x, int y, String status, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
+    public static void renderInlineOffer(GuiGraphicsExtractor graphics, ShopOfferData offer, int x, int y, String status, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
         int itemY = y - 5;
         graphics.blit(RenderPipelines.GUI_TEXTURED, OFFER_GUI, x - 3, itemY - 6, 0.0f, 2.0f, 96, 28, 96, 32);
 
@@ -90,20 +90,20 @@ public class TradeBookLayoutUtils {
         int resX = x + OfferTemplateButton.RESULT_X_OFFSET;
 
         if (!offer.payment1().isEmpty()) {
-            graphics.renderItem(offer.payment1(), p1x, itemY);
-            graphics.renderItemDecorations(context.getFont(), offer.payment1(), p1x, itemY);
+            graphics.item(offer.payment1(), p1x, itemY);
+            graphics.itemDecorations(context.getFont(), offer.payment1(), p1x, itemY);
         }
         if (!offer.payment2().isEmpty()) {
-            graphics.renderItem(offer.payment2(), p2x, itemY);
-            graphics.renderItemDecorations(context.getFont(), offer.payment2(), p2x, itemY);
+            graphics.item(offer.payment2(), p2x, itemY);
+            graphics.itemDecorations(context.getFont(), offer.payment2(), p2x, itemY);
         }
 
         Identifier arrowTexture = status.equals("OK") ? TRADE_ARROW : TRADE_ARROW_DISABLED;
         graphics.blit(RenderPipelines.GUI_TEXTURED, arrowTexture, arrX, itemY + 4, 0.0f, 0.0f, 10, 9, 10, 9);
 
         if (!offer.result().isEmpty()) {
-            graphics.renderItem(offer.result(), resX, itemY);
-            graphics.renderItemDecorations(context.getFont(), offer.result(), resX, itemY);
+            graphics.item(offer.result(), resX, itemY);
+            graphics.itemDecorations(context.getFont(), offer.result(), resX, itemY);
         }
 
         double scaledMouseX = mouseX / scale;

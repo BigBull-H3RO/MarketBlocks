@@ -7,8 +7,8 @@ import de.bigbull.marketblocks.feature.log.TransactionLogEntry;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -68,7 +68,7 @@ public class SingleOfferTransactionLogPanel {
         isDragging = false;
     }
 
-    public void renderBackground(GuiGraphics graphics, Font font, int leftPos, int topPos, int mouseX, int mouseY,
+    public void renderBackground(GuiGraphicsExtractor graphics, Font font, int leftPos, int topPos, int mouseX, int mouseY,
             List<TransactionLogEntry> entries) {
         int containerX = leftPos + CONTAINER_X_OFFSET;
         int containerY = topPos + CONTAINER_Y_OFFSET;
@@ -109,7 +109,7 @@ public class SingleOfferTransactionLogPanel {
             int contentW = (trackX - 1) - (containerX + 1);
             int textX = containerX + 1 + (contentW - tw) / 2;
             int textY = containerY + (CONTAINER_HEIGHT - font.lineHeight) / 2;
-            graphics.drawString(font, empty, textX, textY, 0xFF808080, false);
+            graphics.text(font, empty, textX, textY, 0xFF808080, false);
             return;
         }
 
@@ -136,7 +136,7 @@ public class SingleOfferTransactionLogPanel {
         graphics.disableScissor();
     }
 
-    private void renderLogRow(GuiGraphics graphics, Font font, TransactionLogEntry entry, int x, int y, int index,
+    private void renderLogRow(GuiGraphicsExtractor graphics, Font font, TransactionLogEntry entry, int x, int y, int index,
             boolean isExpanded, int mouseX, int mouseY, int clipTop, int clipHeight) {
         int rowHeight = isExpanded ? ROW_HEIGHT_EXPANDED : ROW_HEIGHT_COLLAPSED;
         boolean rowHovered = mouseX >= x && mouseX < x + ROW_WIDTH && mouseY >= y && mouseY < y + rowHeight
@@ -163,7 +163,7 @@ public class SingleOfferTransactionLogPanel {
         // Relative Time
         Component timeText = formatRelativeTime(entry.epochSecond());
         int timeX = expandX - 4 - font.width(timeText);
-        graphics.drawString(font, timeText, timeX, textY, 0xFF888888, false);
+        graphics.text(font, timeText, timeX, textY, 0xFF888888, false);
 
         // Buyer Name
         int nameX = headX + 8 + 4;
@@ -172,7 +172,7 @@ public class SingleOfferTransactionLogPanel {
         if (maxNameWidth > 0 && font.width(buyerName) > maxNameWidth) {
             buyerName = font.plainSubstrByWidth(buyerName, maxNameWidth - font.width("...")) + "...";
         }
-        graphics.drawString(font, buyerName, nameX, textY, rowHovered ? 0xFFFFFFFF : 0xFFE0E0E0, false);
+        graphics.text(font, buyerName, nameX, textY, rowHovered ? 0xFFFFFFFF : 0xFFE0E0E0, false);
 
         // Expanded preview box
         if (isExpanded) {
@@ -207,24 +207,24 @@ public class SingleOfferTransactionLogPanel {
                 int repW = font.width(repeatLabel);
                 int repX = offerFrameX - 8 - repW;
                 int repY = offerFrameY + (offerFrameH - font.lineHeight) / 2 + 1;
-                graphics.drawString(font, repeatLabel, repX, repY, 0xFFFFAA00, false);
+                graphics.text(font, repeatLabel, repX, repY, 0xFFFFAA00, false);
             }
 
             // Paid item 1 (no extra background box)
             if (!paid1.isEmpty()) {
-                graphics.renderItem(paid1, slot1X, itemY);
-                graphics.renderItemDecorations(font, paid1, slot1X, itemY);
+                graphics.item(paid1, slot1X, itemY);
+                graphics.itemDecorations(font, paid1, slot1X, itemY);
             }
 
             // Paid item 2 (no extra background box)
             if (!paid2.isEmpty()) {
-                graphics.renderItem(paid2, slot2X, itemY);
-                graphics.renderItemDecorations(font, paid2, slot2X, itemY);
+                graphics.item(paid2, slot2X, itemY);
+                graphics.itemDecorations(font, paid2, slot2X, itemY);
             }
 
             if (paid1.isEmpty() && paid2.isEmpty()) {
                 Component none = Component.translatable("gui.marketblocks.log.none");
-                graphics.drawString(font, none, slot1X, itemY + 4, 0xFF666666, false);
+                graphics.text(font, none, slot1X, itemY + 4, 0xFF666666, false);
             }
 
             // Trade arrow
@@ -232,23 +232,23 @@ public class SingleOfferTransactionLogPanel {
 
             // Bought item (no extra background box)
             if (!bought.isEmpty()) {
-                graphics.renderItem(bought, boughtX, itemY);
-                graphics.renderItemDecorations(font, bought, boughtX, itemY);
+                graphics.item(bought, boughtX, itemY);
+                graphics.itemDecorations(font, bought, boughtX, itemY);
             }
         }
     }
 
-    private void renderPlayerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
+    private void renderPlayerHead(GuiGraphicsExtractor graphics, UUID id, String name, int x, int y) {
         if (id == null || (id.getLeastSignificantBits() == 0L && id.getMostSignificantBits() == 0L)) {
             id = Util.NIL_UUID;
         }
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(id, name != null ? name : "");
         PlayerSkin skin = client.getSkinManager().createLookup(profile, false).get();
-        PlayerFaceRenderer.draw(graphics, skin, x, y, 8);
+        PlayerFaceExtractor.extractRenderState(graphics, skin, x, y, 8);
     }
 
-    public void renderHoverTooltip(GuiGraphics graphics, Font font, int leftPos, int topPos, int mouseX, int mouseY,
+    public void renderHoverTooltip(GuiGraphicsExtractor graphics, Font font, int leftPos, int topPos, int mouseX, int mouseY,
             List<TransactionLogEntry> entries) {
         if (expandedLogIndex < 0 || expandedLogIndex >= entries.size()) {
             return;

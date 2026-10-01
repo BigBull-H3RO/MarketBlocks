@@ -101,7 +101,7 @@ public class MarketBlocks implements ModInitializer {
             }
 
             if (Config.GIVE_TRADE_BOOK_ON_FIRST_JOIN.get()) {
-                if (!player.getTags().contains("marketblocks.received_trade_book")) {
+                if (!player.entityTags().contains("marketblocks.received_trade_book")) {
                     player.addTag("marketblocks.received_trade_book");
                     ItemStack book = new ItemStack(RegistriesInit.TRADE_BOOK.get());
                     if (!player.getInventory().add(book)) {
@@ -135,7 +135,7 @@ public class MarketBlocks implements ModInitializer {
                     InteractionResult res = TradeStandBlock.tryDisableShowcase(world, basePos, baseState, player);
                     if (res != InteractionResult.PASS) {
                         if (res == InteractionResult.FAIL && !world.isClientSide()) {
-                            player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+                            player.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"));
                         }
                         return res;
                     }
@@ -143,7 +143,7 @@ public class MarketBlocks implements ModInitializer {
                     InteractionResult res = TradeStandBlock.tryEnableShowcase(world, basePos, baseState, player, held);
                     if (res != InteractionResult.PASS) {
                         if (res == InteractionResult.FAIL && !world.isClientSide()) {
-                            player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+                            player.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"));
                         }
                         return res;
                     }
@@ -166,7 +166,7 @@ public class MarketBlocks implements ModInitializer {
                     BlockPos shopPos = pos.relative(dir);
                     if (world.getBlockEntity(shopPos) instanceof SingleOfferShopBlockEntity shop) {
                         if (!shop.getOwners().contains(player.getUUID()) && !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
-                            player.displayClientMessage(Component.translatable("message.marketblocks.chest.locked"), true);
+                            player.sendOverlayMessage(Component.translatable("message.marketblocks.chest.locked"));
                             return InteractionResult.FAIL;
                         }
                     }
@@ -189,12 +189,12 @@ public class MarketBlocks implements ModInitializer {
             MarketplaceLinkSavedData linkData = MarketplaceLinkSavedData.get(serverPlayer.level());
             if (linkData.isLinked(globalPos)) {
                 if (!player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
-                    player.displayClientMessage(Component.translatable("command.marketblocks.break.denied"), false);
+                    player.sendSystemMessage(Component.translatable("command.marketblocks.break.denied"));
                     return false;
                 } else {
                     linkData.removeLink(globalPos);
                     linkData.syncToAll(serverPlayer.level().getServer());
-                    player.displayClientMessage(Component.translatable("command.marketblocks.break.unlinked"), false);
+                    player.sendSystemMessage(Component.translatable("command.marketblocks.break.unlinked"));
                 }
             }
 
@@ -203,7 +203,7 @@ public class MarketBlocks implements ModInitializer {
                     BlockPos shopPos = pos.relative(dir);
                     if (world.getBlockEntity(shopPos) instanceof SingleOfferShopBlockEntity shop) {
                         if (!shop.getOwners().contains(player.getUUID()) && !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
-                            player.displayClientMessage(Component.translatable("message.marketblocks.chest.locked"), true);
+                            player.sendOverlayMessage(Component.translatable("message.marketblocks.chest.locked"));
                             return false;
                         }
                     }

@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -143,7 +143,7 @@ public class CompactCheckbox extends AbstractButton {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         Component msg = getEffectiveMessage();
         int bx = getBoxX();
         int by = getBoxY();
@@ -174,11 +174,11 @@ public class CompactCheckbox extends AbstractButton {
                     ? by + 2
                     : getY() + (getHeight() - this.font.lineHeight) / 2 + 1;
             int textColor = this.active ? COLOR_LABEL : COLOR_LABEL_DISABLED;
-            graphics.drawString(this.font, msg, textX, textY, textColor, false);
+            graphics.text(this.font, msg, textX, textY, textColor, false);
         }
     }
 
-    private void renderCheckmark(GuiGraphics graphics, int bx, int by, boolean active) {
+    private void renderCheckmark(GuiGraphicsExtractor graphics, int bx, int by, boolean active) {
         int brightColor = active ? COLOR_GREEN_BRIGHT : COLOR_GREEN_DISABLED_BRIGHT;
         int shadowColor = active ? COLOR_GREEN_DARK : COLOR_GREEN_DISABLED_DARK;
 

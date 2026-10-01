@@ -19,7 +19,7 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewState;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplacePage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -144,9 +144,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     private final MarketplaceOverlayRenderer overlayRenderer = new MarketplaceOverlayRenderer();
 
     public MarketplaceScreen(MarketplaceMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
-        this.imageWidth = 276;
-        this.imageHeight = 207;
+        super(menu, inventory, title, 276, 207);
         this.inventoryLabelY = this.imageHeight - 94;
         this.inventoryLabelX = 108;
 
@@ -502,38 +500,37 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         renderForegroundWidgets(guiGraphics, mouseX, mouseY, partialTick);
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
+        this.extractTooltip(guiGraphics, mouseX, mouseY);
         overlayRenderer.renderTooltips(guiGraphics, createOverlayContext(mouseX, mouseY, false));
         pageSidebar.renderDelayedTooltip(createPageSidebarContext(), guiGraphics, mouseX, mouseY);
     }
 
     /**
      * Renders a static backdrop for modal overlays without using
-     * AbstractContainerScreen#render.
+     * AbstractContainerScreen#extractRenderState.
      */
-    public void renderModalBackdrop(GuiGraphics guiGraphics, float partialTick) {
-        this.renderTransparentBackground(guiGraphics);
-        this.renderBg(guiGraphics, partialTick, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN);
+    public void renderModalBackdrop(GuiGraphicsExtractor guiGraphics, float partialTick) {
+        this.extractBackground(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick);
         for (net.minecraft.client.gui.components.events.GuiEventListener child : this.children()) {
             if (child instanceof Renderable renderable) {
-                renderable.render(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick);
+                renderable.extractRenderState(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick);
             }
         }
         renderForegroundWidgets(guiGraphics, BACKDROP_MOUSE_OFFSCREEN, BACKDROP_MOUSE_OFFSCREEN, partialTick);
     }
 
-    private void renderForegroundWidgets(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    private void renderForegroundWidgets(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         for (AbstractWidget widget : foregroundWidgets) {
             if (widget.visible) {
-                widget.render(guiGraphics, mouseX, mouseY, partialTick);
+                widget.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
             }
         }
     }
 
-    private void renderStaticOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean suppressInteractions) {
+    private void renderStaticOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean suppressInteractions) {
         overlayRenderer.render(guiGraphics, createOverlayContext(mouseX, mouseY, suppressInteractions));
         renderScroller(guiGraphics);
     }
@@ -702,20 +699,22 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.extractTransparentBackground(guiGraphics);
+
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, i, j, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 512, 256);
 
         if (isLocalEditMode) {
-            guiGraphics.drawString(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 166,
+            guiGraphics.text(font, Component.translatable("gui.marketblocks.mode.edit_active"), leftPos + 166,
                     topPos + 6, 0xFFFF5555, false);
         }
 
         renderStaticOverlay(guiGraphics, mouseX, mouseY, false);
     }
 
-    private void renderScroller(GuiGraphics guiGraphics) {
+    private void renderScroller(GuiGraphicsExtractor guiGraphics) {
         int scrollerX = scrollerX();
         int scrollerY = scrollerY();
         int scrollerH = scrollerHeight();
@@ -943,7 +942,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         }
 
         @Override
-        protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        protected void renderPanelForeground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         }
 
         @Override

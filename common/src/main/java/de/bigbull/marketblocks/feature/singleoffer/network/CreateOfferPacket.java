@@ -75,9 +75,8 @@ public record CreateOfferPacket(BlockPos pos, ItemStack payment1, ItemStack paym
                                     .filter(s -> player.getUUID().equals(s.ownerUUID()) && !s.result().isEmpty())
                                     .count();
                             if (activeShops >= maxShops) {
-                                player.displayClientMessage(
-                                        Component.translatable("gui.marketblocks.error.shop_limit_reached", maxShops),
-                                        true);
+                                player.sendOverlayMessage(
+                                        Component.translatable("gui.marketblocks.error.shop_limit_reached", maxShops));
                                 return;
                             }
                         }

@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
@@ -58,7 +58,7 @@ public class SegmentButton extends AbstractButton {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         int x = getX();
         int y = getY();
         int w = getWidth();
@@ -95,7 +95,7 @@ public class SegmentButton extends AbstractButton {
             int textW = this.font.width(msg);
             int textX = x + (w - textW) / 2;
             int textY = y + (h - this.font.lineHeight) / 2 + 1;
-            graphics.drawString(this.font, msg, textX, textY, textColor, false);
+            graphics.text(this.font, msg, textX, textY, textColor, false);
         }
     }
 

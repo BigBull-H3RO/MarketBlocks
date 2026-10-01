@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import de.bigbull.marketblocks.feature.trader.network.TeleportRequestPacket;
 import de.bigbull.marketblocks.network.NetworkHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -34,7 +34,7 @@ public class ShopEntryElement implements ITradeBookElement {
     }
 
     @Override
-    public void render(GuiGraphics graphics, String insertion, int startX, int startY, int mouseX, int mouseY,
+    public void render(GuiGraphicsExtractor graphics, String insertion, int startX, int startY, int mouseX, int mouseY,
             float scale, TradeBookRenderContext context) {
         String[] parts = insertion.split("\\|\\|");
         if (parts.length < 14)
@@ -62,11 +62,11 @@ public class ShopEntryElement implements ITradeBookElement {
 
         // Render Icon / Status
         String statusIcon = isClosed ? "§c✖" : "§a✔";
-        graphics.drawString(context.getFont(), statusIcon, startX, startY, 0xFF000000, false);
+        graphics.text(context.getFont(), statusIcon, startX, startY, 0xFF000000, false);
 
         // Render Shop Name
         String shopName = TradeBookLayoutUtils.truncate(shopNameFull, 18);
-        graphics.drawString(context.getFont(), shopName, startX + 12, startY, 0xFFFFAA00, false);
+        graphics.text(context.getFont(), shopName, startX + 12, startY, 0xFFFFAA00, false);
 
         if (shopNameFull.length() > 18) {
             int nameWidth = context.getFont().width(shopName);
@@ -123,7 +123,7 @@ public class ShopEntryElement implements ITradeBookElement {
             int noOfferWidth = context.getFont().width(noOfferStr);
             int noOfferX = frameX + (96 - noOfferWidth) / 2; // Centered inside the frame
 
-            graphics.drawString(context.getFont(), noOfferStr, noOfferX, currentY + 6, 0xFFAAAAAA, false);
+            graphics.text(context.getFont(), noOfferStr, noOfferX, currentY + 6, 0xFFAAAAAA, false);
 
             renderCompass(graphics, startX, currentY, px, py, pz, dim, scale);
             currentY += 21;
@@ -136,7 +136,7 @@ public class ShopEntryElement implements ITradeBookElement {
         int coordsX = startX + ((int) (TradeBookLayoutUtils.TEXT_WIDTH / scale) - coordsWidth) / 2;
 
         if (canTeleport) {
-            graphics.drawString(context.getFont(), coords, coordsX, currentY, 0xFF5555FF, false);
+            graphics.text(context.getFont(), coords, coordsX, currentY, 0xFF5555FF, false);
 
             int scaledX = (int) (coordsX * scale);
             int scaledY = (int) (currentY * scale);
@@ -151,7 +151,7 @@ public class ShopEntryElement implements ITradeBookElement {
                 NetworkHandler.sendToServer(new TeleportRequestPacket(shopId));
             }));
         } else {
-            graphics.drawString(context.getFont(), coords, coordsX, currentY, 0xFF555555, false);
+            graphics.text(context.getFont(), coords, coordsX, currentY, 0xFF555555, false);
         }
 
         if (currentY < 170) {
@@ -161,7 +161,7 @@ public class ShopEntryElement implements ITradeBookElement {
         }
     }
 
-    private void renderCompass(GuiGraphics graphics, int startX, int currentY, int px, int py, int pz, String dim,
+    private void renderCompass(GuiGraphicsExtractor graphics, int startX, int currentY, int px, int py, int pz, String dim,
             float scale) {
         ItemStack compass = new ItemStack(Items.COMPASS);
         try {

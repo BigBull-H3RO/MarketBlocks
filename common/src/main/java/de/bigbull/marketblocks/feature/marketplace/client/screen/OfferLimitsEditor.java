@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.marketplace.client.screen;
 import de.bigbull.marketblocks.network.NetworkHandler;
 import de.bigbull.marketblocks.feature.marketplace.network.MarketplaceUpdateOfferLimitsPacket;
 import de.bigbull.marketblocks.feature.marketplace.data.OfferLimit;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -63,7 +63,18 @@ public class OfferLimitsEditor extends BaseModalScreen {
 
     private EditBox createPositiveIntInput(int x, int y, String value) {
         EditBox input = new EditBox(this.font, x, y, INPUT_WIDTH, INPUT_HEIGHT, Component.literal(""));
-        input.setFilter(raw -> raw.isEmpty() || raw.matches(POSITIVE_INT_PATTERN));
+        final String[] lastValid = new String[] { value };
+        final boolean[] reverting = new boolean[] { false };
+        input.setResponder(raw -> {
+            if (reverting[0]) return;
+            if (raw.isEmpty() || raw.matches(POSITIVE_INT_PATTERN)) {
+                lastValid[0] = raw;
+            } else {
+                reverting[0] = true;
+                input.setValue(lastValid[0]);
+                reverting[0] = false;
+            }
+        });
         input.setValue(value);
         this.addRenderableWidget(input);
         return input;
@@ -112,14 +123,14 @@ public class OfferLimitsEditor extends BaseModalScreen {
     }
 
     @Override
-    protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderPanelForeground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         int labelX = panelLeft + LABEL_X_OFFSET;
         int rowStartY = panelTop + LABEL_START_Y_OFFSET;
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.daily"),
+        guiGraphics.text(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.daily"),
                 labelX, rowStartY, 0xFFCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.stock"),
+        guiGraphics.text(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.stock"),
                 labelX, rowStartY + ROW_SPACING, 0xFFCFCFCF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.restock"),
+        guiGraphics.text(this.font, Component.translatable("gui.marketblocks.marketplace.editor.limits.restock"),
                 labelX, rowStartY + (ROW_SPACING * 2), 0xFFCFCFCF, false);
 
         renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY,

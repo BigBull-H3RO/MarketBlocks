@@ -1,7 +1,7 @@
 package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,21 +25,21 @@ public final class GroupBox {
     /**
      * Renders a flat GroupBox with default colors and standard rounded corners (radius 2).
      */
-    public static void render(GuiGraphics graphics, Font font, @Nullable Component title, int x, int y, int width, int height) {
+    public static void render(GuiGraphicsExtractor graphics, Font font, @Nullable Component title, int x, int y, int width, int height) {
         render(graphics, font, title, x, y, width, height, DEFAULT_BORDER_COLOR, DEFAULT_TITLE_COLOR, DEFAULT_BG_COLOR, 0, DEFAULT_CORNER_RADIUS);
     }
 
     /**
      * Renders a flat GroupBox with default colors and a specific corner radius.
      */
-    public static void render(GuiGraphics graphics, Font font, @Nullable Component title, int x, int y, int width, int height, int cornerRadius) {
+    public static void render(GuiGraphicsExtractor graphics, Font font, @Nullable Component title, int x, int y, int width, int height, int cornerRadius) {
         render(graphics, font, title, x, y, width, height, DEFAULT_BORDER_COLOR, DEFAULT_TITLE_COLOR, DEFAULT_BG_COLOR, 0, cornerRadius);
     }
 
     /**
      * Renders a flat GroupBox with custom border, title and background cutout colors.
      */
-    public static void render(GuiGraphics graphics, Font font, @Nullable Component title, int x, int y, int width, int height,
+    public static void render(GuiGraphicsExtractor graphics, Font font, @Nullable Component title, int x, int y, int width, int height,
                               int borderColor, int titleColor, int bgColor) {
         render(graphics, font, title, x, y, width, height, borderColor, titleColor, bgColor, 0, DEFAULT_CORNER_RADIUS);
     }
@@ -47,7 +47,7 @@ public final class GroupBox {
     /**
      * Renders a flat GroupBox with optional inner background tint.
      */
-    public static void render(GuiGraphics graphics, Font font, @Nullable Component title, int x, int y, int width, int height,
+    public static void render(GuiGraphicsExtractor graphics, Font font, @Nullable Component title, int x, int y, int width, int height,
                               int borderColor, int titleColor, int bgColor, int innerBgColor) {
         render(graphics, font, title, x, y, width, height, borderColor, titleColor, bgColor, innerBgColor, DEFAULT_CORNER_RADIUS);
     }
@@ -59,7 +59,7 @@ public final class GroupBox {
      *   2: subtle 1-pixel diagonal bevel / rounded corner
      *   3+: gentler 2-pixel rounded curve
      */
-    public static void render(GuiGraphics graphics, Font font, @Nullable Component title, int x, int y, int width, int height,
+    public static void render(GuiGraphicsExtractor graphics, Font font, @Nullable Component title, int x, int y, int width, int height,
                               int borderColor, int titleColor, int bgColor, int innerBgColor, int cornerRadius) {
         int r = Math.max(0, cornerRadius);
 
@@ -109,7 +109,7 @@ public final class GroupBox {
 
             // Draw title
             int effectiveTitleColor = (titleColor & 0xFF000000) == 0 ? (0xFF000000 | titleColor) : titleColor;
-            graphics.drawString(font, styledTitle, textX, textY, effectiveTitleColor, false);
+            graphics.text(font, styledTitle, textX, textY, effectiveTitleColor, false);
         }
 
         // Draw rounded corner pixels
@@ -119,7 +119,7 @@ public final class GroupBox {
     /**
      * Renders corner pixels for rounded borders.
      */
-    private static void renderCorners(GuiGraphics graphics, int x, int y, int width, int height, int radius, int color) {
+    private static void renderCorners(GuiGraphicsExtractor graphics, int x, int y, int width, int height, int radius, int color) {
         if (radius <= 1) {
             return;
         }
@@ -149,14 +149,14 @@ public final class GroupBox {
     /**
      * Renders an etched/beveled 3D GroupBox in classic Minecraft sunken frame style.
      */
-    public static void renderEtched(GuiGraphics graphics, Font font, @Nullable Component title, int x, int y, int width, int height) {
+    public static void renderEtched(GuiGraphicsExtractor graphics, Font font, @Nullable Component title, int x, int y, int width, int height) {
         renderEtched(graphics, font, title, x, y, width, height, 0xFF373737, 0xFFFFFFFF, DEFAULT_TITLE_COLOR, DEFAULT_BG_COLOR, 0);
     }
 
     /**
      * Full-featured etched GroupBox with 3D bevel.
      */
-    public static void renderEtched(GuiGraphics graphics, Font font, @Nullable Component title, int x, int y, int width, int height,
+    public static void renderEtched(GuiGraphicsExtractor graphics, Font font, @Nullable Component title, int x, int y, int width, int height,
                                     int shadowColor, int highlightColor, int titleColor, int bgColor, int innerBgColor) {
         // Optional inner fill
         if ((innerBgColor & 0xFF000000) != 0) {
@@ -197,6 +197,6 @@ public final class GroupBox {
 
         // Draw title
         int effectiveTitleColor = (titleColor & 0xFF000000) == 0 ? (0xFF000000 | titleColor) : titleColor;
-        graphics.drawString(font, styledTitle, textX, textY, effectiveTitleColor, false);
+        graphics.text(font, styledTitle, textX, textY, effectiveTitleColor, false);
     }
 }

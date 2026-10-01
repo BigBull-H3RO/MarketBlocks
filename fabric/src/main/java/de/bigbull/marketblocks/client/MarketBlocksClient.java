@@ -20,15 +20,13 @@ import de.bigbull.marketblocks.platform.Services;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 import net.fabricmc.api.ClientModInitializer;
 import de.bigbull.marketblocks.Constants;
-import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.entity.player.Player;
 import org.lwjgl.glfw.GLFW;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.KeyMapping;
@@ -57,12 +55,8 @@ public class MarketBlocksClient implements ClientModInitializer {
         BlockEntityRenderers.register(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntityRenderer::new);
         EntityRenderers.register(RegistriesInit.SHOP_BUYER.get(), ShopBuyerRenderer::new);
 
-        // Render layers
-        BlockRenderLayerMap.putBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), ChunkSectionLayer.CUTOUT);
-        BlockRenderLayerMap.putBlock(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), ChunkSectionLayer.CUTOUT);
-
         // Keybindings
-        KeyBindingHelper.registerKeyBinding(OPEN_MARKETPLACE);
+        KeyMappingHelper.registerKeyMapping(OPEN_MARKETPLACE);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (OPEN_MARKETPLACE.consumeClick()) {

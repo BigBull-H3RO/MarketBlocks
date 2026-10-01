@@ -35,8 +35,8 @@ import de.bigbull.marketblocks.client.gui.IconButton;
 import de.bigbull.marketblocks.client.gui.OfferTemplateButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -144,9 +144,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     private int lastSettingsVersion = -1;
 
     public SingleOfferShopScreen(SingleOfferShopMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title);
-        this.imageWidth = GuiConstants.IMAGE_WIDTH;
-        this.imageHeight = GuiConstants.IMAGE_HEIGHT;
+        super(menu, inv, title, GuiConstants.IMAGE_WIDTH, GuiConstants.IMAGE_HEIGHT);
         this.inventoryLabelY = GuiConstants.PLAYER_INV_LABEL_Y;
     }
 
@@ -784,8 +782,8 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
         if (menu.getActiveTab() == ShopTab.OFFERS) {
             SingleOfferShopBlockEntity be = menu.getBlockEntity();
@@ -846,11 +844,11 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
             if (isHovering(labelX, badgeY, labelW + 4 + badgeW, badgeH, mouseX, mouseY)) {
                 graphics.setTooltipForNextFrame(font, Component.translatable("gui.marketblocks.log.count_tooltip"), mouseX,
-                        mouseY);
+                                mouseY);
             }
         }
 
-        renderTooltip(graphics, mouseX, mouseY);
+        extractTooltip(graphics, mouseX, mouseY);
     }
 
     @Override
@@ -881,10 +879,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        this.extractTransparentBackground(graphics);
+
         for (IconButton tab : sideTabs) {
             if (!tab.isSelected()) {
-                tab.render(graphics, mouseX, mouseY, partialTick);
+                tab.extractRenderState(graphics, mouseX, mouseY, partialTick);
             }
         }
 
@@ -897,12 +897,12 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
         for (IconButton tab : sideTabs) {
             if (tab.isSelected()) {
-                tab.render(graphics, mouseX, mouseY, partialTick);
+                tab.extractRenderState(graphics, mouseX, mouseY, partialTick);
             }
         }
     }
 
-    private void renderOffersBg(GuiGraphics graphics) {
+    private void renderOffersBg(GuiGraphicsExtractor graphics) {
         graphics.blit(RenderPipelines.GUI_TEXTURED, OFFERS_BG, leftPos, topPos, 0.0F, 0.0F, imageWidth, imageHeight, 256, 256);
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         offerButton.active = be.hasOffer();
@@ -934,15 +934,15 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
     }
 
-    private void renderInventoryBg(GuiGraphics graphics) {
+    private void renderInventoryBg(GuiGraphicsExtractor graphics) {
         graphics.blit(RenderPipelines.GUI_TEXTURED, INVENTORY_BG, leftPos, topPos, 0.0F, 0.0F, imageWidth, imageHeight, 256, 256);
         graphics.blit(RenderPipelines.GUI_TEXTURED, INPUT_OUTPUT_ICON, leftPos + 77, topPos + 33, 0.0F, 0.0F, 22, 22, 22, 22);
     }
 
-    private void renderSettingsBg(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    private void renderSettingsBg(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         for (IconButton tab : categoryTabs) {
             if (!tab.isSelected()) {
-                tab.render(graphics, mouseX, mouseY, partialTick);
+                tab.extractRenderState(graphics, mouseX, mouseY, partialTick);
             }
         }
 
@@ -950,7 +950,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
         for (IconButton tab : categoryTabs) {
             if (tab.isSelected()) {
-                tab.render(graphics, mouseX, mouseY, partialTick);
+                tab.extractRenderState(graphics, mouseX, mouseY, partialTick);
             }
         }
 
@@ -989,7 +989,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
     }
 
-    private void renderLogBg(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderLogBg(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         graphics.blit(RenderPipelines.GUI_TEXTURED, SETTINGS_BG, leftPos, topPos, 0.0F, 0.0F, imageWidth, imageHeight, 256, 256);
         logPanel.renderBackground(graphics, font, leftPos, topPos, mouseX, mouseY, menu.getTransactionLogEntries());
     }
@@ -1002,7 +1002,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
     }
 
     @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         switch (menu.getActiveTab()) {
             case OFFERS -> renderOffersLabels(graphics);
             case INVENTORY -> renderInventoryLabels(graphics);
@@ -1011,7 +1011,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         }
     }
 
-    private void renderOffersLabels(GuiGraphics graphics) {
+    private void renderOffersLabels(GuiGraphicsExtractor graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         boolean showAdminBadge = be.isAdminShopEnabled();
 
@@ -1027,7 +1027,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         if (showAdminBadge) {
             graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, 0xFF8A38D0);
             graphics.fill(badgeX + 1, badgeY + 1, badgeX + badgeW - 1, badgeY + badgeH - 1, 0xFF2E1840);
-            graphics.drawString(font, badgeText, badgeX + 4, badgeY + 2, 0xFFE0A0FF, false);
+            graphics.text(font, badgeText, badgeX + 4, badgeY + 2, 0xFFE0A0FF, false);
             maxTitleWidth = badgeX - 8 - 4;
         } else if (!menu.isOwner() && hasOwner) {
             renderOwnerHead(graphics, be.getOwnerId(), be.getOwnerName(), imageWidth - OWNER_HEAD_X_OFFSET,
@@ -1048,54 +1048,54 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         } else {
             displayTitle = fullTitle;
         }
-        graphics.drawString(font, displayTitle, 8, 6, 0xFF404040, false);
+        graphics.text(font, displayTitle, 8, 6, 0xFF404040, false);
 
-        graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 0xFF404040, false);
+        graphics.text(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 0xFF404040, false);
     }
 
-    private void renderOwnerHead(GuiGraphics graphics, UUID id, String name, int x, int y) {
+    private void renderOwnerHead(GuiGraphicsExtractor graphics, UUID id, String name, int x, int y) {
         Minecraft client = Minecraft.getInstance();
         GameProfile profile = new GameProfile(id != null ? id : Util.NIL_UUID, name != null ? name : "");
         PlayerSkin skin = client.getSkinManager().createLookup(profile, false).get();
 
         graphics.fill(x - 1, y - 1, x + 9, y + 9, 0xFF2A2A2A);
         graphics.fill(x, y, x + 8, y + 8, 0xFF181818);
-        PlayerFaceRenderer.draw(graphics, skin, x, y, 8);
+        PlayerFaceExtractor.extractRenderState(graphics, skin, x, y, 8);
     }
 
-    private void renderInventoryLabels(GuiGraphics graphics) {
+    private void renderInventoryLabels(GuiGraphicsExtractor graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        graphics.drawString(font, Component.translatable("gui.marketblocks.input"), 8, 6, 0xFF404040, false);
-        graphics.drawString(font, Component.translatable("gui.marketblocks.output"), 98, 6, 0xFF404040, false);
+        graphics.text(font, Component.translatable("gui.marketblocks.input"), 8, 6, 0xFF404040, false);
+        graphics.text(font, Component.translatable("gui.marketblocks.output"), 98, 6, 0xFF404040, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
         if (be.isAdminShopEnabled()) {
             Component info = Component.translatable("gui.marketblocks.inventory_admin_disabled");
             int w = font.width(info);
-            graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0xFF808080, false);
+            graphics.text(font, info, (imageWidth - w) / 2, 84, 0xFF808080, false);
         } else if (!menu.isOwner()) {
             Component info = Component.translatable("gui.marketblocks.inventory_owner_only");
             int w = font.width(info);
-            graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0xFF808080, false);
+            graphics.text(font, info, (imageWidth - w) / 2, 84, 0xFF808080, false);
         }
-        graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 0xFF404040, false);
+        graphics.text(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 0xFF404040, false);
     }
 
-    private void renderSettingsLabels(GuiGraphics graphics) {
+    private void renderSettingsLabels(GuiGraphicsExtractor graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
         Component headerTitle = activeSettingsCategory != null ? activeSettingsCategory.headerTitle()
                 : Component.translatable("gui.marketblocks.settings_title");
-        graphics.drawString(font, headerTitle, 8, 6, 0xFF404040, false);
+        graphics.text(font, headerTitle, 8, 6, 0xFF404040, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
         if (!menu.isOwner() && !canToggleAdminShop()) {
             Component info = Component.translatable("gui.marketblocks.settings_owner_only");
             int w = font.width(info);
-            graphics.drawString(font, info, (imageWidth - w) / 2, 84, 0xFF808080, false);
+            graphics.text(font, info, (imageWidth - w) / 2, 84, 0xFF808080, false);
         }
     }
 
-    private void renderLogLabels(GuiGraphics graphics) {
+    private void renderLogLabels(GuiGraphicsExtractor graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        graphics.drawString(font, Component.translatable("gui.marketblocks.log_title"), 8, 6, 0xFF404040, false);
+        graphics.text(font, Component.translatable("gui.marketblocks.log_title"), 8, 6, 0xFF404040, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
 
         int count = menu.getTransactionLogEntries().size();
@@ -1112,7 +1112,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int labelW = font.width(label);
         int labelX = badgeX - 4 - labelW;
         int labelY = badgeY + (badgeH - font.lineHeight) / 2 + 1;
-        graphics.drawString(font, label, labelX, labelY, 0xFF404040, false);
+        graphics.text(font, label, labelX, labelY, 0xFF404040, false);
 
         // Badge Inset & Border (Access Settings / Slider style)
         graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, 0xFF222222);
@@ -1125,7 +1125,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         int textX = badgeX + (badgeW - numW) / 2;
         int textY = badgeY + (badgeH - font.lineHeight) / 2 + 1;
         int textColor = count > 0 ? 0xFF55FF55 : 0xFF808080;
-        graphics.drawString(font, countComp, textX, textY, textColor, false);
+        graphics.text(font, countComp, textX, textY, textColor, false);
     }
 
     @Override
@@ -1215,13 +1215,13 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             p1 = norm.getFirst();
             p2 = norm.getSecond();
             if (result.isEmpty()) {
-                minecraft.gui.getChat().addMessage(
+                minecraft.gui.getChat().addClientSystemMessage(
                         Component.translatable("gui.marketblocks.error.no_result_item").withStyle(ChatFormatting.RED));
                 playSound(SoundEvents.ITEM_BREAK);
                 return;
             }
             if (p1.isEmpty() && p2.isEmpty()) {
-                minecraft.gui.getChat().addMessage(Component.translatable("gui.marketblocks.error.no_payment_items")
+                minecraft.gui.getChat().addClientSystemMessage(Component.translatable("gui.marketblocks.error.no_payment_items")
                         .withStyle(ChatFormatting.RED));
                 playSound(SoundEvents.ITEM_BREAK);
                 return;

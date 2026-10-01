@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.client.gui;
 
 import de.bigbull.marketblocks.feature.singleoffer.settings.AccessMode;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -65,7 +65,7 @@ public class AccessFilterButton extends AbstractButton {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         int x = getX();
         int y = getY();
         int w = getWidth();
@@ -92,7 +92,7 @@ public class AccessFilterButton extends AbstractButton {
         int textW = this.font.width(label);
         int textX = x + (w - textW) / 2;
         int textY = y + (h - this.font.lineHeight) / 2 + 1;
-        graphics.drawString(this.font, label, textX, textY, textColor, false);
+        graphics.text(this.font, label, textX, textY, textColor, false);
     }
 
     @Override

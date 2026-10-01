@@ -69,7 +69,7 @@ public class ShopBuyerSpawner {
 
         // Check daytime preference (tick 0-12000)
         if (TraderConfig.PREFER_DAYTIME_SPAWN.get()) {
-            long dayTime = level.getDayTime() % 24000;
+            long dayTime = level.getDefaultClockTime() % 24000;
             if (dayTime >= 12000) {
                 return; // Don't spawn at night
             }

@@ -2,7 +2,7 @@ package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.KeyEvent;
@@ -242,7 +242,7 @@ public class CustomSlider extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         Font font = Minecraft.getInstance().font;
         int x = getX();
         int y = getY();
@@ -268,7 +268,7 @@ public class CustomSlider extends AbstractWidget {
             // Label
             if (this.prefix != null && !this.prefix.getString().isEmpty()) {
                 int curLabelColor = this.active ? this.labelColor : 0xFF808080;
-                graphics.drawString(font, GuiConstants.compact(this.prefix), x, headerY, curLabelColor, false);
+                graphics.text(font, GuiConstants.compact(this.prefix), x, headerY, curLabelColor, false);
             }
 
             // Value text
@@ -296,10 +296,10 @@ public class CustomSlider extends AbstractWidget {
                 graphics.fill(badgeX + badgeW - 1, badgeY + 1, badgeX + badgeW, badgeY + badgeH - 1, badgeBorder);
 
                 // Text
-                graphics.drawString(font, valText, badgeX + 3, badgeY + 1, badgeText, false);
+                graphics.text(font, valText, badgeX + 3, badgeY + 1, badgeText, false);
             } else {
                 int curLabelColor = this.active ? this.labelColor : 0xFF808080;
-                graphics.drawString(font, valText, x + w - valWidth, headerY, curLabelColor, false);
+                graphics.text(font, valText, x + w - valWidth, headerY, curLabelColor, false);
             }
         }
 

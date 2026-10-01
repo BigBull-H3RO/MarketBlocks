@@ -11,7 +11,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
@@ -397,14 +397,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             boolean adminShop = blockEntity.isAdminShopEnabled();
             if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
                 if (!player.level().isClientSide()) {
-                    player.displayClientMessage(Component.translatable("gui.marketblocks.out_of_stock"), false);
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
                 }
                 return ItemStack.EMPTY;
             }
 
             if (!adminShop && blockEntity.isOutputSpaceMissing()) {
                 if (!player.level().isClientSide()) {
-                    player.displayClientMessage(Component.translatable("gui.marketblocks.output_full"), false);
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 }
                 return ItemStack.EMPTY;
             }
@@ -505,10 +505,10 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
      * workflow.
      */
     @Override
-    public void clicked(int slotId, int button, ClickType type, Player player) {
+    public void clicked(int slotId, int button, ContainerInput type, Player player) {
         boolean trackBuyerContext = !player.level().isClientSide()
                 && slotId == OFFER_SLOT_INDEX
-                && (type == ClickType.PICKUP || type == ClickType.SWAP)
+                && (type == ContainerInput.PICKUP || type == ContainerInput.SWAP)
                 && blockEntity.hasOffer();
         if (trackBuyerContext) {
             blockEntity.beginPurchaseContext(player);
@@ -517,7 +517,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
         try {
             if (!player.level().isClientSide()
                     && slotId == OFFER_SLOT_INDEX
-                    && (type == ClickType.PICKUP || type == ClickType.SWAP)
+                    && (type == ContainerInput.PICKUP || type == ContainerInput.SWAP)
                     && blockEntity.hasOffer()) {
                 if (!canPlayerBuy()) {
                     return;
@@ -525,17 +525,17 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 if (blockEntity.getOfferHandler().getStackInSlot(0).isEmpty()) {
                     boolean adminShop = blockEntity.isAdminShopEnabled();
                     if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
-                        player.displayClientMessage(Component.translatable("gui.marketblocks.out_of_stock"), false);
+                        player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
                         return;
                     }
                     if (!adminShop && blockEntity.isOutputSpaceMissing()) {
-                        player.displayClientMessage(Component.translatable("gui.marketblocks.output_full"), false);
+                        player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                         return;
                     }
                 }
             }
 
-            if (type == ClickType.PICKUP_ALL) {
+            if (type == ContainerInput.PICKUP_ALL) {
                 if (slotId >= 0 && slotId < PAYMENT_SLOTS) {
                     return;
                 }
@@ -657,14 +657,14 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
             boolean adminShop = blockEntity.isAdminShopEnabled();
             if (!adminShop && !blockEntity.hasResultItemInInput(false)) {
                 if (!player.level().isClientSide()) {
-                    player.displayClientMessage(Component.translatable("gui.marketblocks.out_of_stock"), false);
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.out_of_stock"));
                 }
                 return false;
             }
 
             if (!adminShop && blockEntity.isOutputSpaceMissing()) {
                 if (!player.level().isClientSide()) {
-                    player.displayClientMessage(Component.translatable("gui.marketblocks.output_full"), false);
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.output_full"));
                 }
                 return false;
             }

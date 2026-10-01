@@ -2,11 +2,13 @@ package de.bigbull.marketblocks.core.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.singleoffer.settings.ShopCategory;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +29,7 @@ import java.util.UUID;
  * Uses a LinkedHashMap for O(1) lookups by position while preserving insertion order.
  */
 public class ShopDirectorySavedData extends SavedData {
-    public static final String DATA_NAME = "marketblocks_shop_directory";
+    public static final Identifier DATA_NAME = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "shop_directory");
 
     private final Map<GlobalPos, ShopEntry> shopsByPos = new LinkedHashMap<>();
     private static final Random RANDOM = new Random();

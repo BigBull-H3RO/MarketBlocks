@@ -52,13 +52,13 @@ public class ModGameEvents {
             result = TradeStandBlock.tryDisableShowcase(level, basePos, baseState, event.getEntity());
             if (result == InteractionResult.FAIL && !level.isClientSide()
                     && event.getEntity() instanceof ServerPlayer player) {
-                player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+                player.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"));
             }
         } else if (stack.is(Items.GLASS)) {
             result = TradeStandBlock.tryEnableShowcase(level, basePos, baseState, event.getEntity(), stack);
             if (result == InteractionResult.FAIL && !level.isClientSide()
                     && event.getEntity() instanceof ServerPlayer player) {
-                player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+                player.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"));
             }
         }
 
@@ -80,7 +80,7 @@ public class ModGameEvents {
         if (Config.GIVE_TRADE_BOOK_ON_FIRST_JOIN.get()) {
             CompoundTag persistentData = player.getPersistentData();
             if (!persistentData.getBooleanOr("MB_ReceivedTradeBook", false)
-                    && !player.getTags().contains("marketblocks.received_trade_book")) {
+                    && !player.entityTags().contains("marketblocks.received_trade_book")) {
                 persistentData.putBoolean("MB_ReceivedTradeBook", true);
                 player.addTag("marketblocks.received_trade_book");
                 ItemStack book = new ItemStack(RegistriesInit.TRADE_BOOK.get());

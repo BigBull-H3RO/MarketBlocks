@@ -20,7 +20,7 @@ import net.minecraft.world.entity.npc.villager.VillagerProfession;
 import net.minecraft.world.entity.npc.villager.VillagerType;
 
 public class ShopBuyerRenderer extends MobRenderer<ShopBuyerEntity, VillagerRenderState, VillagerModel> {
-    private static final Identifier CITIZEN_TEXTURE = Identifier.withDefaultNamespace("textures/entity/wandering_trader.png");
+    private static final Identifier CITIZEN_TEXTURE = Identifier.withDefaultNamespace("textures/entity/wandering_trader/wandering_trader.png");
     private static final Identifier WEALTHY_OVERLAY = Identifier.withDefaultNamespace("textures/entity/villager/profession/cartographer.png");
     private static final Identifier NOBLE_OVERLAY = Identifier.withDefaultNamespace("textures/entity/villager/profession/librarian.png");
 

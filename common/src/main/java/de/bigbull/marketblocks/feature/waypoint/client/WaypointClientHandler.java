@@ -24,10 +24,9 @@ public class WaypointClientHandler {
         if (hasJourneyMap) {
             boolean created = JourneyMapCompat.createWaypoint(name, pos, packet.dim());
             if (created) {
-                player.displayClientMessage(
+                player.sendSystemMessage(
                         Component.translatable("command.marketblocks.internal.waypoint.journeymap.success", name)
-                                .withStyle(ChatFormatting.GREEN),
-                        false);
+                                .withStyle(ChatFormatting.GREEN));
                 handled = true;
             }
         }
@@ -40,22 +39,19 @@ public class WaypointClientHandler {
                     "xaero_waypoint:%s:%s:%d:%d:%d:1:false:0:Internal-dim%s",
                     name, label, packet.x(), packet.y(), packet.z(), xaeroDim);
 
-            player.displayClientMessage(
+            player.sendSystemMessage(
                     Component.translatable("command.marketblocks.internal.waypoint.xaero")
-                            .withStyle(ChatFormatting.YELLOW),
-                    false);
-            player.displayClientMessage(
-                    Component.literal(xaeroWaypoint).withStyle(ChatFormatting.GRAY),
-                    false);
+                            .withStyle(ChatFormatting.YELLOW));
+            player.sendSystemMessage(
+                    Component.literal(xaeroWaypoint).withStyle(ChatFormatting.GRAY));
             handled = true;
         }
 
         if (!handled) {
-            player.displayClientMessage(
+            player.sendSystemMessage(
                     Component.translatable("command.marketblocks.internal.waypoint.coords",
                             name, packet.x(), packet.y(), packet.z(), packet.dim())
-                            .withStyle(ChatFormatting.GOLD),
-                    false);
+                            .withStyle(ChatFormatting.GOLD));
         }
     }
 }

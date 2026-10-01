@@ -36,9 +36,9 @@ public final class ShopSearchCommand {
             net.minecraft.commands.CommandBuildContext buildContext) {
         return Commands.literal("search")
                 .then(Commands.argument("item", ItemArgument.item(buildContext))
-                        .executes(c -> executeSearch(c, ItemArgument.getItem(c, "item").getItem(), 1))
+                        .executes(c -> executeSearch(c, ItemArgument.getItem(c, "item").item().value(), 1))
                         .then(Commands.argument("page", IntegerArgumentType.integer(1))
-                                .executes(c -> executeSearch(c, ItemArgument.getItem(c, "item").getItem(),
+                                .executes(c -> executeSearch(c, ItemArgument.getItem(c, "item").item().value(),
                                         IntegerArgumentType.getInteger(c, "page")))));
     }
 

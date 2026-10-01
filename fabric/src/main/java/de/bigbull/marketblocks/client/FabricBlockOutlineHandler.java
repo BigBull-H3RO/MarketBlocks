@@ -4,13 +4,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.ShapeRenderer;
+import net.minecraft.client.renderer.state.level.BlockOutlineRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.ARGB;
@@ -39,7 +40,7 @@ public class FabricBlockOutlineHandler {
     private static final VoxelShape CRATE_LID_INNER_OUTLINE = Block.box(2.5, 15, 1.5, 13.5, 17, 13.5);
 
     public static void init() {
-        WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outlineRenderState) -> {
+        LevelRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outlineRenderState) -> {
             Level level = Minecraft.getInstance().level;
             if (level == null) {
                 return true;
@@ -62,7 +63,7 @@ public class FabricBlockOutlineHandler {
         });
     }
 
-    private static void renderTradeStandOutline(WorldRenderContext context, Level level, BlockPos pos, BlockState state) {
+    private static void renderTradeStandOutline(LevelRenderContext context, Level level, BlockPos pos, BlockState state) {
         BlockPos outlineOrigin;
         if (state.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             outlineOrigin = pos;
@@ -77,8 +78,8 @@ public class FabricBlockOutlineHandler {
 
         Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
         Vec3 camPos = camera.position();
-        PoseStack poseStack = context.matrices();
-        MultiBufferSource consumers = context.consumers();
+        PoseStack poseStack = context.poseStack();
+        MultiBufferSource consumers = context.bufferSource();
         if (consumers == null) return;
 
         BlockState baseState = level.getBlockState(outlineOrigin);
@@ -126,11 +127,11 @@ public class FabricBlockOutlineHandler {
         poseStack.popPose();
     }
 
-    private static void renderMarketCrateOutline(WorldRenderContext context, BlockPos pos, BlockState state) {
+    private static void renderMarketCrateOutline(LevelRenderContext context, BlockPos pos, BlockState state) {
         Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
         Vec3 camPos = camera.position();
-        PoseStack poseStack = context.matrices();
-        MultiBufferSource consumers = context.consumers();
+        PoseStack poseStack = context.poseStack();
+        MultiBufferSource consumers = context.bufferSource();
         if (consumers == null) return;
 
         Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)

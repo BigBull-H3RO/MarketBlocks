@@ -11,7 +11,7 @@ import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEn
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopMenu;
 import de.bigbull.marketblocks.feature.singleoffer.menu.ShopTab;
 import de.bigbull.marketblocks.client.gui.IconButton;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
@@ -93,6 +93,10 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
 
     protected AbstractSingleOfferShopScreen(T menu, Inventory inv, Component title) {
         super(menu, inv, title);
+    }
+
+    protected AbstractSingleOfferShopScreen(T menu, Inventory inv, Component title, int imageWidth, int imageHeight) {
+        super(menu, inv, title, imageWidth, imageHeight);
     }
 
     protected void createTabButtons(int x, int y, ShopTab selectedTab, Runnable onOffers, Runnable onInventory,
@@ -209,7 +213,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
         }
     }
 
-    protected void renderOwnerInfo(GuiGraphics guiGraphics, SingleOfferShopBlockEntity blockEntity, boolean isOwner,
+    protected void renderOwnerInfo(GuiGraphicsExtractor guiGraphics, SingleOfferShopBlockEntity blockEntity, boolean isOwner,
             int imageWidth) {
         if (blockEntity.getOwnerId() == null) {
             return;
@@ -221,7 +225,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
             }
             Component ownerText = Component.translatable("gui.marketblocks.owner", names);
             int ownerWidth = font.width(ownerText);
-            guiGraphics.drawString(font, ownerText, imageWidth - ownerWidth - 8, 6, 0xFF404040, false);
+            guiGraphics.text(font, ownerText, imageWidth - ownerWidth - 8, 6, 0xFF404040, false);
         }
     }
 

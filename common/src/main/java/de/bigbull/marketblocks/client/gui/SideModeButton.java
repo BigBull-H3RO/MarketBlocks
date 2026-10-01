@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.client.gui;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -110,7 +110,7 @@ public class SideModeButton extends Button {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         Identifier background;
         if (!this.active) {
             background = BUTTON;

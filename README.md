@@ -8,7 +8,7 @@
 
 **The Complete Economy, Physical Shop & Autonomous Trader NPC Suite for Minecraft**
 
-[![Minecraft Versions](https://img.shields.io/badge/Minecraft-1.21.1%20|%201.21.4%20|%201.21.11-brightgreen.svg?style=flat&logo=minecraft)](https://www.curseforge.com/minecraft/mc-mods/marketblocks)&nbsp;
+[![Minecraft Versions](https://img.shields.io/badge/Minecraft-1.21.1%20|%201.21.4%20|%201.21.11%20|%2026.1.2-brightgreen.svg?style=flat&logo=minecraft)](https://www.curseforge.com/minecraft/mc-mods/marketblocks)&nbsp;
 [![NeoForge](https://img.shields.io/badge/Modloader-NeoForge-e06522.svg?style=flat)](https://neoforged.net/)[![Fabric](https://img.shields.io/badge/%20-Fabric-dbb68a.svg?style=flat&logo=fabric)](https://fabricmc.net/)&nbsp;
 [![Wiki](https://img.shields.io/badge/Documentation-GitHub_Wiki-blue.svg?style=flat&logo=github)](https://github.com/BigBull-H3RO/MarketBlocks/wiki)&nbsp;
 [![License: MIT & Custom Assets](https://img.shields.io/badge/License-MIT_%26_Custom_Assets-0280ff.svg?style=flat)](https://github.com/BigBull-H3RO/MarketBlocks/blob/main/LICENSE)&nbsp;

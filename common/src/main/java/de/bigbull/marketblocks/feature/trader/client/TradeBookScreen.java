@@ -3,7 +3,7 @@ package de.bigbull.marketblocks.feature.trader.client;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.client.GameNarrator;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
@@ -292,18 +292,18 @@ public class TradeBookScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderTransparentBackground(guiGraphics);
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.extractTransparentBackground(guiGraphics);
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, BOOK_LOCATION, (this.width - IMAGE_WIDTH) / 2, 2, 121.0f, 0.0f, IMAGE_WIDTH, IMAGE_HEIGHT, 512, 256);
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.nextHoveredObject = null;
         this.tooltipRenderers.clear();
         this.activeZones.clear();
 
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         int leftPos = (this.width - IMAGE_WIDTH) / 2;
         int topPos = 2;
 
@@ -347,7 +347,7 @@ public class TradeBookScreen extends Screen {
         }
     }
 
-    private void renderPageHeader(GuiGraphics guiGraphics, int pageIndex, int textX, int topPos, int centerX) {
+    private void renderPageHeader(GuiGraphicsExtractor guiGraphics, int pageIndex, int textX, int topPos, int centerX) {
         int logicalIndex = this.physicalToLogical.getOrDefault(pageIndex, -1);
         String sectionName = getSectionName(logicalIndex);
         if (sectionName != null) {
@@ -356,13 +356,13 @@ public class TradeBookScreen extends Screen {
             int sectionWidth = this.font.width(sectionLabel);
             int headerX = textX + (TradeBookLayoutUtils.TEXT_WIDTH - sectionWidth) / 2;
             int headerY = topPos + 14;
-            guiGraphics.drawString(this.font, sectionLabel, headerX, headerY, 0xFF383838, false);
+            guiGraphics.text(this.font, sectionLabel, headerX, headerY, 0xFF383838, false);
             int lineY = headerY + 10;
             guiGraphics.fill(textX + 2, lineY, textX + TradeBookLayoutUtils.TEXT_WIDTH - 2, lineY + 1, 0x44000000);
         }
     }
 
-    private void renderPage(GuiGraphics guiGraphics, int pageIndex, int textX, int textY, int mouseX, int mouseY, TradeBookRenderContext context) {
+    private void renderPage(GuiGraphicsExtractor guiGraphics, int pageIndex, int textX, int textY, int mouseX, int mouseY, TradeBookRenderContext context) {
         float scale = this.pageScales.getOrDefault(pageIndex, TradeBookLayoutUtils.TEXT_SCALE);
         guiGraphics.pose().pushMatrix();
         guiGraphics.pose().scale(scale, scale);
@@ -400,7 +400,7 @@ public class TradeBookScreen extends Screen {
                 return true;
             });
 
-            guiGraphics.drawString(this.font, line, scaledTextX, lineY, 0xFF000000, false);
+            guiGraphics.text(this.font, line, scaledTextX, lineY, 0xFF000000, false);
 
             int lineHeight = 9;
             int extraHeight = getLineExtraHeight(line);
@@ -409,8 +409,12 @@ public class TradeBookScreen extends Screen {
         guiGraphics.pose().popMatrix();
 
         Style style = this.getClickedStyleForPage(mouseX, mouseY, pageIndex, textX, textY);
-        if (style != null) {
-            guiGraphics.renderComponentHoverEffect(this.font, style, mouseX, mouseY);
+        if (style != null && style.getHoverEvent() != null) {
+            if (style.getHoverEvent() instanceof net.minecraft.network.chat.HoverEvent.ShowText showText) {
+                guiGraphics.setTooltipForNextFrame(this.font, showText.value(), mouseX, mouseY);
+            } else if (style.getHoverEvent() instanceof net.minecraft.network.chat.HoverEvent.ShowItem showItem) {
+                guiGraphics.setTooltipForNextFrame(this.font, showItem.item().create(), mouseX, mouseY);
+            }
         }
     }
 
@@ -522,7 +526,7 @@ public class TradeBookScreen extends Screen {
                 return false;
             }
             case ClickEvent.RunCommand runCommand -> {
-                Screen.defaultHandleGameClickEvent(clickevent, this.minecraft, this);
+                Screen.defaultHandleGameClickEvent(runCommand, this.minecraft, this);
                 this.onClose();
                 return true;
             }
@@ -536,6 +540,11 @@ public class TradeBookScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public boolean isInGameUi() {
+        return true;
     }
 
     private Component getDisplayedPageContent(int logicalPageIndex) {

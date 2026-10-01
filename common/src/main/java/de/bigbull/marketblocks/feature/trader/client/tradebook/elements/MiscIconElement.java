@@ -1,6 +1,6 @@
 package de.bigbull.marketblocks.feature.trader.client.tradebook.elements;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
@@ -36,7 +36,7 @@ public class MiscIconElement implements ITradeBookElement {
     }
 
     @Override
-    public void render(GuiGraphics graphics, String insertion, int x, int y, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
+    public void render(GuiGraphicsExtractor graphics, String insertion, int x, int y, int mouseX, int mouseY, float scale, TradeBookRenderContext context) {
         if (insertion.startsWith("HEAD:")) {
             String name = insertion.substring(5);
             TradeBookLayoutUtils.renderPlayerHead(graphics, name, x, y, scale, 10);

@@ -1,9 +1,12 @@
 package de.bigbull.marketblocks.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
+
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Compact numeric text box with gold border and dark interior.
@@ -17,15 +20,44 @@ public class CompactNumberBox extends EditBox {
     private static final int TEXT_COLOR = 0xFFFFFF55;
     private static final int TEXT_COLOR_DISABLED = 0xFF707070;
 
+    private Predicate<String> filter = s -> true;
+    private Consumer<String> customResponder;
+    private String lastValidValue = "";
+    private boolean reverting = false;
+
     public CompactNumberBox(Font font, int x, int y, int width, int height, Component message) {
         super(font, x, y, width, height, message);
         this.setBordered(false);
         this.setTextColor(TEXT_COLOR);
         this.setTextColorUneditable(TEXT_COLOR_DISABLED);
+        super.setResponder(val -> {
+            if (this.reverting) {
+                return;
+            }
+            if (this.filter != null && !this.filter.test(val)) {
+                this.reverting = true;
+                this.setValue(this.lastValidValue);
+                this.reverting = false;
+            } else {
+                this.lastValidValue = val;
+                if (this.customResponder != null) {
+                    this.customResponder.accept(val);
+                }
+            }
+        });
+    }
+
+    public void setFilter(Predicate<String> filter) {
+        this.filter = filter;
     }
 
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void setResponder(Consumer<String> responder) {
+        this.customResponder = responder;
+    }
+
+    @Override
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         if (!this.isVisible()) {
             return;
         }
@@ -60,7 +92,7 @@ public class CompactNumberBox extends EditBox {
         int textXOffset = 4;
         graphics.pose().pushMatrix();
         graphics.pose().translate(textXOffset, textYOffset);
-        super.renderWidget(graphics, mouseX, mouseY, partialTick);
+        super.extractWidgetRenderState(graphics, mouseX, mouseY, partialTick);
         graphics.pose().popMatrix();
     }
 }
