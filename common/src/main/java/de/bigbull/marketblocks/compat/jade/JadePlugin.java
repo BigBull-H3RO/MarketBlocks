@@ -15,9 +15,9 @@ public class JadePlugin implements IWailaPlugin {
 
     @Override
     public void register(IWailaCommonRegistration registration) {
-        registration.registerBlockDataProvider(ShopBlockComponentProvider.INSTANCE, SingleOfferShopBlockEntity.class);
-        registration.registerBlockDataProvider(ShopBlockComponentProvider.INSTANCE, TradeStandTopBlock.class);
-        registration.registerEntityDataProvider(ShopBuyerComponentProvider.INSTANCE, ShopBuyerEntity.class);
+        registration.registerBlockDataProvider(ShopBlockServerDataProvider.INSTANCE, SingleOfferShopBlockEntity.class);
+        registration.registerBlockDataProvider(ShopBlockServerDataProvider.INSTANCE, TradeStandTopBlock.class);
+        registration.registerEntityDataProvider(ShopBuyerServerDataProvider.INSTANCE, ShopBuyerEntity.class);
     }
 
     @Override
