@@ -13,12 +13,10 @@ import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.Config;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 
-import snownee.jade.api.IServerDataProvider;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandTopBlock;
 
-public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
+public enum ShopBlockComponentProvider implements IBlockComponentProvider {
     INSTANCE;
 
     public static final Identifier SHOP_INFO = Identifier.fromNamespaceAndPath(Constants.MOD_ID,
@@ -103,22 +101,6 @@ public enum ShopBlockComponentProvider implements IBlockComponentProvider, IServ
         }
     }
 
-    @Override
-    public void appendServerData(CompoundTag data, BlockAccessor accessor) {
-        if (!Config.ENABLE_JADE_COMPAT.get()) {
-            return;
-        }
-        BlockEntity be = accessor.getBlockEntity();
-        if (be == null && accessor.getBlock() instanceof TradeStandTopBlock) {
-            be = accessor.getLevel().getBlockEntity(accessor.getPosition().below());
-        }
-        if (be instanceof SingleOfferShopBlockEntity shop) {
-            boolean hasStock = shop.isAdminShopEnabled() || shop.getOfferManager().hasResultItemInInput(true);
-            boolean outputFull = !shop.isAdminShopEnabled() && !shop.getInventoryManager().hasOutputSpace(shop.getOfferPayment1(), shop.getOfferPayment2());
-            data.putBoolean("HasStock", hasStock);
-            data.putBoolean("OutputFull", outputFull);
-        }
-    }
 
     @Override
     public Identifier getUid() {
