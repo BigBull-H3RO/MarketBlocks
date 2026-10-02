@@ -469,6 +469,8 @@
   "item.marketblocks.trade_stand.with_showcase": "Handelsstand (Mit Vitrine)",
   "itemGroup.marketblocks": "MarketBlocks",
   "key.categories.marketblocks": "MarketBlocks",
+  "key.category.marketblocks": "MarketBlocks",
+  "key.category.marketblocks.marketblocks": "MarketBlocks",
   "key.marketblocks.open_marketplace": "Marktplatz öffnen",
   "marketblocks.jade.for": "Für:",
   "marketblocks.jade.out_of_stock": "Ausverkauft!",

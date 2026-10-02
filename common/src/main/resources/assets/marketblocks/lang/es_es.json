@@ -465,6 +465,8 @@
   "item.marketblocks.trade_stand.with_showcase": "Puesto de comercio (con vitrina)",
   "itemGroup.marketblocks": "MarketBlocks",
   "key.categories.marketblocks": "MarketBlocks",
+  "key.category.marketblocks": "MarketBlocks",
+  "key.category.marketblocks.marketblocks": "MarketBlocks",
   "key.marketblocks.open_marketplace": "Abrir el mercado",
   "marketblocks.jade.for": "Por:",
   "marketblocks.jade.out_of_stock": "¡Agotado!",
