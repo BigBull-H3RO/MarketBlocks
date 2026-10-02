@@ -12,7 +12,7 @@ These commands can be executed by any player without special permissions:
 
 | Command | Alias | Description |
 |---|---|---|
-| `/marketblocks marketplace` | `/mb marketplace` | Opens the central Marketplace GUI (requires an active player entity; equivalent to keybind **O**). |
+| `/marketblocks marketplace` | `/mb marketplace` | Opens the central Marketplace GUI (requires an active player entity; equivalent to keybind **K** / **O** in 1.21.x). |
 | `/marketblocks search <item> [page]` | `/mb search <item> [page]` | Searches for SingleOfferShops and Marketplace hubs buying or selling the specified item. Supports tab-completion for any item ID. |
 | `/marketblocks stats` | `/mb stats` | Displays both the Top 10 SingleOfferShops and Top 10 Marketplace offers by total sales. |
 | `/marketblocks stats shops` | `/mb stats shops` | Displays the Top 10 SingleOfferShops by total sales volume. |

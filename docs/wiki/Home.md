@@ -18,7 +18,7 @@ Placeable shop blocks with dedicated single-offer trading:
 
 ### 2. 🌐 Central Marketplace (Server Economy Hub)
 A server-wide trading hub organized into tabbed category pages:
-- **Multiple Ways to Access**: Open anywhere via keybind (**O** by default), chat command (`/mb marketplace`), or right-click decorative market stalls linked in spawn cities (`/mb admin marketplace link`).
+- **Multiple Ways to Access**: Open anywhere via keybind (**K** by default, **O** in 1.21.x), chat command (`/mb marketplace`), or right-click decorative market stalls linked in spawn cities (`/mb admin marketplace link`).
 - **Live In-Game Editor**: Operators can create pages, add offers, reorder slots, and configure prices directly in-game using `/mb admin editmode true` — no JSON editing required!
 - **Dynamic Pricing & Limits**: Simulate living economies with demand-based price curves, stock caps, restock timers, daily player purchase limits, and timed promotional sales.
 - ➡️ **Guides:** [Marketplace Overview](Marketplace) • [In-Game Management](Marketplace-In-Game-Management) • [Dynamic Pricing & Limits](Marketplace-Dynamic-Pricing-and-Limits) • [JSON Configuration](Marketplace-JSON-Configuration-Guide)

@@ -9,7 +9,7 @@ The **Marketplace** is the centralized, server-wide trading hub in MarketBlocks.
 
 Players can access the Marketplace through three methods:
 
-1. **Keybind (`O`)**: Press **`O`** (default, rebindable under **Options -> Controls -> Key Binds** in the *MarketBlocks* category) to open the Marketplace instantly from anywhere.
+1. **Keybind (`K` / `O`)**: Press **`K`** (default in 26.2+, **`O`** in 1.21.x; rebindable under **Options -> Controls -> Key Binds** in the *MarketBlocks* category) to open the Marketplace instantly from anywhere.
 2. **Chat Command**: Type **`/marketblocks marketplace`** (or the shorthand **`/mb marketplace`**).
 3. **Linked World Blocks**: Right-click decorative market stalls, NPC counters, barrels, or custom blocks linked by server administrators.
    > [!NOTE]
@@ -60,7 +60,7 @@ Operators (OP level 2) can manage categories, trade offers, dynamic pricing, and
    ```
    /mb admin editmode true
    ```
-2. Open the Marketplace (`/mb marketplace` or keybind `O`).
+2. Open the Marketplace (`/mb marketplace` or keybind `K` / `O`).
 3. Click the **Gear icon button** in the top-right corner to toggle between customer view and editor view on the fly.
 
 ![Marketplace In-Game Edit Mode](https://raw.githubusercontent.com/BigBull-H3RO/MarketBlocks/main/docs/assets/screenshots/wiki/marketplace_edit_mode.png)

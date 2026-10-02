@@ -26,7 +26,7 @@ public class ClientEvents {
     private static final KeyMapping OPEN_MARKETPLACE = new KeyMapping(
             "key.marketblocks.open_marketplace",
             InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_O,
+            GLFW.GLFW_KEY_K,
             CATEGORY);
 
     @SubscribeEvent
