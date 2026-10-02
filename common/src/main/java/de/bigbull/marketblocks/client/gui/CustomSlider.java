@@ -152,7 +152,7 @@ public class CustomSlider extends AbstractWidget {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-        if (this.visible && this.active && this.isDragging && event.button() == 0) {
+        if (this.visible && this.active && this.isDragging && this.isValidClickButton(event.buttonInfo())) {
             updateFromMouse(event.x());
             return true;
         }
@@ -173,7 +173,7 @@ public class CustomSlider extends AbstractWidget {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (event.button() == 0) {
+        if (this.isValidClickButton(event.buttonInfo())) {
             this.isDragging = false;
         }
         return super.mouseReleased(event);

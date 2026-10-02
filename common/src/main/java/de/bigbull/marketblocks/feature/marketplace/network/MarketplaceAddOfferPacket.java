@@ -13,6 +13,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import de.bigbull.marketblocks.platform.network.PacketContext;
@@ -68,7 +69,7 @@ public record MarketplaceAddOfferPacket(String pageName) implements CustomPacket
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.removeItemNoUpdate(i);
             if (!stack.isEmpty()) {
-                player.getInventory().placeItemBackInInventory(stack);
+                player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
             }
         }
     }

@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.feature.trader.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.client.GameNarrator;
@@ -484,7 +485,7 @@ public class TradeBookScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (event.button() == 0) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             double mouseX = event.x();
             double mouseY = event.y();
             for (InteractiveZone zone : this.activeZones) {

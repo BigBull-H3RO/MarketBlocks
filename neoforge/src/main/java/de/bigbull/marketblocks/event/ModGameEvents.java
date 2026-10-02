@@ -9,8 +9,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -48,7 +49,7 @@ public class ModGameEvents {
         ItemStack stack = event.getItemStack();
         InteractionResult result = InteractionResult.PASS;
 
-        if (stack.getItem() instanceof AxeItem) {
+        if (stack.is(ItemTags.AXES)) {
             result = TradeStandBlock.tryDisableShowcase(level, basePos, baseState, event.getEntity());
             if (result == InteractionResult.FAIL && !level.isClientSide()
                     && event.getEntity() instanceof ServerPlayer player) {
@@ -85,7 +86,7 @@ public class ModGameEvents {
                 player.addTag("marketblocks.received_trade_book");
                 ItemStack book = new ItemStack(RegistriesInit.TRADE_BOOK.get());
                 if (!player.getInventory().add(book)) {
-                    player.drop(book, false);
+                    player.drop(book, false, Prediction.SERVER_ONLY);
                 }
             }
         }

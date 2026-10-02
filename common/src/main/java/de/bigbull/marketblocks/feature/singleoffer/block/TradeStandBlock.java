@@ -4,7 +4,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.SoundType;
 
-import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -41,7 +40,6 @@ import org.jetbrains.annotations.Nullable;
  * block on top for interaction logic.
  */
 public class TradeStandBlock extends BaseShopBlock {
-    public static final MapCodec<TradeStandBlock> CODEC = simpleCodec(TradeStandBlock::new);
     public static final BooleanProperty HAS_SHOWCASE = BooleanProperty.create("has_showcase");
 
     private static final VoxelShape SHAPE_NO_SHOWCASE = Block.box(0, 0, 0, 16, 11, 16);
@@ -245,10 +243,5 @@ public class TradeStandBlock extends BaseShopBlock {
             }
         }
         return super.playerWillDestroy(level, pos, state, player);
-    }
-
-    @Override
-    protected MapCodec<? extends BaseShopBlock> codec() {
-        return CODEC;
     }
 }

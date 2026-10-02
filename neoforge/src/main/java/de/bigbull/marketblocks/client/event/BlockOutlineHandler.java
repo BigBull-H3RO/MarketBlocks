@@ -114,18 +114,28 @@ public class BlockOutlineHandler {
                     false);
         }
 
-        int color = highContrast ? -11010079 : ARGB.color(102, -16777216);
+        int color = highContrast ? -11010079 : ARGB.black(102);
+        RenderType renderType = getOutlineRenderType(highContrast);
         float lineWidth = Minecraft.getInstance().getWindow().getAppropriateLineWidth();
 
         submitNodeCollector.submitShapeOutline(
                 poseStack,
                 outline,
-                RenderTypes.lines(),
+                renderType,
                 color,
                 lineWidth,
                 false);
 
         poseStack.popPose();
+    }
+
+    private static RenderType getOutlineRenderType(boolean highContrast) {
+        if (highContrast) {
+            return RenderTypes.linesDepthBias();
+        }
+        return Minecraft.getInstance().gameRenderer.useImprovedTransparency()
+                ? RenderTypes.linesTranslucentNoDepthWrite()
+                : RenderTypes.linesTranslucent();
     }
 
     private static void renderMarketCrateOutline(SubmitNodeCollector submitNodeCollector, PoseStack poseStack,
@@ -149,9 +159,10 @@ public class BlockOutlineHandler {
             renderMarketCrateShape(submitNodeCollector, poseStack, pos, camPos, yRot, -16777216, 7.0F, RenderTypes.secondaryBlockOutline());
         }
 
-        int color = highContrast ? -11010079 : ARGB.color(102, -16777216);
+        int color = highContrast ? -11010079 : ARGB.black(102);
+        RenderType renderType = getOutlineRenderType(highContrast);
         float lineWidth = Minecraft.getInstance().getWindow().getAppropriateLineWidth();
-        renderMarketCrateShape(submitNodeCollector, poseStack, pos, camPos, yRot, color, lineWidth, RenderTypes.lines());
+        renderMarketCrateShape(submitNodeCollector, poseStack, pos, camPos, yRot, color, lineWidth, renderType);
     }
 
     private static void renderMarketCrateShape(SubmitNodeCollector submitNodeCollector, PoseStack poseStack, BlockPos pos, Vec3 camPos,
@@ -166,7 +177,7 @@ public class BlockOutlineHandler {
         poseStack.translate(0.5, 0.5, 0.5);
 
         if (yRot != 0.0f) {
-            poseStack.mulPose(new Quaternionf(new AxisAngle4f((float) Math.toRadians(yRot), 0.0f, 1.0f, 0.0f)));
+            poseStack.rotate(new Quaternionf(new AxisAngle4f((float) Math.toRadians(yRot), 0.0f, 1.0f, 0.0f)));
         }
 
         poseStack.translate(-0.5, -0.5, -0.5);
@@ -185,7 +196,7 @@ public class BlockOutlineHandler {
         poseStack.pushPose();
 
         poseStack.translate(8.0 / 16.0, 15.0 / 16.0, 15.5 / 16.0);
-        poseStack.mulPose(new Quaternionf(new AxisAngle4f((float) Math.toRadians(-22.5), 1.0f, 0.0f, 0.0f)));
+        poseStack.rotate(new Quaternionf(new AxisAngle4f((float) Math.toRadians(-22.5), 1.0f, 0.0f, 0.0f)));
         poseStack.translate(-8.0 / 16.0, -15.0 / 16.0, -15.5 / 16.0);
 
         submitNodeCollector.submitShapeOutline(

@@ -60,7 +60,7 @@ public final class NeoForgeRegistries {
                 .instrument(NoteBlockInstrument.BASS)
                 .strength(2.5F, 3600000.0F)
                 .sound(SoundType.WOOD)
-                .pushReaction(PushReaction.BLOCK);
+                .pushReaction(PushReaction.IMMOVEABLE);
     }
 
     public static void init() {
@@ -78,7 +78,7 @@ public final class NeoForgeRegistries {
                         .instrument(NoteBlockInstrument.BASS)
                         .strength(2.5F, 3600000.0F)
                         .sound(SoundType.WOOD)
-                        .pushReaction(PushReaction.BLOCK));
+                        .pushReaction(PushReaction.IMMOVEABLE));
         RegistriesInit.MARKETCRATE_BLOCK = marketCrate;
 
         // Block Items

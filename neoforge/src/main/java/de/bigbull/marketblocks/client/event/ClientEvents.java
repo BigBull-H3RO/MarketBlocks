@@ -14,7 +14,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * Main client-side event handler for MarketBlocks.
@@ -25,8 +24,7 @@ public class ClientEvents {
     private static final KeyMapping.Category CATEGORY = new KeyMapping.Category(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "marketblocks"));
     private static final KeyMapping OPEN_MARKETPLACE = new KeyMapping(
             "key.marketblocks.open_marketplace",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_K,
+            InputConstants.KEY_K,
             CATEGORY);
 
     @SubscribeEvent

@@ -202,7 +202,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                     float speed = offerSettings.speed();
                     if (speed > 0) {
                         float time = (state.gameTime + state.partialTick) * (speed * 5.0f);
-                        poseStack.mulPose(Axis.YP.rotationDegrees(time % 360));
+                        poseStack.rotate(Axis.YP.rotationDegrees(time % 360));
                     }
 
                     applySlotRotation(poseStack, offerItem);
@@ -236,11 +236,11 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                         poseStack.translate(0.0f, heightOffset, 0.0f);
 
                         poseStack.translate(0.5f, 0.0f, 0.5f);
-                        poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - dir.toYRot()));
+                        poseStack.rotate(Axis.YP.rotationDegrees(180.0f - dir.toYRot()));
                         poseStack.translate(-0.5f, 0.0f, -0.5f);
 
                         poseStack.translate(0.5f, 15.0f / 16.0f, 15.5f / 16.0f);
-                        poseStack.mulPose(Axis.XP.rotationDegrees(-22.5f));
+                        poseStack.rotate(Axis.XP.rotationDegrees(-22.5f));
                         poseStack.translate(0.0f, -0.125f, -0.515f);
 
                         boolean isBlock = result.getItem() instanceof BlockItem;
@@ -300,7 +300,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
                             poseStack.pushPose();
 
                             poseStack.translate(offerItem.x(), offerItem.y() + heightOffset, offerItem.z());
-                            poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
+                            poseStack.rotate(Axis.YP.rotationDegrees(baseRotation));
 
                             double offsetX = 0;
                             double offsetY = 0;
@@ -363,16 +363,16 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         float yRest = hOffset + (isBlock ? itemScale * 0.2f : 0) + baselineY;
 
         poseStack.translate(rx, yRest, rz);
-        poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
+        poseStack.rotate(Axis.YP.rotationDegrees(baseRotation));
 
         if (chaosRotation > 0) {
-            poseStack.mulPose(Axis.YP.rotationDegrees(rand.nextFloat() * 360f * chaosRotation));
-            poseStack.mulPose(Axis.XP.rotationDegrees((rand.nextFloat() - 0.5f) * 45f * chaosRotation));
-            poseStack.mulPose(Axis.ZP.rotationDegrees((rand.nextFloat() - 0.5f) * 45f * chaosRotation));
+            poseStack.rotate(Axis.YP.rotationDegrees(rand.nextFloat() * 360f * chaosRotation));
+            poseStack.rotate(Axis.XP.rotationDegrees((rand.nextFloat() - 0.5f) * 45f * chaosRotation));
+            poseStack.rotate(Axis.ZP.rotationDegrees((rand.nextFloat() - 0.5f) * 45f * chaosRotation));
         }
 
         if (!isBlock) {
-            poseStack.mulPose(Axis.XP.rotationDegrees(90f));
+            poseStack.rotate(Axis.XP.rotationDegrees(90f));
         }
         return yRest;
     }
@@ -407,10 +407,10 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
         float yRest = hOffset + (isBlock ? itemScale * 0.2f : 0) + baselineY;
 
         poseStack.translate(posX, yRest, posZ);
-        poseStack.mulPose(Axis.YP.rotationDegrees(baseRotation));
+        poseStack.rotate(Axis.YP.rotationDegrees(baseRotation));
 
         if (!isBlock) {
-            poseStack.mulPose(Axis.XP.rotationDegrees(90f));
+            poseStack.rotate(Axis.XP.rotationDegrees(90f));
         }
         return yRest;
     }
@@ -474,12 +474,12 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         poseStack.pushPose();
         poseStack.translate(xOff, itemConfig.y(), zOff);
-        poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
+        poseStack.rotate(Axis.YP.rotationDegrees(-dir.toYRot()));
         applySlotRotation(poseStack, itemConfig);
 
         boolean is3D = itemRenderState.usesBlockLight();
         if (is3D) {
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            poseStack.rotate(Axis.YP.rotationDegrees(180.0F));
         }
 
         float finalPaymentScale = itemConfig.scale();
@@ -505,7 +505,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         poseStack.pushPose();
         poseStack.translate(x, arrowConfig.y(), z);
-        poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
+        poseStack.rotate(Axis.YP.rotationDegrees(-dir.toYRot()));
         applySlotRotation(poseStack, arrowConfig);
 
         float scale = arrowConfig.scale();
@@ -543,7 +543,7 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
         poseStack.pushPose();
         poseStack.translate(x, countConfig.y(), z);
-        poseStack.mulPose(Axis.YP.rotationDegrees(-dir.toYRot()));
+        poseStack.rotate(Axis.YP.rotationDegrees(-dir.toYRot()));
         applySlotRotation(poseStack, countConfig);
         poseStack.scale(countConfig.scale(), -countConfig.scale(), countConfig.scale());
 
@@ -568,11 +568,11 @@ public class SingleOfferShopBlockEntityRenderer implements BlockEntityRenderer<S
 
     private static void applySlotRotation(PoseStack poseStack, ShopRenderConfig.SlotRenderConfig slot) {
         if (slot.yaw() != 0.0F)
-            poseStack.mulPose(Axis.YP.rotationDegrees(slot.yaw()));
+            poseStack.rotate(Axis.YP.rotationDegrees(slot.yaw()));
         if (slot.pitch() != 0.0F)
-            poseStack.mulPose(Axis.XP.rotationDegrees(slot.pitch()));
+            poseStack.rotate(Axis.XP.rotationDegrees(slot.pitch()));
         if (slot.roll() != 0.0F)
-            poseStack.mulPose(Axis.ZP.rotationDegrees(slot.roll()));
+            poseStack.rotate(Axis.ZP.rotationDegrees(slot.roll()));
     }
 
     private static boolean isToolOrWeapon(ItemStack stack) {

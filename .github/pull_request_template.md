@@ -42,7 +42,7 @@
 ## 🧪 Testing & Verification
 <!-- How did you test your changes? Please describe steps to verify behavior. -->
 - **Environment:**
-  - Minecraft Version: `26.2` (or `26.1.2` / `1.21.11` / `1.21.4` / `1.21.1`)
+  - Minecraft Version: `26.3` (or `26.2` / `26.1.2` / `1.21.11` / `1.21.4` / `1.21.1`)
   - Loader: <!-- NeoForge 21.4.x / Fabric Loader 0.19.x -->
   - Environment: <!-- Singleplayer / Dedicated Server / Both -->
 

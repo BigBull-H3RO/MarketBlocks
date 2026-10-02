@@ -23,7 +23,6 @@ import de.bigbull.marketblocks.Constants;
 import net.minecraft.resources.Identifier;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.entity.player.Player;
-import org.lwjgl.glfw.GLFW;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -38,8 +37,7 @@ public class MarketBlocksClient implements ClientModInitializer {
 
     public static final KeyMapping OPEN_MARKETPLACE = new KeyMapping(
             "key.marketblocks.open_marketplace",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_K,
+            InputConstants.KEY_K,
             CATEGORY);
 
     @Override

@@ -9,6 +9,7 @@ on:
       - "1.21.11"
       - "26.1.2"
       - "26.2"
+      - "26.3"
   workflow_dispatch:
     inputs:
       dry_run:

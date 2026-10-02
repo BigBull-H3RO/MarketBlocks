@@ -5,6 +5,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.util.Util;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Pair;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.SingleOfferConfig;
@@ -1141,15 +1142,20 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             }
         }
 
-        if (menu.getActiveTab() == ShopTab.LOG && button == 0) {
-            if (logPanel.onMouseClicked(mouseX, mouseY, leftPos, topPos, menu.getTransactionLogEntries())) {
-                return true;
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
+            if (menu.getActiveTab() == ShopTab.LOG) {
+                if (logPanel.onMouseClicked(mouseX, mouseY, leftPos, topPos, menu.getTransactionLogEntries())) {
+                    this.setDragging(true);
+                    return true;
+                }
             }
-        }
-        if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS
-                && menu.isPrimaryOwner()) {
-            if (ownerListPanel.onMouseClicked(mouseX, mouseY, leftPos))
-                return true;
+            if (menu.getActiveTab() == ShopTab.SETTINGS && activeSettingsCategory == SettingsCategory.ACCESS
+                    && menu.isPrimaryOwner()) {
+                if (ownerListPanel.onMouseClicked(mouseX, mouseY, leftPos)) {
+                    this.setDragging(true);
+                    return true;
+                }
+            }
         }
         return super.mouseClicked(event, doubleClick);
     }
@@ -1167,7 +1173,7 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
             if (ownerListPanel.onMouseDragged(mouseY))
                 return true;
         }
-        if (this.getFocused() != null && this.isDragging() && event.button() == 0) {
+        if (this.getFocused() != null && this.isDragging() && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             if (this.getFocused().mouseDragged(event, dragX, dragY)) {
                 return true;
             }
@@ -1184,10 +1190,13 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (event.button() == 0) {
-            logPanel.onMouseReleased();
-        }
+        logPanel.onMouseReleased();
         ownerListPanel.onMouseReleased();
+        for (var child : this.children()) {
+            if (child instanceof de.bigbull.marketblocks.client.gui.CustomSlider slider) {
+                slider.mouseReleased(event);
+            }
+        }
         return super.mouseReleased(event);
     }
 

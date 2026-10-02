@@ -28,8 +28,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.ChestBlock;
@@ -105,7 +106,7 @@ public class MarketBlocks implements ModInitializer {
                     player.addTag("marketblocks.received_trade_book");
                     ItemStack book = new ItemStack(RegistriesInit.TRADE_BOOK.get());
                     if (!player.getInventory().add(book)) {
-                        player.drop(book, false);
+                        player.drop(book, false, Prediction.SERVER_ONLY);
                     }
                 }
             }
@@ -131,7 +132,7 @@ public class MarketBlocks implements ModInitializer {
                 }
 
                 ItemStack held = player.getItemInHand(hand);
-                if (held.getItem() instanceof AxeItem) {
+                if (held.is(ItemTags.AXES)) {
                     InteractionResult res = TradeStandBlock.tryDisableShowcase(world, basePos, baseState, player);
                     if (res != InteractionResult.PASS) {
                         if (res == InteractionResult.FAIL && !world.isClientSide()) {

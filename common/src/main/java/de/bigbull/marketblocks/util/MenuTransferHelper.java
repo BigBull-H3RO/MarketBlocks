@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.util;
 
+import net.minecraft.util.Prediction;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -40,7 +41,7 @@ public class MenuTransferHelper {
 
             moveItemStackTo.accept(chunk);
             if (!chunk.isEmpty()) {
-                player.drop(chunk, false);
+                player.drop(chunk, false, Prediction.SERVER_ONLY);
             }
             remaining -= chunkSize;
         }

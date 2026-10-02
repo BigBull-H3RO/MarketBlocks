@@ -13,6 +13,7 @@ import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOffer;
 import de.bigbull.marketblocks.feature.marketplace.data.MarketplaceOfferViewState;
 import de.bigbull.marketblocks.util.MenuTransferHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -347,7 +348,7 @@ public class MarketplaceMenu extends AbstractContainerMenu {
 
     private void giveItemToPlayer(Player player, ItemStack stack) {
         if (stack.isEmpty()) return;
-        player.getInventory().placeItemBackInInventory(stack);
+        player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
     }
 
     @Override

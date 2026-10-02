@@ -3,22 +3,25 @@
   "criteria": {
     "activated_showcase": {
       "conditions": {
-        "location": [
-          {
-            "condition": "minecraft:location_check",
-            "predicate": {
-              "block": {
-                "blocks": "marketblocks:trade_stand"
+        "location": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:location_check",
+              "predicate": {
+                "block": {
+                  "blocks": "marketblocks:trade_stand"
+                }
+              }
+            },
+            {
+              "type": "minecraft:match_tool",
+              "predicate": {
+                "items": "minecraft:glass"
               }
             }
-          },
-          {
-            "condition": "minecraft:match_tool",
-            "predicate": {
-              "items": "minecraft:glass"
-            }
-          }
-        ]
+          ]
+        }
       },
       "trigger": "minecraft:item_used_on_block"
     }

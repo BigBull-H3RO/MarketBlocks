@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "marketblocks:trade_stand"
+        "recipes": "marketblocks:trade_stand"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

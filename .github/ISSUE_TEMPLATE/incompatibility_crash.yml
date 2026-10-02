@@ -40,6 +40,7 @@ body:
       label: Minecraft version
       description: What version of Minecraft are you running? Please note that only the versions listed below are supported. If you're running an outdated version, update to receive support.
       options:
+        - "26.3"
         - "26.2"
         - "26.1.2"
         - "1.21.11"
@@ -73,7 +74,7 @@ body:
     attributes:
       label: MarketBlocks version
       description: "Please provide the exact MarketBlocks mod version."
-      placeholder: "1.0.0+26.2"
+      placeholder: "1.0.0+26.3"
     validations:
       required: true
   - type: textarea
@@ -82,8 +83,8 @@ body:
       label: Minimal mod set used for reproduction
       description: "List only the required mods (including versions), loader and API dependencies."
       placeholder: |
-        - NeoForge: 26.2.0.x
-        - MarketBlocks: 1.0.0+26.2
+        - NeoForge: 26.3.0.x
+        - MarketBlocks: 1.0.0+26.3
         - ConflictingMod: 1.0.0
     validations:
       required: true

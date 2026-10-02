@@ -12,6 +12,7 @@ import de.bigbull.marketblocks.feature.singleoffer.network.OfferStatusPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -209,7 +210,7 @@ public class OfferManager {
     private void returnStacksToPlayer(ServerPlayer player, ItemStack... stacks) {
         for (ItemStack stack : stacks) {
             if (!stack.isEmpty()) {
-                player.getInventory().placeItemBackInInventory(stack);
+                player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
                 if (!stack.isEmpty())
                     Containers.dropItemStack(player.level(), player.getX(), player.getY(), player.getZ(), stack);
             }

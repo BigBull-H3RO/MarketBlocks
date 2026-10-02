@@ -1,8 +1,9 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
-import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -29,16 +30,10 @@ import org.jetbrains.annotations.Nullable;
  * opening the UI) back to the base block.
  */
 public class TradeStandTopBlock extends Block {
-    public static final MapCodec<TradeStandTopBlock> CODEC = simpleCodec(TradeStandTopBlock::new);
     private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 9, 15);
 
     public TradeStandTopBlock(BlockBehaviour.Properties properties) {
         super(properties);
-    }
-
-    @Override
-    protected MapCodec<? extends Block> codec() {
-        return CODEC;
     }
 
     @Override
@@ -123,7 +118,7 @@ public class TradeStandTopBlock extends Block {
                     level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 35);
                 } else {
                     BlockEntity blockEntity = level.getBlockEntity(basePos);
-                    baseState.getBlock().playerDestroy(level, player, basePos, baseState, blockEntity,
+                    baseState.getBlock().playerDestroy((ServerLevel) level, (ServerPlayer) player, basePos, baseState, blockEntity,
                             player.getMainHandItem());
                     level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 3);
                 }

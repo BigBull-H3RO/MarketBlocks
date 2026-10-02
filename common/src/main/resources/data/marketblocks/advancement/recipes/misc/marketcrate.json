@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "marketblocks:marketcrate"
+        "recipes": "marketblocks:marketcrate"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

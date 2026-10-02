@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.platform;
 
 import de.bigbull.marketblocks.platform.inventory.ICommonItemHandler;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.item.ItemStackResourceHandler;
@@ -11,8 +10,7 @@ import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("removal")
-public class CommonToNeoForgeItemHandlerWrapper implements ResourceHandler<ItemResource>, IItemHandler {
+public class CommonToNeoForgeItemHandlerWrapper implements ResourceHandler<ItemResource> {
     private final ICommonItemHandler common;
     private final List<SlotWrapper> slotWrappers;
 
@@ -92,35 +90,5 @@ public class CommonToNeoForgeItemHandlerWrapper implements ResourceHandler<ItemR
     public int extract(int slot, ItemResource resource, int amount, TransactionContext transactionContext) {
         if (slot < 0 || slot >= slotWrappers.size()) return 0;
         return slotWrappers.get(slot).extract(0, resource, amount, transactionContext);
-    }
-
-    @Override
-    public int getSlots() {
-        return common.getSlots();
-    }
-
-    @Override
-    public ItemStack getStackInSlot(int slot) {
-        return common.getStackInSlot(slot);
-    }
-
-    @Override
-    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        return common.insertItem(slot, stack, simulate);
-    }
-
-    @Override
-    public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        return common.extractItem(slot, amount, simulate);
-    }
-
-    @Override
-    public int getSlotLimit(int slot) {
-        return common.getSlotLimit(slot);
-    }
-
-    @Override
-    public boolean isItemValid(int slot, ItemStack stack) {
-        return common.isItemValid(slot, stack);
     }
 }

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0+26.3] - 2026-10-02
+### Added
+- **Minecraft 26.3 Support:** Initial release with full feature parity on Fabric & NeoForge for Minecraft 26.3.
+
+### Changed
+- **Marketplace Keybind:** Default keybind updated to `K` (previously `O`) to prevent collision with Minecraft 26.2's vanilla Friends list.
+
 ## [1.0.0+26.2] - 2026-10-02
 ### Added
 - **Minecraft 26.2 Support:** Initial release with full feature parity on Fabric & NeoForge for Minecraft 26.2.

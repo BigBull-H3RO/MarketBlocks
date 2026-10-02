@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.feature.singleoffer.SideMode;
 import net.minecraft.client.Minecraft;
@@ -73,7 +74,7 @@ public class SideModeButton extends Button {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (event.button() == 0 || event.button() == 1) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT || event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
             isPressing = false;
         }
         return super.mouseReleased(event);
@@ -90,14 +91,14 @@ public class SideModeButton extends Button {
             isPressing = true;
             pressTicks = 4;
 
-            if (event.button() == 0) { // Left click -> Next mode
+            if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) { // Left click -> Next mode
                 mode = mode.next();
                 updateTooltip();
                 if (onModeChanged != null) {
                     onModeChanged.accept(mode);
                 }
                 return true;
-            } else if (event.button() == 1) { // Right click -> Previous mode
+            } else if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) { // Right click -> Previous mode
                 mode = mode.previous();
                 updateTooltip();
                 if (onModeChanged != null) {

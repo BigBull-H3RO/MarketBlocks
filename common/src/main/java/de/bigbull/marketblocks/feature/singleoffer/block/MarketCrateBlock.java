@@ -1,6 +1,5 @@
 package de.bigbull.marketblocks.feature.singleoffer.block;
 
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -16,7 +15,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * Uses a unique, slightly slanted VoxelShape to match its 3D model.
  */
 public class MarketCrateBlock extends BaseShopBlock {
-    public static final MapCodec<MarketCrateBlock> CODEC = simpleCodec(MarketCrateBlock::new);
 
     private static final VoxelShape BASE_SHAPE_NORTH = Shapes.or(
             Block.box(0, 0, 0, 16, 8, 16),
@@ -88,10 +86,5 @@ public class MarketCrateBlock extends BaseShopBlock {
     @Override
     public ShopRenderConfig getRenderConfig(BlockState state) {
         return ShopRenderConfig.MARKET_CRATE;
-    }
-
-    @Override
-    protected MapCodec<? extends BaseShopBlock> codec() {
-        return CODEC;
     }
 }

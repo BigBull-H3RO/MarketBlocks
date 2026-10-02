@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.feature.marketplace.client.screen;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.sounds.SoundEvents;
 
 import de.bigbull.marketblocks.Constants;
@@ -667,8 +668,9 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
         double mouseX = event.x();
         double mouseY = event.y();
         int button = event.button();
-        if (button == 0 && isScrollBarActive() && isWithinScroller(mouseX, mouseY)) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && isScrollBarActive() && isWithinScroller(mouseX, mouseY)) {
             isDragging = true;
+            this.setDragging(true);
             return true;
         }
         if (trySelectOfferAt(mouseX, mouseY)) {
@@ -770,7 +772,7 @@ public class MarketplaceScreen extends AbstractContainerScreen<MarketplaceMenu> 
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (event.button() == 0)
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT)
             isDragging = false;
         return super.mouseReleased(event);
     }

@@ -364,7 +364,7 @@ public class TraderEconomyManager {
             return null; // Prevent infinite loops
         visited.add(target);
 
-        ContextMap contextMap = level != null ? SlotDisplayContext.fromLevel(level) : new ContextMap.Builder().create(SlotDisplayContext.CONTEXT);
+        ContextMap contextMap = level != null ? SlotDisplayContext.fromLevel(level) : ContextMap.EMPTY;
 
         // Find a recipe that produces this item
         for (RecipeHolder<?> holder : recipeManager.getRecipes()) {

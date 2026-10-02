@@ -50,7 +50,7 @@ public final class FabricRegistries {
                 .instrument(NoteBlockInstrument.BASS)
                 .strength(2.5F, 3600000.0F)
                 .sound(SoundType.WOOD)
-                .pushReaction(PushReaction.BLOCK);
+                .pushReaction(PushReaction.IMMOVEABLE);
     }
 
     public static void init() {
@@ -79,7 +79,7 @@ public final class FabricRegistries {
                         .instrument(NoteBlockInstrument.BASS)
                         .strength(2.5F, 3600000.0F)
                         .sound(SoundType.WOOD)
-                        .pushReaction(PushReaction.BLOCK)
+                        .pushReaction(PushReaction.IMMOVEABLE)
                         .setId(marketCrateKey)));
         RegistriesInit.MARKETCRATE_BLOCK = () -> marketCrate;
 
