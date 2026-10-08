@@ -7,16 +7,17 @@ import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.block.TradeStandBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import de.bigbull.marketblocks.feature.trader.entity.ai.AttackShopBuyerGoal;
+import net.minecraft.world.entity.Mob;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
@@ -40,7 +41,8 @@ public class ModGameEvents {
 
         BlockPos basePos = clickedPos;
         BlockState baseState = clickedState;
-        if (clickedState.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+        boolean isTopBlock = clickedState.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get());
+        if (isTopBlock) {
             basePos = clickedPos.below();
             baseState = level.getBlockState(basePos);
         }
@@ -49,16 +51,10 @@ public class ModGameEvents {
         InteractionResult result = InteractionResult.PASS;
 
         if (stack.getItem() instanceof AxeItem) {
-            result = TradeStandBlock.tryDisableShowcase(level, basePos, baseState, event.getEntity());
-            if (result == InteractionResult.FAIL && !level.isClientSide
-                    && event.getEntity() instanceof ServerPlayer player) {
-                player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
-            }
-        } else if (stack.is(Items.GLASS)) {
-            result = TradeStandBlock.tryEnableShowcase(level, basePos, baseState, event.getEntity(), stack);
-            if (result == InteractionResult.FAIL && !level.isClientSide
-                    && event.getEntity() instanceof ServerPlayer player) {
-                player.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"), true);
+            boolean isShowcaseHit = isTopBlock || (TradeStandBlock.hasShowcase(baseState)
+                    && TradeStandBlock.isHitOnShowcase(basePos, event.getHitVec()));
+            if (isShowcaseHit && TradeStandBlock.canPlayerModifyShowcase(level, basePos, event.getEntity())) {
+                result = TradeStandBlock.tryDisableShowcase(level, basePos, baseState, event.getEntity());
             }
         }
 
@@ -88,6 +84,13 @@ public class ModGameEvents {
                     player.drop(book, false);
                 }
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide() && event.getEntity() instanceof Mob mob) {
+            AttackShopBuyerGoal.addHostileTargetGoal(mob);
         }
     }
 }

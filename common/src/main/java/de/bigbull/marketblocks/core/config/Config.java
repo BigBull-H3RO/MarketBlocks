@@ -15,7 +15,8 @@ public class Config {
 
     // General Settings
     public static final TomlConfigValue.BooleanValue GIVE_TRADE_BOOK_ON_FIRST_JOIN;
-    public static final TomlConfigValue.BooleanValue ALLOW_NON_OP_TELEPORT;
+    public static final TomlConfigValue.BooleanValue ENABLE_TELEPORT;
+    public static final TomlConfigValue.BooleanValue TELEPORT_REQUIRES_OP;
     public static final TomlConfigValue.BooleanValue SHOW_SHOP_ID_WITH_NAME;
 
     // Integrations
@@ -29,9 +30,14 @@ public class Config {
         GIVE_TRADE_BOOK_ON_FIRST_JOIN = COMMON_BUILDER
                 .comment("Give the interactive Trade Book to players when they join the world/server for the first time.")
                 .define("giveTradeBookOnFirstJoin", true);
-        ALLOW_NON_OP_TELEPORT = COMMON_BUILDER
-                .comment("Allow non-OP players to use the [TP] button in the shop/marketplace list")
-                .define("allowNonOpTeleport", false);
+        ENABLE_TELEPORT = COMMON_BUILDER
+                .comment("Master switch for shop teleportation (via Trade Book coordinate clicks and chat commands).",
+                        "Default: false (Disabled by default for a vanilla survival experience).")
+                .define("enableTeleport", false);
+        TELEPORT_REQUIRES_OP = COMMON_BUILDER
+                .comment("If enableTeleport is true, requires OP permissions (permission level 2) to teleport to shops.",
+                        "Default: false (When teleportation is enabled, all players can use it).")
+                .define("teleportRequiresOp", false);
         SHOW_SHOP_ID_WITH_NAME = COMMON_BUILDER
                 .comment("If true, shows the auto-generated Shop ID alongside custom shop names (e.g. 'My Shop (#A1F2)'). If false, only shows the custom name.")
                 .define("showShopIdWithName", true);
@@ -54,5 +60,19 @@ public class Config {
         COMMON_BUILDER.pop();
 
         COMMON_SPEC = COMMON_BUILDER.build();
+    }
+
+    /**
+     * Determines whether the given player is permitted to teleport to shops
+     * based on the master switch and optional OP permission requirement.
+     */
+    public static boolean canPlayerTeleport(net.minecraft.world.entity.player.Player player) {
+        if (!ENABLE_TELEPORT.get()) {
+            return false;
+        }
+        if (TELEPORT_REQUIRES_OP.get()) {
+            return player.hasPermissions(2);
+        }
+        return true;
     }
 }

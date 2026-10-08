@@ -66,8 +66,8 @@ public class VanillaIconButton extends Button {
         int iconY = getY() + (getHeight() - iconRenderHeight) / 2 + iconYOffset;
         graphics.blit(RenderType::guiTextured, icon, iconX, iconY,
                 (float) sourceU, (float) sourceV,
-                sourceWidth, sourceHeight,
                 iconRenderWidth, iconRenderHeight,
+                sourceWidth, sourceHeight,
                 ICON_TEXTURE_SIZE, ICON_TEXTURE_SIZE);
     }
 }

@@ -242,7 +242,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
             return true;
         }
 
-        boolean isOwner = shop.isOwner(player);
+        boolean isOwner = shop.isPrimaryOwner(player);
         boolean isAdminShop = shop.isAdminShopEnabled();
         boolean hasAdminBypass = player.hasPermissions(2) && player.isCreative();
 

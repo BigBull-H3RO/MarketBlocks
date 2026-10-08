@@ -30,6 +30,8 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.resources.ResourceLocation;
 
@@ -131,7 +133,7 @@ public final class SingleOfferSettingsSections {
         // --- GroupBox 1: SHOP-PROFIL (y = 23, h = 46, ends at 69) ---
         // Row 1: Name field & Shop ID badge
         EditBox nameField = host.addSettingsWidget(
-                new EditBox(host.settingsFont(), host.settingsLeftPos() + 40, host.settingsTopPos() + 30, 81, 14,
+                new EditBox(host.settingsFont(), host.settingsLeftPos() + 44, host.settingsTopPos() + 30, 77, 14,
                         Component.translatable("gui.marketblocks.shop_name")));
         nameField.setMaxLength(32);
         nameField.setValue(draft.shopName());
@@ -198,6 +200,13 @@ public final class SingleOfferSettingsSections {
                 leftPos + 7, topPos + 23, 162, 46);
 
         Component nameLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.general.shop_name_label"));
+        int maxNameLabelW = 44 - 12;
+        if (font.width(nameLabel) > maxNameLabelW) {
+            String dots = "...";
+            int maxW = Math.max(0, maxNameLabelW - font.width(GuiConstants.compact(dots)));
+            FormattedText head = font.getSplitter().headByWidth(nameLabel, maxW, Style.EMPTY);
+            nameLabel = GuiConstants.compact(head.getString() + dots);
+        }
         graphics.drawString(font, nameLabel, leftPos + 12, topPos + 33, 0x404040, false);
 
         // GroupBox 2: Funktionen & Signale (starts at 75, exact 6px gap, h = 40)
@@ -454,7 +463,7 @@ public final class SingleOfferSettingsSections {
 
         // Zeile 1: NPC-Name
         EditBox npcNameField = host.addSettingsWidget(
-                new EditBox(host.settingsFont(), host.settingsLeftPos() + 42, host.settingsTopPos() + 30, 122, 14,
+                new EditBox(host.settingsFont(), host.settingsLeftPos() + 44, host.settingsTopPos() + 30, 120, 14,
                         Component.translatable("gui.marketblocks.visuals.npc_name")));
         npcNameField.setMaxLength(32);
         npcNameField.setValue(draft.npcName());
@@ -639,6 +648,13 @@ public final class SingleOfferSettingsSections {
                 leftPos + 7, topPos + 23, 162, 62, groupBorderColor, groupTitleColor, GroupBox.DEFAULT_BG_COLOR);
 
         Component nameLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.npc_name_label"));
+        int maxNameLabelW = 44 - 12;
+        if (font.width(nameLabel) > maxNameLabelW) {
+            String dots = "...";
+            int maxW = Math.max(0, maxNameLabelW - font.width(GuiConstants.compact(dots)));
+            FormattedText head = font.getSplitter().headByWidth(nameLabel, maxW, Style.EMPTY);
+            nameLabel = GuiConstants.compact(head.getString() + dots);
+        }
         graphics.drawString(font, nameLabel, leftPos + 12, topPos + 33, labelColor, false);
 
         // GroupBox 2: Feedback & Effekte (starts at 91, exact 6px gap, h = 47, ends at 138)
@@ -670,6 +686,12 @@ public final class SingleOfferSettingsSections {
 
                 Component countLabel = GuiConstants
                         .compact(Component.translatable("gui.marketblocks.visuals.count_short"));
+                int maxCountLabelWidth = 52;
+                if (font.width(countLabel) > maxCountLabelWidth) {
+                    FormattedText head = font.getSplitter().headByWidth(countLabel,
+                            Math.max(0, maxCountLabelWidth - font.width("...")), Style.EMPTY);
+                    countLabel = GuiConstants.compact(head.getString() + "...");
+                }
                 graphics.drawString(font, countLabel, leftPos + 12, topPos + 51, labelColor, false);
 
                 GroupBox.render(graphics, font,
@@ -739,9 +761,7 @@ public final class SingleOfferSettingsSections {
                             : null);
                 });
 
-                Component countShort = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.count_short"));
-                int labelWidth = host.settingsFont().width(countShort);
-                int countBoxX = leftX + labelWidth + 3;
+                int countBoxX = host.settingsLeftPos() + 59;
                 int countBoxWidth = 18;
                 int boxHeight = 16;
 
@@ -800,8 +820,8 @@ public final class SingleOfferSettingsSections {
                     arrowBtn.setTooltip(en ? Tooltip.create(Component.translatable("gui.marketblocks.visuals.count.tooltip")) : null);
                 });
 
-                CompactCheckbox dynamicFillCheckbox = new CompactCheckbox(
-                        0,
+                CompactCheckbox dynamicFillCheckbox = host.addSettingsWidget(new CompactCheckbox(
+                        host.settingsLeftPos() + 98,
                         host.settingsTopPos() + 49,
                         Component.translatable("gui.marketblocks.visuals.dynamic_fill_level"),
                         host.settingsFont(),
@@ -810,15 +830,12 @@ public final class SingleOfferSettingsSections {
                         (checkbox, value) -> {
                             draft.setDynamicFillLevel(value);
                             onDirty.run();
-                        }).setTextOnLeft(true).setCompactText(true);
-                int dfX = host.settingsLeftPos() + 164 - dynamicFillCheckbox.getWidth();
-                dynamicFillCheckbox.setX(dfX);
+                        }).setBoxOnRightEdge(true).setCustomWidth(66).setMaxTextWidth(50).setCompactText(true));
                 dynamicFillCheckbox.active = enabled;
                 if (enabled) {
                     dynamicFillCheckbox.setTooltip(
                             Tooltip.create(Component.translatable("gui.marketblocks.visuals.dynamic_fill_level.tooltip")));
                 }
-                host.addSettingsWidget(dynamicFillCheckbox);
 
                 sectionWidgets.add(en -> {
                     dynamicFillCheckbox.active = en;
@@ -837,7 +854,7 @@ public final class SingleOfferSettingsSections {
                         (checkbox, value) -> {
                             draft.setFullbright(value);
                             onDirty.run();
-                        }).setTextOnLeft(true).setCompactText(true));
+                        }).setBoxOnRightEdge(true).setCustomWidth(72).setMaxTextWidth(56).setCompactText(true));
                 fullbrightCheckbox.active = enabled;
                 if (enabled) {
                     fullbrightCheckbox.setTooltip(Tooltip
@@ -929,7 +946,7 @@ public final class SingleOfferSettingsSections {
                         (checkbox, value) -> {
                             draft.setFullbright(value);
                             onDirty.run();
-                        }).setTextOnLeft(true).setCompactText(true));
+                        }).setBoxOnRightEdge(true).setCustomWidth(72).setMaxTextWidth(56).setCompactText(true));
                 fullbrightCheckbox.active = enabled;
                 if (enabled) {
                     fullbrightCheckbox.setTooltip(Tooltip
@@ -946,7 +963,7 @@ public final class SingleOfferSettingsSections {
                         (checkbox, value) -> {
                             draft.setBobbing(value);
                             onDirty.run();
-                        }).setTextOnLeft(true).setCompactText(true));
+                        }).setBoxOnRightEdge(true).setCustomWidth(78).setMaxTextWidth(62).setCompactText(true));
                 bobbingCheckbox.active = enabled;
                 if (enabled) {
                     bobbingCheckbox.setTooltip(Tooltip.create(Component.translatable("gui.marketblocks.visuals.bobbing.tooltip")));

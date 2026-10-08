@@ -44,6 +44,8 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
@@ -797,6 +799,13 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
                     graphics.renderTooltip(font, tab.getTooltipMessage(), mouseX, mouseY);
                 }
             }
+            Component fullHeaderTitle = activeSettingsCategory != null ? activeSettingsCategory.headerTitle()
+                    : Component.translatable("gui.marketblocks.settings_title");
+            int maxHeaderW = getSettingsHeaderAvailableWidth(activeSettingsCategory);
+            if (font.width(fullHeaderTitle) > maxHeaderW
+                    && isHovering(8, 6, maxHeaderW, font.lineHeight, mouseX, mouseY)) {
+                graphics.renderTooltip(font, fullHeaderTitle, mouseX, mouseY);
+            }
         } else if (menu.getActiveTab() == ShopTab.OFFERS) {
             SingleOfferShopBlockEntity be = menu.getBlockEntity();
             boolean showAdminBadge = be.isAdminShopEnabled();
@@ -1088,10 +1097,49 @@ public class SingleOfferShopScreen extends AbstractSingleOfferShopScreen<SingleO
         graphics.drawString(font, playerInventoryTitle, 8, GuiConstants.PLAYER_INV_LABEL_Y, 4210752, false);
     }
 
+    private int getSettingsHeaderAvailableWidth(SettingsCategory category) {
+        if (category == null) {
+            return imageWidth - 16;
+        }
+        return switch (category) {
+            case GENERAL -> {
+                Component statusLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.general.status_label"));
+                yield Math.max(20, (150 - font.width(statusLabel) - 4) - 8);
+            }
+            case IO -> {
+                Component ioLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.io.status_label"));
+                yield Math.max(20, (130 - font.width(ioLabel) - 4) - 8);
+            }
+            case VILLAGER -> {
+                Component npcLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.npc_short"));
+                int right = 130 - font.width(npcLabel) - 4;
+                yield Math.max(20, right - 8);
+            }
+            case VISUALS -> {
+                Component displayLabel = GuiConstants.compact(Component.translatable("gui.marketblocks.visuals.display"));
+                yield Math.max(20, (130 - font.width(displayLabel) - 4) - 8);
+            }
+            default -> imageWidth - 16;
+        };
+    }
+
+    private Component truncateHeaderTitle(Component title, int maxWidth) {
+        if (font.width(title) <= maxWidth) {
+            return title;
+        }
+        String dots = "...";
+        int dotsWidth = font.width(dots);
+        int maxTextWidth = Math.max(0, maxWidth - dotsWidth);
+        FormattedText head = font.getSplitter().headByWidth(title, maxTextWidth, Style.EMPTY);
+        return Component.literal(head.getString() + dots);
+    }
+
     private void renderSettingsLabels(GuiGraphics graphics) {
         SingleOfferShopBlockEntity be = menu.getBlockEntity();
-        Component headerTitle = activeSettingsCategory != null ? activeSettingsCategory.headerTitle()
+        Component fullHeaderTitle = activeSettingsCategory != null ? activeSettingsCategory.headerTitle()
                 : Component.translatable("gui.marketblocks.settings_title");
+        int maxHeaderW = getSettingsHeaderAvailableWidth(activeSettingsCategory);
+        Component headerTitle = truncateHeaderTitle(fullHeaderTitle, maxHeaderW);
         graphics.drawString(font, headerTitle, 8, 6, 4210752, false);
         renderOwnerInfo(graphics, be, menu.isOwner(), imageWidth);
         if (!menu.isOwner() && !canToggleAdminShop()) {

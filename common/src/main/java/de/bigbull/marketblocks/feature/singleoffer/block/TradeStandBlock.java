@@ -7,7 +7,16 @@ import net.minecraft.world.level.block.SoundType;
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.phys.BlockHitResult;
+import java.util.List;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.InteractionResult;
@@ -112,6 +121,85 @@ public class TradeStandBlock extends BaseShopBlock {
         return stack;
     }
 
+    public static boolean canPlayerModifyShowcase(Level level, BlockPos pos, Player player) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof SingleOfferShopBlockEntity shop && shop.getOwnerId() != null) {
+            return shop.isOwner(player);
+        }
+        return true;
+    }
+
+    /**
+     * Checks whether the hit result on this base block specifically struck the showcase
+     * (box from 1/16 to 15/16 in X/Z and 11/16 to 16/16 in Y), rather than the 1-pixel
+     * counter margin or front/side table surface.
+     */
+    public static boolean isHitOnShowcase(BlockPos pos, BlockHitResult hitResult) {
+        // If the hit face is UP, it's hitting the counter tabletop (Y=11/16) that surrounds the showcase
+        if (hitResult.getDirection() == Direction.UP) {
+            return false;
+        }
+
+        double hitX = hitResult.getLocation().x - pos.getX();
+        double hitY = hitResult.getLocation().y - pos.getY();
+        double hitZ = hitResult.getLocation().z - pos.getZ();
+
+        double minX = 1.0 / 16.0 - 0.001;
+        double maxX = 15.0 / 16.0 + 0.001;
+        double minY = 11.0 / 16.0 + 0.001;
+        double maxY = 1.0 + 0.001;
+        double minZ = 1.0 / 16.0 - 0.001;
+        double maxZ = 15.0 / 16.0 + 0.001;
+
+        return hitY >= minY && hitY <= maxY
+                && hitX >= minX && hitX <= maxX
+                && hitZ >= minZ && hitZ <= maxZ;
+    }
+
+    @Override
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
+            InteractionHand hand, BlockHitResult hitResult) {
+        boolean hasShowcase = state.getValue(HAS_SHOWCASE);
+
+        // 1. Holding Glass and clicking top face of counter without showcase places the showcase (no shift needed)
+        if (stack.is(Items.GLASS) && hitResult.getDirection() == Direction.UP && !hasShowcase) {
+            if (canPlayerModifyShowcase(level, pos, player)) {
+                InteractionResult res = tryEnableShowcase(level, pos, state, player, stack);
+                if (res.consumesAction()) {
+                    return level.isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+                }
+            }
+            // If the player is not an owner/co-owner, do NOT return FAIL.
+            // Delegate to super.useItemOn so it opens the shop GUI normally without placing a glass block in the world.
+            return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
+        }
+
+        // 2. Clicking the showcase with an axe knocks it down (no shift needed).
+        // The showcase extends from Y = 11/16 to 16/16 and X/Z = 1/16 to 15/16 in this base block.
+        if (stack.getItem() instanceof net.minecraft.world.item.AxeItem && hasShowcase
+                && isHitOnShowcase(pos, hitResult)) {
+            if (canPlayerModifyShowcase(level, pos, player)) {
+                InteractionResult res = tryDisableShowcase(level, pos, state, player);
+                if (res.consumesAction()) {
+                    return level.isClientSide ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+                }
+            }
+            // If the player is not authorized to knock down the showcase, let them open the shop GUI normally with their axe
+            return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
+        }
+
+        // 3. Side/front clicks, clicks on the counter (including surrounding 1-pixel margin), or other items open the shop menu normally
+        return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents,
+            TooltipFlag tooltipFlag) {
+        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+        tooltipComponents.add(Component.translatable("tooltip.marketblocks.trade_stand.showcase_info")
+                .withStyle(ChatFormatting.GRAY));
+    }
+
     public static InteractionResult tryEnableShowcase(Level level, BlockPos pos, BlockState state, Player player,
             ItemStack stack) {
         if (!state.is(RegistriesInit.TRADE_STAND_BLOCK.get()) || state.getValue(HAS_SHOWCASE)) {
@@ -124,12 +212,12 @@ public class TradeStandBlock extends BaseShopBlock {
         boolean topAlreadyPresent = topState.is(topBlock);
 
         if (!topAlreadyPresent && !topState.canBeReplaced()) {
-            return InteractionResult.FAIL;
+            return InteractionResult.PASS;
         }
 
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof SingleOfferShopBlockEntity shop && !shop.isOwner(player)) {
+            if (be instanceof SingleOfferShopBlockEntity shop && shop.getOwnerId() != null && !shop.isOwner(player)) {
                 return InteractionResult.FAIL;
             }
 
@@ -153,7 +241,7 @@ public class TradeStandBlock extends BaseShopBlock {
 
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof SingleOfferShopBlockEntity shop && !shop.isOwner(player)) {
+            if (be instanceof SingleOfferShopBlockEntity shop && shop.getOwnerId() != null && !shop.isOwner(player)) {
                 return InteractionResult.FAIL;
             }
 
@@ -198,6 +286,8 @@ public class TradeStandBlock extends BaseShopBlock {
             BlockPos topPos = pos.above();
             if (level.getBlockState(topPos).is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
                 level.setBlock(topPos, Blocks.AIR.defaultBlockState(), 3);
+                level.destroyBlockProgress(0, topPos, -1);
+                level.destroyBlockProgress(500000, topPos, -1);
             }
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
@@ -223,6 +313,8 @@ public class TradeStandBlock extends BaseShopBlock {
         if (baseState.getValue(HAS_SHOWCASE) && !topState.is(topBlock)) {
             if (topState.canBeReplaced()) {
                 level.setBlock(topPos, topBlock.defaultBlockState(), 3);
+                level.destroyBlockProgress(0, topPos, -1);
+                level.destroyBlockProgress(500000, topPos, -1);
             }
         }
     }
