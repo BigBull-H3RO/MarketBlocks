@@ -1,11 +1,17 @@
 package de.bigbull.marketblocks.client.gui;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Modern compact checkbox widget with dark bezel frame and vivid green
@@ -34,6 +40,10 @@ public class CompactCheckbox extends AbstractButton {
     private boolean textOnLeft = false;
     private boolean compactText = false;
     private boolean boxOnRightEdge = false;
+    private int maxTextWidth = -1;
+    private Tooltip boxTooltip;
+    private Tooltip fullTextTooltip;
+    private boolean isTextTruncated = false;
 
     public interface OnValueChange {
         void onValueChange(CompactCheckbox checkbox, boolean value);
@@ -75,6 +85,25 @@ public class CompactCheckbox extends AbstractButton {
         return this;
     }
 
+    public CompactCheckbox setMaxTextWidth(int maxTextWidth) {
+        this.maxTextWidth = maxTextWidth;
+        recalculateWidth();
+        return this;
+    }
+
+    @Override
+    public void setTooltip(@Nullable Tooltip tooltip) {
+        super.setTooltip(null);
+        this.boxTooltip = tooltip;
+    }
+
+    @Override
+    public void setMessage(Component message) {
+        super.setMessage(message);
+        this.fullTextTooltip = null;
+        recalculateWidth();
+    }
+
     private void recalculateWidth() {
         if (this.boxOnRightEdge) {
             return;
@@ -87,12 +116,52 @@ public class CompactCheckbox extends AbstractButton {
     private Component getEffectiveMessage() {
         Component msg = getMessage();
         if (msg == null || msg.getString().isEmpty()) {
+            this.isTextTruncated = false;
             return Component.empty();
         }
-        if (this.compactText) {
-            return GuiConstants.compact(Component.literal(msg.getString().toUpperCase(java.util.Locale.ROOT)));
+        Component effective = this.compactText
+                ? GuiConstants.compact(Component.literal(msg.getString().toUpperCase(java.util.Locale.ROOT)))
+                : msg;
+        if (this.maxTextWidth > 0 && this.font.width(effective) > this.maxTextWidth) {
+            this.isTextTruncated = true;
+            if (this.fullTextTooltip == null) {
+                this.fullTextTooltip = Tooltip.create(msg);
+            }
+            String dots = "...";
+            Component dotsComp = this.compactText ? GuiConstants.compact(dots) : Component.literal(dots);
+            int maxW = Math.max(0, this.maxTextWidth - this.font.width(dotsComp));
+            FormattedText head = this.font.getSplitter().headByWidth(effective, maxW, Style.EMPTY);
+            return this.compactText
+                    ? GuiConstants.compact(head.getString() + dots)
+                    : Component.literal(head.getString() + dots);
         }
-        return msg;
+        this.isTextTruncated = false;
+        return effective;
+    }
+
+    public ScreenRectangle getBoxRectangle() {
+        return new ScreenRectangle(getBoxX(), getBoxY(), this.boxSize, this.boxSize);
+    }
+
+    public ScreenRectangle getTextRectangle() {
+        Component msg = getEffectiveMessage();
+        int bx = getBoxX();
+        int by = getBoxY();
+        int textX = (this.textOnLeft || this.boxOnRightEdge) ? getX() : bx + this.boxSize + 4;
+        int textY = this.compactText
+                ? by + 2
+                : getY() + (getHeight() - this.font.lineHeight) / 2 + 1;
+        int textWidth = msg != null ? this.font.width(msg) : 0;
+        return new ScreenRectangle(textX, textY, textWidth, this.font.lineHeight);
+    }
+
+    public boolean isTextHovered(double mouseX, double mouseY) {
+        if (!this.active || !this.visible) {
+            return false;
+        }
+        ScreenRectangle rect = getTextRectangle();
+        return mouseX >= rect.left() && mouseX < rect.left() + rect.width()
+                && mouseY >= rect.top() && mouseY < rect.top() + rect.height();
     }
 
     public int getBoxX() {
@@ -175,6 +244,16 @@ public class CompactCheckbox extends AbstractButton {
                     : getY() + (getHeight() - this.font.lineHeight) / 2 + 1;
             int textColor = this.active ? COLOR_LABEL : COLOR_LABEL_DISABLED;
             graphics.drawString(this.font, msg, textX, textY, textColor, false);
+        }
+
+        // 4. Tooltip dispatch (box gets setting explanation, truncated text gets full label)
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen != null) {
+            if (boxHovered && this.boxTooltip != null) {
+                mc.screen.setTooltipForNextRenderPass(this.boxTooltip.toCharSequence(mc));
+            } else if (isTextHovered(mouseX, mouseY) && this.isTextTruncated && this.fullTextTooltip != null) {
+                mc.screen.setTooltipForNextRenderPass(this.fullTextTooltip.toCharSequence(mc));
+            }
         }
     }
 

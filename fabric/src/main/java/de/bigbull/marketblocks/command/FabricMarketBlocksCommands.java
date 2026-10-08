@@ -133,7 +133,7 @@ public final class FabricMarketBlocksCommands {
             throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
 
-        if (!Config.ALLOW_NON_OP_TELEPORT.get() && !player.hasPermissions(2)) {
+        if (!Config.canPlayerTeleport(player)) {
             player.sendSystemMessage(
                     Component.translatable("command.marketblocks.internal.tp.no_permission")
                             .withStyle(ChatFormatting.RED));

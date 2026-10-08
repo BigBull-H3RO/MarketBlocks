@@ -3,6 +3,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,10 +28,16 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
-      - name: Setup JDK 21
+      - name: Resolve Java version from gradle.properties
+        id: java_version
+        run: |
+          java_ver=$(grep -E '^java_version=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r' | xargs)
+          echo "java_version=${java_ver:-21}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: ${{ steps.java_version.outputs.java_version }}
           distribution: 'temurin'
 
       - name: Setup Gradle
@@ -76,10 +83,16 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
-      - name: Setup JDK 21
+      - name: Resolve Java version from gradle.properties
+        id: java_version
+        run: |
+          java_ver=$(grep -E '^java_version=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r' | xargs)
+          echo "java_version=${java_ver:-21}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: ${{ steps.java_version.outputs.java_version }}
           distribution: 'temurin'
 
       - name: Setup Gradle

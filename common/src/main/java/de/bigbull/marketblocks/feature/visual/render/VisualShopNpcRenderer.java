@@ -39,7 +39,7 @@ public final class VisualShopNpcRenderer {
     private static final float SPAWN_BOUNCE_DURATION = 8.0F;
     private static final float DESPAWN_DURATION = 10.0F;
     private static final float HEAD_YAW_LIMIT = 60.0F;
-    private static final float PLAYER_TRACK_RANGE = 8.0F;
+    private static final float PLAYER_TRACK_RANGE = 5.0F;
     private static final float SPAWN_FALL_SOUND_VOLUME = 0.40F;
     private static final float SPAWN_FALL_SOUND_PITCH = 1.5F;
     private static final float SPAWN_BOUNCE_SOUND_VOLUME = 0.72F;
@@ -244,12 +244,16 @@ public final class VisualShopNpcRenderer {
                 }
             }
             if (settings.purchaseSoundsEnabled()) {
-                if (now - state.getLastPurchaseFeedbackTick() > 4L) {
-                    int delta = currentCounter - state.getLastPurchaseCounter();
-                    float pitch = Math.min(0.9F + delta * 0.08F, 1.8F);
+                long elapsed = now - state.getLastPurchaseFeedbackTick();
+                long cooldown = state.getNextPurchaseSoundCooldownTicks();
+                // If it's a new interaction session (paused > 35 ticks / 1.75s) or cooldown passed
+                if (elapsed > 35L || (cooldown > 0L && elapsed >= cooldown)) {
+                    float pitch = 0.95F + level.random.nextFloat() * 0.20F;
                     level.playLocalSound(placement.spawnPos().x, placement.spawnPos().y + 1.0D, placement.spawnPos().z,
                             SoundEvents.VILLAGER_YES, SoundSource.BLOCKS, 0.6F, pitch, false);
                     state.setLastPurchaseFeedbackTick(now);
+                    // Natural random cooldown between 18 and 38 ticks (approx 0.9s - 1.9s)
+                    state.setNextPurchaseSoundCooldownTicks(18L + level.random.nextInt(21));
                 }
             }
         }
@@ -312,28 +316,51 @@ public final class VisualShopNpcRenderer {
     }
 
     private static LookTarget calculateLookTarget(Level level, Vec3 spawnPos, long now, float partialTick, float bodyYaw) {
-        Player nearest = level.getNearestPlayer(spawnPos.x, spawnPos.y, spawnPos.z, PLAYER_TRACK_RANGE, false);
-        if (nearest == null) {
+        Player bestPlayer = null;
+        double bestDistSq = PLAYER_TRACK_RANGE * PLAYER_TRACK_RANGE;
+        float bestYaw = bodyYaw;
+        float bestPitch = 0.0F;
+
+        for (Player player : level.players()) {
+            if (player.isSpectator() || !player.isAlive()) {
+                continue;
+            }
+
+            double dx = player.getX() - spawnPos.x;
+            double dz = player.getZ() - spawnPos.z;
+            double dy = player.getEyeY() - (spawnPos.y + 1.42D);
+            double distSq = dx * dx + dz * dz + dy * dy;
+
+            if (distSq > bestDistSq) {
+                continue;
+            }
+
+            float rawYaw = (float) (Mth.atan2(dz, dx) * (180F / Math.PI)) - 90.0F;
+            float delta = Mth.wrapDegrees(rawYaw - bodyYaw);
+
+            // Only track players in front of the counter (within head turning reach)
+            // Players behind the NPC are ignored so they don't hijack focus
+            if (Math.abs(delta) > HEAD_YAW_LIMIT + 5.0F) {
+                continue;
+            }
+
+            bestDistSq = distSq;
+            bestPlayer = player;
+            float clampedDelta = Mth.clamp(delta, -HEAD_YAW_LIMIT, HEAD_YAW_LIMIT);
+            bestYaw = bodyYaw + clampedDelta;
+
+            double horizontal = Math.sqrt(dx * dx + dz * dz);
+            bestPitch = Mth.clamp(
+                    (float) (-(Mth.atan2(dy, horizontal) * (180F / Math.PI))),
+                    -24.0F, 20.0F
+            );
+        }
+
+        if (bestPlayer == null) {
             return new LookTarget(bodyYaw, calculateIdleNodPitch(now, partialTick));
         }
 
-        double dx = nearest.getX() - spawnPos.x;
-        double dz = nearest.getZ() - spawnPos.z;
-        double dy = nearest.getEyeY() - (spawnPos.y + 1.42D);
-        double horizontal = Math.sqrt(dx * dx + dz * dz);
-
-        float rawYaw = (float) (Mth.atan2(dz, dx) * (180F / Math.PI)) - 90.0F;
-        float delta = Mth.wrapDegrees(rawYaw - bodyYaw);
-
-        if (Math.abs(delta) > HEAD_YAW_LIMIT) {
-            return new LookTarget(bodyYaw, calculateIdleNodPitch(now, partialTick));
-        }
-
-        float pitch = Mth.clamp(
-                (float) (-(Mth.atan2(dy, horizontal) * (180F / Math.PI))),
-                -24.0F, 20.0F
-        );
-        return new LookTarget(rawYaw, pitch);
+        return new LookTarget(bestYaw, bestPitch);
     }
 
     private static float calculateIdleNodPitch(long now, float partialTick) {

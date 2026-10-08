@@ -45,8 +45,8 @@ public record TeleportRequestPacket(String shopId) implements CustomPacketPayloa
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
-            // Permission check: must be OP or config must allow non-OP teleport
-            if (!Config.ALLOW_NON_OP_TELEPORT.get() && !player.hasPermissions(2)) {
+            // Permission check: must be permitted by teleport configuration
+            if (!Config.canPlayerTeleport(player)) {
                 return;
             }
 

@@ -3,8 +3,13 @@ package de.bigbull.marketblocks.feature.singleoffer.block;
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -74,6 +79,32 @@ public class TradeStandTopBlock extends Block {
         if (!level.isClientSide && !state.canSurvive(level, pos)) {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         }
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
+            InteractionHand hand, BlockHitResult hitResult) {
+        BlockPos basePos = pos.below();
+        BlockState baseState = level.getBlockState(basePos);
+
+        if (!baseState.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        // Hitting the top block (the glass showcase) with an axe knocks it down (no shift needed)
+        if (stack.getItem() instanceof AxeItem) {
+            if (TradeStandBlock.canPlayerModifyShowcase(level, basePos, player)) {
+                InteractionResult res = TradeStandBlock.tryDisableShowcase(level, basePos, baseState, player);
+                if (res.consumesAction()) {
+                    return ItemInteractionResult.sidedSuccess(level.isClientSide);
+                }
+            }
+            // If the player cannot modify the showcase, let them open the shop menu normally with their axe
+        }
+
+        BlockHitResult redirectedHit = new BlockHitResult(hitResult.getLocation(), hitResult.getDirection(), basePos,
+                hitResult.isInside());
+        return baseState.useItemOn(stack, level, player, hand, redirectedHit);
     }
 
     @Override

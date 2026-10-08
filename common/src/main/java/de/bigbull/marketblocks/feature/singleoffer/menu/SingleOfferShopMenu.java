@@ -506,6 +506,12 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
      */
     @Override
     public void clicked(int slotId, int button, ClickType type, Player player) {
+        // Convert rapid double-clicks (PICKUP_ALL) on the active offer slot into regular purchases
+        if (slotId == OFFER_SLOT_INDEX && blockEntity.hasOffer() && type == ClickType.PICKUP_ALL) {
+            type = ClickType.PICKUP;
+            button = 0;
+        }
+
         boolean trackBuyerContext = !player.level().isClientSide
                 && slotId == OFFER_SLOT_INDEX
                 && (type == ClickType.PICKUP || type == ClickType.SWAP)
@@ -539,7 +545,7 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 if (slotId >= 0 && slotId < PAYMENT_SLOTS) {
                     return;
                 }
-                if (slotId == OFFER_SLOT_INDEX && !blockEntity.hasOffer()) {
+                if (slotId == OFFER_SLOT_INDEX) {
                     return;
                 }
             }
