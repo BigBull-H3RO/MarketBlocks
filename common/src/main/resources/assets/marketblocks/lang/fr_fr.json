@@ -399,6 +399,8 @@
   "item.marketblocks.trade_stand.with_showcase": "Stand de commerce (avec vitrine)",
   "itemGroup.marketblocks": "MarketBlocks",
   "key.categories.marketblocks": "MarketBlocks",
+  "key.category.marketblocks": "MarketBlocks",
+  "key.category.marketblocks.marketblocks": "MarketBlocks",
   "key.marketblocks.open_marketplace": "Ouvrir la place du marché",
   "marketblocks.jade.for": "Pour :",
   "marketblocks.jade.out_of_stock": "Rupture de stock !",
@@ -450,5 +452,6 @@
   "message.marketblocks.trade_stand.no_offer": "Ce stand de commerce n'a actuellement aucune offre active.",
   "message.marketblocks.trade_stand.not_owner": "Seul le propriétaire peut détruire ce stand de commerce.",
   "subtitles.marketblocks.visual_npc_fall": "Le villageois atterrit",
+  "tooltip.marketblocks.hold_shift": "Maintenez %s pour plus d'informations",
   "tooltip.marketblocks.trade_stand.showcase_info": "Astuce : Clic droit sur le dessus avec du verre pour ajouter une vitrine. Retirer avec une hache."
 }

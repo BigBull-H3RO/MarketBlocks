@@ -399,6 +399,8 @@
   "item.marketblocks.trade_stand.with_showcase": "Handelsstand (Mit Vitrine)",
   "itemGroup.marketblocks": "MarketBlocks",
   "key.categories.marketblocks": "MarketBlocks",
+  "key.category.marketblocks": "MarketBlocks",
+  "key.category.marketblocks.marketblocks": "MarketBlocks",
   "key.marketblocks.open_marketplace": "Marktplatz öffnen",
   "marketblocks.jade.for": "Für:",
   "marketblocks.jade.out_of_stock": "Ausverkauft!",
@@ -450,5 +452,6 @@
   "message.marketblocks.trade_stand.no_offer": "Dieser Handelsstand hat aktuell kein aktives Angebot.",
   "message.marketblocks.trade_stand.not_owner": "Nur der Besitzer kann diesen Handelsstand abbauen.",
   "subtitles.marketblocks.visual_npc_fall": "Dorfbewohner landet",
+  "tooltip.marketblocks.hold_shift": "Halte %s für Info",
   "tooltip.marketblocks.trade_stand.showcase_info": "Tipp: Oben mit Glas rechtsklicken für Vitrine. Mit einer Axt abschlagen."
 }

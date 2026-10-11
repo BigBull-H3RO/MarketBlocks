@@ -142,7 +142,7 @@ public class ShopBuyerEntity extends PathfinderMob {
     }
 
     public void onFlee() {
-        this.fleeCooldownTicks = 60;
+        this.fleeCooldownTicks = 120;
     }
 
     public boolean isScared() {
@@ -218,9 +218,8 @@ public class ShopBuyerEntity extends PathfinderMob {
             }
         });
 
-        // Panic goal when not raging (runs at full sprint speed 1.0D when taking
-        // damage)
-        this.goalSelector.addGoal(1, new PanicGoal(this, 1.0D) {
+        // Panic goal when not raging (runs at full sprint speed ~0.36 when taking damage)
+        this.goalSelector.addGoal(1, new PanicGoal(this, 1.2D) {
             @Override
             public boolean canUse() {
                 return !ShopBuyerEntity.this.isRaging() && super.canUse();
@@ -232,17 +231,15 @@ public class ShopBuyerEntity extends PathfinderMob {
             }
         });
 
-        // Flee from hostile mobs when not raging (vanilla Wandering Trader behavior)
-        // Walk speed 0.7D, sprint speed 1.0D (fast sprint when monster is within 7
-        // blocks)
-        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Zombie.class, 10.0F, 0.7D, 1.0D));
-        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Pillager.class, 15.0F, 0.7D, 1.0D));
-        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Evoker.class, 12.0F, 0.7D, 1.0D));
-        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Vindicator.class, 10.0F, 0.7D, 1.0D));
-        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Illusioner.class, 12.0F, 0.7D, 1.0D));
-        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Vex.class, 10.0F, 0.7D, 1.0D));
-        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Zoglin.class, 10.0F, 0.7D, 1.0D));
-        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Raider.class, 12.0F, 0.7D, 1.0D));
+        // Flee from hostile mobs when not raging (matching vanilla flee distances & ~0.36 speed)
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Zombie.class, 14.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Evoker.class, 16.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Vindicator.class, 14.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Vex.class, 12.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Pillager.class, 16.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Illusioner.class, 16.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Zoglin.class, 12.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Raider.class, 14.0F, 1.2D, 1.2D));
 
         this.goalSelector.addGoal(2, new LeaveAndDespawnGoal(this, 0.65D));
         this.goalSelector.addGoal(3, new TradeWithShopGoal(this, 3.5f));

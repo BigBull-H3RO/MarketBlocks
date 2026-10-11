@@ -399,6 +399,8 @@
   "item.marketblocks.trade_stand.with_showcase": "Trade Stand (With Showcase)",
   "itemGroup.marketblocks": "MarketBlocks",
   "key.categories.marketblocks": "MarketBlocks",
+  "key.category.marketblocks": "MarketBlocks",
+  "key.category.marketblocks.marketblocks": "MarketBlocks",
   "key.marketblocks.open_marketplace": "Open Marketplace",
   "marketblocks.jade.for": "For:",
   "marketblocks.jade.out_of_stock": "Out of Stock!",
@@ -450,5 +452,6 @@
   "message.marketblocks.trade_stand.no_offer": "This trade stand currently has no active offer.",
   "message.marketblocks.trade_stand.not_owner": "Only the owner can break this trade stand.",
   "subtitles.marketblocks.visual_npc_fall": "Villager lands",
+  "tooltip.marketblocks.hold_shift": "Hold %s for info",
   "tooltip.marketblocks.trade_stand.showcase_info": "Tip: Right-click top with Glass to add a showcase. Knock off with an Axe."
 }

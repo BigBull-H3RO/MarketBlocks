@@ -7,16 +7,10 @@ import net.minecraft.world.level.block.SoundType;
 import com.mojang.serialization.MapCodec;
 import de.bigbull.marketblocks.core.init.RegistriesInit;
 import de.bigbull.marketblocks.feature.singleoffer.entity.SingleOfferShopBlockEntity;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.phys.BlockHitResult;
-import java.util.List;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.InteractionResult;
@@ -194,13 +188,6 @@ public class TradeStandBlock extends BaseShopBlock {
         return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
     }
 
-    @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents,
-            TooltipFlag tooltipFlag) {
-        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
-        tooltipComponents.add(Component.translatable("tooltip.marketblocks.trade_stand.showcase_info")
-                .withStyle(ChatFormatting.GRAY));
-    }
 
     public static InteractionResult tryEnableShowcase(Level level, BlockPos pos, BlockState state, Player player,
             ItemStack stack) {

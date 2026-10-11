@@ -73,6 +73,11 @@ public class MarketBlocksClient implements ClientModInitializer {
                     return 0.0F;
                 });
 
+        // Tooltip handler
+        net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+            de.bigbull.marketblocks.client.tooltip.TradeStandTooltipHandler.appendTooltip(stack, lines);
+        });
+
         // Keybindings
         KeyBindingHelper.registerKeyBinding(OPEN_MARKETPLACE);
 

@@ -72,11 +72,6 @@ public class TomlConfigSpec {
             String fullKey = val.getCategory().isEmpty() ? val.getKey() : val.getCategory() + "." + val.getKey();
             if (parsedEntries.containsKey(fullKey)) {
                 val.deserialize(parsedEntries.get(fullKey));
-            } else if ("maxShopsPerPlayer".equals(val.getKey())) {
-                String legacyKey = (val.getCategory().isEmpty() ? "" : val.getCategory() + ".") + "maxShopsPerPlayerSurvival";
-                if (parsedEntries.containsKey(legacyKey)) {
-                    val.deserialize(parsedEntries.get(legacyKey));
-                }
             }
         }
 
@@ -181,11 +176,6 @@ public class TomlConfigSpec {
             String fullKey = val.getCategory().isEmpty() ? val.getKey() : val.getCategory() + "." + val.getKey();
             if (valuesMap.containsKey(fullKey)) {
                 val.deserialize(valuesMap.get(fullKey));
-            } else if ("maxShopsPerPlayer".equals(val.getKey())) {
-                String legacyKey = (val.getCategory().isEmpty() ? "" : val.getCategory() + ".") + "maxShopsPerPlayerSurvival";
-                if (valuesMap.containsKey(legacyKey)) {
-                    val.deserialize(valuesMap.get(legacyKey));
-                }
             }
         }
     }
