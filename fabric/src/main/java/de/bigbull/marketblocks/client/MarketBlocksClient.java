@@ -56,6 +56,11 @@ public class MarketBlocksClient implements ClientModInitializer {
         BlockRenderLayerMap.INSTANCE.putBlock(RegistriesInit.TRADE_STAND_BLOCK.get(), RenderType.cutout());
         BlockRenderLayerMap.INSTANCE.putBlock(RegistriesInit.TRADE_STAND_BLOCK_TOP.get(), RenderType.cutout());
 
+        // Tooltip handler
+        net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+            de.bigbull.marketblocks.client.tooltip.TradeStandTooltipHandler.appendTooltip(stack, lines);
+        });
+
         // Keybindings
         KeyBindingHelper.registerKeyBinding(OPEN_MARKETPLACE);
 

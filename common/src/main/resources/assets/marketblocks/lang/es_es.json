@@ -399,6 +399,8 @@
   "item.marketblocks.trade_stand.with_showcase": "Puesto de comercio (con vitrina)",
   "itemGroup.marketblocks": "MarketBlocks",
   "key.categories.marketblocks": "MarketBlocks",
+  "key.category.marketblocks": "MarketBlocks",
+  "key.category.marketblocks.marketblocks": "MarketBlocks",
   "key.marketblocks.open_marketplace": "Abrir el mercado",
   "marketblocks.jade.for": "Por:",
   "marketblocks.jade.out_of_stock": "¡Agotado!",
@@ -450,5 +452,6 @@
   "message.marketblocks.trade_stand.no_offer": "Este puesto de comercio actualmente no tiene ninguna oferta activa.",
   "message.marketblocks.trade_stand.not_owner": "Solo el propietario puede romper este puesto de comercio.",
   "subtitles.marketblocks.visual_npc_fall": "Aldeano aterriza",
+  "tooltip.marketblocks.hold_shift": "Mantén presionado %s para más información",
   "tooltip.marketblocks.trade_stand.showcase_info": "Consejo: Clic derecho arriba con Cristal para añadir vitrina. Quitar con un hacha."
 }
