@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -54,6 +56,7 @@ public class CustomSlider extends AbstractWidget {
     protected boolean showLabel = true;
     protected boolean isDragging = false;
     protected int labelColor = LABEL_COLOR;
+    protected Tooltip badgeTooltip;
 
     public CustomSlider(int x, int y, int width, int height, @Nullable Component prefix,
                         float min, float max, float value, @Nullable Consumer<Float> onValueChanged) {
@@ -96,6 +99,36 @@ public class CustomSlider extends AbstractWidget {
         this.valueFormatter = val -> Component.literal(formatter.apply(val));
         return this;
     }
+
+    @Override
+    public void setTooltip(@Nullable Tooltip tooltip) {
+        super.setTooltip(null);
+        this.badgeTooltip = tooltip;
+    }
+
+    public ScreenRectangle getBadgeRectangle() {
+        Font font = Minecraft.getInstance().font;
+        Component valText = (this.valueFormatter != null)
+                ? this.valueFormatter.apply(this.currentValue)
+                : Component.literal(String.format(Locale.US, "%.2f", this.currentValue));
+        int valWidth = font.width(valText);
+        int badgeW = valWidth + 6;
+        int badgeH = 9;
+        int badgeX = getX() + this.width - badgeW;
+        int badgeY = getY() - 2;
+        return new ScreenRectangle(badgeX, badgeY, badgeW, badgeH);
+    }
+
+    public boolean isBadgeHovered(double mouseX, double mouseY) {
+        if (!this.visible || !this.showBadge || this.isDragging) {
+            return false;
+        }
+        ScreenRectangle rect = getBadgeRectangle();
+        return mouseX >= rect.left() && mouseX < rect.left() + rect.width()
+                && mouseY >= rect.top() && mouseY < rect.top() + rect.height();
+    }
+
+
 
     public float getValue() {
         return this.currentValue;
@@ -358,6 +391,14 @@ public class CustomSlider extends AbstractWidget {
         graphics.fill(thumbX + 2, thumbY + 2, thumbX + thumbWidth - 2, thumbY + thumbHeight - 2, body);
         graphics.fill(thumbX + thumbWidth - 2, thumbY + 2, thumbX + thumbWidth - 1, thumbY + thumbHeight - 2, shadow);
         graphics.fill(thumbX + 1, thumbY + thumbHeight - 2, thumbX + thumbWidth - 1, thumbY + thumbHeight - 1, shadow);
+
+        // 4. Tooltip dispatch (displayed ONLY when hovering over the value badge, hidden when dragging)
+        Minecraft mc = Minecraft.getInstance();
+        if (this.badgeTooltip != null && this.showBadge && !this.isDragging) {
+            if (isBadgeHovered(mouseX, mouseY)) {
+                graphics.setTooltipForNextFrame(mc.font, this.badgeTooltip.toCharSequence(mc), mouseX, mouseY);
+            }
+        }
     }
 
     @Override

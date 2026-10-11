@@ -34,8 +34,7 @@ public final class CommandUtils {
      */
     public static void appendWaypointsAndTp(CommandSourceStack source, MutableComponent text, GlobalPos pos,
             String name) {
-        if (source.getEntity() instanceof ServerPlayer player
-                && (player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) || Config.ALLOW_NON_OP_TELEPORT.get())) {
+        if (source.getEntity() instanceof ServerPlayer player && Config.canPlayerTeleport(player)) {
             Vec3 tpPos = calculateTeleportPos(pos, source.getServer());
             final double finalTpX = tpPos.x;
             final double finalTpY = tpPos.y;

@@ -18,9 +18,16 @@ public class TraderConfig {
 
     // --- Behavior ---
     public static final TomlConfigValue.IntValue DESPAWN_TICKS;
+    public static final TomlConfigValue.IntValue DESPAWN_PLAYER_DISTANCE;
     public static final TomlConfigValue.IntValue MAX_SHOPS_PER_VISIT;
     public static final TomlConfigValue.IntValue MIN_BUDGET;
     public static final TomlConfigValue.IntValue MAX_BUDGET;
+    public static final TomlConfigValue.IntValue CITIZEN_MIN_BUDGET;
+    public static final TomlConfigValue.IntValue CITIZEN_MAX_BUDGET;
+    public static final TomlConfigValue.IntValue WEALTHY_MIN_BUDGET;
+    public static final TomlConfigValue.IntValue WEALTHY_MAX_BUDGET;
+    public static final TomlConfigValue.IntValue NOBLE_MIN_BUDGET;
+    public static final TomlConfigValue.IntValue NOBLE_MAX_BUDGET;
     public static final TomlConfigValue.BooleanValue ALLOW_ADMIN_SHOPS;
     public static final TomlConfigValue.BooleanValue NAMES_ENABLED;
 
@@ -61,15 +68,36 @@ public class TraderConfig {
         DESPAWN_TICKS = BUILDER
                 .comment("Time in ticks before a trader despawns. Default: 48000 (~40 minutes, same as vanilla Wandering Trader)")
                 .defineInRange("despawnTicks", 48000, 6000, 120000);
+        DESPAWN_PLAYER_DISTANCE = BUILDER
+                .comment("Minimum distance in blocks away from any player before a departing trader can despawn with smoke particles. Default: 36")
+                .defineInRange("despawnPlayerDistance", 36, 16, 128);
         MAX_SHOPS_PER_VISIT = BUILDER
                 .comment("Maximum number of distinct shops a trader will visit before despawning. Default: 5")
                 .defineInRange("maxShopsPerVisit", 5, 1, 20);
         MIN_BUDGET = BUILDER
-                .comment("Minimum emerald budget a trader spawns with. Default: 16")
+                .comment("Fallback minimum budget (currency points) a trader spawns with. Default: 16")
                 .defineInRange("minBudget", 16, 1, 1024);
         MAX_BUDGET = BUILDER
-                .comment("Maximum emerald budget a trader spawns with. Default: 128")
+                .comment("Fallback maximum budget (currency points) a trader spawns with. Default: 128")
                 .defineInRange("maxBudget", 128, 16, 4096);
+        CITIZEN_MIN_BUDGET = BUILDER
+                .comment("Minimum budget (currency points, where 1 Emerald = 10, 1 Iron = 2, 1 Diamond = 15) for Citizen rank traders. Default: 32")
+                .defineInRange("citizenMinBudget", 32, 1, 1024);
+        CITIZEN_MAX_BUDGET = BUILDER
+                .comment("Maximum budget (currency points) for Citizen rank traders. Default: 128")
+                .defineInRange("citizenMaxBudget", 128, 1, 2048);
+        WEALTHY_MIN_BUDGET = BUILDER
+                .comment("Minimum budget (currency points) for Wealthy rank traders. Default: 256")
+                .defineInRange("wealthyMinBudget", 256, 1, 4096);
+        WEALTHY_MAX_BUDGET = BUILDER
+                .comment("Maximum budget (currency points) for Wealthy rank traders. Default: 1024")
+                .defineInRange("wealthyMaxBudget", 1024, 1, 8192);
+        NOBLE_MIN_BUDGET = BUILDER
+                .comment("Minimum budget (currency points) for Noble rank traders. Default: 1024")
+                .defineInRange("nobleMinBudget", 1024, 1, 16384);
+        NOBLE_MAX_BUDGET = BUILDER
+                .comment("Maximum budget (currency points) for Noble rank traders. Default: 8192")
+                .defineInRange("nobleMaxBudget", 8192, 1, 65536);
         ALLOW_ADMIN_SHOPS = BUILDER
                 .comment("Whether traders are allowed to buy from Admin Shops (infinite supply). Default: true")
                 .define("allowAdminShops", true);

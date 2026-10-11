@@ -33,4 +33,9 @@ public final class ClientGameEvents {
     public static void onClientLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         TomlConfigManager.onClientDisconnect();
     }
+
+    @SubscribeEvent
+    public static void onItemTooltip(net.neoforged.neoforge.event.entity.player.ItemTooltipEvent event) {
+        de.bigbull.marketblocks.client.tooltip.TradeStandTooltipHandler.appendTooltip(event.getItemStack(), event.getToolTip());
+    }
 }

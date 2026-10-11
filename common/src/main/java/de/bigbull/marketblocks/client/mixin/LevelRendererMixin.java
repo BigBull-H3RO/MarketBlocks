@@ -30,6 +30,15 @@ public abstract class LevelRendererMixin {
         try {
             marketblocks$IS_MIRRORING.set(true);
 
+            int mirrorBreakerId = breakerId + 500000;
+
+            if (progress < 0) {
+                this.destroyBlockProgress(mirrorBreakerId, pos, -1);
+                this.destroyBlockProgress(mirrorBreakerId, pos.above(), -1);
+                this.destroyBlockProgress(mirrorBreakerId, pos.below(), -1);
+                return;
+            }
+
             ClientLevel level = (ClientLevel) (Object) this;
             BlockState state = level.getBlockState(pos);
             BlockPos targetPos = null;
@@ -41,7 +50,6 @@ public abstract class LevelRendererMixin {
             }
 
             if (targetPos != null) {
-                int mirrorBreakerId = breakerId + 500000;
                 this.destroyBlockProgress(mirrorBreakerId, targetPos, progress);
             }
         } finally {

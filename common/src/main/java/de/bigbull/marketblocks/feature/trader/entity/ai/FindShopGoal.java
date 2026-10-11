@@ -30,6 +30,8 @@ public class FindShopGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        if (entity.isScared())
+            return false;
         if (entity.getBudget() <= 0)
             return false;
         if (entity.getTargetShop() != null)
@@ -73,6 +75,13 @@ public class FindShopGoal extends Goal {
             if (entity.hasVisited(pos))
                 continue;
             candidates.add(shop);
+        }
+
+        if (candidates.isEmpty() && entity.getVisitedShopCount() > 0) {
+            // All available shops within the district have already been visited!
+            // End the shopping tour gracefully instead of idling endlessly in the street.
+            entity.onShoppingTourExhausted();
+            return false;
         }
 
         // Shuffle so the trader doesn't always pick the same shop
