@@ -15,8 +15,10 @@ import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
 import de.bigbull.marketblocks.feature.trader.entity.ShopBuyerEntity;
 import de.bigbull.marketblocks.init.FabricRegistries;
 import de.bigbull.marketblocks.network.FabricNetwork;
+import de.bigbull.marketblocks.feature.trader.entity.ai.AttackShopBuyerGoal;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -28,10 +30,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
@@ -49,6 +51,13 @@ public class MarketBlocks implements ModInitializer {
 
         // Entity attributes
         FabricDefaultAttributeRegistry.register(RegistriesInit.SHOP_BUYER.get(), ShopBuyerEntity.createAttributes());
+
+        // Hostile mob targeting for Shop Buyer NPC
+        ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+            if (entity instanceof Mob mob) {
+                AttackShopBuyerGoal.addHostileTargetGoal(mob);
+            }
+        });
 
         // Lifecycle Events
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
@@ -89,14 +98,16 @@ public class MarketBlocks implements ModInitializer {
                 player.sendSystemMessage(
                         Component.translatable("gui.marketblocks.notifications.login.out_of_stock", emptyShops.size()));
                 for (BlockPos pos : emptyShops) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate", pos.getX(), pos.getY(), pos.getZ()));
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate",
+                            pos.getX(), pos.getY(), pos.getZ()));
                 }
             }
             if (!fullShops.isEmpty()) {
                 player.sendSystemMessage(
                         Component.translatable("gui.marketblocks.notifications.login.output_full", fullShops.size()));
                 for (BlockPos pos : fullShops) {
-                    player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate", pos.getX(), pos.getY(), pos.getZ()));
+                    player.sendSystemMessage(Component.translatable("gui.marketblocks.notifications.login.coordinate",
+                            pos.getX(), pos.getY(), pos.getZ()));
                 }
             }
 
@@ -120,32 +131,27 @@ public class MarketBlocks implements ModInitializer {
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
             BlockPos pos = hitResult.getBlockPos();
 
-            // Showcase toggling with Axe/Glass while crouching (must run on both client and server to prevent client ghost block placement)
+            // Showcase toggling with Axe while crouching (must run on both client and
+            // server to prevent client ghost block placement)
             if (player.isShiftKeyDown()) {
                 BlockState state = world.getBlockState(pos);
                 BlockPos basePos = pos;
                 BlockState baseState = state;
-                if (state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
+                boolean isTopBlock = state.is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get());
+                if (isTopBlock) {
                     basePos = pos.below();
                     baseState = world.getBlockState(basePos);
                 }
 
                 ItemStack held = player.getItemInHand(hand);
                 if (held.getItem() instanceof AxeItem) {
-                    InteractionResult res = TradeStandBlock.tryDisableShowcase(world, basePos, baseState, player);
-                    if (res != InteractionResult.PASS) {
-                        if (res == InteractionResult.FAIL && !world.isClientSide()) {
-                            player.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"));
+                    boolean isShowcaseHit = isTopBlock || (TradeStandBlock.hasShowcase(baseState)
+                            && TradeStandBlock.isHitOnShowcase(basePos, hitResult));
+                    if (isShowcaseHit && TradeStandBlock.canPlayerModifyShowcase(world, basePos, player)) {
+                        InteractionResult res = TradeStandBlock.tryDisableShowcase(world, basePos, baseState, player);
+                        if (res != InteractionResult.PASS) {
+                            return res;
                         }
-                        return res;
-                    }
-                } else if (held.is(Items.GLASS)) {
-                    InteractionResult res = TradeStandBlock.tryEnableShowcase(world, basePos, baseState, player, held);
-                    if (res != InteractionResult.PASS) {
-                        if (res == InteractionResult.FAIL && !world.isClientSide()) {
-                            player.sendOverlayMessage(Component.translatable("message.marketblocks.trade_stand.not_owner"));
-                        }
-                        return res;
                     }
                 }
             }

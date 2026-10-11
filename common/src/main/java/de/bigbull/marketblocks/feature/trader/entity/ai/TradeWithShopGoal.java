@@ -23,11 +23,17 @@ public class TradeWithShopGoal extends Goal {
     private final double tradeDistanceSq;
     private int tradeDelay;
 
-    /** Whether the trader is currently in browsing/window-shopping mode at a closed or unsuitable shop. */
+    /**
+     * Whether the trader is currently in browsing/window-shopping mode at a closed
+     * or unsuitable shop.
+     */
     private boolean browsingPhase;
     /** Extra time the trader spends looking around before reacting. */
     private int browsingTimer;
-    /** Time the trader holds the purchased item in hand and celebrates before departing. */
+    /**
+     * Time the trader holds the purchased item in hand and celebrates before
+     * departing.
+     */
     private int celebratingTimer;
 
     public TradeWithShopGoal(ShopBuyerEntity entity, float tradeDistance) {
@@ -38,53 +44,87 @@ public class TradeWithShopGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (entity.isInvisible()) return false;
-        
-        BlockPos target = entity.getTargetShop();
-        if (target == null) return false;
-        
-        BlockPos standPos = MoveToShopGoal.getTargetStandingPos(entity.level(), target);
-        double distToShopSq = entity.distanceToSqr(Vec3.atCenterOf(target));
-        double distToStandSq = entity.distanceToSqr(Vec3.atCenterOf(standPos));
+        if (entity.isScared())
+            return false;
+        if (entity.isInvisible())
+            return false;
 
-        // Reachable if close enough to the shop directly (e.g. over a counter) or at the target stand position
-        return distToShopSq <= tradeDistanceSq || distToStandSq <= 2.5 * 2.5;
+        BlockPos target = entity.getTargetShop();
+        if (target == null)
+            return false;
+
+        // 1. Trader must NOT be standing on top of or inside the shop block
+        if (entity.blockPosition().equals(target) || entity.blockPosition().equals(target.above())) {
+            return false;
+        }
+        if (entity.getY() >= target.getY() + 0.30D && entity.distanceToSqr(Vec3.atCenterOf(target)) < 4.0D) {
+            return false;
+        }
+
+        // 2. Trader must be strictly in front of the shop (never behind or flank)
+        if (!MoveToShopGoal.isInFrontOfShop(entity.level(), target, entity.position())) {
+            return false;
+        }
+
+        // 3. Distance check: within trade distance (no artificial minimum distance
+        // cutoff)
+        double distToShopSq = entity.distanceToSqr(Vec3.atCenterOf(target));
+        if (distToShopSq > tradeDistanceSq) {
+            return false;
+        }
+
+        // 4. Must have arrived near the counter or completed navigation
+        return entity.getNavigation().isDone() || distToShopSq <= 4.0D;
     }
 
     @Override
     public boolean canContinueToUse() {
-        if (entity.isInvisible()) return false;
-        if (entity.getTargetShop() == null) return false;
-        if (celebratingTimer > 0 || browsingPhase) return true;
-        return canUse();
+        if (entity.isScared())
+            return false;
+        if (entity.isInvisible())
+            return false;
+        BlockPos target = entity.getTargetShop();
+        if (target == null)
+            return false;
+        // Stay active throughout inspection, celebrating, and browsing/rejection
+        // Only abort if knocked away (> 4.0 blocks)
+        return entity.distanceToSqr(Vec3.atCenterOf(target)) <= 16.0;
     }
 
     @Override
     public void start() {
-        // Natural inspection time: 2 to 4 seconds (40 to 80 ticks) before making a purchase decision
+        // Natural inspection time: 2 to 4 seconds (40 to 80 ticks) before making a
+        // purchase decision
         this.tradeDelay = 40 + entity.getRandom().nextInt(41);
         this.browsingPhase = false;
         this.browsingTimer = 0;
         this.celebratingTimer = 0;
+        entity.setInteractingWithShop(true);
         entity.getNavigation().stop();
     }
 
     @Override
     public void tick() {
         BlockPos target = entity.getTargetShop();
-        if (target == null) return;
+        if (target == null)
+            return;
 
-        // Celebrating phase after a successful purchase: hold item proudly for ~1.75s
+        // 1. Celebrating phase after a successful purchase: hold item proudly for
+        // ~1.75s
         if (celebratingTimer > 0) {
             celebratingTimer--;
             entity.getNavigation().stop();
 
-            // Look proudly towards a nearby player if present, otherwise admire the counter/item
-            Player nearbyPlayer = entity.level().getNearestPlayer(entity, 8.0D);
-            if (nearbyPlayer != null) {
-                entity.getLookControl().setLookAt(nearbyPlayer.getX(), nearbyPlayer.getEyeY(), nearbyPlayer.getZ(), 20.0F, (float) entity.getMaxHeadXRot());
+            // Look proudly towards an immediate nearby player (e.g. at the counter <= 4.0m)
+            // with clear line of sight
+            Player nearbyPlayer = entity.level().getNearestPlayer(entity, 4.0D);
+            if (nearbyPlayer != null && entity.hasLineOfSight(nearbyPlayer)) {
+                entity.getLookControl().setLookAt(nearbyPlayer.getX(), nearbyPlayer.getEyeY(), nearbyPlayer.getZ(),
+                        20.0F, (float) entity.getMaxHeadXRot());
             } else {
-                entity.getLookControl().setLookAt(target.getX() + 0.5D, target.getY() + 0.4D, target.getZ() + 0.5D, 10.0F, (float) entity.getMaxHeadXRot());
+                // Otherwise admire the counter/purchased item
+                entity.getLookControl().setLookAt(target.getX() + 0.5D, target.getY() + 0.4D, target.getZ() + 0.5D,
+                        10.0F, (float) entity.getMaxHeadXRot());
             }
 
             if (celebratingTimer <= 0) {
@@ -94,41 +134,43 @@ public class TradeWithShopGoal extends Goal {
             return;
         }
 
-        // Keep looking at the shop display during inspection
+        // 2. Rejection / window-shopping phase when shop is unsuitable/empty/too
+        // expensive
+        if (browsingPhase) {
+            browsingTimer--;
+            entity.getNavigation().stop();
+            // Calmly look at the shop / counter (no 1-tick sideways twitching!)
+            entity.getLookControl().setLookAt(target.getX() + 0.5D, target.getY() + 0.35D, target.getZ() + 0.5D, 10.0F,
+                    (float) entity.getMaxHeadXRot());
+
+            if (browsingTimer <= 0) {
+                finishAndLeave(target);
+            }
+            return;
+        }
+
+        // 3. Inspection phase: keep looking at the shop display / showcase
         double lookY = target.getY() + 0.5D;
         if (tradeDelay < 25) {
-            // Lower half of inspection: tilt head slightly down to examine the counter / showcase
+            // Lower half of inspection: tilt head slightly down to examine the counter /
+            // showcase
             lookY = target.getY() + 0.25D;
         }
-        entity.getLookControl().setLookAt(target.getX() + 0.5D, lookY, target.getZ() + 0.5D, 10.0F, (float) entity.getMaxHeadXRot());
+        entity.getLookControl().setLookAt(target.getX() + 0.5D, lookY, target.getZ() + 0.5D, 10.0F,
+                (float) entity.getMaxHeadXRot());
 
         if (tradeDelay > 0) {
             tradeDelay--;
             return;
         }
 
-        // If in browsing phase (window shopping at empty/unsuitable shop), wait it out calmly
-        if (browsingPhase) {
-            browsingTimer--;
-            if (browsingTimer % 30 == 0 && entity.getRandom().nextInt(3) == 0) {
-                double rx = target.getX() + 0.5D + (entity.getRandom().nextDouble() - 0.5D) * 2.0D;
-                double rz = target.getZ() + 0.5D + (entity.getRandom().nextDouble() - 0.5D) * 2.0D;
-                entity.getLookControl().setLookAt(rx, target.getY() + 0.8D, rz, 10.0F, (float) entity.getMaxHeadXRot());
-            }
-            if (browsingTimer <= 0) {
-                if (entity.level() instanceof ServerLevel sl) {
-                    sl.playSound(null, entity.blockPosition(), SoundEvents.WANDERING_TRADER_NO, SoundSource.NEUTRAL, 0.8F, 1.0F);
-                }
-                finishAndLeave(target);
-            }
-            return;
-        }
-
+        // Inspection complete: execute purchase decision
         executeTrade(target);
     }
 
     private void executeTrade(BlockPos target) {
-        if (!(entity.level() instanceof ServerLevel serverLevel)) return;
+        if (!(entity.level() instanceof ServerLevel serverLevel))
+            return;
 
         BlockEntity be = serverLevel.getBlockEntity(target);
         if (be instanceof SingleOfferShopBlockEntity shop) {
@@ -145,16 +187,19 @@ public class TradeWithShopGoal extends Goal {
 
                 if (!result.isEmpty()) {
                     Double v = eco.evaluateItem(result.getItem(), serverLevel.recipeAccess(), serverLevel);
-                    if (v != null) resultValue = v * result.getCount();
+                    if (v != null)
+                        resultValue = v * result.getCount();
                 }
 
                 if (!p1.isEmpty()) {
                     Double v = eco.evaluateItem(p1.getItem(), serverLevel.recipeAccess(), serverLevel);
-                    if (v != null) paymentValue += v * p1.getCount();
+                    if (v != null)
+                        paymentValue += v * p1.getCount();
                 }
                 if (!p2.isEmpty()) {
                     Double v = eco.evaluateItem(p2.getItem(), serverLevel.recipeAccess(), serverLevel);
-                    if (v != null) paymentValue += v * p2.getCount();
+                    if (v != null)
+                        paymentValue += v * p2.getCount();
                 }
 
                 int budgetCost = (int) Math.ceil(paymentValue);
@@ -162,20 +207,39 @@ public class TradeWithShopGoal extends Goal {
                 boolean rankInterested = entity.isRankInterested(shop.getGeneralSettings().shopCategory(), resultValue);
                 double allowedBudget = categoryInterested ? entity.getBudget() : entity.getBudget() * 0.20;
 
-                // Rank-dependent tolerance: Citizens accept fair prices, Nobles want quality deals
+                // Rank-dependent tolerance: Citizens accept fair prices, Nobles want quality
+                // deals
                 double tolerance = switch (entity.getTraderRank()) {
-                    case CITIZEN -> 0.85;   // Accepts up to 15% markup
-                    case WEALTHY -> 0.95;   // Accepts up to 5% markup
-                    case NOBLE -> 1.0;      // Only buys at or below market value
+                    case CITIZEN -> 0.85; // Accepts up to 15% markup
+                    case WEALTHY -> 0.95; // Accepts up to 5% markup
+                    case NOBLE -> 1.0; // Only buys at or below market value
                 };
 
-                if (resultValue > 0 && resultValue >= paymentValue * tolerance && allowedBudget >= budgetCost && rankInterested) {
-                    // Determine how many units this rank wants to buy
-                    int maxQty = switch (entity.getTraderRank()) {
-                        case CITIZEN -> 1;
-                        case WEALTHY -> Math.min(3, Math.max(1, (int) (allowedBudget / Math.max(1, budgetCost))));
-                        case NOBLE -> Math.min(5, Math.max(1, (int) (allowedBudget / Math.max(1, budgetCost))));
+                if (resultValue > 0 && resultValue >= paymentValue * tolerance && allowedBudget >= budgetCost
+                        && rankInterested) {
+                    // Determine organic, randomized desired quantity based on rank and category
+                    // interest
+                    var rnd = entity.getRandom();
+                    int desiredQty = switch (entity.getTraderRank()) {
+                        // Citizen: 1 to 3 purchases (1-3 if category matches, 1-2 if casual)
+                        case CITIZEN -> categoryInterested ? 1 + rnd.nextInt(3) : 1 + rnd.nextInt(2);
+                        // Wealthy: 2 to 6 purchases (3-6 if category matches, 2-4 if casual)
+                        case WEALTHY -> categoryInterested ? 3 + rnd.nextInt(4) : 2 + rnd.nextInt(3);
+                        // Noble: 4 to 8 purchases (4-8 if category matches, 3-6 if casual)
+                        case NOBLE -> categoryInterested ? 4 + rnd.nextInt(5) : 3 + rnd.nextInt(4);
                     };
+
+                    // Cap non-stackable items (tools, weapons, armor) to realistic amounts (max 1
+                    // for Citizen, max 2 for Wealthy/Noble)
+                    if (result.getMaxStackSize() == 1) {
+                        desiredQty = Math.min(desiredQty,
+                                entity.getTraderRank() == ShopBuyerEntity.TraderRank.CITIZEN ? 1 : 2);
+                    }
+
+                    // Respect budget affordability: if item is expensive, buy as many as budget
+                    // allows (down to 1)
+                    int affordable = Math.max(1, (int) (allowedBudget / Math.max(1, budgetCost)));
+                    int maxQty = Math.max(1, Math.min(desiredQty, affordable));
 
                     String rankName = entity.getTraderRank().name().charAt(0)
                             + entity.getTraderRank().name().substring(1).toLowerCase();
@@ -189,8 +253,10 @@ public class TradeWithShopGoal extends Goal {
                         entity.reduceBudget(budgetCost * bought);
                         entity.incrementSuccessfulPurchases();
 
-                        // Happy Wandering Trader reaction sound (calm & cheerful, not obnoxious villager)
-                        serverLevel.playSound(null, entity.blockPosition(), SoundEvents.WANDERING_TRADER_YES, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                        // Happy Wandering Trader reaction sound (calm & cheerful, not obnoxious
+                        // villager)
+                        serverLevel.playSound(null, entity.blockPosition(), SoundEvents.WANDERING_TRADER_YES,
+                                SoundSource.NEUTRAL, 1.0F, 1.0F);
                         for (int i = 0; i < 6; i++) {
                             serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
                                     entity.getX() + (entity.getRandom().nextDouble() - 0.5D),
@@ -208,9 +274,21 @@ public class TradeWithShopGoal extends Goal {
             }
 
             if (!canBuy) {
-                // Window-shopping: browse for 2-3 seconds calmly, then react
-                browsingPhase = true;
-                browsingTimer = 40 + entity.getRandom().nextInt(30);
+                // Rejection reaction: play disappointed Wandering Trader sound immediately
+                serverLevel.playSound(null, entity.blockPosition(), SoundEvents.WANDERING_TRADER_NO,
+                        SoundSource.NEUTRAL, 0.8F, 1.0F);
+                for (int i = 0; i < 3; i++) {
+                    serverLevel.sendParticles(ParticleTypes.SMOKE,
+                            entity.getX() + (entity.getRandom().nextDouble() - 0.5D) * 0.4D,
+                            entity.getY() + 1.2D + (entity.getRandom().nextDouble() - 0.5D) * 0.4D,
+                            entity.getZ() + (entity.getRandom().nextDouble() - 0.5D) * 0.4D,
+                            1, 0.0, 0.0, 0.0, 0.01);
+                }
+
+                // Window-shopping / rejection: pause calmly for ~1.0 second (20 ticks) before
+                // turning and leaving
+                this.browsingPhase = true;
+                this.browsingTimer = 20;
                 return;
             }
         }
@@ -224,6 +302,7 @@ public class TradeWithShopGoal extends Goal {
         entity.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
         this.celebratingTimer = 0;
         this.browsingPhase = false;
+        entity.setInteractingWithShop(false);
     }
 
     /**
@@ -231,19 +310,21 @@ public class TradeWithShopGoal extends Goal {
      * Marks the shop as visited, updates the shopping-tour counter, and walks away.
      */
     private void finishAndLeave(BlockPos target) {
+        entity.setInteractingWithShop(false);
         if (entity.level() instanceof ServerLevel sl) {
             entity.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
             // Mark this shop as visited
             entity.addVisitedShop(target);
-            
+
             // Decrement the shopping-tour counter (triggers despawn when it reaches 0)
             entity.onShopVisitComplete();
-            
+
             // If still shopping, add a pause before searching for the next shop
             if (entity.getBudget() > 0) {
-                entity.delayNextShopSearch(sl.getGameTime(), 200 + entity.getRandom().nextInt(200)); // 10 to 20 seconds pause
+                entity.delayNextShopSearch(sl.getGameTime(), 200 + entity.getRandom().nextInt(200)); // 10 to 20 seconds
+                                                                                                     // pause
             }
-            
+
             // Walk away calmly from the shop
             Vec3 randomPos = DefaultRandomPos.getPos(entity, 10, 4);
             if (randomPos != null) {

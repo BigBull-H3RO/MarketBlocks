@@ -20,6 +20,7 @@ import de.bigbull.marketblocks.platform.Services;
 import de.bigbull.marketblocks.platform.network.PacketContext;
 import net.fabricmc.api.ClientModInitializer;
 import de.bigbull.marketblocks.Constants;
+
 import net.minecraft.resources.Identifier;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.entity.player.Player;
@@ -54,6 +55,12 @@ public class MarketBlocksClient implements ClientModInitializer {
         // Renderers
         BlockEntityRenderers.register(RegistriesInit.SINGLE_OFFER_SHOP_BLOCK_ENTITY.get(), SingleOfferShopBlockEntityRenderer::new);
         EntityRenderers.register(RegistriesInit.SHOP_BUYER.get(), ShopBuyerRenderer::new);
+
+
+        // Tooltip handler
+        net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+            de.bigbull.marketblocks.client.tooltip.TradeStandTooltipHandler.appendTooltip(stack, lines);
+        });
 
         // Keybindings
         KeyMappingHelper.registerKeyMapping(OPEN_MARKETPLACE);

@@ -15,6 +15,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
@@ -105,11 +106,20 @@ public class SingleOfferTransactionLogPanel {
         // 4. Empty State
         if (entries.isEmpty()) {
             Component empty = Component.translatable("gui.marketblocks.log.empty");
-            int tw = font.width(empty);
             int contentW = (trackX - 1) - (containerX + 1);
-            int textX = containerX + 1 + (contentW - tw) / 2;
-            int textY = containerY + (CONTAINER_HEIGHT - font.lineHeight) / 2;
-            graphics.text(font, empty, textX, textY, 0xFF808080, false);
+            int maxTextW = Math.max(10, contentW - 8);
+            List<FormattedCharSequence> lines = font.split(empty, maxTextW);
+            int lineHeight = font.lineHeight;
+            int lineSpacing = 2;
+            int totalH = lines.size() * lineHeight + Math.max(0, lines.size() - 1) * lineSpacing;
+            int startY = containerY + (CONTAINER_HEIGHT - totalH) / 2;
+            for (int i = 0; i < lines.size(); i++) {
+                FormattedCharSequence line = lines.get(i);
+                int lw = font.width(line);
+                int textX = containerX + 1 + Math.max(0, (contentW - lw) / 2);
+                int textY = startY + i * (lineHeight + lineSpacing);
+                graphics.text(font, line, textX, textY, 0xFF808080, false);
+            }
             return;
         }
 
