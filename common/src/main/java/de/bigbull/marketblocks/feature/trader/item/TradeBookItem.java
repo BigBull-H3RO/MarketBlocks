@@ -68,7 +68,7 @@ public class TradeBookItem extends Item {
                 // Leaderboard will be computed inside addShopLeaderboardPages
                 List<ShopDirectorySavedData.ShopEntry> leaderboardShops = new ArrayList<>(openShops);
 
-                boolean canTeleport = Config.ALLOW_NON_OP_TELEPORT.get() || player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER);
+                boolean canTeleport = Config.canPlayerTeleport(player);
                 UUID playerUUID = player.getUUID();
 
                 // === Section 1: My Shops (personal stats) ===

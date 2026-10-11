@@ -1,5 +1,6 @@
 package de.bigbull.marketblocks.client.gui;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.Button;
@@ -9,6 +10,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.BooleanSupplier;
 
@@ -23,7 +25,8 @@ public class IconButton extends Button {
     private final Identifier activeIcon;
     private Identifier disabledIcon;
     private final BooleanSupplier selectedSupplier;
-    private final Component tooltipMessage;
+    private Component tooltipMessage;
+    private boolean mouseTooltip = false;
     private boolean flipBackgroundHorizontal = false;
     private boolean allowClickWhenSelected = false;
 
@@ -72,6 +75,37 @@ public class IconButton extends Button {
 
     public Component getTooltipMessage() {
         return tooltipMessage;
+    }
+
+    public IconButton withMouseTooltip() {
+        this.mouseTooltip = true;
+        super.setTooltip(null);
+        return this;
+    }
+
+    public boolean isMouseTooltip() {
+        return this.mouseTooltip;
+    }
+
+    public boolean isHovered(double mouseX, double mouseY) {
+        return this.visible && mouseX >= getX() && mouseX < getX() + getWidth()
+                && mouseY >= getY() && mouseY < getY() + getHeight();
+    }
+
+    public void setTooltipMessage(Component tooltipMessage) {
+        this.tooltipMessage = tooltipMessage;
+        if (!this.mouseTooltip) {
+            super.setTooltip(tooltipMessage != null ? Tooltip.create(tooltipMessage) : null);
+        }
+    }
+
+    @Override
+    public void setTooltip(@Nullable Tooltip tooltip) {
+        if (this.mouseTooltip) {
+            super.setTooltip(null);
+        } else {
+            super.setTooltip(tooltip);
+        }
     }
 
     public IconButton allowClickWhenSelected() {
@@ -186,5 +220,9 @@ public class IconButton extends Button {
 
         int iconColor = tintIcon ? 0xB28C8C8C : -1;
         graphics.blit(RenderPipelines.GUI_TEXTURED, iconToRender, iconX, iconY, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize, iconColor);
+
+        if (this.mouseTooltip && this.tooltipMessage != null && isHovered(mouseX, mouseY)) {
+            graphics.setTooltipForNextFrame(Minecraft.getInstance().font, this.tooltipMessage, mouseX, mouseY);
+        }
     }
 }

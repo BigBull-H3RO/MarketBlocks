@@ -63,7 +63,7 @@ public class OfferPricingEditor extends BaseModalScreen {
                         enablePricing = !enablePricing;
                         button.setMessage(pricingToggleMessage());
                 })
-                                .bounds(inputX - 26, rowStartY - 2, 92, 20)
+                                .bounds(inputX, rowStartY - 1, INPUT_WIDTH, 20)
                                 .build();
                 this.addRenderableWidget(togglePricingButton);
 
@@ -171,23 +171,14 @@ public class OfferPricingEditor extends BaseModalScreen {
         protected void renderPanelForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
                 int labelX = panelLeft + LABEL_X_OFFSET;
                 int rowStartY = panelTop + LABEL_START_Y_OFFSET;
+                int maxLabelW = (panelLeft + INPUT_X_OFFSET) - labelX - 6;
 
-                guiGraphics.drawString(this.font,
-                                Component.translatable("gui.marketblocks.marketplace.editor.pricing.label"),
-                                labelX, rowStartY, 0xFFCFCFCF, false);
-                guiGraphics.drawString(this.font,
-                                Component.translatable("gui.marketblocks.marketplace.editor.pricing.base"),
-                                labelX, rowStartY + ROW_SPACING, 0xFFCFCFCF, false);
-                guiGraphics.drawString(this.font,
-                                Component.translatable("gui.marketblocks.marketplace.editor.pricing.min"),
-                                labelX, rowStartY + (ROW_SPACING * 2), 0xFFCFCFCF, false);
-                guiGraphics.drawString(this.font,
-                                Component.translatable("gui.marketblocks.marketplace.editor.pricing.max"),
-                                labelX, rowStartY + (ROW_SPACING * 3), 0xFFCFCFCF, false);
-                guiGraphics.drawString(this.font,
-                                Component.translatable("gui.marketblocks.marketplace.editor.pricing.volatility"),
-                                labelX,
-                                rowStartY + (ROW_SPACING * 4), 0xFFCFCFCF, false);
+                renderLabel(guiGraphics, "gui.marketblocks.marketplace.editor.pricing.label", labelX, rowStartY, maxLabelW);
+                renderLabel(guiGraphics, "gui.marketblocks.marketplace.editor.pricing.base", labelX, rowStartY + ROW_SPACING, maxLabelW);
+                renderLabel(guiGraphics, "gui.marketblocks.marketplace.editor.pricing.min", labelX, rowStartY + (ROW_SPACING * 2), maxLabelW);
+                renderLabel(guiGraphics, "gui.marketblocks.marketplace.editor.pricing.max", labelX, rowStartY + (ROW_SPACING * 3), maxLabelW);
+                renderLabel(guiGraphics, "gui.marketblocks.marketplace.editor.pricing.volatility", labelX,
+                                rowStartY + (ROW_SPACING * 4), maxLabelW);
 
                 renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY,
                                 "gui.marketblocks.marketplace.editor.pricing.label.tooltip");
@@ -199,5 +190,15 @@ public class OfferPricingEditor extends BaseModalScreen {
                                 "gui.marketblocks.marketplace.editor.pricing.max.tooltip");
                 renderTooltipIfHovered(guiGraphics, mouseX, mouseY, labelX, rowStartY + (ROW_SPACING * 4),
                                 "gui.marketblocks.marketplace.editor.pricing.volatility.tooltip");
+        }
+
+        private void renderLabel(GuiGraphics guiGraphics, String key, int x, int y, int maxW) {
+                Component comp = Component.translatable(key);
+                if (this.font.width(comp) > maxW) {
+                        String text = this.font.plainSubstrByWidth(comp.getString(), Math.max(0, maxW - this.font.width("..."))) + "...";
+                        guiGraphics.drawString(this.font, text, x, y, 0xFFCFCFCF, false);
+                } else {
+                        guiGraphics.drawString(this.font, comp, x, y, 0xFFCFCFCF, false);
+                }
         }
 }

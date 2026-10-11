@@ -35,6 +35,7 @@ public class ShopNpcAnimationState {
     private boolean spawnLandSoundPlayed = false;
     private long lastSpawnWhooshTick = -1L;
     private long lastPurchaseFeedbackTick = -1L;
+    private long nextPurchaseSoundCooldownTicks = 0L;
     private long lastPaymentFeedbackTick = -1L;
     private float smoothedYaw = 180.0F;
     private boolean yawInitialized = false;
@@ -124,6 +125,14 @@ public class ShopNpcAnimationState {
         this.lastPurchaseFeedbackTick = lastPurchaseFeedbackTick;
     }
 
+    public long getNextPurchaseSoundCooldownTicks() {
+        return nextPurchaseSoundCooldownTicks;
+    }
+
+    public void setNextPurchaseSoundCooldownTicks(long nextPurchaseSoundCooldownTicks) {
+        this.nextPurchaseSoundCooldownTicks = nextPurchaseSoundCooldownTicks;
+    }
+
     public long getLastPaymentFeedbackTick() {
         return lastPaymentFeedbackTick;
     }
@@ -200,12 +209,17 @@ public class ShopNpcAnimationState {
 
             if (Minecraft.getInstance().getConnection() != null) {
                 for (PlayerInfo info : Minecraft.getInstance().getConnection().getOnlinePlayers()) {
+                    boolean hasTextures = info.getProfile().properties().containsKey("textures");
                     if (parsedUuid != null && info.getProfile().id().equals(parsedUuid)) {
-                        profile = info.getProfile();
-                        break;
+                        if (hasTextures) {
+                            profile = info.getProfile();
+                            break;
+                        }
                     } else if (input.equalsIgnoreCase(info.getProfile().name())) {
-                        profile = info.getProfile();
-                        break;
+                        if (hasTextures) {
+                            profile = info.getProfile();
+                            break;
+                        }
                     }
                 }
             }

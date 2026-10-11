@@ -105,6 +105,7 @@ public final class MarketplacePageSidebar {
                 callbacks.rebuildUi();
             }
         }).bounds(baseX, navY, NAV_BUTTON_WIDTH, NAV_BUTTON_HEIGHT)
+          .tooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("gui.marketblocks.marketplace.sidebar.prev")))
           .build();
         prevButton.active = currentSidebarPage > 0;
         callbacks.addWidget(prevButton);
@@ -115,6 +116,7 @@ public final class MarketplacePageSidebar {
                 callbacks.rebuildUi();
             }
         }).bounds(baseX + buttonWidth - NAV_BUTTON_WIDTH, navY, NAV_BUTTON_WIDTH, NAV_BUTTON_HEIGHT)
+          .tooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("gui.marketblocks.marketplace.sidebar.next")))
           .build();
         nextButton.active = currentSidebarPage < totalSidebarPages - 1;
         callbacks.addWidget(nextButton);
@@ -197,7 +199,10 @@ public final class MarketplacePageSidebar {
     public List<Rect2i> getExtraAreas(int leftPos, int screenHeight) {
         int buttonWidth = calculateButtonWidth(leftPos);
         int startX = calculateBaseX(leftPos, buttonWidth);
-        int clampedX = Math.max(0, startX);
+        // If the remaining space between the screen edge (x = 0) and the sidebar buttons
+        // is too small for a recipe viewer to render items (< 48 px), extend the exclusion
+        // area all the way to x = 0 so REI/JEI don't squeeze an empty scrollbar into that gap.
+        int clampedX = startX < 48 ? 0 : startX;
         int width = leftPos - clampedX;
         if (width <= 0 || screenHeight <= 0) {
             return Collections.emptyList();

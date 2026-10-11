@@ -111,7 +111,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
                         onOffers.run();
                 },
                 Component.translatable("gui.marketblocks.offers_tab"),
-                () -> selectedTab == ShopTab.OFFERS).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
+                () -> selectedTab == ShopTab.OFFERS).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0).withMouseTooltip();
         sideTabs.add(offersButton);
 
         int inventoryWidth = SIDE_TAB_WIDTH + (selectedTab == ShopTab.INVENTORY ? SIDE_TAB_SELECTED_WIDTH_OFFSET : 0);
@@ -125,7 +125,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
                         onInventory.run();
                 },
                 inventoryTooltip,
-                () -> selectedTab == ShopTab.INVENTORY).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
+                () -> selectedTab == ShopTab.INVENTORY).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0).withMouseTooltip();
         sideTabs.add(inventoryButton);
         inventoryButton.active = inventoryEnabled;
 
@@ -138,7 +138,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
                         onSettings.run();
                 },
                 Component.translatable("gui.marketblocks.settings_tab"),
-                () -> selectedTab == ShopTab.SETTINGS).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
+                () -> selectedTab == ShopTab.SETTINGS).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0).withMouseTooltip();
         sideTabs.add(settingsButton);
         settingsButton.active = settingsEnabled;
 
@@ -151,7 +151,7 @@ public abstract class AbstractSingleOfferShopScreen<T extends AbstractContainerM
                         onLog.run();
                 },
                 Component.translatable("gui.marketblocks.log_tab"),
-                () -> selectedTab == ShopTab.LOG).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0);
+                () -> selectedTab == ShopTab.LOG).withCustomBackground(35, 27, -3, 0, 0).withIconOffset(0, 0).withSelectedIconOffset(0, 0).withMouseTooltip();
         sideTabs.add(logButton);
         logButton.active = logEnabled;
     }
