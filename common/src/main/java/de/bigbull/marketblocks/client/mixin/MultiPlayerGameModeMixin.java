@@ -53,15 +53,24 @@ public abstract class MultiPlayerGameModeMixin {
         }
 
         // Synchronous multiblock destruction on client:
+        int playerId = minecraft.player.getId();
         if (isBase && state.is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
             BlockPos topPos = pos.above();
             if (minecraft.level.getBlockState(topPos).is(RegistriesInit.TRADE_STAND_BLOCK_TOP.get())) {
                 minecraft.level.setBlock(topPos, Blocks.AIR.defaultBlockState(), 11);
             }
+            if (minecraft.level != null) {
+                minecraft.level.destroyBlockProgress(playerId, pos, -1);
+                minecraft.level.destroyBlockProgress(playerId + 500000, topPos, -1);
+            }
         } else if (isTop) {
             BlockPos basePos = pos.below();
             if (minecraft.level.getBlockState(basePos).is(RegistriesInit.TRADE_STAND_BLOCK.get())) {
                 minecraft.level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 11);
+            }
+            if (minecraft.level != null) {
+                minecraft.level.destroyBlockProgress(playerId, basePos, -1);
+                minecraft.level.destroyBlockProgress(playerId + 500000, pos, -1);
             }
         }
     }

@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -46,13 +47,19 @@ public final class MarketplaceOverlayRenderer {
     private void renderEmptyState(GuiGraphicsExtractor guiGraphics, Context context) {
         if (!context.hasPages()) {
             Component noPagesText = Component.translatable("gui.marketblocks.marketplace.no_pages");
-            int textX = context.previewX() - 118;
-            int textY = context.previewY() + 55;
-            guiGraphics.textWithWordWrap(context.font(), noPagesText, textX, textY, 200, 0xFF555555);
+            List<FormattedCharSequence> lines = context.font().split(noPagesText, context.listWidth());
+            int totalHeight = lines.size() * context.font().lineHeight;
+            int startY = context.listStartY() + (context.listHeight() - totalHeight) / 2;
+            for (int i = 0; i < lines.size(); i++) {
+                FormattedCharSequence line = lines.get(i);
+                int lineX = context.listStartX() + (context.listWidth() - context.font().width(line)) / 2;
+                int lineY = startY + (i * context.font().lineHeight);
+                guiGraphics.text(context.font(), line, lineX, lineY, 0xFF555555, false);
+            }
         } else if (context.visibleOffers().isEmpty()) {
             Component noOffersText = Component.translatable("gui.marketblocks.marketplace.no_offers");
             int textX = context.listStartX() + (context.listWidth() - context.font().width(noOffersText)) / 2;
-            int textY = context.listStartY() + context.listHeight() / 2 - 4;
+            int textY = context.listStartY() + (context.listHeight() - context.font().lineHeight) / 2;
             guiGraphics.text(context.font(), noOffersText, textX, textY, 0xFF555555, false);
         }
     }

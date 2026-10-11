@@ -20,6 +20,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.PanicGoal;
@@ -27,6 +28,14 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.UseItemGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.monster.illager.Evoker;
+import net.minecraft.world.entity.monster.illager.Illusioner;
+import net.minecraft.world.entity.monster.illager.Pillager;
+import net.minecraft.world.entity.monster.Vex;
+import net.minecraft.world.entity.monster.illager.Vindicator;
+import net.minecraft.world.entity.monster.Zoglin;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -52,6 +61,8 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.util.RandomSource;
 import de.bigbull.marketblocks.feature.trader.data.TraderEconomyManager;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.util.DefaultRandomPos;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.item.enchantment.Enchantments;
 
 import java.util.ArrayList;
@@ -112,6 +123,37 @@ public class ShopBuyerEntity extends PathfinderMob {
     /** UUID of the player this trader is angry at (for revenge upon return) */
     @Nullable
     private UUID angryTargetUUID = null;
+
+    /** Cooldown timer after actively fleeing a hostile mob (to suppress shopping goals while in danger) */
+    private int fleeCooldownTicks = 0;
+
+    /** Flag set when actively inspecting, trading, or browsing at a shop */
+    private boolean interactingWithShop = false;
+
+    /** Watchdog tick counter when targetShop is assigned but trader is idle */
+    private int targetShopStuckTicks = 0;
+
+    public boolean isInteractingWithShop() {
+        return this.interactingWithShop;
+    }
+
+    public void setInteractingWithShop(boolean interacting) {
+        this.interactingWithShop = interacting;
+    }
+
+    public void onFlee() {
+        this.fleeCooldownTicks = 120; // 6s calm-down cooldown to prevent premature turnaround
+    }
+
+    public boolean isScared() {
+        if (this.isRaging) {
+            return false;
+        }
+        if (this.fleeCooldownTicks > 0 || this.isPanicking()) {
+            return true;
+        }
+        return this.getLastHurtByMob() != null && (this.tickCount - this.getLastHurtByMobTimestamp() < 100);
+    }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
@@ -176,8 +218,8 @@ public class ShopBuyerEntity extends PathfinderMob {
             }
         });
 
-        // Panic goal when not raging
-        this.goalSelector.addGoal(1, new PanicGoal(this, 0.5D) {
+        // Panic goal when not raging (vanilla Wandering Trader / Villager flee speed ~0.36)
+        this.goalSelector.addGoal(1, new PanicGoal(this, 1.2D) {
             @Override
             public boolean canUse() {
                 return !ShopBuyerEntity.this.isRaging() && super.canUse();
@@ -189,12 +231,23 @@ public class ShopBuyerEntity extends PathfinderMob {
             }
         });
 
+        // Flee from hostile mobs when not raging (matching vanilla flee distances & ~0.36 speed)
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Zombie.class, 14.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Evoker.class, 16.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Vindicator.class, 14.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Vex.class, 12.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Pillager.class, 16.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Illusioner.class, 16.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Zoglin.class, 12.0F, 1.2D, 1.2D));
+        this.goalSelector.addGoal(1, new TraderAvoidGoal<>(Raider.class, 14.0F, 1.2D, 1.2D));
+
         this.goalSelector.addGoal(2, new LeaveAndDespawnGoal(this, 0.65D));
         this.goalSelector.addGoal(3, new TradeWithShopGoal(this, 3.5f));
-        this.goalSelector.addGoal(4, new MoveToShopGoal(this, 0.65D, 1.25f));
+        this.goalSelector.addGoal(4, new MoveToShopGoal(this, 0.65D, 0.35f));
         this.goalSelector.addGoal(5, new FindShopGoal(this, 48));
         this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.5D));
-        this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Mob.class, 6.0F));
         this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
     }
 
@@ -292,12 +345,16 @@ public class ShopBuyerEntity extends PathfinderMob {
                     this.budget = 0; // Force despawn via LeaveAndDespawnGoal
                 }
             }
+            if (this.fleeCooldownTicks > 0) {
+                this.fleeCooldownTicks--;
+            }
 
             // Handle Rage and Revenge logic
             if (TraderConfig.RAGE_MODE_ENABLED.get()) {
                 if (this.isRaging) {
                     LivingEntity currentTarget = this.getTarget();
-                    if (currentTarget == null || !currentTarget.isAlive() || (currentTarget instanceof Player p && (p.isDeadOrDying() || p.isRemoved()))) {
+                    if (currentTarget == null || !currentTarget.isAlive()
+                            || (currentTarget instanceof Player p && (p.isDeadOrDying() || p.isRemoved()))) {
                         if (currentTarget instanceof Player p) {
                             this.angryTargetUUID = p.getUUID();
                         }
@@ -312,6 +369,26 @@ public class ShopBuyerEntity extends PathfinderMob {
                     }
                 }
             }
+
+            // Anti-deadlock watchdog: if targetShop is set but trader is neither moving nor trading for > 40 ticks
+            if (this.targetShop != null) {
+                if (!this.interactingWithShop && this.getNavigation().isDone()) {
+                    this.targetShopStuckTicks++;
+                    if (this.targetShopStuckTicks >= 40) { // 2 seconds idle at/near shop without interaction
+                        this.addVisitedShop(this.targetShop);
+                        this.setTargetShop(null);
+                        this.targetShopStuckTicks = 0;
+                        Vec3 escapePos = DefaultRandomPos.getPos(this, 10, 4);
+                        if (escapePos != null) {
+                            this.getNavigation().moveTo(escapePos.x, escapePos.y, escapePos.z, 0.55D);
+                        }
+                    }
+                } else {
+                    this.targetShopStuckTicks = 0;
+                }
+            } else {
+                this.targetShopStuckTicks = 0;
+            }
         }
     }
 
@@ -322,7 +399,7 @@ public class ShopBuyerEntity extends PathfinderMob {
 
     @Override
     public void playAmbientSound() {
-        if (this.isInvisible()) {
+        if (this.isInvisible() || this.isScared()) {
             return;
         }
         super.playAmbientSound();
@@ -330,7 +407,8 @@ public class ShopBuyerEntity extends PathfinderMob {
 
     @Override
     public int getAmbientSoundInterval() {
-        // ~45-60 seconds (900 ticks) instead of rapid spam to keep wandering audio subtle and non-intrusive
+        // ~45-60 seconds (900 ticks) instead of rapid spam to keep wandering audio
+        // subtle and non-intrusive
         return 900;
     }
 
@@ -412,6 +490,14 @@ public class ShopBuyerEntity extends PathfinderMob {
         }
     }
 
+    /**
+     * Called when all available shops in the district have been visited and no more unvisited shops remain.
+     * Completes the visit and triggers LeaveAndDespawnGoal.
+     */
+    public void onShoppingTourExhausted() {
+        this.budget = 0; // Trigger LeaveAndDespawnGoal
+    }
+
     // --- Purchases ---
 
     public int getSuccessfulPurchases() {
@@ -467,12 +553,15 @@ public class ShopBuyerEntity extends PathfinderMob {
             }
             lastDialogTimes.put(playerUuid, gameTime);
 
-            // Show rank and interest category so the player knows what this NPC is looking for
+            // Show rank and interest category so the player knows what this NPC is looking
+            // for
             Component rankInfo = Component.translatable(
                     "message.marketblocks.shop_buyer.info",
-                    Component.translatable("entity.marketblocks.shop_buyer.rank." + getTraderRank().name().toLowerCase()),
-                    Component.translatable("entity.marketblocks.shop_buyer.category." + getInterestCategory().name().toLowerCase())
-            ).withStyle(ChatFormatting.GRAY);
+                    Component.translatable(
+                            "entity.marketblocks.shop_buyer.rank." + getTraderRank().name().toLowerCase()),
+                    Component.translatable(
+                            "entity.marketblocks.shop_buyer.category." + getInterestCategory().name().toLowerCase()))
+                    .withStyle(ChatFormatting.GRAY);
             player.sendSystemMessage(rankInfo);
 
             int messageIndex = selectInteractMessage();
@@ -520,7 +609,8 @@ public class ShopBuyerEntity extends PathfinderMob {
         equipRageWeapon();
 
         int msgIndex = 1 + this.random.nextInt(3);
-        String nameStr = this.hasCustomName() ? this.getCustomName().getString() : Component.translatable("entity.marketblocks.shop_buyer").getString();
+        String nameStr = this.hasCustomName() ? this.getCustomName().getString()
+                : Component.translatable("entity.marketblocks.shop_buyer").getString();
         target.sendSystemMessage(Component.translatable("message.marketblocks.shop_buyer.rage." + msgIndex, nameStr));
     }
 
@@ -531,7 +621,8 @@ public class ShopBuyerEntity extends PathfinderMob {
         this.playSound(SoundEvents.VINDICATOR_CELEBRATE, 1.0F, 1.0F);
         equipRageWeapon();
 
-        String nameStr = this.hasCustomName() ? this.getCustomName().getString() : Component.translatable("entity.marketblocks.shop_buyer").getString();
+        String nameStr = this.hasCustomName() ? this.getCustomName().getString()
+                : Component.translatable("entity.marketblocks.shop_buyer").getString();
         player.sendSystemMessage(Component.translatable("message.marketblocks.shop_buyer.revenge", nameStr));
     }
 
@@ -646,9 +737,12 @@ public class ShopBuyerEntity extends PathfinderMob {
     }
 
     /**
-     * Determines whether this trader's social rank is interested in an item based on its category and value.
-     * NOBLE: Only buys valuable items or equipment/potions (ignores cheap junk under 5 coins).
-     * CITIZEN: Focuses on everyday basics (food, blocks, misc, tools) with lower budgets.
+     * Determines whether this trader's social rank is interested in an item based
+     * on its category and value.
+     * NOBLE: Only buys valuable items or equipment/potions (ignores cheap junk
+     * under 5 coins).
+     * CITIZEN: Focuses on everyday basics (food, blocks, misc, tools) with lower
+     * budgets.
      */
     public boolean isRankInterested(ShopCategory category, double totalResultValue) {
         if (this.getTraderRank() == TraderRank.NOBLE) {
@@ -668,22 +762,25 @@ public class ShopBuyerEntity extends PathfinderMob {
             @Nullable SpawnGroupData spawnData) {
         RandomSource random = level.getRandom();
 
-        int configMin = TraderConfig.MIN_BUDGET.get();
-        int configMax = TraderConfig.MAX_BUDGET.get();
         int roll = random.nextInt(100);
         ShopBuyerEntity.TraderRank rank;
-        int budget;
+        int minB;
+        int maxB;
         if (roll < 5) {
             rank = ShopBuyerEntity.TraderRank.NOBLE;
-            budget = 1024 + random.nextInt(7169); // 1024 - 8192
+            minB = TraderConfig.NOBLE_MIN_BUDGET.get();
+            maxB = Math.max(minB, TraderConfig.NOBLE_MAX_BUDGET.get());
         } else if (roll < 30) {
             rank = ShopBuyerEntity.TraderRank.WEALTHY;
-            budget = 256 + random.nextInt(769); // 256 - 1024
+            minB = TraderConfig.WEALTHY_MIN_BUDGET.get();
+            maxB = Math.max(minB, TraderConfig.WEALTHY_MAX_BUDGET.get());
         } else {
             rank = ShopBuyerEntity.TraderRank.CITIZEN;
-            budget = 32 + random.nextInt(97); // 32 - 128
+            minB = TraderConfig.CITIZEN_MIN_BUDGET.get();
+            maxB = Math.max(minB, TraderConfig.CITIZEN_MAX_BUDGET.get());
         }
-        budget = Math.max(configMin, Math.min(configMax, budget));
+        int range = maxB - minB + 1;
+        int budget = range > 1 ? minB + random.nextInt(range) : minB;
 
         ShopBuyerEntity.InterestCategory category = ShopBuyerEntity.InterestCategory.values()[random
                 .nextInt(ShopBuyerEntity.InterestCategory.values().length)];
@@ -704,7 +801,40 @@ public class ShopBuyerEntity extends PathfinderMob {
     }
 
     /**
-     * Prevents the vanilla/AI double-drinking bug where mobs drink potion or milk twice
+     * Avoid goal that marks the trader as actively fleeing and refreshes the fear
+     * cooldown.
+     */
+    private class TraderAvoidGoal<T extends LivingEntity> extends AvoidEntityGoal<T> {
+        TraderAvoidGoal(Class<T> entityClass, float maxDist, double walkSpeed, double sprintSpeed) {
+            super(ShopBuyerEntity.this, entityClass, maxDist, walkSpeed, sprintSpeed);
+        }
+
+        @Override
+        public boolean canUse() {
+            return !ShopBuyerEntity.this.isRaging() && super.canUse();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return !ShopBuyerEntity.this.isRaging() && super.canContinueToUse();
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            ShopBuyerEntity.this.onFlee();
+        }
+
+        @Override
+        public void tick() {
+            super.tick();
+            ShopBuyerEntity.this.onFlee();
+        }
+    }
+
+    /**
+     * Prevents the vanilla/AI double-drinking bug where mobs drink potion or milk
+     * twice
      * consecutively due to delayed update of the isInvisible flag.
      */
     private class DrinkPotionGoal extends UseItemGoal<ShopBuyerEntity> {

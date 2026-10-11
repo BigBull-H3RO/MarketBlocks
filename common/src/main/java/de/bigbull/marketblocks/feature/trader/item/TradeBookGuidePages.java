@@ -35,7 +35,10 @@ public class TradeBookGuidePages {
                 .withStyle(ChatFormatting.GOLD)
                 .append(Component.translatable("gui.marketblocks.trade_book.guide.tradestand.text")
                         .withStyle(ChatFormatting.BLACK))
-                .append(Component.literal("\n  ").withStyle(style -> style.withInsertion("RECIPE:TRADESTAND")));
+                .append(Component.literal("\n  ").withStyle(style -> style.withInsertion("RECIPE:TRADESTAND")))
+                .append(Component.literal("\n"))
+                .append(Component.translatable("gui.marketblocks.trade_book.guide.tradestand.showcase_tip")
+                        .withStyle(ChatFormatting.BLACK));
         pages.add(tradeStandPage);
 
         // Shop Types - Market Crate (text + recipe on same page)

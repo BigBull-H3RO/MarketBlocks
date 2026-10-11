@@ -46,7 +46,6 @@ body:
         - "1.21.11"
         - "1.21.4"
         - "1.21.1"
-        - "1.21"
       default: 0
     validations:
       required: true
@@ -74,7 +73,7 @@ body:
     attributes:
       label: MarketBlocks version
       description: "Please provide the exact MarketBlocks mod version."
-      placeholder: "1.0.0+26.3"
+      placeholder: "1.1.0+26.3"
     validations:
       required: true
   - type: textarea
@@ -84,7 +83,7 @@ body:
       description: "List only the required mods (including versions), loader and API dependencies."
       placeholder: |
         - NeoForge: 26.3.0.x
-        - MarketBlocks: 1.0.0+26.3
+        - MarketBlocks: 1.1.0+26.3
         - ConflictingMod: 1.0.0
     validations:
       required: true

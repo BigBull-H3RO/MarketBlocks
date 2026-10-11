@@ -2,7 +2,6 @@ package de.bigbull.marketblocks.feature.trader.data;
 
 import com.google.gson.*;
 
-
 import de.bigbull.marketblocks.Constants;
 import de.bigbull.marketblocks.core.config.TraderConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -84,79 +83,79 @@ public class TraderEconomyManager {
             JsonObject defaultObj = new JsonObject();
 
             // --- Valuables & Ores ---
-            defaultObj.addProperty("minecraft:netherite_ingot", 100.0);
+            defaultObj.addProperty("minecraft:netherite_ingot", 140.0);
             defaultObj.addProperty("minecraft:netherite_scrap", 25.0);
-            defaultObj.addProperty("minecraft:diamond", 15.0);
+            defaultObj.addProperty("minecraft:diamond", 20.0);
             defaultObj.addProperty("minecraft:emerald", 10.0);
             defaultObj.addProperty("minecraft:gold_ingot", 5.0);
-            defaultObj.addProperty("minecraft:iron_ingot", 2.0);
-            defaultObj.addProperty("minecraft:copper_ingot", 0.5);
-            defaultObj.addProperty("minecraft:lapis_lazuli", 0.5);
-            defaultObj.addProperty("minecraft:redstone", 0.2);
-            defaultObj.addProperty("minecraft:coal", 0.5);
-            defaultObj.addProperty("minecraft:quartz", 0.5);
-            defaultObj.addProperty("minecraft:amethyst_shard", 1.0);
+            defaultObj.addProperty("minecraft:iron_ingot", 2.5);
+            defaultObj.addProperty("minecraft:copper_ingot", 0.6);
+            defaultObj.addProperty("minecraft:lapis_lazuli", 1.0);
+            defaultObj.addProperty("minecraft:redstone", 1.0);
+            defaultObj.addProperty("minecraft:coal", 1.65);
+            defaultObj.addProperty("minecraft:quartz", 1.0);
+            defaultObj.addProperty("minecraft:amethyst_shard", 1.5);
 
             // --- Rare & Special ---
             defaultObj.addProperty("minecraft:totem_of_undying", 150.0);
-            defaultObj.addProperty("minecraft:enchanted_golden_apple", 200.0);
-            defaultObj.addProperty("minecraft:golden_apple", 15.0);
-            defaultObj.addProperty("minecraft:shulker_shell", 25.0);
-            defaultObj.addProperty("minecraft:saddle", 10.0);
+            defaultObj.addProperty("minecraft:enchanted_golden_apple", 250.0);
+            defaultObj.addProperty("minecraft:golden_apple", 20.0);
+            defaultObj.addProperty("minecraft:shulker_shell", 30.0);
+            defaultObj.addProperty("minecraft:saddle", 15.0);
             defaultObj.addProperty("minecraft:name_tag", 10.0);
-            defaultObj.addProperty("minecraft:ender_pearl", 2.0);
-            defaultObj.addProperty("minecraft:blaze_rod", 3.0);
-            defaultObj.addProperty("minecraft:ghast_tear", 10.0);
-            defaultObj.addProperty("minecraft:phantom_membrane", 2.0);
+            defaultObj.addProperty("minecraft:ender_pearl", 4.0);
+            defaultObj.addProperty("minecraft:blaze_rod", 4.0);
+            defaultObj.addProperty("minecraft:ghast_tear", 15.0);
+            defaultObj.addProperty("minecraft:phantom_membrane", 3.0);
 
             // --- Late-Game Items ---
-            defaultObj.addProperty("minecraft:nether_star", 250.0);
-            defaultObj.addProperty("minecraft:elytra", 200.0);
-            defaultObj.addProperty("minecraft:dragon_breath", 5.0);
-            defaultObj.addProperty("minecraft:wither_skeleton_skull", 25.0);
-            defaultObj.addProperty("minecraft:heart_of_the_sea", 50.0);
-            defaultObj.addProperty("minecraft:trident", 100.0);
-            defaultObj.addProperty("minecraft:sponge", 10.0);
+            defaultObj.addProperty("minecraft:nether_star", 300.0);
+            defaultObj.addProperty("minecraft:elytra", 250.0);
+            defaultObj.addProperty("minecraft:dragon_breath", 8.0);
+            defaultObj.addProperty("minecraft:wither_skeleton_skull", 35.0);
+            defaultObj.addProperty("minecraft:heart_of_the_sea", 60.0);
+            defaultObj.addProperty("minecraft:trident", 120.0);
+            defaultObj.addProperty("minecraft:sponge", 15.0);
             defaultObj.addProperty("minecraft:end_crystal", 50.0);
             defaultObj.addProperty("minecraft:dragon_head", 100.0);
 
             // --- Food & Farming ---
-            defaultObj.addProperty("minecraft:cooked_beef", 0.1);
-            defaultObj.addProperty("minecraft:cooked_porkchop", 0.1);
-            defaultObj.addProperty("minecraft:cooked_mutton", 0.08);
-            defaultObj.addProperty("minecraft:cooked_chicken", 0.06);
-            defaultObj.addProperty("minecraft:bread", 0.05);
-            defaultObj.addProperty("minecraft:apple", 0.05);
-            defaultObj.addProperty("minecraft:carrot", 0.02);
-            defaultObj.addProperty("minecraft:potato", 0.02);
-            defaultObj.addProperty("minecraft:wheat", 0.01);
-            defaultObj.addProperty("minecraft:sugar_cane", 0.02);
-            defaultObj.addProperty("minecraft:leather", 0.2);
-            defaultObj.addProperty("minecraft:feather", 0.02);
-            defaultObj.addProperty("minecraft:slime_ball", 1.0);
-            defaultObj.addProperty("minecraft:honey_bottle", 1.0);
+            defaultObj.addProperty("minecraft:cooked_beef", 1.0);
+            defaultObj.addProperty("minecraft:cooked_porkchop", 1.0);
+            defaultObj.addProperty("minecraft:cooked_mutton", 0.8);
+            defaultObj.addProperty("minecraft:cooked_chicken", 0.7);
+            defaultObj.addProperty("minecraft:bread", 0.6);
+            defaultObj.addProperty("minecraft:apple", 0.35);
+            defaultObj.addProperty("minecraft:carrot", 0.3);
+            defaultObj.addProperty("minecraft:potato", 0.3);
+            defaultObj.addProperty("minecraft:wheat", 0.2);
+            defaultObj.addProperty("minecraft:sugar_cane", 0.25);
+            defaultObj.addProperty("minecraft:leather", 1.2);
+            defaultObj.addProperty("minecraft:feather", 0.15);
+            defaultObj.addProperty("minecraft:slime_ball", 2.0);
+            defaultObj.addProperty("minecraft:honey_bottle", 2.0);
 
             // --- Monster Loot ---
-            defaultObj.addProperty("minecraft:gunpowder", 0.5);
-            defaultObj.addProperty("minecraft:bone", 0.1);
-            defaultObj.addProperty("minecraft:string", 0.05);
-            defaultObj.addProperty("minecraft:spider_eye", 0.1);
-            defaultObj.addProperty("minecraft:rotten_flesh", 0.01);
+            defaultObj.addProperty("minecraft:gunpowder", 1.0);
+            defaultObj.addProperty("minecraft:bone", 0.5);
+            defaultObj.addProperty("minecraft:string", 0.3);
+            defaultObj.addProperty("minecraft:spider_eye", 0.5);
+            defaultObj.addProperty("minecraft:rotten_flesh", 0.2);
 
             // --- Blocks & Nature ---
-            defaultObj.addProperty("minecraft:oak_log", 0.1);
-            defaultObj.addProperty("minecraft:spruce_log", 0.1);
-            defaultObj.addProperty("minecraft:birch_log", 0.1);
-            defaultObj.addProperty("minecraft:jungle_log", 0.1);
-            defaultObj.addProperty("minecraft:acacia_log", 0.1);
-            defaultObj.addProperty("minecraft:dark_oak_log", 0.1);
-            defaultObj.addProperty("minecraft:cherry_log", 0.15);
-            defaultObj.addProperty("minecraft:mangrove_log", 0.15);
-            defaultObj.addProperty("minecraft:obsidian", 2.0);
-            defaultObj.addProperty("minecraft:glass", 0.05);
-            defaultObj.addProperty("minecraft:cobblestone", 0.01);
-            defaultObj.addProperty("minecraft:stone", 0.02);
-            defaultObj.addProperty("minecraft:deepslate", 0.02);
+            defaultObj.addProperty("minecraft:oak_log", 1.25);
+            defaultObj.addProperty("minecraft:spruce_log", 1.25);
+            defaultObj.addProperty("minecraft:birch_log", 1.25);
+            defaultObj.addProperty("minecraft:jungle_log", 1.25);
+            defaultObj.addProperty("minecraft:acacia_log", 1.25);
+            defaultObj.addProperty("minecraft:dark_oak_log", 1.25);
+            defaultObj.addProperty("minecraft:cherry_log", 1.5);
+            defaultObj.addProperty("minecraft:mangrove_log", 1.5);
+            defaultObj.addProperty("minecraft:obsidian", 3.0);
+            defaultObj.addProperty("minecraft:glass", 0.3);
+            defaultObj.addProperty("minecraft:cobblestone", 0.05);
+            defaultObj.addProperty("minecraft:stone", 0.1);
+            defaultObj.addProperty("minecraft:deepslate", 0.1);
 
             Files.writeString(file, GSON.toJson(defaultObj));
         }
@@ -239,7 +238,6 @@ public class TraderEconomyManager {
                 blArr.add(BuiltInRegistries.ITEM.getKey(item).toString());
             }
             Files.writeString(configDir.resolve("trader_blacklist.json"), GSON.toJson(blArr));
-
 
         } catch (IOException e) {
             Constants.LOG.error("Failed to save trader economy config", e);

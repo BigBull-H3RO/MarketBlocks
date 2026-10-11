@@ -30,6 +30,9 @@
     ],
     "jade": [
       "de.bigbull.marketblocks.compat.jade.JadePlugin"
+    ],
+    "rei_client": [
+      "de.bigbull.marketblocks.compat.rei.MarketBlocksReiClientPlugin"
     ]
   },
   "mixins": [
@@ -44,6 +47,8 @@
   },
   "suggests": {
     "jei": "*",
-    "jade": "*"
+    "jade": "*",
+    "emi": "*",
+    "roughlyenoughitems": "*"
   }
 }
