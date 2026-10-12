@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
 
 ### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
 - **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
 - **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180° head-snapping.
@@ -60,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
 
 ### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
 - **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
 - **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180° head-snapping.
@@ -89,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
 
 ### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
 - **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
 - **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180° head-snapping.
@@ -118,6 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
 
 ### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
 - **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
 - **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180° head-snapping.
@@ -146,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
 
 ### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
 - **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
 - **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180° head-snapping.
