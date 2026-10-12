@@ -204,6 +204,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
         if (player instanceof ServerPlayer serverPlayer) {
             if (shopEntity.getOwnerId() == null || shopEntity.hasOffer() || shopEntity.isOwner(player)) {
                 shopEntity.updateShopDirectory();
+                int initialFlags = shopEntity.createMenuFlags(serverPlayer).get(0);
                 Services.PLATFORM.openMenu(serverPlayer,
                         new SimpleMenuProvider(
                                 (id, inv, p) -> new SingleOfferShopMenu(id, inv, shopEntity),
@@ -211,6 +212,7 @@ public abstract class BaseShopBlock extends BaseEntityBlock {
                         buf -> {
                             buf.writeBlockPos(pos);
                             buf.writeUtf(shopEntity.getShopId());
+                            buf.writeVarInt(initialFlags);
                         });
             } else {
                 serverPlayer.displayClientMessage(Component.translatable("message.marketblocks.trade_stand.no_offer"),

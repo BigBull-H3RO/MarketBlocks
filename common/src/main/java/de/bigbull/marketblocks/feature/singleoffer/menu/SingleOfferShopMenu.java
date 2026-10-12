@@ -70,6 +70,10 @@ public class SingleOfferShopMenu extends AbstractSingleOfferShopMenu implements 
                 this.blockEntity.setShopId(syncedShopId);
             }
         }
+        if (buf.isReadable()) {
+            int initialFlags = buf.readVarInt();
+            this.flags.set(0, initialFlags);
+        }
     }
 
     private static SingleOfferShopBlockEntity getBlockEntity(Inventory inv, RegistryFriendlyByteBuf buf) {
