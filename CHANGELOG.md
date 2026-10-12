@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -7,16 +7,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0+1.21.1] - 2026-10-08 - "The Living Economy & Quality of Life Update"
+## [1.1.0+26.3] - 2026-10-11 - "The Living Economy & Quality of Life Update"
 
 ### Added
+- **Minecraft 26.3 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 26.3 with full Fabric & NeoForge parity.
 - **Trader NPC Survival & Combat AI:**
   - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
   - Traders flee at full sprint speed from threats and prioritize survival over shopping.
 - **Organic Trader Shopping Behavior:**
   - Traders now approach shops naturally from the front at realistic standing distances.
   - Realistic, wealth-based purchase quantities (Citizens buy few items, Nobles buy more).
-  - Unstackable equipment (weapons, armor, tools) is now capped at 1–2 per purchase.
+  - Unstackable equipment (weapons, armor, tools) is now capped at 1ÔÇô2 per purchase.
+- **Recipe Viewer Support:** Native exclusion zones for **Roughly Enough Items (REI)** (Fabric & NeoForge).
+- **Trade Stand Showcase Ergonomics:** Place glass showcases directly without sneaking, and break them easily with an axe.
+- **NPC Clerk Player Skins:** Player skins can now be resolved by player name or UUID reliably.
+- **Configurable Shop Teleportation:** Added independent `enableTeleport` master toggle in `main.toml`.
+
+### Changed
+- **Marketplace Keybind:** Default keybind updated to `K` (previously `O`) to prevent collision with Minecraft's vanilla Friends list.
+- **Realistic Item Economy:** Overhauled default exchange values for vanilla items in `TraderEconomyManager`.
+- **Configurable Budgets:** Separate min/max budgets per trader tier in `trader.toml`.
+- **Shop Protection:** Only primary owners can dismantle shop blocks or remove showcases; co-owners manage stock safely.
+- **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
+
+### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
+- **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
+- **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
+- **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
+- **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
+- **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+
+## [1.1.0+26.2] - 2026-10-11 - "The Living Economy & Quality of Life Update"
+
+### Added
+- **Minecraft 26.2 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 26.2 with full Fabric & NeoForge parity.
+- **Trader NPC Survival & Combat AI:**
+  - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
+  - Traders flee at full sprint speed from threats and prioritize survival over shopping.
+- **Organic Trader Shopping Behavior:**
+  - Traders now approach shops naturally from the front at realistic standing distances.
+  - Realistic, wealth-based purchase quantities (Citizens buy few items, Nobles buy more).
+  - Unstackable equipment (weapons, armor, tools) is now capped at 1ÔÇô2 per purchase.
+- **Recipe Viewer Support:** Native exclusion zones for **Roughly Enough Items (REI)** (Fabric & NeoForge).
+- **Trade Stand Showcase Ergonomics:** Place glass showcases directly without sneaking, and break them easily with an axe.
+- **NPC Clerk Player Skins:** Player skins can now be resolved by player name or UUID reliably.
+- **Configurable Shop Teleportation:** Added independent `enableTeleport` master toggle in `main.toml`.
+
+### Changed
+- **Marketplace Keybind:** Default keybind updated to `K` (previously `O`) to prevent collision with Minecraft 26.2's vanilla Friends list.
+- **Realistic Item Economy:** Overhauled default exchange values for vanilla items in `TraderEconomyManager`.
+- **Configurable Budgets:** Separate min/max budgets per trader tier in `trader.toml`.
+- **Shop Protection:** Only primary owners can dismantle shop blocks or remove showcases; co-owners manage stock safely.
+- **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
+
+### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
+- **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
+- **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
+- **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
+- **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
+- **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+
+## [1.1.0+26.1.2] - 2026-10-11 - "The Living Economy & Quality of Life Update"
+
+### Added
+- **Minecraft 26.1.2 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 26.1.2 with full Fabric & NeoForge parity.
+- **Trader NPC Survival & Combat AI:**
+  - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
+  - Traders flee at full sprint speed from threats and prioritize survival over shopping.
+- **Organic Trader Shopping Behavior:**
+  - Traders now approach shops naturally from the front at realistic standing distances.
+  - Realistic, wealth-based purchase quantities (Citizens buy few items, Nobles buy more).
+  - Unstackable equipment (weapons, armor, tools) is now capped at 1ÔÇô2 per purchase.
+- **Recipe Viewer Support:** Native exclusion zones for **Roughly Enough Items (REI)** (Fabric & NeoForge).
+- **Trade Stand Showcase Ergonomics:** Place glass showcases directly without sneaking, and break them easily with an axe.
+- **NPC Clerk Player Skins:** Player skins can now be resolved by player name or UUID reliably.
+- **Configurable Shop Teleportation:** Added independent `enableTeleport` master toggle in `main.toml`.
+
+### Changed
+- **Realistic Item Economy:** Overhauled default exchange values for vanilla items in `TraderEconomyManager`.
+- **Configurable Budgets:** Separate min/max budgets per trader tier in `trader.toml`.
+- **Shop Protection:** Only primary owners can dismantle shop blocks or remove showcases; co-owners manage stock safely.
+- **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
+
+### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
+- **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
+- **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
+- **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
+- **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
+- **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+
+## [1.1.0+1.21.11] - 2026-10-09 - "The Living Economy & Quality of Life Update"
+
+### Added
+- **Minecraft 1.21.11 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 1.21.11 with full Fabric & NeoForge parity.
+- **Trader NPC Survival & Combat AI:**
+  - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
+  - Traders flee at full sprint speed from threats and prioritize survival over shopping.
+- **Organic Trader Shopping Behavior:**
+  - Traders now approach shops naturally from the front at realistic standing distances.
+  - Realistic, wealth-based purchase quantities (Citizens buy few items, Nobles buy more).
+  - Unstackable equipment (weapons, armor, tools) is now capped at 1ÔÇô2 per purchase.
 - **Recipe Viewer Support:** Native exclusion zones for **Roughly Enough Items (REI)** and **EMI** (Fabric & NeoForge).
 - **Trade Stand Showcase Ergonomics:** Place glass showcases directly without sneaking, and break them easily with an axe.
 - **NPC Clerk Player Skins:** Player skins can now be resolved by player name or UUID reliably.
@@ -32,7 +125,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
 - **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
 - **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
-- **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180° head-snapping.
+- **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
+- **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
+- **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+
+## [1.1.0+1.21.4] - 2026-10-08 - "The Living Economy & Quality of Life Update"
+
+### Added
+- **Minecraft 1.21.4 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 1.21.4 with full Fabric & NeoForge parity.
+- **Trader NPC Survival & Combat AI:**
+  - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
+  - Traders flee at full sprint speed from threats and prioritize survival over shopping.
+- **Organic Trader Shopping Behavior:**
+  - Traders now approach shops naturally from the front at realistic standing distances.
+  - Realistic, wealth-based purchase quantities (Citizens buy few items, Nobles buy more).
+  - Unstackable equipment (weapons, armor, tools) is now capped at 1ÔÇô2 per purchase.
+- **Recipe Viewer Support:** Native exclusion zones for **Roughly Enough Items (REI)** and **EMI** (Fabric & NeoForge).
+- **Trade Stand Showcase Ergonomics:** Place glass showcases directly without sneaking, and break them easily with an axe.
+- **NPC Clerk Player Skins:** Player skins can now be resolved by player name or UUID reliably.
+- **Configurable Shop Teleportation:** Added independent `enableTeleport` master toggle in `main.toml`.
+
+### Changed
+- **Realistic Item Economy:** Overhauled default exchange values for vanilla items in `TraderEconomyManager`.
+- **Configurable Budgets:** Separate min/max budgets per trader tier in `trader.toml`.
+- **Shop Protection:** Only primary owners can dismantle shop blocks or remove showcases; co-owners manage stock safely.
+- **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
+
+### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
+- **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
+- **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
+- **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
+- **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
+- **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+
+## [1.1.0+1.21.1] - 2026-10-08 - "The Living Economy & Quality of Life Update"
+
+### Added
+- **Trader NPC Survival & Combat AI:**
+  - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
+  - Traders flee at full sprint speed from threats and prioritize survival over shopping.
+- **Organic Trader Shopping Behavior:**
+  - Traders now approach shops naturally from the front at realistic standing distances.
+  - Realistic, wealth-based purchase quantities (Citizens buy few items, Nobles buy more).
+  - Unstackable equipment (weapons, armor, tools) is now capped at 1ÔÇô2 per purchase.
+- **Recipe Viewer Support:** Native exclusion zones for **Roughly Enough Items (REI)** and **EMI** (Fabric & NeoForge).
+- **Trade Stand Showcase Ergonomics:** Place glass showcases directly without sneaking, and break them easily with an axe.
+- **NPC Clerk Player Skins:** Player skins can now be resolved by player name or UUID reliably.
+- **Configurable Shop Teleportation:** Added independent `enableTeleport` master toggle in `main.toml`.
+
+### Changed
+- **Realistic Item Economy:** Overhauled default exchange values for vanilla items in `TraderEconomyManager`.
+- **Configurable Budgets:** Separate min/max budgets per trader tier in `trader.toml`.
+- **Shop Protection:** Only primary owners can dismantle shop blocks or remove showcases; co-owners manage stock safely.
+- **NeoForge Compatibility:** Decoupled runtime version requirements for smoother modpack compatibility.
+
+### Fixed
+- **Single Offer Shop GUI & Side Panels:** Fixed delayed side tabs (Inventory, Settings, Log) and delete button popping in late upon opening shops or market crates; permission flags are now synchronized instantly on Frame 0 with zero lag.
+- **Trader AI Navigation:** Fixed traders getting stuck spinning on counter edges, and resolved frozen departure routines after shopping.
+- **Shopping Menus:** Fixed rapid double-clicks accidentally swallowing purchases.
+- **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
 - **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
 - **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
 
