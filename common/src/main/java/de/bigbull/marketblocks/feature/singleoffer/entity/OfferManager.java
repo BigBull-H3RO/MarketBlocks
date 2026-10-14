@@ -614,23 +614,20 @@ public class OfferManager {
             return;
 
         List<ItemStack> paidStacks = new ArrayList<>(2);
-        ItemStack paidOne = TransactionLogEntry.scaleStack(payment1, tradeCount);
-        ItemStack paidTwo = TransactionLogEntry.scaleStack(payment2, tradeCount);
-        if (!paidOne.isEmpty())
-            paidStacks.add(paidOne);
-        if (!paidTwo.isEmpty())
-            paidStacks.add(paidTwo);
+        if (payment1 != null && !payment1.isEmpty())
+            paidStacks.add(payment1.copy());
+        if (payment2 != null && !payment2.isEmpty())
+            paidStacks.add(payment2.copy());
 
         List<ItemStack> boughtStacks = new ArrayList<>(1);
-        ItemStack bought = TransactionLogEntry.scaleStack(result, tradeCount);
-        if (!bought.isEmpty())
-            boughtStacks.add(bought);
+        if (result != null && !result.isEmpty())
+            boughtStacks.add(result.copy());
 
         UUID buyerId = buyer != null ? buyer.uuid() : new UUID(0L, 0L);
         String buyerName = buyer != null ? buyer.name() : "";
 
         TransactionLogEntry entry = TransactionLogEntry.now(
-                buyerId, buyerName, paidStacks, boughtStacks,
+                buyerId, buyerName, paidStacks, boughtStacks, tradeCount,
                 shiftPurchase ? TransactionLogEntry.PurchaseKind.SHIFT : TransactionLogEntry.PurchaseKind.SINGLE);
 
         ShopTransactionLogSavedData.get(serverLevel).appendEntry(
