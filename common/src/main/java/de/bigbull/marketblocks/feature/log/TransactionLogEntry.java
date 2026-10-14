@@ -67,7 +67,11 @@ public record TransactionLogEntry(
     }
 
     public static TransactionLogEntry now(UUID buyerUuid, String buyerName, List<ItemStack> paidStacks, List<ItemStack> boughtStacks, PurchaseKind purchaseKind) {
-        return new TransactionLogEntry(Instant.now().getEpochSecond(), buyerUuid, buyerName, paidStacks, boughtStacks, 1, purchaseKind);
+        return now(buyerUuid, buyerName, paidStacks, boughtStacks, 1, purchaseKind);
+    }
+
+    public static TransactionLogEntry now(UUID buyerUuid, String buyerName, List<ItemStack> paidStacks, List<ItemStack> boughtStacks, int aggregationCount, PurchaseKind purchaseKind) {
+        return new TransactionLogEntry(Instant.now().getEpochSecond(), buyerUuid, buyerName, paidStacks, boughtStacks, aggregationCount, purchaseKind);
     }
 
     /**
@@ -168,7 +172,7 @@ public record TransactionLogEntry(
         long scaledCount = (long) original.getCount() * multiplier;
         if (scaledCount <= 0L) return ItemStack.EMPTY;
         ItemStack copy = original.copy();
-        copy.setCount((int) Math.min(Integer.MAX_VALUE, scaledCount));
+        copy.setCount((int) Math.min(99, scaledCount));
         return copy;
     }
 
@@ -222,7 +226,13 @@ public record TransactionLogEntry(
         List<ItemStack> sanitized = new ArrayList<>(Math.min(stacks.size(), MAX_STACKS_PER_SIDE));
         for (ItemStack stack : stacks) {
             if (sanitized.size() >= MAX_STACKS_PER_SIDE) break;
-            if (stack != null && !stack.isEmpty() && stack.getCount() > 0) sanitized.add(stack.copy());
+            if (stack != null && !stack.isEmpty() && stack.getCount() > 0) {
+                ItemStack copy = stack.copy();
+                if (copy.getCount() > 99) {
+                    copy.setCount(99);
+                }
+                sanitized.add(copy);
+            }
         }
         return sanitized.isEmpty() ? List.of() : List.copyOf(sanitized);
     }
