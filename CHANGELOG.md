@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
 - **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
 - **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+- **Server Autosave Crash:** Fixed a critical server crash (`IllegalStateException: Value must be within range [1;99]`) triggered during autosave when players made bulk purchases exceeding 99 items; transaction logs now preserve base item stacks and record purchase multipliers via aggregation counts.
+- **Advancement Background:** Fixed missing (black/magenta checkerboard) root advancement background texture by adopting modern identifier format (`minecraft:gui/advancements/backgrounds/stone`).
 
 ## [1.1.0+26.2] - 2026-10-11 - "The Living Economy & Quality of Life Update"
 
@@ -68,6 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
 - **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
 - **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+- **Server Autosave Crash:** Fixed a critical server crash (`IllegalStateException: Value must be within range [1;99]`) triggered during autosave when players made bulk purchases exceeding 99 items; transaction logs now preserve base item stacks and record purchase multipliers via aggregation counts.
+- **Advancement Background:** Fixed missing (black/magenta checkerboard) root advancement background texture by adopting modern identifier format (`minecraft:gui/advancements/backgrounds/stone`).
 
 ## [1.1.0+26.1.2] - 2026-10-11 - "The Living Economy & Quality of Life Update"
 
@@ -98,6 +102,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
 - **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
 - **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+- **Server Autosave Crash:** Fixed a critical server crash (`IllegalStateException: Value must be within range [1;99]`) triggered during autosave when players made bulk purchases exceeding 99 items; transaction logs now preserve base item stacks and record purchase multipliers via aggregation counts.
+- **Advancement Background:** Fixed missing (black/magenta checkerboard) root advancement background texture by adopting modern identifier format (`minecraft:gui/advancements/backgrounds/stone`).
 
 ## [1.1.0+1.21.11] - 2026-10-09 - "The Living Economy & Quality of Life Update"
 
@@ -128,6 +134,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
 - **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
 - **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+- **Server Autosave Crash:** Fixed a critical server crash (`IllegalStateException: Value must be within range [1;99]`) triggered during autosave when players made bulk purchases exceeding 99 items; transaction logs now preserve base item stacks and record purchase multipliers via aggregation counts.
+- **Advancement Background:** Fixed missing (black/magenta checkerboard) root advancement background texture by adopting modern identifier format (`minecraft:gui/advancements/backgrounds/stone`).
 
 ## [1.1.0+1.21.4] - 2026-10-08 - "The Living Economy & Quality of Life Update"
 
@@ -158,6 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
 - **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
 - **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+- **Server Autosave Crash:** Fixed a critical server crash (`IllegalStateException: Value must be within range [1;99]`) triggered during autosave when players made bulk purchases exceeding 99 items; transaction logs now preserve base item stacks and record purchase multipliers via aggregation counts.
 
 ## [1.1.0+1.21.1] - 2026-10-08 - "The Living Economy & Quality of Life Update"
 
@@ -187,6 +196,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clerk NPCs:** Fixed repetitive sound spam during fast purchases and prevented 180┬░ head-snapping.
 - **Visual Glitches:** Fixed lingering mining cracks on placed trade stands and misleading ownership messages.
 - **Localization & UI Overflows:** Fixed truncated texts, layout misalignments, and overlapping labels across all supported languages (English, German, Spanish, French).
+- **Server Autosave Crash:** Fixed a critical server crash (`IllegalStateException: Value must be within range [1;99]`) triggered during autosave when players made bulk purchases exceeding 99 items; transaction logs now preserve base item stacks and record purchase multipliers via aggregation counts.
 
 ## [1.0.0+26.3] - 2026-10-02
 ### Added
