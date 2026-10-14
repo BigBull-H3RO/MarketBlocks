@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0+26.3] - 2026-10-11 - "The Living Economy & Quality of Life Update"
 
 ### Added
-- **Minecraft 26.3 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 26.3 with full Fabric & NeoForge parity.
 - **Trader NPC Survival & Combat AI:**
   - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
   - Traders flee at full sprint speed from threats and prioritize survival over shopping.
@@ -43,7 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0+26.2] - 2026-10-11 - "The Living Economy & Quality of Life Update"
 
 ### Added
-- **Minecraft 26.2 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 26.2 with full Fabric & NeoForge parity.
 - **Trader NPC Survival & Combat AI:**
   - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
   - Traders flee at full sprint speed from threats and prioritize survival over shopping.
@@ -76,7 +74,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0+26.1.2] - 2026-10-11 - "The Living Economy & Quality of Life Update"
 
 ### Added
-- **Minecraft 26.1.2 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 26.1.2 with full Fabric & NeoForge parity.
 - **Trader NPC Survival & Combat AI:**
   - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
   - Traders flee at full sprint speed from threats and prioritize survival over shopping.
@@ -108,7 +105,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0+1.21.11] - 2026-10-09 - "The Living Economy & Quality of Life Update"
 
 ### Added
-- **Minecraft 1.21.11 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 1.21.11 with full Fabric & NeoForge parity.
 - **Trader NPC Survival & Combat AI:**
   - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
   - Traders flee at full sprint speed from threats and prioritize survival over shopping.
@@ -140,7 +136,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0+1.21.4] - 2026-10-08 - "The Living Economy & Quality of Life Update"
 
 ### Added
-- **Minecraft 1.21.4 Support:** Ported "The Living Economy & Quality of Life Update" to Minecraft 1.21.4 with full Fabric & NeoForge parity.
 - **Trader NPC Survival & Combat AI:**
   - Hostile mobs (Zombies, Pillagers, Vindicators, etc.) now actively target Trader NPCs.
   - Traders flee at full sprint speed from threats and prioritize survival over shopping.
